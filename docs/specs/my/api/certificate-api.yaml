@@ -1,0 +1,353 @@
+openapi: 3.0.3
+info:
+  title: Certificate API
+  version: 1.0.0
+  description: 电子证照模块 API 规格。
+servers:
+  - url: /api/v1
+tags:
+  - name: Certificates
+security:
+  - bearerAuth: []
+paths:
+  /certificates:
+    get:
+      tags: [Certificates]
+      summary: 获取电子证照列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: ownerType
+          in: query
+          schema:
+            type: string
+            enum: [vessel, vehicle, personnel]
+        - name: ownerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: certificateTypeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, expired, archived]
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateListResponse'
+    post:
+      tags: [Certificates]
+      summary: 创建电子证照
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDetailResponse'
+  /certificates/grouped:
+    get:
+      tags: [Certificates]
+      summary: 按持有对象分组查询电子证照
+      parameters:
+        - name: groupBy
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [owner, type]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CertificateGroup'
+  '/certificates/{id}':
+    get:
+      tags: [Certificates]
+      summary: 获取电子证照详情
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDetailResponse'
+    patch:
+      tags: [Certificates]
+      summary: 更新电子证照
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDetailResponse'
+    delete:
+      tags: [Certificates]
+      summary: 删除电子证照
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204':
+          description: No Content
+  '/certificates/{id}/files':
+    post:
+      tags: [Certificates]
+      summary: 绑定电子证照附件
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileIds]
+              properties:
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDetailResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  schemas:
+    Certificate:
+      type: object
+      required:
+        [id, certificateTypeId, ownerType, ownerId, title, expiryDate, advanceDays, status, files, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        certificateTypeId:
+          type: string
+          format: uuid
+        certificateTypeName:
+          type: string
+        ownerType:
+          type: string
+          enum: [vessel, vehicle, personnel]
+        ownerId:
+          type: string
+          format: uuid
+        ownerName:
+          type: string
+        certificateNo:
+          type: string
+          nullable: true
+        title:
+          type: string
+        issueDate:
+          type: string
+          format: date
+          nullable: true
+        expiryDate:
+          type: string
+          format: date
+        advanceDays:
+          type: integer
+        issuer:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, expired, archived]
+        remarks:
+          type: string
+          nullable: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileAttachment'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FileAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        ossKey:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileRole:
+          type: string
+    CertificateGroup:
+      type: object
+      properties:
+        groupKey:
+          type: string
+        groupLabel:
+          type: string
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificate'
+    CertificateCreateRequest:
+      type: object
+      required: [certificateTypeId, ownerType, ownerId, title, expiryDate]
+      properties:
+        certificateTypeId:
+          type: string
+          format: uuid
+        ownerType:
+          type: string
+          enum: [vessel, vehicle, personnel]
+        ownerId:
+          type: string
+          format: uuid
+        certificateNo:
+          type: string
+        title:
+          type: string
+        issueDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        advanceDays:
+          type: integer
+        issuer:
+          type: string
+        remarks:
+          type: string
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    CertificateUpdateRequest:
+      type: object
+      properties:
+        certificateNo:
+          type: string
+        title:
+          type: string
+        issueDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        advanceDays:
+          type: integer
+        issuer:
+          type: string
+        status:
+          type: string
+          enum: [active, expired, archived]
+        remarks:
+          type: string
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    CertificateListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificate'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    CertificateDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Certificate'
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer

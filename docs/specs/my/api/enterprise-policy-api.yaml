@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Policy API
+  version: 1.0.0
+  description: 企业制度模块 API 规格。
+servers:
+  - url: /api/v1
+tags:
+  - name: EnterprisePolicies
+security:
+  - bearerAuth: []
+paths:
+  /enterprise-policies:
+    get:
+      tags: [EnterprisePolicies]
+      summary: 获取企业制度列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, deprecated]
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyListResponse'
+    post:
+      tags: [EnterprisePolicies]
+      summary: 创建企业制度
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterprisePolicyCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+  '/enterprise-policies/{id}':
+    get:
+      tags: [EnterprisePolicies]
+      summary: 获取企业制度详情
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+    patch:
+      tags: [EnterprisePolicies]
+      summary: 更新企业制度
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterprisePolicyUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+    delete:
+      tags: [EnterprisePolicies]
+      summary: 删除企业制度版本
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204':
+          description: No Content
+  '/enterprise-policies/{id}/versions':
+    get:
+      tags: [EnterprisePolicies]
+      summary: 获取企业制度版本历史
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PolicyVersion'
+  '/enterprise-policies/{id}/publish':
+    post:
+      tags: [EnterprisePolicies]
+      summary: 发布企业制度版本
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  schemas:
+    EnterprisePolicy:
+      type: object
+      required: [id, title, policyCode, version, status, files, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        policyCode:
+          type: string
+        version:
+          type: string
+        summary:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, published, deprecated]
+        effectiveDate:
+          type: string
+          format: date
+          nullable: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileAttachment'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FileAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        ossKey:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+    PolicyVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: string
+        status:
+          type: string
+          enum: [draft, published, deprecated]
+        effectiveDate:
+          type: string
+          format: date
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    EnterprisePolicyCreateRequest:
+      type: object
+      required: [title, policyCode, version]
+      properties:
+        title:
+          type: string
+        policyCode:
+          type: string
+        version:
+          type: string
+        summary:
+          type: string
+        effectiveDate:
+          type: string
+          format: date
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    EnterprisePolicyUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        summary:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+          enum: [draft, published, deprecated]
+        effectiveDate:
+          type: string
+          format: date
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    EnterprisePolicyListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnterprisePolicy'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    EnterprisePolicyDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/EnterprisePolicy'
+            - type: object
+              properties:
+                versionHistory:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PolicyVersion'
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer

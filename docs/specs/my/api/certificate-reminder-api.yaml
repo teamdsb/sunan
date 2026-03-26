@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: Certificate Reminder API
+  version: 1.0.0
+  description: 证书提醒模块 API 规格。
+servers:
+  - url: /api/v1
+tags:
+  - name: CertificateReminders
+security:
+  - bearerAuth: []
+paths:
+  /certificate-reminders/dashboard:
+    get:
+      tags: [CertificateReminders]
+      summary: 获取提醒看板统计
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReminderDashboard'
+  /certificate-reminders:
+    get:
+      tags: [CertificateReminders]
+      summary: 获取提醒列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, acknowledged, failed]
+        - name: reminderType
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, overdue]
+        - name: ownerType
+          in: query
+          schema:
+            type: string
+            enum: [vessel, vehicle, personnel]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderListResponse'
+  '/certificate-reminders/{id}':
+    get:
+      tags: [CertificateReminders]
+      summary: 获取提醒详情
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderDetailResponse'
+  '/certificate-reminders/{id}/acknowledge':
+    post:
+      tags: [CertificateReminders]
+      summary: 确认提醒
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderDetailResponse'
+        '409':
+          description: 已确认，不能重复确认
+  /certificate-reminders/actions/scan:
+    post:
+      tags: [CertificateReminders]
+      summary: 手动触发证书扫描
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                      acceptedAt:
+                        type: string
+                        format: date-time
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  schemas:
+    ReminderDashboard:
+      type: object
+      properties:
+        totalPending:
+          type: integer
+        totalOverdue:
+          type: integer
+        totalAcknowledged:
+          type: integer
+        byOwnerType:
+          type: array
+          items:
+            type: object
+            properties:
+              ownerType:
+                type: string
+              count:
+                type: integer
+        byCertificateType:
+          type: array
+          items:
+            type: object
+            properties:
+              certificateTypeName:
+                type: string
+              count:
+                type: integer
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        certificateId:
+          type: string
+          format: uuid
+        certificateTitle:
+          type: string
+        ownerType:
+          type: string
+          enum: [vessel, vehicle, personnel]
+        ownerName:
+          type: string
+        recipientUserId:
+          type: string
+        reminderType:
+          type: string
+          enum: [upcoming, overdue]
+        status:
+          type: string
+          enum: [pending, sent, acknowledged, failed]
+        scheduledDate:
+          type: string
+          format: date
+        daysBeforeExpiry:
+          type: integer
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        acknowledgedAt:
+          type: string
+          format: date-time
+          nullable: true
+        acknowledgedBy:
+          type: string
+          nullable: true
+    ReminderListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    ReminderDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Reminder'
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
