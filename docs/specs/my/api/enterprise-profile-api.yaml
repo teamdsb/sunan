@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Profile API
+  version: 1.0.0
+  description: 企业资料模块 API 规格。
+servers:
+  - url: /api/v1
+tags:
+  - name: EnterpriseProfiles
+security:
+  - bearerAuth: []
+paths:
+  /enterprise-profiles:
+    get:
+      tags: [EnterpriseProfiles]
+      summary: 获取企业资料列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProfileListResponse'
+    post:
+      tags: [EnterpriseProfiles]
+      summary: 创建企业资料
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseProfileCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProfileDetailResponse'
+  '/enterprise-profiles/{id}':
+    get:
+      tags: [EnterpriseProfiles]
+      summary: 获取企业资料详情
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProfileDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [EnterpriseProfiles]
+      summary: 更新企业资料
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseProfileUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProfileDetailResponse'
+    delete:
+      tags: [EnterpriseProfiles]
+      summary: 删除企业资料
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204':
+          description: No Content
+  '/enterprise-profiles/{id}/files':
+    post:
+      tags: [EnterpriseProfiles]
+      summary: 绑定企业资料附件
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileIds]
+              properties:
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProfileDetailResponse'
+  '/enterprise-profiles/{id}/files/{fileId}':
+    delete:
+      tags: [EnterpriseProfiles]
+      summary: 解绑企业资料附件
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    NotFound:
+      description: 资源不存在
+  schemas:
+    EnterpriseProfile:
+      type: object
+      required: [id, title, category, status, files, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, published, archived]
+        effectiveDate:
+          type: string
+          format: date
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileAttachment'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FileAttachment:
+      type: object
+      required: [id, fileName, ossKey, mimeType, fileSize]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        ossKey:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+    EnterpriseProfileCreateRequest:
+      type: object
+      required: [title, category]
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, published]
+        effectiveDate:
+          type: string
+          format: date
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    EnterpriseProfileUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, published, archived]
+        effectiveDate:
+          type: string
+          format: date
+    EnterpriseProfileListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnterpriseProfile'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    EnterpriseProfileDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EnterpriseProfile'
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer

@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Settings API
+  version: 1.0.0
+  description: 用户设置模块 API 规格。
+servers:
+  - url: /api/v1
+tags:
+  - name: Settings
+security:
+  - bearerAuth: []
+paths:
+  /settings:
+    get:
+      tags: [Settings]
+      summary: 获取当前用户设置
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+    patch:
+      tags: [Settings]
+      summary: 更新当前用户设置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettingsUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserSettings:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        defaultModule:
+          type: string
+          enum: [my]
+        reminderViewMode:
+          type: string
+          enum: [dashboard, list]
+        certificateGroupBy:
+          type: string
+          enum: [owner, type]
+        enablePushNotifications:
+          type: boolean
+        theme:
+          type: string
+          enum: [light]
+        updatedAt:
+          type: string
+          format: date-time
+    UserSettingsUpdateRequest:
+      type: object
+      properties:
+        reminderViewMode:
+          type: string
+          enum: [dashboard, list]
+        certificateGroupBy:
+          type: string
+          enum: [owner, type]
+        enablePushNotifications:
+          type: boolean
+    UserSettingsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserSettings'
