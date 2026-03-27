@@ -1,0 +1,24 @@
+{
+  "name": "sunan",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": "20.x"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter api build",
+    "lint": "pnpm --filter api lint",
+    "test": "pnpm --filter api test",
+    "test:unit": "pnpm --filter api test:unit",
+    "test:integration": "pnpm --filter api test:integration",
+    "migration:run": "pnpm --filter api migration:run",
+    "start:dev": "pnpm --filter api start:dev"
+  }
+}
