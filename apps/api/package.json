@@ -49,8 +49,8 @@
     "start:dev": "nest start --watch",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "pnpm run test:unit && pnpm run test:integration",
-    "test:unit": "NODE_ENV=test jest --config ./jest.unit.config.ts",
-    "test:integration": "NODE_ENV=test jest --config ./jest.integration.config.ts",
+    "test:unit": "jest --config ./jest.unit.config.ts",
+    "test:integration": "jest --config ./jest.integration.config.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate src/database/migrations/auto -d src/database/data-source.ts"
   }
