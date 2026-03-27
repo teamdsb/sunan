@@ -1,5 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthCallbackPage } from '../features/auth/AuthCallbackPage';
+import { CertificateDetailPage } from '../features/certificate/CertificateDetailPage';
+import { CertificateListPage } from '../features/certificate/CertificateListPage';
+import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from '../features/enterprise/EnterprisePolicyPage';
+import { EnterpriseProfilePage } from '../features/enterprise/EnterpriseProfilePage';
+import { EnterpriseProfileDetailPage } from '../features/enterprise/EnterpriseProfileDetailPage';
+import { MonitorPage } from '../features/monitor/MonitorPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppShell } from '../layouts/AppShell';
 import { PlaceholderPage } from './PlaceholderPage';
 import { RequireAuth } from './RequireAuth';
@@ -12,43 +19,22 @@ export function AppRoutes() {
         <Route element={<AppShell />}>
           <Route
             path="/my"
-            element={
-              <PlaceholderPage
-                title="我的模块首页"
-                description="六宫格与功能卡片后续在 Wave 3 接入。当前已具备受保护路由与认证上下文。"
-              />
-            }
+            element={<PlaceholderPage title="我的模块首页" description="Wave 3 业务页面已接入，请从导航进入各模块。" />}
           />
-          <Route
-            path="/my/enterprise-profile"
-            element={
-              <PlaceholderPage
-                title="企业资料"
-                description="为企业资料列表、详情与附件管理预留挂载点。"
-              />
-            }
-          />
-          <Route
-            path="/my/enterprise-policy"
-            element={
-              <PlaceholderPage
-                title="企业制度"
-                description="为制度列表、版本历史与预览流程预留挂载点。"
-              />
-            }
-          />
-          <Route
-            path="/my/settings"
-            element={
-              <PlaceholderPage
-                title="设置"
-                description="为用户偏好、提醒参数和轻量设置预留挂载点。"
-              />
-            }
-          />
+          <Route path="/my/enterprise-profile" element={<EnterpriseProfilePage />} />
+          <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
+          <Route path="/my/enterprise-policy" element={<EnterprisePolicyPage />} />
+          <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
+          <Route path="/my/certificates" element={<CertificateListPage />} />
+          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
+          <Route path="/my/monitors" element={<MonitorPage />} />
+          <Route path="/my/monitors/:vesselId" element={<MonitorPage />} />
+          <Route path="/my/settings" element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />
     </Routes>
   );
 }
+
+

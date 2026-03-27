@@ -164,10 +164,10 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 
 **任务清单**：
 
-- [ ] 测试：`EnterpriseProfileController` 集成测试（列表分页、详情、创建含附件、更新、软删除）
-- [ ] 实现：Controller + Service + Repository
-- [ ] Migration：`enterprise_profiles` + `enterprise_profile_files` 表
-- [ ] 权限：普通员工只读，部门管理员本部门，系统管理员全权
+- [x] 测试：`EnterpriseProfileController` 集成测试（列表分页、详情、创建含附件、更新、软删除）
+- [x] 实现：Controller + Service + Repository
+- [x] Migration：`enterprise_profiles` + `enterprise_profile_files` 表
+- [x] 权限：普通员工只读，部门管理员本部门，系统管理员全权
 
 ---
 
@@ -183,10 +183,10 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 
 **任务清单**：
 
-- [ ] 测试：`EnterprisePolicyController` 集成测试（列表、详情、创建、更新、软删除）
-- [ ] 实现：Controller + Service + Repository
-- [ ] Migration：`enterprise_policies` + `enterprise_policy_files` 表
-- [ ] 权限：普通员工只读，管理员可上传更新
+- [x] 测试：`EnterprisePolicyController` 集成测试（列表、详情、创建、更新、软删除）
+- [x] 实现：Controller + Service + Repository
+- [x] Migration：`enterprise_policies` + `enterprise_policy_files` 表
+- [x] 权限：普通员工只读，管理员可上传更新
 
 ---
 
@@ -202,13 +202,13 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 
 **任务清单**：
 
-- [ ] 测试：`CertificateController` 集成测试
+- [x] 测试：`CertificateController` 集成测试
   - 按 `owner_type + owner_id` 分组查询
   - 分页、排序、筛选（按类型、临期状态）
   - 创建含附件（多态关联校验）
   - 更新、软删除
-- [ ] 实现：Controller + Service + Repository
-- [ ] Migration：`certificates` + `certificate_files` 表
+- [x] 实现：Controller + Service + Repository
+- [x] Migration：`certificates` + `certificate_files` 表
   - `idx_certificates_owner(owner_type, owner_id) WHERE deleted_at IS NULL`
   - `idx_certificates_expiry(expiry_date) WHERE deleted_at IS NULL`
 
@@ -228,18 +228,18 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 **任务清单**：
 
 1. **企业微信消息推送**
-   - [ ] 测试：`WecomMessageService` 单元测试（文本卡片构造、多人发送、invalidUser、重试）
-   - [ ] 实现：`WecomMessageService.sendTextCard()`（token 失效重试、网络超时 3 次重试间隔 30s）
+   - [x] 测试：`WecomMessageService` 单元测试（文本卡片构造、多人发送、invalidUser、重试）
+   - [x] 实现：`WecomMessageService.sendTextCard()`（token 失效重试、网络超时 3 次重试间隔 30s）
 
 2. **船舶监控**
-   - [ ] 测试：`ShipMonitorController` 集成测试（列表、创建/更新/删除、仅绑定 vessels）
-   - [ ] 实现：Controller + Service + Repository
-   - [ ] Migration：`ship_monitors` 表
+   - [x] 测试：`ShipMonitorController` 集成测试（列表、创建/更新/删除、仅绑定 vessels）
+   - [x] 实现：Controller + Service + Repository
+   - [x] Migration：`ship_monitors` 表
 
 3. **用户设置**
-   - [ ] 测试：`SettingsController` 集成测试（获取、更新、默认值）
-   - [ ] 实现：Controller + Service + Repository
-   - [ ] Migration：`user_settings` 表
+   - [x] 测试：`SettingsController` 集成测试（获取、更新、默认值）
+   - [x] 实现：Controller + Service + Repository
+   - [x] Migration：`user_settings` 表
 
 ---
 
@@ -254,11 +254,11 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 
 **任务清单**：
 
-- [ ] 测试：`enterpriseSlice` 单元测试（RTK Query 缓存、乐观更新）
-- [ ] 测试：`EnterpriseProfilePage` 组件测试（列表、详情、编辑表单）
-- [ ] 实现：`enterpriseSlice` + `EnterpriseProfilePage`
-- [ ] 测试：`EnterprisePolicyPage` 组件测试（文档列表、上传、`wx.previewFile` 预览）
-- [ ] 实现：`EnterprisePolicyPage`
+- [x] 测试：`enterpriseSlice` 单元测试（RTK Query 缓存、乐观更新）
+- [x] 测试：`EnterpriseProfilePage` 组件测试（列表、详情、编辑表单）
+- [x] 实现：`enterpriseSlice` + `EnterpriseProfilePage`
+- [x] 测试：`EnterprisePolicyPage` 组件测试（文档列表、上传、`wx.previewFile` 预览）
+- [x] 实现：`EnterprisePolicyPage`
 
 ---
 
@@ -278,20 +278,20 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 **任务清单**：
 
 1. **电子证照**
-   - [ ] 测试：`certificateSlice` 单元测试（owner 分组、缓存）
-   - [ ] 测试：`CertificateListPage` 组件测试（三 Tab 船舶/车辆/人员、筛选、分页）
-   - [ ] 测试：`CertificateDetailPage` 组件测试（详情、附件、编辑）
-   - [ ] 实现：`certificateSlice` + `CertificateListPage` + `CertificateDetailPage`
+   - [x] 测试：`certificateSlice` 单元测试（owner 分组、缓存）
+   - [x] 测试：`CertificateListPage` 组件测试（三 Tab 船舶/车辆/人员、筛选、分页）
+   - [x] 测试：`CertificateDetailPage` 组件测试（详情、附件、编辑）
+   - [x] 实现：`certificateSlice` + `CertificateListPage` + `CertificateDetailPage`
 
 2. **船舶监控**
-   - [ ] 测试：`monitorSlice` 单元测试
-   - [ ] 测试：`MonitorPage` 组件测试（列表、管理员配置/普通只读）
-   - [ ] 实现：`monitorSlice` + `MonitorPage`
+   - [x] 测试：`monitorSlice` 单元测试
+   - [x] 测试：`MonitorPage` 组件测试（列表、管理员配置/普通只读）
+   - [x] 实现：`monitorSlice` + `MonitorPage`
 
 3. **用户设置**
-   - [ ] 测试：`settingsSlice` 单元测试
-   - [ ] 测试：`SettingsPage` 组件测试（表单、保存反馈）
-   - [ ] 实现：`settingsSlice` + `SettingsPage`
+   - [x] 测试：`settingsSlice` 单元测试
+   - [x] 测试：`SettingsPage` 组件测试（表单、保存反馈）
+   - [x] 实现：`settingsSlice` + `SettingsPage`
 
 ---
 

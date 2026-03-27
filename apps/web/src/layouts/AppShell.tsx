@@ -1,4 +1,4 @@
-import { Avatar, Button, Layout, Space, Tag, Typography } from 'antd';
+﻿import { Avatar, Button, Layout, Space, Tag, Typography } from 'antd';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
@@ -8,6 +8,8 @@ const navItems = [
   { to: '/my', label: '我的首页' },
   { to: '/my/enterprise-profile', label: '企业资料' },
   { to: '/my/enterprise-policy', label: '企业制度' },
+  { to: '/my/certificates', label: '电子证照' },
+  { to: '/my/monitors', label: '船舶监控' },
   { to: '/my/settings', label: '设置' },
 ];
 
@@ -30,7 +32,7 @@ export function AppShell() {
               苏南船舶管理
             </Typography.Title>
             <Typography.Paragraph className="shell-subtitle">
-              企业微信 H5 工作台骨架，当前交付认证与 JS-SDK 基线。
+              企业微信 H5 工作台
             </Typography.Paragraph>
           </div>
           <Space wrap size="middle">
@@ -57,3 +59,4 @@ export function AppShell() {
     </Layout>
   );
 }
+
