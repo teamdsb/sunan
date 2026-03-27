@@ -13,9 +13,14 @@
     "typescript-eslint": "^8.28.0"
   },
   "scripts": {
-    "build": "pnpm --filter api build",
+    "build": "pnpm --filter web build && pnpm --filter api build",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "dev:web": "pnpm --filter web dev",
     "lint": "pnpm --filter api lint",
-    "test": "pnpm --filter api test",
+    "test": "pnpm --filter web test && pnpm --filter api test",
+    "test:web": "pnpm --filter web test",
+    "test:api": "pnpm --filter api test",
     "test:unit": "pnpm --filter api test:unit",
     "test:integration": "pnpm --filter api test:integration",
     "migration:run": "pnpm --filter api migration:run",
