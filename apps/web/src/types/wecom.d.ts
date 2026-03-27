@@ -22,6 +22,23 @@ declare global {
         success: () => void;
         fail: (error: unknown) => void;
       }) => void;
+      chooseImage: (params: {
+        count: number;
+        sizeType: string[];
+        sourceType: string[];
+        success: (result: { localIds: string[] }) => void;
+        fail?: (error: unknown) => void;
+      }) => void;
+      uploadImage: (params: {
+        localId: string;
+        isShowProgressTips: 0 | 1;
+        success: (result: { serverId: string }) => void;
+        fail?: (error: unknown) => void;
+      }) => void;
+      previewFile: (params: {
+        url: string;
+        name: string;
+      }) => void;
     };
   }
 

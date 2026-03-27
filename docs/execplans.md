@@ -27,31 +27,31 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 **任务清单**：
 
 1. **项目初始化**
-   - [ ] NestJS CLI 创建项目，TypeScript 5.x
-   - [ ] ESLint + Prettier 配置
-   - [ ] Jest + Supertest 测试框架配置
-   - [ ] TypeORM 连接 PostgreSQL 16（`.env.local`）
-   - [ ] Redis 连接（`ioredis`）
-   - [ ] 全局异常过滤器（统一错误响应格式）
-   - [ ] 全局响应拦截器（`{ data }` / `{ data, meta }` 包装）
-   - [ ] `X-Request-Id` 中间件
-   - [ ] Swagger 文档（`/api/docs`，仅 dev/test）
-   - [ ] 速率限制（`@nestjs/throttler`）
-   - [ ] `updated_at` 自动更新触发器函数（全局）
+   - [x] NestJS CLI 创建项目，TypeScript 5.x
+   - [x] ESLint + Prettier 配置
+   - [x] Jest + Supertest 测试框架配置
+   - [x] TypeORM 连接 PostgreSQL 16（`.env.local`）
+   - [x] Redis 连接（`ioredis`）
+   - [x] 全局异常过滤器（统一错误响应格式）
+   - [x] 全局响应拦截器（`{ data }` / `{ data, meta }` 包装）
+   - [x] `X-Request-Id` 中间件
+   - [x] Swagger 文档（`/api/docs`，仅 dev/test）
+   - [x] 速率限制（`@nestjs/throttler`）
+   - [x] `updated_at` 自动更新触发器函数（全局）
 
 2. **企业微信 Token 缓存服务**
-   - [ ] 测试：`WecomTokenService` 单元测试（缓存命中/未命中、分布式锁竞争、Redis 降级）
-   - [ ] 实现：`WecomTokenService`（`getAccessToken`、`getCorpJsapiTicket`、`getAgentJsapiTicket`、`forceRefresh`）
+   - [x] 测试：`WecomTokenService` 单元测试（缓存命中/未命中、分布式锁竞争、Redis 降级）
+   - [x] 实现：`WecomTokenService`（`getAccessToken`、`getCorpJsapiTicket`、`getAgentJsapiTicket`、`forceRefresh`）
 
 3. **OAuth2 + JWT 认证**
-   - [ ] 测试：`AuthController` 集成测试（code→JWT、code 过期 401、非通讯录 403）
-   - [ ] 实现：`GET /api/v1/auth/wecom/callback`、`POST /api/v1/auth/refresh`、`GET /api/v1/auth/me`
-   - [ ] 实现：`JwtAuthGuard`、`RolesGuard`、`@Roles()`、`@CurrentUser()` 装饰器
-   - [ ] Migration：`wecom_users` 表
+   - [x] 测试：`AuthController` 集成测试（code→JWT、code 过期 401、非通讯录 403）
+   - [x] 实现：`GET /api/v1/auth/wecom/callback`、`POST /api/v1/auth/refresh`、`GET /api/v1/auth/me`
+   - [x] 实现：`JwtAuthGuard`、`RolesGuard`、`@Roles()`、`@CurrentUser()` 装饰器
+   - [x] Migration：`wecom_users` 表
 
 4. **JS-SDK 签名**
-   - [ ] 测试：签名算法单元测试（SHA1 拼接、corp/agent 两种类型）
-   - [ ] 实现：`GET /api/v1/auth/jssdk/signature`
+   - [x] 测试：签名算法单元测试（SHA1 拼接、corp/agent 两种类型）
+   - [x] 实现：`GET /api/v1/auth/jssdk/signature`
 
 **产出物**：后端项目骨架 + 完整认证链路（OAuth2 → JWT → Guard），`pnpm test` 通过。
 
@@ -71,24 +71,24 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 **任务清单**：
 
 1. **项目初始化**
-   - [ ] Vite + React 18 + TypeScript 项目
-   - [ ] Ant Design Pro 6 + Ant Design 5 集成
-   - [ ] Redux Toolkit store 骨架（含 RTK Query baseApi）
-   - [ ] React Router 6 路由骨架（`/my/*`）
-   - [ ] Axios baseQuery（JWT 拦截器、401 跳转 OAuth）
-   - [ ] ESLint + Prettier
-   - [ ] Vitest + React Testing Library
+   - [x] Vite + React 18 + TypeScript 项目
+   - [x] Ant Design Pro 6 + Ant Design 5 集成
+   - [x] Redux Toolkit store 骨架（含 RTK Query baseApi）
+   - [x] React Router 6 路由骨架（`/my/*`）
+   - [x] Axios baseQuery（JWT 拦截器、401 跳转 OAuth）
+   - [x] ESLint + Prettier
+   - [x] Vitest + React Testing Library
 
 2. **OAuth2 登录**
-   - [ ] 测试：`authSlice` 单元测试（登录/登出/token 存储/401 重定向）
-   - [ ] 实现：`authSlice`（RTK Query: `wecomCallback`、`refreshToken`、`getMe`）
-   - [ ] 实现：OAuth2 重定向 + state 防 CSRF
-   - [ ] 实现：JWT `localStorage` 存取（key: `sunan_token`）
+   - [x] 测试：`authSlice` 单元测试（登录/登出/token 存储/401 重定向）
+   - [x] 实现：`authSlice`（RTK Query: `wecomCallback`、`refreshToken`、`getMe`）
+   - [x] 实现：OAuth2 重定向 + state 防 CSRF
+   - [x] 实现：JWT `localStorage` 存取（key: `sunan_token`）
 
 3. **JS-SDK 初始化**
-   - [ ] 测试：`useWecomJsSdk` hook 测试（isReady、iOS/Android 差异）
-   - [ ] 实现：`useWecomJsSdk`（wx.config → wx.ready → wx.agentConfig）
-   - [ ] 实现：iOS 初始 URL 记录（`sessionStorage: sunan_initial_url`）
+   - [x] 测试：`useWecomJsSdk` hook 测试（isReady、iOS/Android 差异）
+   - [x] 实现：`useWecomJsSdk`（wx.config → wx.ready → wx.agentConfig）
+   - [x] 实现：iOS 初始 URL 记录（`sessionStorage: sunan_initial_url`）
 
 **产出物**：前端项目骨架 + 登录流程 + JS-SDK 就绪，`pnpm test` 通过。
 
@@ -113,17 +113,17 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 **任务清单**：
 
 1. **文件上传服务**
-   - [ ] 测试：`FileService` 单元测试（预签名 URL、回调写入、mediaId 转存）
-   - [ ] 测试：`FileController` 集成测试（presign→callback、类型/大小校验拒绝）
-   - [ ] 实现：`POST /api/v1/files/presign`、`POST /api/v1/files/callback`、`GET /api/v1/files/{ossKey}/download-url`、`POST /api/v1/files/from-wecom`
-   - [ ] Migration：`files` 表
+   - [x] 测试：`FileService` 单元测试（预签名 URL、回调写入、mediaId 转存）
+   - [x] 测试：`FileController` 集成测试（presign→callback、类型/大小校验拒绝）
+   - [x] 实现：`POST /api/v1/files/presign`、`POST /api/v1/files/callback`、`GET /api/v1/files/{ossKey}/download-url`、`POST /api/v1/files/from-wecom`
+   - [x] Migration：`files` 表
 
 2. **引用数据表**
-   - [ ] Migration：`vessels` 表
-   - [ ] Migration：`vehicles` 表
-   - [ ] Migration：`personnel` 表
-   - [ ] Migration：`certificate_types` 表
-   - [ ] Seeder：船舶 11 艘、车辆 1 辆、证书类型 12 种（`INSERT ... ON CONFLICT DO NOTHING`）
+   - [x] Migration：`vessels` 表
+   - [x] Migration：`vehicles` 表
+   - [x] Migration：`personnel` 表
+   - [x] Migration：`certificate_types` 表
+   - [x] Seeder：船舶 11 艘、车辆 1 辆、证书类型 12 种（`INSERT ... ON CONFLICT DO NOTHING`）
 
 **产出物**：文件上传全链路可用 + 引用数据初始化完成。
 
@@ -139,10 +139,10 @@ M1（"我的"模块）拆分为 **4 个批次（Wave）**，每个 Wave 内部�
 
 **任务清单**：
 
-- [ ] 测试：文件上传组件测试（presign → PUT → callback、进度、错误处理）
-- [ ] 实现：通用文件上传组件（presign API + OSS 直传 + callback）
-- [ ] 实现：`wx.chooseImage` + `wx.uploadImage` 拍照上传路径
-- [ ] 实现：文件预览调用 `wx.previewFile`
+- [x] 测试：文件上传组件测试（presign → PUT → callback、进度、错误处理）
+- [x] 实现：通用文件上传组件（presign API + OSS 直传 + callback）
+- [x] 实现：`wx.chooseImage` + `wx.uploadImage` 拍照上传路径
+- [x] 实现：文件预览调用 `wx.previewFile`
 
 **产出物**：可复用的文件上传/预览组件。
 

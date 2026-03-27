@@ -45,6 +45,9 @@ describe('useWecomJsSdk', () => {
       ready: vi.fn((callback: () => void) => callback()),
       error: vi.fn(),
       agentConfig: vi.fn(({ success }) => success()),
+      chooseImage: vi.fn(),
+      uploadImage: vi.fn(),
+      previewFile: vi.fn(),
     };
 
     getSignature
@@ -96,6 +99,9 @@ describe('useWecomJsSdk', () => {
       ready: vi.fn(),
       error: vi.fn(),
       agentConfig: vi.fn(),
+      chooseImage: vi.fn(),
+      uploadImage: vi.fn(),
+      previewFile: vi.fn(),
     };
 
     getSignature.mockReturnValue({

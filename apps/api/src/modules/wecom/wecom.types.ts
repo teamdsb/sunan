@@ -39,3 +39,8 @@ export interface WecomTicketResponse {
   errcode?: number;
   errmsg?: string;
 }
+
+export interface WecomMediaResponse {
+  buffer: Buffer;
+  contentType: string;
+}

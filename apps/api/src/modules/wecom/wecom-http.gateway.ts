@@ -10,6 +10,7 @@ import { firstValueFrom } from 'rxjs';
 
 import type {
   WecomDepartmentListResponse,
+  WecomMediaResponse,
   WecomTicketResponse,
   WecomTokenResponse,
   WecomUserDetailResponse,
@@ -67,6 +68,30 @@ export class WecomHttpGateway {
     return this.get<WecomDepartmentListResponse>('/cgi-bin/department/list', {
       access_token: accessToken,
     });
+  }
+
+  async getMedia(accessToken: string, mediaId: string): Promise<WecomMediaResponse> {
+    try {
+      const response = (await firstValueFrom(
+        this.httpService.get<ArrayBuffer>('https://qyapi.weixin.qq.com/cgi-bin/media/get', {
+          params: {
+            access_token: accessToken,
+            media_id: mediaId,
+          },
+          responseType: 'arraybuffer',
+        }),
+      )) as {
+        data: ArrayBuffer;
+        headers: Record<string, string | undefined>;
+      };
+
+      return {
+        buffer: Buffer.from(response.data),
+        contentType: response.headers['content-type'] ?? 'application/octet-stream',
+      };
+    } catch {
+      throw new BadGatewayException('Failed to download media from WeCom');
+    }
   }
 
   private async get<T>(

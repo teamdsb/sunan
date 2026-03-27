@@ -169,6 +169,7 @@ export const baseApi = createApi({
     'ReminderDashboard',
     'ShipMonitor',
     'UserSettings',
+    'File',
   ],
   endpoints: () => ({}),
 });

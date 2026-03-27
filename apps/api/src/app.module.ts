@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import appConfig from 'src/config/app.config';
 import { HealthController } from 'src/health/health.controller';
 import { AuthModule } from 'src/modules/auth/auth.module';
+import { FilesModule } from 'src/modules/files/files.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { buildTypeOrmOptions } from 'src/database/typeorm.config';
@@ -27,6 +28,7 @@ import { buildTypeOrmOptions } from 'src/database/typeorm.config';
     TypeOrmModule.forRoot(buildTypeOrmOptions()),
     WecomModule,
     AuthModule,
+    FilesModule,
   ],
   controllers: [HealthController],
   providers: [
