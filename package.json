@@ -1,0 +1,9 @@
+{
+  "name": "sunan",
+  "private": true,
+  "packageManager": "pnpm@10.7.0",
+  "scripts": {
+    "build": "pnpm --filter web build",
+    "test": "pnpm --filter web test"
+  }
+}
