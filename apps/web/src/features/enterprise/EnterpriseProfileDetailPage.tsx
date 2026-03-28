@@ -1,12 +1,15 @@
 ﻿import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 import { useBindEnterpriseProfileFilesMutation, useGetEnterpriseProfileByIdQuery, useUpdateEnterpriseProfileMutation } from './enterpriseApi';
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, { skip: !id });
   const [updateProfile, { isLoading: saving }] = useUpdateEnterpriseProfileMutation();
@@ -34,6 +37,7 @@ export function EnterpriseProfileDetailPage() {
   }, [profile, form]);
 
   const currentUpload = useMemo(() => uploaded, [uploaded]);
+  const backHref = resolveBackHref(myRouteConfig.enterpriseProfile.path, location.search);
 
   return (
     <section className="page-hero">
@@ -65,7 +69,7 @@ export function EnterpriseProfileDetailPage() {
           </Form.Item>
           <Space>
             <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
-            <Button onClick={() => navigate('/my/enterprise-profile')}>返回列表</Button>
+            <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
           </Space>
         </Form>
       </Card>

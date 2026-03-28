@@ -1,15 +1,38 @@
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from './AppRoutes';
+import { myRouteConfig } from './myRouteConfig';
+import { buildDetailHref, resolveBackHref } from './myRouteState';
 import { authReducer, loginSucceeded } from '../features/auth/authSlice';
 import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
+}));
+
+vi.mock('../features/enterprise/EnterpriseProfilePage', () => ({
+  EnterpriseProfilePage: () => <div>ENTERPRISE_PROFILE</div>,
+}));
+
+vi.mock('../features/enterprise/EnterpriseProfileDetailPage', () => ({
+  EnterpriseProfileDetailPage: () => <div>ENTERPRISE_PROFILE_DETAIL</div>,
+}));
+
+vi.mock('../features/enterprise/EnterprisePolicyPage', () => ({
+  EnterprisePolicyPage: () => <div>ENTERPRISE_POLICY</div>,
+  EnterprisePolicyDetailPage: () => <div>ENTERPRISE_POLICY_DETAIL</div>,
+}));
+
+vi.mock('../features/certificate/CertificateListPage', () => ({
+  CertificateListPage: () => <div>CERTIFICATE_LIST</div>,
+}));
+
+vi.mock('../features/certificate/CertificateDetailPage', () => ({
+  CertificateDetailPage: () => <div>CERTIFICATE_DETAIL</div>,
 }));
 
 vi.mock('../features/reminder/ReminderDashboardPage', () => ({
@@ -19,6 +42,21 @@ vi.mock('../features/reminder/ReminderDashboardPage', () => ({
 vi.mock('../features/reminder/ReminderDetailPage', () => ({
   ReminderDetailPage: () => <div>REMINDER_DETAIL</div>,
 }));
+
+vi.mock('../features/monitor/MonitorPage', () => ({
+  MonitorPage: () => <div>MONITOR_PAGE</div>,
+}));
+
+vi.mock('../features/settings/SettingsPage', () => ({
+  SettingsPage: () => <div>SETTINGS_PAGE</div>,
+}));
+
+function BackHrefConsumer() {
+  const location = useLocation();
+  const backHref = resolveBackHref('/my/reminders', location.search);
+
+  return <a href={backHref}>BACK_HREF:{backHref}</a>;
+}
 
 function renderRoute(path: string) {
   const store = configureStore({
@@ -52,6 +90,38 @@ function renderRoute(path: string) {
   );
 }
 
+function renderBackHref(path: string) {
+  const store = configureStore({
+    reducer: {
+      auth: authReducer,
+      myUi: myUiReducer,
+      [baseApi.reducerPath]: baseApi.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(baseApi.middleware),
+  });
+  store.dispatch(
+    loginSucceeded({
+      accessToken: 'token',
+      expiresIn: 3600,
+      user: {
+        userId: 'u1',
+        name: '张三',
+        department: ['总经办'],
+        roles: ['all_authenticated'],
+      },
+    }),
+  );
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[path]}>
+        <BackHrefConsumer />
+      </MemoryRouter>
+    </Provider>,
+  );
+}
+
 describe('AppRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,11 +132,66 @@ describe('AppRoutes', () => {
     expect(screen.getByText('MY_HOME')).toBeInTheDocument();
   });
 
-  it('renders reminder dashboard and detail routes', () => {
-    renderRoute('/my/reminders');
-    expect(screen.getByText('REMINDER_DASHBOARD')).toBeInTheDocument();
+  it.each([
+    ['/my/enterprise-profile', 'ENTERPRISE_PROFILE'],
+    ['/my/enterprise-policy', 'ENTERPRISE_POLICY'],
+    ['/my/certificates', 'CERTIFICATE_LIST'],
+    ['/my/reminders', 'REMINDER_DASHBOARD'],
+    ['/my/monitors', 'MONITOR_PAGE'],
+    ['/my/settings', 'SETTINGS_PAGE'],
+  ] as const)('renders %s', (path, expectedText) => {
+    renderRoute(path);
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
+  });
 
-    renderRoute('/my/reminders/1');
-    expect(screen.getByText('REMINDER_DETAIL')).toBeInTheDocument();
+  it.each([
+    [myRouteConfig.reminders.path, myRouteConfig.reminders.detailPath, '1', '/my/reminders/1', 'REMINDER_DETAIL'],
+    [myRouteConfig.enterprisePolicy.path, myRouteConfig.enterprisePolicy.detailPath, '1', '/my/enterprise-policy/1', 'ENTERPRISE_POLICY_DETAIL'],
+    [myRouteConfig.enterpriseProfile.path, myRouteConfig.enterpriseProfile.detailPath, '1', '/my/enterprise-profile/1', 'ENTERPRISE_PROFILE_DETAIL'],
+    [myRouteConfig.certificates.path, myRouteConfig.certificates.detailPath, '1', '/my/certificates/1', 'CERTIFICATE_DETAIL'],
+    [myRouteConfig.monitors.path, myRouteConfig.monitors.detailPath, 'vessel-1', '/my/monitors/vessel-1', 'MONITOR_PAGE'],
+  ] as const)('renders detail route %s', (listPath, detailPath, id, path, expectedText) => {
+    expect(detailPath).toMatch(/\/:(id|vesselId)$/);
+    const href = buildDetailHref(listPath, id);
+    expect(href).toBe(`${path}?backTo=${encodeURIComponent(listPath)}`);
+    renderRoute(href);
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
+  });
+
+  it('exposes the shared my route config for route-aware consumers', () => {
+    expect(myRouteConfig.myHome.path).toBe('/my');
+    expect(myRouteConfig.enterpriseProfile.path).toBe('/my/enterprise-profile');
+    expect(myRouteConfig.enterprisePolicy.path).toBe('/my/enterprise-policy');
+    expect(myRouteConfig.certificates.path).toBe('/my/certificates');
+    expect(myRouteConfig.reminders.path).toBe('/my/reminders');
+    expect(myRouteConfig.monitors.path).toBe('/my/monitors');
+    expect(myRouteConfig.settings.path).toBe('/my/settings');
+  });
+
+  it('reconstructs the list url when returning from detail pages', () => {
+    const detailSearch = `?backTo=${encodeURIComponent('/my/reminders?page=2&status=pending')}`;
+    expect(buildDetailHref('/my/reminders', '1', '?page=2&status=pending')).toBe(`/my/reminders/1${detailSearch}`);
+    expect(resolveBackHref('/my/reminders', detailSearch)).toBe('/my/reminders?page=2&status=pending');
+    expect(resolveBackHref('/my/reminders', '?backTo=https%3A%2F%2Fevil.example')).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders', '?backTo=%2F%2Fevil.example')).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/reminders-archive?x=1')}`)).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/settings')}`)).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders')).toBe('/my/reminders');
+  });
+
+  it('renders the round-trip back href from a generated detail url', () => {
+    const href = buildDetailHref('/my/reminders', '1', '?page=2&status=pending');
+    renderBackHref(href);
+
+    expect(screen.getByRole('link', { name: 'BACK_HREF:/my/reminders?page=2&status=pending' })).toHaveAttribute(
+      'href',
+      '/my/reminders?page=2&status=pending',
+    );
+  });
+
+  it('falls back to the list path for an unsafe backTo value', () => {
+    renderBackHref('/my/reminders/1?backTo=%2Fmy%2Fsettings');
+
+    expect(screen.getByRole('link', { name: 'BACK_HREF:/my/reminders' })).toHaveAttribute('href', '/my/reminders');
   });
 });

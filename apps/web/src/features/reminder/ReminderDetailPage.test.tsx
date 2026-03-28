@@ -1,21 +1,41 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ReminderDetailPage } from './ReminderDetailPage';
 
 const mockCurrentUser = vi.fn();
 const mockDetail = vi.fn();
 const mockAcknowledge = vi.fn();
+const mockNavigate = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
   useAppSelector: (selector: (state: { auth: { currentUser: { userId: string; roles: string[] } | null } }) => unknown) =>
     selector({ auth: { currentUser: mockCurrentUser() } }),
 }));
 
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 vi.mock('./reminderApi', () => ({
   useGetReminderByIdQuery: () => mockDetail(),
   useAcknowledgeReminderMutation: () => [mockAcknowledge, { isLoading: false }],
 }));
+
+function LocationDisplay() {
+  const location = useLocation();
+  return (
+    <div>
+      <div data-testid="pathname">{location.pathname}</div>
+      <div data-testid="search">{location.search}</div>
+    </div>
+  );
+}
 
 describe('ReminderDetailPage', () => {
   beforeEach(() => {
@@ -117,5 +137,35 @@ describe('ReminderDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /确认提醒/ }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: /已确认/ })).toBeDisabled());
+  });
+
+  it.each([
+    ['返回看板', '/my/reminders?view=list&status=pending&page=2'],
+    ['返回列表', '/my/reminders?view=list&status=pending&page=2'],
+  ])('replaces history when clicking %s', async (buttonName, expectedHref) => {
+    render(
+      <MemoryRouter
+        initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
+      >
+        <Routes>
+          <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
+          <Route
+            path="/my/reminders"
+            element={
+              <>
+                <div>提醒列表</div>
+                <LocationDisplay />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByText(buttonName));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expectedHref, { replace: true });
+    });
   });
 });

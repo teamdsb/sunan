@@ -1,7 +1,9 @@
 import { Alert, Button, Card, Descriptions, Space, Tag, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 import {
   useAcknowledgeReminderMutation,
   useGetReminderByIdQuery,
@@ -23,12 +25,14 @@ function describeAckStatus(reminder: ReminderItem): string {
 
 export function ReminderDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data, isLoading, refetch } = useGetReminderByIdQuery(id, { skip: !id });
   const [acknowledgeReminder, { isLoading: acknowledging }] = useAcknowledgeReminderMutation();
   const [localReminder, setLocalReminder] = useState<ReminderItem | null>(null);
   const [acknowledgeError, setAcknowledgeError] = useState<string | null>(null);
+  const backHref = resolveBackHref(myRouteConfig.reminders.path, location.search);
 
   useEffect(() => {
     if (data?.data) {
@@ -82,7 +86,7 @@ export function ReminderDetailPage() {
           <Typography.Title level={2} style={{ marginBottom: 0 }}>
             提醒详情
           </Typography.Title>
-          <Button onClick={() => navigate('/my/reminders')}>返回看板</Button>
+          <Button onClick={() => navigate(backHref, { replace: true })}>返回看板</Button>
         </Space>
 
         <Card loading={isLoading}>
@@ -134,9 +138,7 @@ export function ReminderDetailPage() {
                     </Button>
                   ) : null
                 ) : null}
-                <Button>
-                  <Link to="/my/reminders">返回列表</Link>
-                </Button>
+                <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
               </Space>
             </Space>
           ) : null}
