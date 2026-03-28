@@ -611,7 +611,96 @@ describe('CertificateReminderEngineService', () => {
     expect(reminderRepo.save).toHaveBeenCalledTimes(1);
   });
 
-  it('persists a reminder row before sending and avoids blind resend when the row already exists', async () => {
+  it('retries a same-day pending reminder instead of dropping it', async () => {
+    const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
+
+    const certificate = makeCertificate({
+      ownerType: 'vehicle',
+      ownerId: randomUUID(),
+      expiryDate: '2026-04-27',
+      advanceDays: 30,
+      certificateTypeId: randomUUID(),
+    });
+
+    const reminderRepo = createRepo([
+      {
+        id: randomUUID(),
+        certificateId: certificate.id,
+        certificateTypeId: certificate.certificateTypeId,
+        certificateTypeName: 'insurance',
+        certificateTitle: certificate.title,
+        certificateExpiryDate: certificate.expiryDate,
+        ownerType: 'vehicle',
+        ownerId: certificate.ownerId,
+        ownerName: '桂A0001',
+        recipientUserId: 'logistics-user',
+        reminderType: 'upcoming',
+        status: 'pending',
+        scheduledDate: '2026-03-28',
+        daysBeforeExpiry: 30,
+        sentAt: null,
+        acknowledgedAt: null,
+        acknowledgedBy: null,
+        failureReason: null,
+        createdAt: new Date('2026-03-28T01:00:00.000Z'),
+        updatedAt: new Date('2026-03-28T01:00:00.000Z'),
+      },
+    ]);
+    const certificateRepo = createRepo([certificate]);
+    const certificateTypeRepo = createRepo([
+      makeCertificateType(certificate.certificateTypeId as string, 'insurance', 'certificate', 30),
+    ]);
+    const vesselRepo = createRepo([]);
+    const vehicleRepo = createRepo([makeVehicle(certificate.ownerId as string)]);
+    const personnelRepo = createRepo([]);
+    const wecomUserRepo = createRepo([
+      makeWecomUser('logistics-user', ['logistics_dept'], ['后勤部'], { position: '主管' }),
+    ]);
+    const wecomMessageService = {
+      sendTextCard: jest.fn(async () => ({ invalidUser: [] })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => dateOnly('2026-03-28')),
+    };
+    const redis = {
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      expire: jest.fn(),
+    };
+
+    const service = new CertificateReminderEngineService(
+      reminderRepo as never,
+      certificateRepo as never,
+      certificateTypeRepo as never,
+      vesselRepo as never,
+      vehicleRepo as never,
+      personnelRepo as never,
+      wecomUserRepo as never,
+      wecomMessageService as never,
+      clock as never,
+      redis as never,
+    );
+
+    const result = await service.runScan({ jobId: 'job-pending', source: 'manual' });
+    const existingReminder = reminderRepo.rows[0] as any;
+
+    expect(result.createdCount).toBe(0);
+    expect(result.sentCount).toBe(1);
+    expect(wecomMessageService.sendTextCard).toHaveBeenCalledTimes(1);
+    expect(reminderRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: existingReminder.id,
+        status: 'sent',
+        recipientUserId: 'logistics-user',
+      }),
+    );
+  });
+
+  it('persists a reminder row before sending and reuses a pending row on rerun', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 
     const certificate = makeCertificate({
@@ -670,6 +759,7 @@ describe('CertificateReminderEngineService', () => {
     );
 
     const existingReminder = reminderRepo.rows[0] as any as {
+      id: string;
       status: string;
       sentAt: Date | null;
       failureReason: string | null;
@@ -686,8 +776,15 @@ describe('CertificateReminderEngineService', () => {
 
     const secondRun = await service.runScan({ jobId: 'job-9', source: 'manual' });
     expect(secondRun.createdCount).toBe(0);
-    expect(sendTextCard).not.toHaveBeenCalled();
+    expect(secondRun.sentCount).toBe(1);
+    expect(sendTextCard).toHaveBeenCalledTimes(1);
     expect(reminderRepo.upsert).not.toHaveBeenCalled();
+    expect(reminderRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: existingReminder.id,
+        status: 'sent',
+      }),
+    );
   });
 
   it('stops sending additional reminders when the scan lease becomes invalid', async () => {

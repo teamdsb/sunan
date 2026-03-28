@@ -80,10 +80,11 @@ export class CertificateReminderEngineService {
     const vesselById = new Map(vessels.map((row) => [row.id, row]));
     const vehicleById = new Map(vehicles.map((row) => [row.id, row]));
     const personnelById = new Map(personnel.map((row) => [row.id, row]));
-    const existingReminderKeys = new Set(
-      reminders.map((reminder) =>
+    const reminderByKey = new Map(
+      reminders.map((reminder) => [
         this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType),
-      ),
+        reminder,
+      ]),
     );
     const acknowledgedReminderKeys = new Set(
       reminders
@@ -153,11 +154,18 @@ export class CertificateReminderEngineService {
           continue;
         }
 
-        if (existingReminderKeys.has(reminderKey)) {
-          continue;
+        const existingReminder = reminderByKey.get(reminderKey);
+        if (existingReminder) {
+          if (existingReminder.status === 'sent' || existingReminder.status === 'acknowledged') {
+            continue;
+          }
+
+          if (existingReminder.status === 'failed' && !this.isRecoverableFailure(existingReminder.failureReason)) {
+            continue;
+          }
         }
 
-        const reminder = this.reminderRepository.create({
+        const reminder = existingReminder ?? this.reminderRepository.create({
           id: randomUUID(),
           certificateId: certificate.id,
           certificateTypeId: certificate.certificateTypeId,
@@ -178,18 +186,36 @@ export class CertificateReminderEngineService {
           failureReason: null,
         });
 
-        const persistedReminder = { ...reminder };
-        await this.reminderRepository.upsert(persistedReminder, [
-          'certificateId',
-          'recipientUserId',
-          'scheduledDate',
-          'reminderType',
-        ]);
-        createdCount += 1;
+        if (!existingReminder) {
+          const persistedReminder = { ...reminder };
+          await this.reminderRepository.upsert(persistedReminder, [
+            'certificateId',
+            'recipientUserId',
+            'scheduledDate',
+            'reminderType',
+          ]);
+          createdCount += 1;
+        } else {
+          reminder.certificateTypeId = certificate.certificateTypeId;
+          reminder.certificateTypeName = type?.name ?? type?.code ?? certificate.certificateTypeId;
+          reminder.certificateTitle = certificate.title;
+          reminder.certificateExpiryDate = certificate.expiryDate;
+          reminder.ownerType = certificate.ownerType;
+          reminder.ownerId = certificate.ownerId;
+          reminder.ownerName = this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById);
+          reminder.reminderType = reminderType;
+          reminder.scheduledDate = scheduledDate;
+          reminder.daysBeforeExpiry = daysUntilExpiry;
+          reminder.status = 'pending';
+          reminder.sentAt = null;
+          reminder.acknowledgedAt = null;
+          reminder.acknowledgedBy = null;
+          reminder.failureReason = null;
+        }
 
         const sendLockToken = await this.acquireSendLock(reminder);
         if (!sendLockToken) {
-          existingReminderKeys.add(reminderKey);
+          reminderByKey.set(reminderKey, reminder);
           continue;
         }
 
@@ -230,7 +256,7 @@ export class CertificateReminderEngineService {
         }
 
         await this.reminderRepository.save(reminder);
-        existingReminderKeys.add(reminderKey);
+        reminderByKey.set(reminderKey, reminder);
       }
     }
 
@@ -387,6 +413,14 @@ export class CertificateReminderEngineService {
 
   private isLeaseLostError(error: unknown): boolean {
     return error instanceof Error && error.message === 'scan lock lost';
+  }
+
+  private isRecoverableFailure(failureReason: string | null | undefined): boolean {
+    if (!failureReason) {
+      return false;
+    }
+
+    return failureReason === 'scan lock lost' || failureReason.startsWith('retryable:');
   }
 
   private diffDays(expiryDate: string, scheduledDate: string): number {
