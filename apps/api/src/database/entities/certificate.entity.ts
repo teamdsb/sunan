@@ -1,8 +1,11 @@
-﻿import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
-
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
-const dateColumnType = appEnv.NODE_ENV === 'test' ? 'date' : 'date';
+﻿import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'certificates' })
 export class CertificateEntity {
@@ -18,16 +21,21 @@ export class CertificateEntity {
   @Column({ name: 'owner_id', type: 'uuid' })
   ownerId!: string;
 
-  @Column({ name: 'certificate_no', type: 'varchar', length: 128, nullable: true })
+  @Column({
+    name: 'certificate_no',
+    type: 'varchar',
+    length: 128,
+    nullable: true,
+  })
   certificateNo!: string | null;
 
   @Column({ type: 'varchar', length: 128 })
   title!: string;
 
-  @Column({ name: 'issue_date', type: dateColumnType, nullable: true })
+  @Column({ name: 'issue_date', type: 'date', nullable: true })
   issueDate!: string | null;
 
-  @Column({ name: 'expiry_date', type: dateColumnType })
+  @Column({ name: 'expiry_date', type: 'date' })
   expiryDate!: string;
 
   @Column({ name: 'advance_days', type: 'integer' })
@@ -39,7 +47,7 @@ export class CertificateEntity {
   @Column({ type: 'varchar', length: 16, default: 'active' })
   status!: 'active' | 'expired' | 'archived';
 
-  @Column({ name: 'latest_scan_at', type: timestampColumnType, nullable: true })
+  @Column({ name: 'latest_scan_at', type: 'timestamptz', nullable: true })
   latestScanAt!: Date | null;
 
   @Column({ type: 'text', nullable: true })
@@ -51,13 +59,12 @@ export class CertificateEntity {
   @Column({ name: 'updated_by', type: 'varchar', length: 64 })
   updatedBy!: string;
 
-  @CreateDateColumn({ name: 'created_at', type: timestampColumnType })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: timestampColumnType })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', type: timestampColumnType, nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt!: Date | null;
 }
-

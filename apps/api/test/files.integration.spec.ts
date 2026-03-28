@@ -1,7 +1,16 @@
-import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/common';
+﻿import type {
+  CanActivate,
+  ExecutionContext,
+  INestApplication,
+} from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  bootstrapPgTestDatabase,
+  buildPgTypeOrmOptions,
+  shutdownPgTestDatabase,
+} from 'test/pg-test-container';
 import request from 'supertest';
 
 import { configureApp } from 'src/app.bootstrap';
@@ -19,9 +28,9 @@ const authGuard: CanActivate = {
     request.user = {
       userId: 'tester',
       corpId: 'ww-test',
-      name: '测试用户',
+      name: '娴嬭瘯鐢ㄦ埛',
       avatar: null,
-      departments: ['总经办'],
+      departments: ['General Office'],
       position: null,
       roles: ['all_authenticated'],
       isAdmin: false,
@@ -32,11 +41,11 @@ const authGuard: CanActivate = {
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'sqljs',
-      autoSave: false,
-      synchronize: true,
-      entities: [FileEntity],
+    TypeOrmModule.forRootAsync({
+      useFactory: async () => {
+        await bootstrapPgTestDatabase();
+        return buildPgTypeOrmOptions();
+      },
     }),
     FilesModule,
   ],
@@ -100,7 +109,10 @@ describe('FilesController integration', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
+    await shutdownPgTestDatabase();
   });
 
   beforeEach(() => {
@@ -110,7 +122,7 @@ describe('FilesController integration', () => {
       expiresAt: '2026-03-01T01:00:00.000Z',
       headers: {
         'Content-Type': 'application/pdf',
-        'x-oss-meta-original-name': '证书.pdf',
+        'x-oss-meta-original-name': '璇佷功.pdf',
       },
     });
     ossServiceMock.createDownloadSignature.mockReturnValue({
@@ -125,11 +137,13 @@ describe('FilesController integration', () => {
   });
 
   it('completes presign -> callback flow', async () => {
-    const presign = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const presign = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/files/presign')
       .set('Authorization', 'Bearer token')
       .send({
-        fileName: '证书.pdf',
+        fileName: '璇佷功.pdf',
         mimeType: 'application/pdf',
         fileSize: 1024,
         category: 'certificates',
@@ -139,12 +153,14 @@ describe('FilesController integration', () => {
     expect(presign.status).toBe(201);
     expect(presignBody.data.ossKey).toMatch(/^certificates\//);
 
-    const callback = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const callback = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/files/callback')
       .set('Authorization', 'Bearer token')
       .send({
         ossKey: presignBody.data.ossKey,
-        fileName: '证书.pdf',
+        fileName: '璇佷功.pdf',
         mimeType: 'application/pdf',
         fileSize: 1024,
         category: 'certificates',
@@ -152,15 +168,19 @@ describe('FilesController integration', () => {
     const callbackBody = callback.body as FileResponseBody;
 
     expect(callback.status).toBe(201);
-    expect(callbackBody.data.downloadUrl).toBe('https://oss.example.com/download');
+    expect(callbackBody.data.downloadUrl).toBe(
+      'https://oss.example.com/download',
+    );
   });
 
   it('rejects oversize files', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/files/presign')
       .set('Authorization', 'Bearer token')
       .send({
-        fileName: '制度.pdf',
+        fileName: '鍒跺害.pdf',
         mimeType: 'application/pdf',
         fileSize: 60 * 1024 * 1024,
         category: 'enterprise-policies',
@@ -170,37 +190,51 @@ describe('FilesController integration', () => {
   });
 
   it('returns download url for saved file', async () => {
-    const callback = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const callback = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/files/callback')
       .set('Authorization', 'Bearer token')
       .send({
         ossKey: 'certificates/2026/03/file-1.pdf',
-        fileName: '证书.pdf',
+        fileName: '璇佷功.pdf',
         mimeType: 'application/pdf',
         fileSize: 1024,
         category: 'certificates',
       });
     const callbackBody = callback.body as FileResponseBody;
 
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .get(`/api/v1/files/${encodeURIComponent(callbackBody.data.ossKey)}/download-url`)
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(
+        `/api/v1/files/${encodeURIComponent(callbackBody.data.ossKey)}/download-url`,
+      )
       .set('Authorization', 'Bearer token');
     const responseBody = response.body as FileResponseBody;
 
     expect(response.status).toBe(200);
-    expect(responseBody.data.downloadUrl).toBe('https://oss.example.com/download');
+    expect(responseBody.data.downloadUrl).toBe(
+      'https://oss.example.com/download',
+    );
   });
 
   it('returns 404 for unknown oss key', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .get(`/api/v1/files/${encodeURIComponent('certificates/2026/03/missing.pdf')}/download-url`)
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(
+        `/api/v1/files/${encodeURIComponent('certificates/2026/03/missing.pdf')}/download-url`,
+      )
       .set('Authorization', 'Bearer token');
 
     expect(response.status).toBe(404);
   });
 
   it('uploads image via wecom media relay', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/files/from-wecom')
       .set('Authorization', 'Bearer token')
       .send({
