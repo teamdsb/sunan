@@ -22,15 +22,15 @@ export function AppRoutes() {
         <Route element={<AppShell />}>
           <Route path={myRouteConfig.myHome.path} element={<MyHomePage />} />
           <Route path={myRouteConfig.enterpriseProfile.path} element={<EnterpriseProfilePage />} />
-          <Route path={`${myRouteConfig.enterpriseProfile.path}/:id`} element={<EnterpriseProfileDetailPage />} />
+          <Route path={myRouteConfig.enterpriseProfile.detailPath} element={<EnterpriseProfileDetailPage />} />
           <Route path={myRouteConfig.enterprisePolicy.path} element={<EnterprisePolicyPage />} />
-          <Route path={`${myRouteConfig.enterprisePolicy.path}/:id`} element={<EnterprisePolicyDetailPage />} />
+          <Route path={myRouteConfig.enterprisePolicy.detailPath} element={<EnterprisePolicyDetailPage />} />
           <Route path={myRouteConfig.certificates.path} element={<CertificateListPage />} />
-          <Route path={`${myRouteConfig.certificates.path}/:id`} element={<CertificateDetailPage />} />
+          <Route path={myRouteConfig.certificates.detailPath} element={<CertificateDetailPage />} />
           <Route path={myRouteConfig.reminders.path} element={<ReminderDashboardPage />} />
-          <Route path={`${myRouteConfig.reminders.path}/:id`} element={<ReminderDetailPage />} />
+          <Route path={myRouteConfig.reminders.detailPath} element={<ReminderDetailPage />} />
           <Route path={myRouteConfig.monitors.path} element={<MonitorPage />} />
-          <Route path={`${myRouteConfig.monitors.path}/:vesselId`} element={<MonitorPage />} />
+          <Route path={myRouteConfig.monitors.detailPath} element={<MonitorPage />} />
           <Route path={myRouteConfig.settings.path} element={<SettingsPage />} />
         </Route>
       </Route>

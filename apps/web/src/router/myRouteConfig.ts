@@ -6,26 +6,31 @@ export const myRouteConfig = {
   },
   enterpriseProfile: {
     path: '/my/enterprise-profile',
+    detailPath: '/my/enterprise-profile/:id',
     label: '企业资料',
     description: '查看企业资料列表与附件。',
   },
   enterprisePolicy: {
     path: '/my/enterprise-policy',
+    detailPath: '/my/enterprise-policy/:id',
     label: '企业制度',
     description: '浏览企业制度和版本历史。',
   },
   certificates: {
     path: '/my/certificates',
+    detailPath: '/my/certificates/:id',
     label: '电子证照',
     description: '查看证照、附件和到期信息。',
   },
   reminders: {
     path: '/my/reminders',
+    detailPath: '/my/reminders/:id',
     label: '证书提醒',
     description: '查看提醒看板并确认处理。',
   },
   monitors: {
     path: '/my/monitors',
+    detailPath: '/my/monitors/:vesselId',
     label: '船舶监控',
     description: '进入船舶监控入口。',
   },
