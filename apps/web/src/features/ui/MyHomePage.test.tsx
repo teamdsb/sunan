@@ -18,4 +18,15 @@ describe('MyHomePage', () => {
     expect(screen.getByTestId('my-home-entry-my-monitors')).toHaveAttribute('href', '/my/monitors');
     expect(screen.getByTestId('my-home-entry-my-settings')).toHaveAttribute('href', '/my/settings');
   });
+
+  it('renders desktop tiles with dedicated square layout hooks', () => {
+    render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid');
+    expect(screen.getAllByTestId('my-home-tile')).toHaveLength(6);
+  });
 });

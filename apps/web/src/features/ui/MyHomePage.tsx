@@ -1,4 +1,4 @@
-import { Card, Col, Row, Space, Typography } from 'antd';
+import { Card, Typography } from 'antd';
 import { Link } from 'react-router-dom';
 import { myRouteNavItems } from '../../router/myRouteConfig';
 
@@ -7,34 +7,33 @@ const entries = myRouteNavItems.filter((item) => item.path !== '/my');
 export function MyHomePage() {
   return (
     <>
-      <section className="page-hero">
+      <section className="page-hero my-home-hero">
         <Typography.Title level={2}>我的模块首页</Typography.Title>
         <Typography.Paragraph type="secondary">
           从这里进入证照、提醒、监控和设置。
         </Typography.Paragraph>
       </section>
-      <Row gutter={[16, 16]} className="page-card-grid">
+
+      <section className="my-home-grid" data-testid="my-home-grid">
         {entries.map((entry) => (
-          <Col xs={24} sm={12} md={8} key={entry.path}>
-            <Card className="placeholder-card" variant="borderless">
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                  <Link
-                    to={entry.path}
-                    className="my-home-entry-link"
-                    data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
-                  >
-                    {entry.label}
-                  </Link>
-                </Typography.Title>
-                <Typography.Paragraph style={{ marginBottom: 0 }}>
-                  {entry.description}
-                </Typography.Paragraph>
-              </Space>
-            </Card>
-          </Col>
+          <Card className="my-home-tile" data-testid="my-home-tile" key={entry.path} variant="borderless">
+            <div className="my-home-tile-accent" aria-hidden="true" />
+            <Typography.Text className="my-home-tile-caption">我的模块</Typography.Text>
+            <Typography.Title level={3} className="my-home-tile-title">
+              <Link
+                to={entry.path}
+                className="my-home-entry-link"
+                data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
+              >
+                {entry.label}
+              </Link>
+            </Typography.Title>
+            <Typography.Paragraph className="my-home-tile-description">
+              {entry.description}
+            </Typography.Paragraph>
+          </Card>
         ))}
-      </Row>
+      </section>
     </>
   );
 }

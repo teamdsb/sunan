@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ReminderDashboardPage } from './ReminderDashboardPage';
 
+type MockSettingsResult = {
+  data?: { data: { reminderViewMode: 'dashboard' | 'list' } };
+  isLoading: boolean;
+};
+
 const mockCurrentUser = vi.fn();
 const mockSettings = vi.fn();
 const mockDashboard = vi.fn();
@@ -146,18 +151,18 @@ describe('ReminderDashboardPage', () => {
   });
 
   it('waits for settings before choosing a default view when the URL omits view', async () => {
-    let settingsState = {
+    let settingsState: MockSettingsResult = {
       data: undefined,
       isLoading: true,
     };
 
     mockSettings.mockImplementation(() => settingsState);
-    mockDashboard.mockImplementation((_params: unknown, options?: { skip?: boolean }) => ({
+    mockDashboard.mockImplementation((_unusedParams: unknown, options?: { skip?: boolean }) => ({
       data: options?.skip ? undefined : dashboardData,
       isLoading: false,
       refetch: dashboardRefetch,
     }));
-    mockList.mockImplementation((params: unknown, options?: { skip?: boolean }) => ({
+    mockList.mockImplementation((_unusedParams: unknown, options?: { skip?: boolean }) => ({
       data: options?.skip ? undefined : reminderListData,
       isLoading: false,
       refetch: listRefetch,
