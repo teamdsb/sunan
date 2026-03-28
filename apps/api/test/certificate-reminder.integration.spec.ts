@@ -1,7 +1,16 @@
-import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/common';
+﻿import type {
+  CanActivate,
+  ExecutionContext,
+  INestApplication,
+} from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  bootstrapPgTestDatabase,
+  buildPgTypeOrmOptions,
+  shutdownPgTestDatabase,
+} from 'test/pg-test-container';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 
@@ -23,8 +32,8 @@ let currentUser = {
   corpId: 'ww-test',
   name: 'Shipping Employee',
   avatar: null,
-  departments: ['船务部'],
-  position: '员工',
+  departments: ['Shipping Department'],
+  position: '鍛樺伐',
   roles: ['all_authenticated'],
   isAdmin: false,
 };
@@ -58,19 +67,11 @@ const wecomMessageMock = {
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'sqljs',
-      autoSave: false,
-      synchronize: true,
-      entities: [
-        CertificateReminderEntity,
-        CertificateTypeEntity,
-        CertificateEntity,
-        PersonnelEntity,
-        VesselEntity,
-        VehicleEntity,
-        WecomUserEntity,
-      ],
+    TypeOrmModule.forRootAsync({
+      useFactory: async () => {
+        await bootstrapPgTestDatabase();
+        return buildPgTypeOrmOptions();
+      },
     }),
     ReminderModule,
   ],
@@ -116,7 +117,7 @@ describe('ReminderController integration', () => {
       await certificateTypeRepo.save(
         certificateTypeRepo.create({
           code: 'nationality_cert',
-          name: '国籍证书',
+          name: '鍥界睄璇佷功',
           ownerScope: 'mixed',
           reminderCategory: 'certificate',
           defaultAdvanceDays: 30,
@@ -131,7 +132,7 @@ describe('ReminderController integration', () => {
       await vesselRepo.save(
         vesselRepo.create({
           code: 'SN012',
-          name: '苏南012',
+          name: '鑻忓崡012',
           category: 'main_vessel',
           status: 'active',
         }),
@@ -141,7 +142,7 @@ describe('ReminderController integration', () => {
     vehicleId = (
       await vehicleRepo.save(
         vehicleRepo.create({
-          plateNumber: '桂A0001',
+          plateNumber: '妗侫0001',
           vehicleType: 'car',
           status: 'active',
         }),
@@ -154,7 +155,7 @@ describe('ReminderController integration', () => {
           wecomUserId: 'shipping-employee',
           name: 'Shipping Employee',
           departmentCode: 'shipping_dept',
-          position: '员工',
+          position: '鍛樺伐',
           mobile: null,
           employmentStatus: 'active',
           isSyncFromWecom: true,
@@ -169,7 +170,7 @@ describe('ReminderController integration', () => {
           ownerType: 'personnel',
           ownerId: personnelId,
           certificateNo: 'CERT-001',
-          title: '人员证书',
+          title: '浜哄憳璇佷功',
           issueDate: '2026-01-01',
           expiryDate: '2026-04-27',
           advanceDays: 30,
@@ -191,8 +192,8 @@ describe('ReminderController integration', () => {
           name: 'Shipping Employee',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
-          departmentNames: ['船务部'],
-          position: '员工',
+          departmentNames: ['Shipping Department'],
+          position: '鍛樺伐',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -202,8 +203,8 @@ describe('ReminderController integration', () => {
           name: 'Shipping Manager',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
-          departmentNames: ['船务部'],
-          position: '经理',
+          departmentNames: ['Shipping Department'],
+          position: '缁忕悊',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -213,8 +214,8 @@ describe('ReminderController integration', () => {
           name: 'Shipping Peer',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
-          departmentNames: ['船务部'],
-          position: '员工',
+          departmentNames: ['Shipping Department'],
+          position: '鍛樺伐',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -224,8 +225,8 @@ describe('ReminderController integration', () => {
           name: 'Office User',
           avatarUrl: null,
           departmentCodes: ['general_office'],
-          departmentNames: ['总经办'],
-          position: '主任',
+          departmentNames: ['General Office'],
+          position: '涓讳换',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -237,8 +238,8 @@ describe('ReminderController integration', () => {
         reminderRepo.create({
           certificateId,
           certificateTypeId: typeId,
-          certificateTypeName: '国籍证书',
-          certificateTitle: '国籍证书',
+          certificateTypeName: '鍥界睄璇佷功',
+          certificateTitle: '鍥界睄璇佷功',
           ownerType: 'personnel',
           ownerId: personnelId,
           ownerName: 'Shipping Employee',
@@ -261,8 +262,8 @@ describe('ReminderController integration', () => {
         reminderRepo.create({
           certificateId,
           certificateTypeId: typeId,
-          certificateTypeName: '国籍证书',
-          certificateTitle: '国籍证书',
+          certificateTypeName: '鍥界睄璇佷功',
+          certificateTitle: '鍥界睄璇佷功',
           ownerType: 'personnel',
           ownerId: personnelId,
           ownerName: 'Shipping Employee',
@@ -285,11 +286,11 @@ describe('ReminderController integration', () => {
         reminderRepo.create({
           certificateId,
           certificateTypeId: typeId,
-          certificateTypeName: '国籍证书',
-          certificateTitle: '国籍证书',
+          certificateTypeName: '鍥界睄璇佷功',
+          certificateTitle: '鍥界睄璇佷功',
           ownerType: 'vehicle',
           ownerId: vehicleId,
-          ownerName: '桂A0001',
+          ownerName: '妗侫0001',
           recipientUserId: 'office-user',
           reminderType: 'overdue',
           status: 'pending',
@@ -306,7 +307,10 @@ describe('ReminderController integration', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
+    await shutdownPgTestDatabase();
   });
 
   it('scopes dashboard, list, and detail to the recipient for non-manager users', async () => {
@@ -314,24 +318,30 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '员工',
+      position: '鍛樺伐',
     };
 
-    const dashboard = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const dashboard = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.totalPending).toBe(0);
     expect(dashboard.body.data.totalAcknowledged).toBe(0);
 
-    const list = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const list = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders?page=1&pageSize=20')
       .set('Authorization', 'Bearer token');
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(1);
     expect(list.body.data[0].recipientUserId).toBe('shipping-employee');
 
-    const hiddenPeerDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const hiddenPeerDetail = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get(`/api/v1/certificate-reminders/${shippingPeerReminderId}`)
       .set('Authorization', 'Bearer token');
     expect(hiddenPeerDetail.status).toBe(404);
@@ -342,22 +352,28 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-manager',
       roles: ['all_authenticated', 'shipping'],
-      position: '经理',
+      position: '缁忕悊',
     };
 
-    const dashboard = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const dashboard = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.totalPending).toBe(0);
 
-    const list = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const list = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders?page=1&pageSize=20')
       .set('Authorization', 'Bearer token');
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(2);
 
-    const detail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const detail = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get(`/api/v1/certificate-reminders/${officeReminderId}`)
       .set('Authorization', 'Bearer token');
     expect(detail.status).toBe(404);
@@ -368,23 +384,29 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'office-user',
       roles: ['all_authenticated', 'general_office'],
-      position: '主任',
+      position: '涓讳换',
     };
 
-    const dashboard = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const dashboard = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.totalPending).toBe(1);
 
-    const list = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const list = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/certificate-reminders?page=1&pageSize=20')
       .set('Authorization', 'Bearer token');
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(1);
     expect(list.body.data[0].recipientUserId).toBe('office-user');
 
-    const hiddenDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const hiddenDetail = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get(`/api/v1/certificate-reminders/${shippingReminderId}`)
       .set('Authorization', 'Bearer token');
     expect(hiddenDetail.status).toBe(404);
@@ -395,40 +417,54 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '员工',
+      position: '鍛樺伐',
     };
 
-    const selfAck = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const selfAck = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post(`/api/v1/certificate-reminders/${shippingReminderId}/acknowledge`)
       .set('Authorization', 'Bearer token')
-      .send({ comment: '已确认' });
+      .send({ comment: 'Acknowledged' });
     expect(selfAck.status).toBe(200);
     expect(selfAck.body.data.status).toBe('acknowledged');
 
-    const employeeAckPeer = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .post(`/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`)
+    const employeeAckPeer = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(
+        `/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`,
+      )
       .set('Authorization', 'Bearer token')
-      .send({ comment: '尝试确认同部门提醒' });
+      .send({ comment: 'Try acknowledge peer reminder' });
     expect(employeeAckPeer.status).toBe(404);
 
     currentUser = {
       ...currentUser,
       userId: 'shipping-manager',
       roles: ['all_authenticated', 'shipping'],
-      position: '经理',
+      position: '缁忕悊',
     };
 
-    const managerAck = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .post(`/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`)
+    const managerAck = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(
+        `/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`,
+      )
       .set('Authorization', 'Bearer token')
-      .send({ comment: '部门已知悉' });
+      .send({ comment: 'Department acknowledged' });
     expect(managerAck.status).toBe(200);
     expect(managerAck.body.data.status).toBe('acknowledged');
 
-    const repeatAck = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .post(`/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`)
+    const repeatAck = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(
+        `/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`,
+      )
       .set('Authorization', 'Bearer token')
-      .send({ comment: '重复确认' });
+      .send({ comment: '閲嶅纭' });
     expect(repeatAck.status).toBe(409);
   });
 
@@ -437,10 +473,12 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '员工',
+      position: '鍛樺伐',
     };
 
-    const scan = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const scan = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/certificate-reminders/actions/scan')
       .set('Authorization', 'Bearer token');
 

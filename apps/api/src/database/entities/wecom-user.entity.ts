@@ -1,19 +1,10 @@
-import {
+﻿import {
   Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { appEnv } from 'src/config/env';
-
-const jsonColumnType = appEnv.NODE_ENV === 'test' ? 'simple-json' : 'jsonb';
-const emptyArrayDefault =
-  appEnv.NODE_ENV === 'test' ? '[]' : () => "'[]'::jsonb";
-const emptyObjectDefault =
-  appEnv.NODE_ENV === 'test' ? '{}' : () => "'{}'::jsonb";
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
 
 @Entity({ name: 'wecom_users' })
 export class WecomUserEntity {
@@ -34,15 +25,15 @@ export class WecomUserEntity {
 
   @Column({
     name: 'department_codes',
-    type: jsonColumnType,
-    default: emptyArrayDefault,
+    type: 'jsonb',
+    default: () => "'[]'::jsonb",
   })
   departmentCodes!: string[];
 
   @Column({
     name: 'department_names',
-    type: jsonColumnType,
-    default: emptyArrayDefault,
+    type: 'jsonb',
+    default: () => "'[]'::jsonb",
   })
   departmentNames!: string[];
 
@@ -54,14 +45,14 @@ export class WecomUserEntity {
 
   @Column({
     name: 'raw_profile',
-    type: jsonColumnType,
-    default: emptyObjectDefault,
+    type: 'jsonb',
+    default: () => "'{}'::jsonb",
   })
   rawProfile!: Record<string, unknown>;
 
-  @CreateDateColumn({ name: 'created_at', type: timestampColumnType })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: timestampColumnType })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 }

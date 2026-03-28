@@ -1,7 +1,16 @@
-import type { INestApplication, NestModule, MiddlewareConsumer } from '@nestjs/common';
+﻿import type {
+  INestApplication,
+  NestModule,
+  MiddlewareConsumer,
+} from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  bootstrapPgTestDatabase,
+  buildPgTypeOrmOptions,
+  shutdownPgTestDatabase,
+} from 'test/pg-test-container';
 import request from 'supertest';
 
 import { configureApp } from 'src/app.bootstrap';
@@ -17,11 +26,11 @@ import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'sqljs',
-      autoSave: false,
-      synchronize: true,
-      entities: [WecomUserEntity],
+    TypeOrmModule.forRootAsync({
+      useFactory: async () => {
+        await bootstrapPgTestDatabase();
+        return buildPgTypeOrmOptions();
+      },
     }),
     WecomModule,
     AuthModule,
@@ -57,14 +66,14 @@ describe('AuthController integration', () => {
 
       return {
         userid: 'admin-user',
-        name: '张三',
+        name: '寮犱笁',
         avatar: 'https://avatar.example.com/u.png',
         department: [1],
-        position: '总经理',
+        position: 'General Manager',
       };
     }),
     listDepartments: jest.fn(() => ({
-      department: [{ id: 1, name: '总经办' }],
+      department: [{ id: 1, name: 'General Office' }],
     })),
   };
 
@@ -113,7 +122,7 @@ describe('AuthController integration', () => {
       {
         sub: 'admin-user',
         corpId: 'ww-test-corp',
-        name: '张三',
+        name: '寮犱笁',
       },
       {
         expiresIn: -1,
@@ -122,7 +131,10 @@ describe('AuthController integration', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
+    await shutdownPgTestDatabase();
   });
 
   beforeEach(() => {
@@ -130,9 +142,9 @@ describe('AuthController integration', () => {
   });
 
   it('returns health payload and request id header', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0]).get(
-      '/api/health',
-    );
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    ).get('/api/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ data: { status: 'ok' } });
@@ -140,7 +152,9 @@ describe('AuthController integration', () => {
   });
 
   it('exchanges code for jwt and current user info', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/wecom/callback')
       .query({ code: 'valid-code' });
     const body = response.body as {
@@ -153,13 +167,19 @@ describe('AuthController integration', () => {
     expect(response.status).toBe(200);
     expect(body.data.accessToken).toEqual(expect.any(String));
     expect(body.data.user.roles).toEqual(
-      expect.arrayContaining(['all_authenticated', 'general_office', 'system_admin']),
+      expect.arrayContaining([
+        'all_authenticated',
+        'general_office',
+        'system_admin',
+      ]),
     );
     expect(body.data.user.isAdmin).toBe(true);
   });
 
   it('returns 401 when code is expired', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/wecom/callback')
       .query({ code: 'expired-code' });
 
@@ -167,7 +187,9 @@ describe('AuthController integration', () => {
   });
 
   it('returns 403 for non-directory user', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/wecom/callback')
       .query({ code: 'outsider-code' });
 
@@ -175,7 +197,9 @@ describe('AuthController integration', () => {
   });
 
   it('refreshes an expired jwt', async () => {
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .post('/api/v1/auth/refresh')
       .set('Authorization', `Bearer ${expiredToken}`);
     const body = response.body as { data: { accessToken: string } };
@@ -185,12 +209,16 @@ describe('AuthController integration', () => {
   });
 
   it('returns current user profile for authenticated request', async () => {
-    const login = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const login = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/wecom/callback')
       .query({ code: 'valid-code' });
     const loginBody = login.body as { data: { accessToken: string } };
 
-    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${loginBody.data.accessToken}`);
     const body = response.body as {
@@ -206,20 +234,24 @@ describe('AuthController integration', () => {
     expect(response.status).toBe(200);
     expect(body.data).toMatchObject({
       userId: 'admin-user',
-      name: '张三',
+      name: '寮犱笁',
       avatar: 'https://avatar.example.com/u.png',
-      department: ['总经办'],
+      department: ['General Office'],
       isAdmin: true,
     });
   });
 
   it('returns corp and agent signatures', async () => {
-    const login = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const login = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/wecom/callback')
       .query({ code: 'valid-code' });
     const loginBody = login.body as { data: { accessToken: string } };
 
-    const corpResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const corpResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/jssdk/signature')
       .query({
         url: 'https://example.com/my?page=1',
@@ -227,7 +259,9 @@ describe('AuthController integration', () => {
       })
       .set('Authorization', `Bearer ${loginBody.data.accessToken}`);
 
-    const agentResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+    const agentResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
       .get('/api/v1/auth/jssdk/signature')
       .query({
         url: 'https://example.com/my?page=1',
