@@ -26,6 +26,18 @@ make dev
 - API: `http://127.0.0.1:3000`
 - Web: `http://127.0.0.1:5173`
 
+## Mock 模式
+
+如需在本地跳过企微认证进行 M1 页面预览，可在前端环境中设置：
+
+```bash
+VITE_LOCAL_BYPASS_AUTH=true
+```
+
+开启后会自动注入本地预览用户，默认角色为 `all_authenticated + shipping`。
+
+详细的 QA 启动步骤、限制说明与手动测试场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
+
 ## 常用命令
 
 ```bash

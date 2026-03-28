@@ -8,6 +8,7 @@
 | 单元测试 | Jest / Vitest | 规则与函数正确性 |
 | 集成测试 | NestJS Testing + `@testcontainers/postgresql` | API + 数据库真实行为 |
 | 组件测试 | React Testing Library | 页面交互与状态切换 |
+| 手动测试 | QA 场景执行、真实设备验证 | 覆盖视觉、企微、打印、弱网等自动化盲区 |
 
 ## 里程碑 M1 重点
 
@@ -29,3 +30,7 @@ pnpm --filter web test
 - 集成测试必须基于 migration（`synchronize: false`）。
 - 修改 API 契约后需先更新测试，再更新实现。
 - 影响提醒逻辑时必须覆盖边界日期测试。
+
+## 手动测试补充
+
+M1 "我的"模块进入 mock 模式开发与 QA 阶段后，手动测试执行基线见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
