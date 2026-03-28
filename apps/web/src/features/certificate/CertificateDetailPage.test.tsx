@@ -31,7 +31,7 @@ describe('CertificateDetailPage', () => {
 
   it('renders detail, edit and bind file', async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={['/my/certificates/c1']}>
+      <MemoryRouter initialEntries={['/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc']}>
         <Routes>
           <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
         </Routes>
@@ -41,6 +41,10 @@ describe('CertificateDetailPage', () => {
     const titleInput = container.querySelector('#title') as HTMLInputElement;
     expect(titleInput.value).toBe('certificate-a');
     expect(screen.getByText('doc.pdf')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '返回列表' })).toHaveAttribute(
+      'href',
+      '/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+    );
 
     fireEvent.change(titleInput, { target: { value: 'certificate-a-updated' } });
     fireEvent.click(screen.getByRole('button', { name: 'upload' }));

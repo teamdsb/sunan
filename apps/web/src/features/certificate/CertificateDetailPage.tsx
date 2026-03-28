@@ -1,13 +1,15 @@
-﻿import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
+import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 import { useBindCertificateFilesMutation, useGetCertificateByIdQuery, useUpdateCertificateMutation } from './certificateApi';
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
+  const location = useLocation();
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
   const [updateCertificate, { isLoading: saving }] = useUpdateCertificateMutation();
   const [bindFiles] = useBindCertificateFilesMutation();
@@ -19,6 +21,7 @@ export function CertificateDetailPage() {
     status: import('./certificateApi').CertificateItem['status'];
   }>();
   const item = data?.data;
+  const backHref = resolveBackHref(myRouteConfig.certificates.path, location.search);
 
   useEffect(() => {
     if (item) {
@@ -54,18 +57,28 @@ export function CertificateDetailPage() {
                 }
               }}
             >
-              <Form.Item name="title" label="标题" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item name="expiryDate" label="到期日" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item name="status" label="状态" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item name="title" label="标题" rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="expiryDate" label="到期日" rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="status" label="状态" rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
               <Form.Item label="附件上传/预览">
                 <FileUploadField category="certificates" value={upload} onChange={setUpload} />
               </Form.Item>
               <Space>
-                <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
-                <Button onClick={() => navigate('/my/certificates')}>返回列表</Button>
+                <Button htmlType="submit" type="primary" loading={saving}>
+                  保存
+                </Button>
+                <Button href={backHref}>返回列表</Button>
               </Space>
             </Form>
-            <Typography.Title level={5} style={{ marginTop: 16 }}>已绑定附件</Typography.Title>
+            <Typography.Title level={5} style={{ marginTop: 16 }}>
+              已绑定附件
+            </Typography.Title>
             <List dataSource={item.files} renderItem={(file) => <List.Item>{file.fileName}</List.Item>} />
           </>
         ) : null}
