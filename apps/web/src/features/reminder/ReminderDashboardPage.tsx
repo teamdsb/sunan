@@ -47,14 +47,17 @@ export function ReminderDashboardPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const settingsQuery = useGetSettingsQuery();
-  const view = readViewMode(searchParams.get('view'), settingsQuery.data?.data.reminderViewMode ?? 'dashboard');
+  const urlViewMode = searchParams.get('view');
+  const settingsViewMode = settingsQuery.data?.data.reminderViewMode;
+  const shouldWaitForSettings = !urlViewMode && settingsQuery.isLoading && !settingsViewMode;
+  const view = urlViewMode ? readViewMode(urlViewMode, 'dashboard') : settingsViewMode ?? 'dashboard';
   const isListMode = view === 'list';
   const status = searchParams.get('status') as ReminderStatusFilter | null;
   const reminderType = searchParams.get('reminderType') as 'overdue' | null;
   const ownerType = searchParams.get('ownerType') as ReminderOwnerType | null;
   const page = readNumber(searchParams, 'page', 1);
   const pageSize = readNumber(searchParams, 'pageSize', 5);
-  const dashboardQuery = useGetReminderDashboardQuery();
+  const dashboardQuery = useGetReminderDashboardQuery(undefined, shouldWaitForSettings ? { skip: true } : undefined);
   const listQueryArgs = useMemo(() => {
     if (!isListMode) {
       return buildDashboardListQuery();
@@ -68,7 +71,7 @@ export function ReminderDashboardPage() {
       ...(ownerType ? { ownerType } : {}),
     };
   }, [isListMode, page, pageSize, reminderType, ownerType, status]);
-  const listQuery = useGetReminderListQuery(listQueryArgs);
+  const listQuery = useGetReminderListQuery(listQueryArgs, shouldWaitForSettings ? { skip: true } : undefined);
   const [triggerScan, { isLoading: scanning }] = useTriggerReminderScanMutation();
 
   const dashboard = dashboardQuery.data?.data;
@@ -125,6 +128,14 @@ export function ReminderDashboardPage() {
       });
     }
   };
+
+  if (shouldWaitForSettings) {
+    return (
+      <section className="page-hero">
+        <Card loading variant="borderless" />
+      </section>
+    );
+  }
 
   return (
     <section className="page-hero">

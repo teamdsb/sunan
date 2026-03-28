@@ -10,6 +10,56 @@ const mockList = vi.fn();
 const mockScan = vi.fn();
 const dashboardRefetch = vi.fn();
 const listRefetch = vi.fn();
+const dashboardData = {
+  data: {
+    totalPending: 2,
+    totalOverdue: 1,
+    totalAcknowledged: 4,
+    byOwnerType: [
+      { ownerType: 'vessel', count: 3 },
+      { ownerType: 'vehicle', count: 2 },
+    ],
+    byCertificateType: [
+      { certificateTypeName: '国籍证书', count: 4 },
+      { certificateTypeName: '安全证书', count: 1 },
+    ],
+  },
+};
+
+const reminderItems = [
+  {
+    id: 'r-overdue',
+    certificateTitle: '国籍证书',
+    ownerName: '苏南012',
+    ownerType: 'vessel',
+    recipientUserId: 'shipping-employee',
+    reminderType: 'overdue',
+    status: 'pending',
+    scheduledDate: '2026-03-28',
+    daysBeforeExpiry: -1,
+    sentAt: null,
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+  },
+  {
+    id: 'r-ack',
+    certificateTitle: '安全证书',
+    ownerName: '桂A0001',
+    ownerType: 'vehicle',
+    recipientUserId: 'shipping-manager',
+    reminderType: 'upcoming',
+    status: 'acknowledged',
+    scheduledDate: '2026-03-27',
+    daysBeforeExpiry: 15,
+    sentAt: '2026-03-27T01:00:00+08:00',
+    acknowledgedAt: '2026-03-27T02:00:00+08:00',
+    acknowledgedBy: 'shipping-manager',
+  },
+] as const;
+const reminderListData = {
+  data: reminderItems as unknown as Array<(typeof reminderItems)[number]>,
+  meta: { total: 2, page: 1, pageSize: 5, totalPages: 1 },
+};
 
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
@@ -34,8 +84,10 @@ vi.mock('../settings/settingsApi', () => ({
 }));
 
 vi.mock('./reminderApi', () => ({
-  useGetReminderDashboardQuery: () => mockDashboard(),
-  useGetReminderListQuery: (_params: unknown) => mockList(_params),
+  useGetReminderDashboardQuery: (_params: unknown, options?: { skip?: boolean }) =>
+    options ? mockDashboard(_params, options) : mockDashboard(_params),
+  useGetReminderListQuery: (_params: unknown, options?: { skip?: boolean }) =>
+    options ? mockList(_params, options) : mockList(_params),
   useTriggerReminderScanMutation: () => [mockScan, { isLoading: false }],
 }));
 
@@ -52,58 +104,12 @@ describe('ReminderDashboardPage', () => {
       roles: ['all_authenticated', 'shipping'],
     });
     mockDashboard.mockReturnValue({
-      data: {
-        data: {
-          totalPending: 2,
-          totalOverdue: 1,
-          totalAcknowledged: 4,
-          byOwnerType: [
-            { ownerType: 'vessel', count: 3 },
-            { ownerType: 'vehicle', count: 2 },
-          ],
-          byCertificateType: [
-            { certificateTypeName: '国籍证书', count: 4 },
-            { certificateTypeName: '安全证书', count: 1 },
-          ],
-        },
-      },
+      data: dashboardData,
       isLoading: false,
       refetch: dashboardRefetch,
     });
     mockList.mockReturnValue({
-      data: {
-        data: [
-          {
-            id: 'r-overdue',
-            certificateTitle: '国籍证书',
-            ownerName: '苏南012',
-            ownerType: 'vessel',
-            recipientUserId: 'shipping-employee',
-            reminderType: 'overdue',
-            status: 'pending',
-            scheduledDate: '2026-03-28',
-            daysBeforeExpiry: -1,
-            sentAt: null,
-            acknowledgedAt: null,
-            acknowledgedBy: null,
-          },
-          {
-            id: 'r-ack',
-            certificateTitle: '安全证书',
-            ownerName: '桂A0001',
-            ownerType: 'vehicle',
-            recipientUserId: 'shipping-manager',
-            reminderType: 'upcoming',
-            status: 'acknowledged',
-            scheduledDate: '2026-03-27',
-            daysBeforeExpiry: 15,
-            sentAt: '2026-03-27T01:00:00+08:00',
-            acknowledgedAt: '2026-03-27T02:00:00+08:00',
-            acknowledgedBy: 'shipping-manager',
-          },
-        ],
-        meta: { total: 2, page: 1, pageSize: 5, totalPages: 1 },
-      },
+      data: reminderListData,
       isLoading: false,
       refetch: listRefetch,
     });
@@ -137,6 +143,55 @@ describe('ReminderDashboardPage', () => {
     );
 
     expect(screen.getByRole('heading', { name: '证书提醒看板' })).toBeInTheDocument();
+  });
+
+  it('waits for settings before choosing a default view when the URL omits view', async () => {
+    let settingsState = {
+      data: undefined,
+      isLoading: true,
+    };
+
+    mockSettings.mockImplementation(() => settingsState);
+    mockDashboard.mockImplementation((_params: unknown, options?: { skip?: boolean }) => ({
+      data: options?.skip ? undefined : dashboardData,
+      isLoading: false,
+      refetch: dashboardRefetch,
+    }));
+    mockList.mockImplementation((params: unknown, options?: { skip?: boolean }) => ({
+      data: options?.skip ? undefined : reminderListData,
+      isLoading: false,
+      refetch: listRefetch,
+    }));
+
+    const { rerender } = render(
+      <MemoryRouter initialEntries={['/my/reminders']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole('heading', { name: '证书提醒看板' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: '提醒列表' })).toBeNull();
+    expect(mockDashboard).toHaveBeenLastCalledWith(undefined, expect.objectContaining({ skip: true }));
+    expect(mockList).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 1, pageSize: 5 }),
+      expect.objectContaining({ skip: true }),
+    );
+
+    settingsState = {
+      data: { data: { reminderViewMode: 'list' } },
+      isLoading: false,
+    };
+
+    rerender(
+      <MemoryRouter initialEntries={['/my/reminders']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: '提醒列表' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 5 }));
+    });
   });
 
   it('shows summary, filters recent reminders, and exposes scan for managers', async () => {
