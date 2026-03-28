@@ -177,7 +177,7 @@ describe('ReminderDashboardPage', () => {
 
   it('clears unrelated filters like ownerType when a stat card changes the view', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard&ownerType=vessel&page=3&pageSize=20']}>
+      <MemoryRouter initialEntries={['/my/reminders?foo=bar&view=dashboard&ownerType=vessel&page=3&pageSize=20']}>
         <ReminderDashboardPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -186,7 +186,7 @@ describe('ReminderDashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /已逾期 1/ }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&reminderType=overdue');
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?foo=bar&view=list&reminderType=overdue');
     });
     await waitFor(() => {
       expect(mockList).toHaveBeenLastCalledWith(

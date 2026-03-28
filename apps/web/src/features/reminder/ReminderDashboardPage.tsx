@@ -91,17 +91,38 @@ export function ReminderDashboardPage() {
 
   const handleCardClick = (item: (typeof statCards)[number]) => {
     if (item.key === 'pending') {
-      setSearchParams({ view: 'list', status: 'pending' });
+      applySearch({
+        view: 'list',
+        status: 'pending',
+        reminderType: null,
+        ownerType: null,
+        page: null,
+        pageSize: null,
+      });
       return;
     }
 
     if (item.key === 'overdue') {
-      setSearchParams({ view: 'list', reminderType: 'overdue' });
+      applySearch({
+        view: 'list',
+        status: null,
+        reminderType: 'overdue',
+        ownerType: null,
+        page: null,
+        pageSize: null,
+      });
       return;
     }
 
     if (item.key === 'acknowledged') {
-      setSearchParams({ view: 'list', status: 'acknowledged' });
+      applySearch({
+        view: 'list',
+        status: 'acknowledged',
+        reminderType: null,
+        ownerType: null,
+        page: null,
+        pageSize: null,
+      });
     }
   };
 
