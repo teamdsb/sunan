@@ -56,7 +56,10 @@ export class CertificateReminderEngineService {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
-  async runScan(envelope: ReminderJobEnvelope): Promise<{
+  async runScan(
+    envelope: ReminderJobEnvelope,
+    options: { isLeaseValid?: () => boolean } = {},
+  ): Promise<{
     createdCount: number;
     sentCount: number;
     failedCount: number;
@@ -99,7 +102,14 @@ export class CertificateReminderEngineService {
     let sentCount = 0;
     let failedCount = 0;
 
+    const assertLeaseValid = (): void => {
+      if (options.isLeaseValid && !options.isLeaseValid()) {
+        throw new Error('scan lock lost');
+      }
+    };
+
     for (const certificate of certificates) {
+      assertLeaseValid();
       if (certificate.deletedAt || certificate.status === 'archived') {
         continue;
       }
@@ -133,6 +143,7 @@ export class CertificateReminderEngineService {
       await this.certificateRepository.save(certificate);
 
       for (const recipientUserId of recipients) {
+        assertLeaseValid();
         const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType);
         const reminderCycleKey = this.makeReminderCycleKey(
           certificate.id,
@@ -176,9 +187,17 @@ export class CertificateReminderEngineService {
           'scheduledDate',
           'reminderType',
         ]);
+        createdCount += 1;
+
+        const sendLockToken = await this.acquireSendLock(reminder);
+        if (!sendLockToken) {
+          existingReminderKeys.add(reminderKey);
+          continue;
+        }
 
         const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
         try {
+          assertLeaseValid();
           const result = await this.wecomMessageService.sendTextCard({
             userIds: [recipientUserId],
             title: message.title,
@@ -200,14 +219,19 @@ export class CertificateReminderEngineService {
             sentCount += 1;
           }
         } catch (error) {
+          if (this.isLeaseLostError(error)) {
+            throw error;
+          }
+
           reminder.status = 'failed';
           reminder.failureReason = this.describeError(error);
           failedCount += 1;
           this.logger.warn(`reminder send failed for ${recipientUserId}: ${reminder.failureReason}`);
+        } finally {
+          await this.releaseSendLock(reminder, sendLockToken);
         }
 
         await this.reminderRepository.save(reminder);
-        createdCount += 1;
         existingReminderKeys.add(reminderKey);
       }
     }
@@ -317,6 +341,54 @@ export class CertificateReminderEngineService {
     ].join('\n');
     const url = `https://${appEnv.APP_DOMAIN}/my/reminders/${reminder.id}`;
     return { title, description, url };
+  }
+
+  private async acquireSendLock(reminder: CertificateReminderEntity): Promise<string | null> {
+    const token = randomUUID();
+    const key = this.buildSendLockKey(reminder);
+    const result = await this.redis.set(key, token, 'PX', 15 * 60 * 1000, 'NX');
+    if (result === null) {
+      return null;
+    }
+
+    return token;
+  }
+
+  private async releaseSendLock(reminder: CertificateReminderEntity, token: string | null): Promise<void> {
+    if (!token) {
+      return;
+    }
+
+    if (typeof this.redis.eval !== 'function') {
+      return;
+    }
+
+    const key = this.buildSendLockKey(reminder);
+    await this.redis.eval(
+      `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        return redis.call('DEL', KEYS[1])
+      end
+      return 0
+      `,
+      1,
+      key,
+      token,
+    );
+  }
+
+  private buildSendLockKey(reminder: CertificateReminderEntity): string {
+    return [
+      'certificate-reminder:send',
+      reminder.certificateId,
+      reminder.recipientUserId,
+      reminder.scheduledDate,
+      reminder.reminderType,
+    ].join(':');
+  }
+
+  private isLeaseLostError(error: unknown): boolean {
+    return error instanceof Error && error.message === 'scan lock lost';
   }
 
   private diffDays(expiryDate: string, scheduledDate: string): number {

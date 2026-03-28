@@ -11,6 +11,7 @@ describe('CertificateReminderJobService', () => {
       lockToken: null as string | null,
       cronMarkers: new Set<string>(),
       lockRenewals: 0,
+      failNextRenewal: false,
     };
 
     const redis = {
@@ -106,16 +107,58 @@ describe('CertificateReminderJobService', () => {
       eval: jest.fn(async (script: string, keyCount: number, ...args: string[]) => {
         void keyCount;
 
-        if (script.includes('LPUSH')) {
-          const [markerKey, queueKey, jobId, ttlSeconds, payload] = args as [string, string, string, string, string];
+        if (script.includes("redis.call('SET'") && script.includes("redis.call('LPUSH'")) {
+          const [markerKey, jobKey, queueKey, jobId, ttlSeconds, acceptedAt, jobTtlSeconds, payload] = args as [
+            string,
+            string,
+            string,
+            string,
+            string,
+            string,
+            string,
+            string,
+          ];
           void queueKey;
           void jobId;
           void ttlSeconds;
+          void acceptedAt;
+          void jobTtlSeconds;
           if (state.cronMarkers.has(markerKey)) {
             return 0;
           }
 
           state.cronMarkers.add(markerKey);
+          state.hashes.set(jobKey, {
+            jobId,
+            source: 'cron',
+            status: 'queued',
+            acceptedAt,
+          });
+          state.queue.unshift(payload);
+          return 1;
+        }
+
+        if (script.includes("redis.call('HSET'") && script.includes("redis.call('LPUSH'")) {
+          const [jobKey, queueKey, jobId, source, acceptedAt, ttlSeconds, payload] = args as [
+            string,
+            string,
+            string,
+            string,
+            string,
+            string,
+            string,
+          ];
+          void queueKey;
+          void jobId;
+          void source;
+          void acceptedAt;
+          void ttlSeconds;
+          state.hashes.set(jobKey, {
+            jobId,
+            source,
+            status: 'queued',
+            acceptedAt,
+          });
           state.queue.unshift(payload);
           return 1;
         }
@@ -123,6 +166,10 @@ describe('CertificateReminderJobService', () => {
         if (script.includes('PEXPIRE')) {
           const [lockKey, token, ttlMs] = args as [string, string, string];
           void ttlMs;
+          if (state.failNextRenewal) {
+            state.failNextRenewal = false;
+            return 0;
+          }
           if (lockKey === 'certificate-reminder:scan-lock' && state.lockToken === token) {
             state.lockRenewals += 1;
             return 1;
@@ -171,6 +218,9 @@ describe('CertificateReminderJobService', () => {
         jobId: result.jobId,
         source: 'manual',
       }),
+      expect.objectContaining({
+        isLeaseValid: expect.any(Function),
+      }),
     );
 
     const jobRecord = state.hashes.get(`certificate-reminder:job:${result.jobId}`);
@@ -184,6 +234,26 @@ describe('CertificateReminderJobService', () => {
     );
     expect(state.queue).toHaveLength(0);
     expect(state.processing).toHaveLength(0);
+  });
+
+  it('does not leave an orphaned queued job when atomic enqueue fails', async () => {
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    const engine = {
+      runScan: jest.fn(async () => ({ createdCount: 0, sentCount: 0, failedCount: 0 })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+    redis.eval.mockRejectedValueOnce(new Error('atomic enqueue failed'));
+
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+
+    await expect(service.enqueueScan({ source: 'manual' })).rejects.toThrow('atomic enqueue failed');
+    expect(state.queue).toHaveLength(0);
+    expect(state.hashes.size).toBe(0);
   });
 
   it('enqueues cron jobs only once per Shanghai day', async () => {
@@ -208,6 +278,15 @@ describe('CertificateReminderJobService', () => {
 
     await (service as any).processQueueOnce();
     expect(engine.runScan).toHaveBeenCalledTimes(1);
+    expect(engine.runScan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: first!.jobId,
+        source: 'cron',
+      }),
+      expect.objectContaining({
+        isLeaseValid: expect.any(Function),
+      }),
+    );
   });
 
   it('does not overlap scan execution when the redis lock is already held', async () => {
@@ -269,6 +348,41 @@ describe('CertificateReminderJobService', () => {
     jest.useRealTimers();
   });
 
+  it('fails the job when scan lock renewal is lost mid-run', async () => {
+    jest.useFakeTimers();
+
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    const engine = {
+      runScan: jest.fn(async (_envelope: unknown, options?: { isLeaseValid?: () => boolean }) => {
+        await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+        expect(options?.isLeaseValid?.()).toBe(false);
+        throw new Error('scan lock lost');
+      }),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+    state.failNextRenewal = true;
+
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+    const enqueueResult = await service.enqueueScan({ source: 'manual' });
+
+    const processing = (service as any).processQueueOnce();
+    await processing;
+
+    const jobRecord = state.hashes.get(`certificate-reminder:job:${enqueueResult.jobId}`);
+    expect(jobRecord).toEqual(
+      expect.objectContaining({
+        status: 'failed',
+        error: 'scan lock lost',
+      }),
+    );
+    jest.useRealTimers();
+  });
+
   it('reclaims stale processing jobs on a later worker tick without restarting the worker', async () => {
     const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
 
@@ -304,6 +418,9 @@ describe('CertificateReminderJobService', () => {
       expect.objectContaining({
         jobId: 'stale-job',
         source: 'manual',
+      }),
+      expect.objectContaining({
+        isLeaseValid: expect.any(Function),
       }),
     );
   });

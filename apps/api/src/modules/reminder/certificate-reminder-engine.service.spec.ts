@@ -690,6 +690,135 @@ describe('CertificateReminderEngineService', () => {
     expect(reminderRepo.upsert).not.toHaveBeenCalled();
   });
 
+  it('stops sending additional reminders when the scan lease becomes invalid', async () => {
+    const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
+
+    const certificate = makeCertificate({
+      ownerType: 'vessel',
+      ownerId: randomUUID(),
+      expiryDate: '2026-04-27',
+      advanceDays: 30,
+    });
+
+    const reminderRepo = createRepo([]);
+    const certificateRepo = createRepo([certificate]);
+    const certificateTypeRepo = createRepo([
+      makeCertificateType(certificate.certificateTypeId as string, 'nationality_cert', 'certificate', 30),
+    ]);
+    const vesselRepo = createRepo([makeVessel(certificate.ownerId as string)]);
+    const vehicleRepo = createRepo([]);
+    const personnelRepo = createRepo([]);
+    const wecomUserRepo = createRepo([
+      makeWecomUser('shipping-user', ['shipping_dept'], ['船务部'], { position: '经理' }),
+      makeWecomUser('office-user', ['general_office'], ['总经办'], { position: '主任' }),
+    ]);
+    let leaseValid = true;
+    const sendTextCard = jest.fn(async () => {
+      leaseValid = false;
+      return { invalidUser: [] };
+    });
+    const wecomMessageService = { sendTextCard };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => dateOnly('2026-03-28')),
+    };
+    const redis = {
+      set: jest.fn(async () => 'OK'),
+      get: jest.fn(),
+      del: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      expire: jest.fn(),
+      eval: jest.fn(async () => 0),
+    };
+
+    const service = new CertificateReminderEngineService(
+      reminderRepo as never,
+      certificateRepo as never,
+      certificateTypeRepo as never,
+      vesselRepo as never,
+      vehicleRepo as never,
+      personnelRepo as never,
+      wecomUserRepo as never,
+      wecomMessageService as never,
+      clock as never,
+      redis as never,
+    );
+
+    await expect(service.runScan({ jobId: 'job-abort', source: 'manual' }, { isLeaseValid: () => leaseValid })).rejects.toThrow(
+      'scan lock lost',
+    );
+
+    expect(sendTextCard).toHaveBeenCalledTimes(1);
+    expect(reminderRepo.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips external send when another worker already holds the reminder send claim', async () => {
+    const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
+
+    const certificate = makeCertificate({
+      ownerType: 'vehicle',
+      ownerId: randomUUID(),
+      expiryDate: '2026-04-27',
+      advanceDays: 30,
+      certificateTypeId: randomUUID(),
+    });
+
+    const reminderRepo = createRepo([]);
+    const certificateRepo = createRepo([certificate]);
+    const certificateTypeRepo = createRepo([
+      makeCertificateType(certificate.certificateTypeId as string, 'insurance', 'certificate', 30),
+    ]);
+    const vesselRepo = createRepo([]);
+    const vehicleRepo = createRepo([makeVehicle(certificate.ownerId as string)]);
+    const personnelRepo = createRepo([]);
+    const wecomUserRepo = createRepo([
+      makeWecomUser('logistics-user', ['logistics_dept'], ['后勤部'], { position: '主管' }),
+    ]);
+    const wecomMessageService = {
+      sendTextCard: jest.fn(async () => ({ invalidUser: [] })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => dateOnly('2026-03-28')),
+    };
+    const redis = {
+      set: jest.fn(async (key: string) => {
+        if (key.startsWith('certificate-reminder:send:')) {
+          return null;
+        }
+
+        return 'OK';
+      }),
+      get: jest.fn(),
+      del: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      expire: jest.fn(),
+      eval: jest.fn(async () => 0),
+    };
+
+    const service = new CertificateReminderEngineService(
+      reminderRepo as never,
+      certificateRepo as never,
+      certificateTypeRepo as never,
+      vesselRepo as never,
+      vehicleRepo as never,
+      personnelRepo as never,
+      wecomUserRepo as never,
+      wecomMessageService as never,
+      clock as never,
+      redis as never,
+    );
+
+    const result = await service.runScan({ jobId: 'job-claim', source: 'manual' });
+
+    expect(result.createdCount).toBe(1);
+    expect(result.sentCount).toBe(0);
+    expect(wecomMessageService.sendTextCard).not.toHaveBeenCalled();
+    expect(reminderRepo.upsert).toHaveBeenCalledTimes(1);
+  });
+
   it('routes ordinary personnel reminders only to the owner and approved same-department managers', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 

@@ -64,35 +64,28 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     const payload = JSON.stringify(envelope);
     const cronMarkerKey = `${CRON_MARKER_PREFIX}${this.clock.today()}`;
 
-    await this.redis.hset(jobKey, {
-      jobId,
-      source: envelope.source,
-      status: 'queued',
-      acceptedAt,
-    });
-    await this.redis.expire(jobKey, 86_400);
-
     const result = await this.redis.eval(
       `
       if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
-        redis.call('LPUSH', KEYS[2], ARGV[3])
+        redis.call('HSET', KEYS[2], 'jobId', ARGV[1], 'source', 'cron', 'status', 'queued', 'acceptedAt', ARGV[3])
+        redis.call('EXPIRE', KEYS[2], ARGV[4])
+        redis.call('LPUSH', KEYS[3], ARGV[5])
         return 1
       end
       return 0
       `,
-      2,
+      3,
       cronMarkerKey,
+      jobKey,
       QUEUE_KEY,
       jobId,
       String(CRON_MARKER_TTL_SECONDS),
+      acceptedAt,
+      '86400',
       payload,
     );
 
     if (Number(result) !== 1) {
-      await this.redis.hset(jobKey, {
-        status: 'skipped',
-        finishedAt: acceptedAt,
-      });
       return null;
     }
 
@@ -107,15 +100,24 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     const acceptedAt = this.clock.now().toISOString();
     const envelope: ReminderJobEnvelope = { jobId, source };
     const jobKey = this.buildKey(jobId);
+    const payload = JSON.stringify(envelope);
 
-    await this.redis.hset(jobKey, {
+    await this.redis.eval(
+      `
+      redis.call('HSET', KEYS[1], 'jobId', ARGV[1], 'source', ARGV[2], 'status', 'queued', 'acceptedAt', ARGV[3])
+      redis.call('EXPIRE', KEYS[1], ARGV[4])
+      redis.call('LPUSH', KEYS[2], ARGV[5])
+      return 1
+      `,
+      2,
+      jobKey,
+      QUEUE_KEY,
       jobId,
       source,
-      status: 'queued',
       acceptedAt,
-    });
-    await this.redis.expire(jobKey, 86_400);
-    await this.redis.lpush(QUEUE_KEY, JSON.stringify(envelope));
+      '86400',
+      payload,
+    );
 
     return { jobId, acceptedAt };
   }
@@ -174,9 +176,12 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
         return false;
       }
 
-      stopHeartbeat = this.startLockHeartbeat(lockToken);
+      let leaseValid = true;
+      stopHeartbeat = this.startLockHeartbeat(lockToken, () => {
+        leaseValid = false;
+      });
       const envelope = JSON.parse(payload) as ReminderJobEnvelope;
-      await this.runJob(envelope);
+      await this.runJob(envelope, () => leaseValid);
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'queue processing failed';
@@ -192,7 +197,7 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     }
   }
 
-  private async runJob(envelope: ReminderJobEnvelope): Promise<void> {
+  private async runJob(envelope: ReminderJobEnvelope, isLeaseValid: () => boolean): Promise<void> {
     const key = this.buildKey(envelope.jobId);
     const startedAt = this.clock.now().toISOString();
     let stopHeartbeat: () => void = () => undefined;
@@ -205,7 +210,7 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
       });
       stopHeartbeat = this.startJobHeartbeat(key);
 
-      const result = await this.engine.runScan(envelope);
+      const result = await this.engine.runScan(envelope, { isLeaseValid });
 
       await this.redis.hset(key, {
         status: 'completed',
@@ -235,11 +240,12 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     return result === 'OK' ? token : null;
   }
 
-  private startLockHeartbeat(token: string): () => void {
+  private startLockHeartbeat(token: string, onLeaseLost: () => void): () => void {
     const renew = () => {
       void this.renewScanLock(token).then((renewed) => {
         if (!renewed) {
           this.logger.warn('reminder scan lock renewal failed');
+          onLeaseLost();
         }
       });
     };
