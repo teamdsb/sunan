@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ReminderDetailPage } from './ReminderDetailPage';
 
 const mockCurrentUser = vi.fn();
@@ -16,6 +16,16 @@ vi.mock('./reminderApi', () => ({
   useGetReminderByIdQuery: () => mockDetail(),
   useAcknowledgeReminderMutation: () => [mockAcknowledge, { isLoading: false }],
 }));
+
+function LocationDisplay() {
+  const location = useLocation();
+  return (
+    <div>
+      <div data-testid="pathname">{location.pathname}</div>
+      <div data-testid="search">{location.search}</div>
+    </div>
+  );
+}
 
 describe('ReminderDetailPage', () => {
   beforeEach(() => {
@@ -119,24 +129,30 @@ describe('ReminderDetailPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /已确认/ })).toBeDisabled());
   });
 
-  it('returns to the reminder list with the current query preserved', () => {
+  it.each(['返回看板', '返回列表'])('navigates back through the router when clicking %s', async (buttonName) => {
     render(
       <MemoryRouter
         initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
       >
         <Routes>
           <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
+          <Route
+            path="/my/reminders"
+            element={
+              <>
+                <div>提醒列表</div>
+                <LocationDisplay />
+              </>
+            }
+          />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: /返回看板/ })).toHaveAttribute(
-      'href',
-      '/my/reminders?view=list&status=pending&page=2',
-    );
-    expect(screen.getByRole('link', { name: /返回列表/ })).toHaveAttribute(
-      'href',
-      '/my/reminders?view=list&status=pending&page=2',
-    );
+    fireEvent.click(screen.getByText(buttonName));
+
+    await waitFor(() => expect(screen.getByText('提醒列表')).toBeInTheDocument());
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/my/reminders');
+    expect(screen.getByTestId('search')).toHaveTextContent('?view=list&status=pending&page=2');
   });
 });
