@@ -319,15 +319,13 @@ describe('ReminderController integration', () => {
       .get('/api/v1/certificate-reminders?page=1&pageSize=20')
       .set('Authorization', 'Bearer token');
     expect(list.status).toBe(200);
-    expect(list.body.data).toHaveLength(2);
-    expect(list.body.data.map((item: { recipientUserId: string }) => item.recipientUserId)).toEqual(
-      expect.arrayContaining(['shipping-employee', 'shipping-peer']),
-    );
+    expect(list.body.data).toHaveLength(1);
+    expect(list.body.data[0].recipientUserId).toBe('shipping-employee');
 
-    const hiddenDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
-      .get(`/api/v1/certificate-reminders/${officeReminderId}`)
+    const hiddenPeerDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/certificate-reminders/${shippingPeerReminderId}`)
       .set('Authorization', 'Bearer token');
-    expect(hiddenDetail.status).toBe(404);
+    expect(hiddenPeerDetail.status).toBe(404);
   });
 
   it('limits shipping managers to reminders within their responsibility scope', async () => {
@@ -397,6 +395,12 @@ describe('ReminderController integration', () => {
       .send({ comment: '已确认' });
     expect(selfAck.status).toBe(200);
     expect(selfAck.body.data.status).toBe('acknowledged');
+
+    const employeeAckPeer = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/certificate-reminders/${shippingPeerReminderId}/acknowledge`)
+      .set('Authorization', 'Bearer token')
+      .send({ comment: '尝试确认同部门提醒' });
+    expect(employeeAckPeer.status).toBe(404);
 
     currentUser = {
       ...currentUser,

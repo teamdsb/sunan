@@ -15,7 +15,7 @@ import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { REDIS_CLIENT } from 'src/modules/wecom/wecom.constants';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 
-import { MANAGEMENT_ROLES, isManagementRole, resolveRolesFromDepartmentNames } from './reminder.constants';
+import { isManagementPosition, resolveRolesFromDepartmentNames } from './reminder.constants';
 import { ReminderClockService } from './reminder-clock.service';
 import type { ReminderJobEnvelope, ReminderOwnerType, ReminderType } from './reminder.types';
 
@@ -82,6 +82,11 @@ export class CertificateReminderEngineService {
         this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType),
       ),
     );
+    const acknowledgedReminderKeys = new Set(
+      reminders
+        .filter((reminder) => reminder.status === 'acknowledged')
+        .map((reminder) => this.makeReminderCycleKey(reminder.certificateId, reminder.recipientUserId, reminder.reminderType)),
+    );
 
     let createdCount = 0;
     let sentCount = 0;
@@ -122,6 +127,11 @@ export class CertificateReminderEngineService {
 
       for (const recipientUserId of recipients) {
         const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType);
+        const reminderCycleKey = this.makeReminderCycleKey(certificate.id, recipientUserId, reminderType);
+        if (acknowledgedReminderKeys.has(reminderCycleKey)) {
+          continue;
+        }
+
         if (existingReminderKeys.has(reminderKey)) {
           continue;
         }
@@ -231,8 +241,7 @@ export class CertificateReminderEngineService {
         continue;
       }
 
-      const roles = resolveRolesFromDepartmentNames(user.departmentNames, user.isSystemAdmin);
-      if (roles.some((role) => isManagementRole(role))) {
+      if (isManagementPosition(user.position)) {
         recipients.add(user.userId);
       }
     }
@@ -298,6 +307,10 @@ export class CertificateReminderEngineService {
     reminderType: string,
   ): string {
     return [certificateId, recipientUserId, scheduledDate, reminderType].join(':');
+  }
+
+  private makeReminderCycleKey(certificateId: string, recipientUserId: string, reminderType: string): string {
+    return [certificateId, recipientUserId, reminderType].join(':');
   }
 
   private describeError(error: unknown): string {

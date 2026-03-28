@@ -6,6 +6,8 @@ export const MANAGEMENT_ROLES = new Set([
   'logistics',
 ]);
 
+const MANAGEMENT_POSITION_PATTERN = /(经理|主管|主任|部长|总监|总经理|副总|负责人)/;
+
 const ROLE_BY_DEPARTMENT_NAME = new Map<string, string>([
   ['总经办', 'general_office'],
   ['财务部', 'finance'],
@@ -36,4 +38,8 @@ export function resolveRolesFromDepartmentNames(
 
 export function isManagementRole(role: string): boolean {
   return MANAGEMENT_ROLES.has(role);
+}
+
+export function isManagementPosition(position: string | null | undefined): boolean {
+  return Boolean(position && MANAGEMENT_POSITION_PATTERN.test(position));
 }

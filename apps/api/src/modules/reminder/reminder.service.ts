@@ -7,7 +7,7 @@ import { CertificateReminderEntity } from 'src/database/entities/certificate-rem
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 
-import { MANAGEMENT_ROLES, isManagementRole, resolveRolesFromDepartmentNames } from './reminder.constants';
+import { isManagementPosition, resolveRolesFromDepartmentNames } from './reminder.constants';
 import { ReminderClockService } from './reminder-clock.service';
 import type { ReminderAcknowledgeDto } from './dto/reminder-acknowledge.dto';
 import type { ReminderListQueryDto } from './dto/reminder-list-query.dto';
@@ -168,14 +168,14 @@ export class ReminderService {
       return false;
     }
 
-    if (!Array.from(context.roles).some((role) => isManagementRole(role))) {
-      return false;
-    }
-
     const personnel = await this.personnelRepository.findOne({
       where: { id: reminder.ownerId, deletedAt: IsNull() },
     });
     if (!personnel || !context.viewer) {
+      return false;
+    }
+
+    if (!isManagementPosition(context.viewer.position)) {
       return false;
     }
 
@@ -238,10 +238,6 @@ export class ReminderService {
       return true;
     }
 
-    if (!user.roles.some((role) => isManagementRole(role))) {
-      return false;
-    }
-
     if (reminder.ownerType !== 'personnel') {
       return false;
     }
@@ -255,8 +251,7 @@ export class ReminderService {
       return false;
     }
 
-    const currentRoles = resolveRolesFromDepartmentNames(currentUser.departmentNames, currentUser.isSystemAdmin);
-    if (!currentRoles.some((role) => isManagementRole(role))) {
+    if (!isManagementPosition(currentUser.position)) {
       return false;
     }
 

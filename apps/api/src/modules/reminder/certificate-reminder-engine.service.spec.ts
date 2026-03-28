@@ -364,14 +364,14 @@ describe('CertificateReminderEngineService', () => {
         recipientUserId: 'shipping-user',
         reminderType: 'upcoming',
         status: 'acknowledged',
-        scheduledDate: '2026-03-28',
-        daysBeforeExpiry: 30,
-        sentAt: new Date('2026-03-28T01:00:00.000Z'),
-        acknowledgedAt: new Date('2026-03-28T02:00:00.000Z'),
+        scheduledDate: '2026-03-27',
+        daysBeforeExpiry: 31,
+        sentAt: new Date('2026-03-27T01:00:00.000Z'),
+        acknowledgedAt: new Date('2026-03-27T02:00:00.000Z'),
         acknowledgedBy: 'shipping-user',
         failureReason: null,
-        createdAt: new Date('2026-03-28T01:00:00.000Z'),
-        updatedAt: new Date('2026-03-28T02:00:00.000Z'),
+        createdAt: new Date('2026-03-27T01:00:00.000Z'),
+        updatedAt: new Date('2026-03-27T02:00:00.000Z'),
       },
     ]);
     const certificateRepo = createRepo([certificate]);
@@ -494,7 +494,7 @@ describe('CertificateReminderEngineService', () => {
     expect(reminderRepo.save).toHaveBeenCalledTimes(1);
   });
 
-  it('routes ordinary personnel reminders to the owner and same-department management users', async () => {
+  it('routes ordinary personnel reminders only to the owner and approved same-department managers', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 
     const certificate = makeCertificate({
@@ -549,14 +549,14 @@ describe('CertificateReminderEngineService', () => {
 
     const result = await service.runScan({ jobId: 'job-6', source: 'manual' });
 
-    expect(result.createdCount).toBe(3);
+    expect(result.createdCount).toBe(2);
     expect(reminderRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({ recipientUserId: 'person-self' }),
     );
     expect(reminderRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({ recipientUserId: 'shipping-manager' }),
     );
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.save).not.toHaveBeenCalledWith(
       expect.objectContaining({ recipientUserId: 'shipping-employee' }),
     );
     expect(reminderRepo.save).not.toHaveBeenCalledWith(
