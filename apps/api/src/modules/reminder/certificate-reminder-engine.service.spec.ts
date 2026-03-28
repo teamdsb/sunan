@@ -345,6 +345,75 @@ describe('CertificateReminderEngineService', () => {
     );
   });
 
+  it('marks reminders failed when the WeCom API responds with a non-success error', async () => {
+    const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
+
+    const certificate = makeCertificate({
+      ownerType: 'vehicle',
+      ownerId: randomUUID(),
+      expiryDate: '2026-04-27',
+      advanceDays: 30,
+      certificateTypeId: randomUUID(),
+    });
+
+    const reminderRepo = createRepo([]);
+    const certificateRepo = createRepo([certificate]);
+    const certificateTypeRepo = createRepo([
+      makeCertificateType(certificate.certificateTypeId as string, 'insurance', 'certificate', 30),
+    ]);
+    const vesselRepo = createRepo([]);
+    const vehicleRepo = createRepo([makeVehicle(certificate.ownerId as string)]);
+    const personnelRepo = createRepo([]);
+    const wecomUserRepo = createRepo([
+      makeWecomUser('logistics-user', ['logistics_dept'], ['后勤部'], { position: '主管' }),
+    ]);
+    const wecomMessageService = {
+      sendTextCard: jest.fn(async () => ({
+        success: false,
+        invalidUser: [],
+        failureReason: 'WeCom API error 60005: sender blocked',
+      })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => dateOnly('2026-03-28')),
+    };
+    const redis = {
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      expire: jest.fn(),
+    };
+
+    const service = new CertificateReminderEngineService(
+      reminderRepo as never,
+      certificateRepo as never,
+      certificateTypeRepo as never,
+      vesselRepo as never,
+      vehicleRepo as never,
+      personnelRepo as never,
+      wecomUserRepo as never,
+      wecomMessageService as never,
+      clock as never,
+      redis as never,
+    );
+
+    const result = await service.runScan({ jobId: 'job-3b', source: 'manual' });
+
+    expect(result.createdCount).toBe(1);
+    expect(result.sentCount).toBe(0);
+    expect(result.failedCount).toBe(1);
+    expect(reminderRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientUserId: 'logistics-user',
+        status: 'failed',
+        failureReason: 'WeCom API error 60005: sender blocked',
+      }),
+    );
+  });
+
   it('skips reminder creation when a matching acknowledged reminder already exists', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 

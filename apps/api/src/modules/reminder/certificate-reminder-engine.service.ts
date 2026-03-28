@@ -165,7 +165,11 @@ export class CertificateReminderEngineService {
             url: message.url,
           });
 
-          if (result.invalidUser.includes(recipientUserId)) {
+          if (result.success === false) {
+            reminder.status = 'failed';
+            reminder.failureReason = result.failureReason ?? 'WeCom API error';
+            failedCount += 1;
+          } else if (result.invalidUser.includes(recipientUserId)) {
             reminder.status = 'failed';
             reminder.failureReason = 'invalid user';
             failedCount += 1;

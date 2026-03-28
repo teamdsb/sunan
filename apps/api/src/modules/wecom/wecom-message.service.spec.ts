@@ -37,6 +37,7 @@ describe('WecomMessageService', () => {
     postMock.mockReturnValue(of({ data: { errcode: 0, errmsg: 'ok', invaliduser: 'u3' } }));
     const result = await service.sendTextCard({ userIds: ['u1', 'u2'], title: 't', description: 'd', url: 'https://example.com' });
 
+    expect(result.success).toBe(true);
     expect(result.invalidUser).toEqual(['u3']);
   });
 
@@ -62,7 +63,9 @@ describe('WecomMessageService', () => {
   it('returns invalid users for non-zero errcode without retrying', async () => {
     postMock.mockReturnValue(of({ data: { errcode: 81013, errmsg: 'invalid user', invaliduser: 'u2|u3' } }));
     const result = await service.sendTextCard({ userIds: ['u1', 'u2', 'u3'], title: 't', description: 'd', url: 'https://example.com' });
+    expect(result.success).toBe(false);
     expect(result.invalidUser).toEqual(['u2', 'u3']);
+    expect(result.failureReason).toBe('WeCom API error 81013: invalid user');
     expect(postMock).toHaveBeenCalledTimes(1);
   });
 
