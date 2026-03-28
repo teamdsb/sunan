@@ -175,6 +175,26 @@ describe('ReminderDashboardPage', () => {
     });
   });
 
+  it('clears unrelated filters like ownerType when a stat card changes the view', async () => {
+    render(
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard&ownerType=vessel&page=3&pageSize=20']}>
+        <ReminderDashboardPage />
+        <LocationDisplay />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /已逾期 1/ }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&reminderType=overdue');
+    });
+    await waitFor(() => {
+      expect(mockList).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, pageSize: 5, reminderType: 'overdue' }),
+      );
+    });
+  });
+
   it('preserves the current query when linking to detail pages', () => {
     render(
       <MemoryRouter
