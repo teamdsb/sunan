@@ -1,7 +1,7 @@
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from './AppRoutes';
 import { myRouteConfig } from './myRouteConfig';
@@ -51,6 +51,13 @@ vi.mock('../features/settings/SettingsPage', () => ({
   SettingsPage: () => <div>SETTINGS_PAGE</div>,
 }));
 
+function BackHrefConsumer() {
+  const location = useLocation();
+  const backHref = resolveBackHref('/my/reminders', location.search);
+
+  return <a href={backHref}>BACK_HREF:{backHref}</a>;
+}
+
 function renderRoute(path: string) {
   const store = configureStore({
     reducer: {
@@ -78,6 +85,38 @@ function renderRoute(path: string) {
     <Provider store={store}>
       <MemoryRouter initialEntries={[path]}>
         <AppRoutes />
+      </MemoryRouter>
+    </Provider>,
+  );
+}
+
+function renderBackHref(path: string) {
+  const store = configureStore({
+    reducer: {
+      auth: authReducer,
+      myUi: myUiReducer,
+      [baseApi.reducerPath]: baseApi.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(baseApi.middleware),
+  });
+  store.dispatch(
+    loginSucceeded({
+      accessToken: 'token',
+      expiresIn: 3600,
+      user: {
+        userId: 'u1',
+        name: '张三',
+        department: ['总经办'],
+        roles: ['all_authenticated'],
+      },
+    }),
+  );
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[path]}>
+        <BackHrefConsumer />
       </MemoryRouter>
     </Provider>,
   );
@@ -138,5 +177,21 @@ describe('AppRoutes', () => {
     expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/reminders-archive?x=1')}`)).toBe('/my/reminders');
     expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/settings')}`)).toBe('/my/reminders');
     expect(resolveBackHref('/my/reminders')).toBe('/my/reminders');
+  });
+
+  it('renders the round-trip back href from a generated detail url', () => {
+    const href = buildDetailHref('/my/reminders', '1', '?page=2&status=pending');
+    renderBackHref(href);
+
+    expect(screen.getByRole('link', { name: 'BACK_HREF:/my/reminders?page=2&status=pending' })).toHaveAttribute(
+      'href',
+      '/my/reminders?page=2&status=pending',
+    );
+  });
+
+  it('falls back to the list path for an unsafe backTo value', () => {
+    renderBackHref('/my/reminders/1?backTo=%2Fmy%2Fsettings');
+
+    expect(screen.getByRole('link', { name: 'BACK_HREF:/my/reminders' })).toHaveAttribute('href', '/my/reminders');
   });
 });
