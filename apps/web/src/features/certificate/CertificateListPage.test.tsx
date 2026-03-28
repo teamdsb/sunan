@@ -61,4 +61,33 @@ describe('CertificateListPage', () => {
       );
     });
   });
+
+  it('updates the route query when the keyword search is edited through the UI', async () => {
+    render(
+      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+        <CertificateListPage />
+        <LocationDisplay />
+      </MemoryRouter>,
+    );
+
+    const keywordInput = screen.getByPlaceholderText('关键字');
+    fireEvent.change(keywordInput, { target: { value: '海事' } });
+    fireEvent.click(screen.getByRole('button', { name: 'search' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent(
+        '?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=%E6%B5%B7%E4%BA%8B',
+      );
+    });
+
+    expect(mockGet).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ownerType: 'vessel',
+        status: 'active',
+        keyword: '海事',
+        page: 1,
+        pageSize: 10,
+      }),
+    );
+  });
 });

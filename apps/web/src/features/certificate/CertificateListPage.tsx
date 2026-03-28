@@ -1,5 +1,5 @@
 import { Button, Card, Input, List, Pagination, Segmented, Select, Space, Typography } from 'antd';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
@@ -27,6 +27,7 @@ export function CertificateListPage() {
   const groupBy = (searchParams.get('groupBy') as 'owner' | 'type' | null) || 'owner';
   const status = searchParams.get('status') || undefined;
   const keyword = searchParams.get('keyword') || '';
+  const [keywordDraft, setKeywordDraft] = useState(keyword);
   const page = readPageValue(searchParams.get('page'), 1);
   const pageSize = readPageValue(searchParams.get('pageSize'), 10);
 
@@ -38,6 +39,10 @@ export function CertificateListPage() {
   const applySearch = (updates: Record<string, string | number | null | undefined>) => {
     setSearchParams(updateSearchParams(location.search, updates));
   };
+
+  useEffect(() => {
+    setKeywordDraft(keyword);
+  }, [keyword]);
 
   return (
     <section className="page-hero">
@@ -92,7 +97,10 @@ export function CertificateListPage() {
           <Input.Search
             placeholder="关键字"
             allowClear
-            value={keyword}
+            value={keywordDraft}
+            onChange={(event) => {
+              setKeywordDraft(event.target.value);
+            }}
             onSearch={(v) => {
               applySearch({
                 keyword: v || null,
