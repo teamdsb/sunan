@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from './AppRoutes';
+import { myRouteConfig } from './myRouteConfig';
 import { authReducer, loginSucceeded } from '../features/auth/authSlice';
 import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
@@ -12,12 +13,33 @@ vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
 }));
 
+vi.mock('../features/enterprise/EnterpriseProfilePage', () => ({
+  EnterpriseProfilePage: () => <div>ENTERPRISE_PROFILE</div>,
+}));
+
+vi.mock('../features/enterprise/EnterprisePolicyPage', () => ({
+  EnterprisePolicyPage: () => <div>ENTERPRISE_POLICY</div>,
+  EnterprisePolicyDetailPage: () => <div>ENTERPRISE_POLICY_DETAIL</div>,
+}));
+
+vi.mock('../features/certificate/CertificateListPage', () => ({
+  CertificateListPage: () => <div>CERTIFICATE_LIST</div>,
+}));
+
 vi.mock('../features/reminder/ReminderDashboardPage', () => ({
   ReminderDashboardPage: () => <div>REMINDER_DASHBOARD</div>,
 }));
 
 vi.mock('../features/reminder/ReminderDetailPage', () => ({
   ReminderDetailPage: () => <div>REMINDER_DETAIL</div>,
+}));
+
+vi.mock('../features/monitor/MonitorPage', () => ({
+  MonitorPage: () => <div>MONITOR_PAGE</div>,
+}));
+
+vi.mock('../features/settings/SettingsPage', () => ({
+  SettingsPage: () => <div>SETTINGS_PAGE</div>,
 }));
 
 function renderRoute(path: string) {
@@ -62,11 +84,25 @@ describe('AppRoutes', () => {
     expect(screen.getByText('MY_HOME')).toBeInTheDocument();
   });
 
-  it('renders reminder dashboard and detail routes', () => {
-    renderRoute('/my/reminders');
-    expect(screen.getByText('REMINDER_DASHBOARD')).toBeInTheDocument();
+  it.each([
+    ['/my/enterprise-profile', 'ENTERPRISE_PROFILE'],
+    ['/my/enterprise-policy', 'ENTERPRISE_POLICY'],
+    ['/my/certificates', 'CERTIFICATE_LIST'],
+    ['/my/reminders', 'REMINDER_DASHBOARD'],
+    ['/my/monitors', 'MONITOR_PAGE'],
+    ['/my/settings', 'SETTINGS_PAGE'],
+  ] as const)('renders %s', (path, expectedText) => {
+    renderRoute(path);
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
+  });
 
-    renderRoute('/my/reminders/1');
-    expect(screen.getByText('REMINDER_DETAIL')).toBeInTheDocument();
+  it('exposes the shared my route config for route-aware consumers', () => {
+    expect(myRouteConfig.myHome.path).toBe('/my');
+    expect(myRouteConfig.enterpriseProfile.path).toBe('/my/enterprise-profile');
+    expect(myRouteConfig.enterprisePolicy.path).toBe('/my/enterprise-policy');
+    expect(myRouteConfig.certificates.path).toBe('/my/certificates');
+    expect(myRouteConfig.reminders.path).toBe('/my/reminders');
+    expect(myRouteConfig.monitors.path).toBe('/my/monitors');
+    expect(myRouteConfig.settings.path).toBe('/my/settings');
   });
 });

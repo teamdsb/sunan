@@ -12,6 +12,7 @@ import { MyHomePage } from '../features/ui/MyHomePage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
+import { myRouteConfig } from './myRouteConfig';
 
 export function AppRoutes() {
   return (
@@ -19,22 +20,21 @@ export function AppRoutes() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route path="/my" element={<MyHomePage />} />
-          <Route path="/my/enterprise-profile" element={<EnterpriseProfilePage />} />
-          <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
-          <Route path="/my/enterprise-policy" element={<EnterprisePolicyPage />} />
-          <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
-          <Route path="/my/certificates" element={<CertificateListPage />} />
-          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
-          <Route path="/my/reminders" element={<ReminderDashboardPage />} />
-          <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
-          <Route path="/my/monitors" element={<MonitorPage />} />
-          <Route path="/my/monitors/:vesselId" element={<MonitorPage />} />
-          <Route path="/my/settings" element={<SettingsPage />} />
+          <Route path={myRouteConfig.myHome.path} element={<MyHomePage />} />
+          <Route path={myRouteConfig.enterpriseProfile.path} element={<EnterpriseProfilePage />} />
+          <Route path={`${myRouteConfig.enterpriseProfile.path}/:id`} element={<EnterpriseProfileDetailPage />} />
+          <Route path={myRouteConfig.enterprisePolicy.path} element={<EnterprisePolicyPage />} />
+          <Route path={`${myRouteConfig.enterprisePolicy.path}/:id`} element={<EnterprisePolicyDetailPage />} />
+          <Route path={myRouteConfig.certificates.path} element={<CertificateListPage />} />
+          <Route path={`${myRouteConfig.certificates.path}/:id`} element={<CertificateDetailPage />} />
+          <Route path={myRouteConfig.reminders.path} element={<ReminderDashboardPage />} />
+          <Route path={`${myRouteConfig.reminders.path}/:id`} element={<ReminderDetailPage />} />
+          <Route path={myRouteConfig.monitors.path} element={<MonitorPage />} />
+          <Route path={`${myRouteConfig.monitors.path}/:vesselId`} element={<MonitorPage />} />
+          <Route path={myRouteConfig.settings.path} element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />
     </Routes>
   );
 }
-
