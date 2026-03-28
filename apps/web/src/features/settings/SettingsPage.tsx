@@ -6,8 +6,8 @@ export function SettingsPage() {
   const { data, isLoading } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [lastSaved, setLastSaved] = useState<Record<string, unknown>>({});
-  const [form] = Form.useForm();
+  const [lastSaved, setLastSaved] = useState<Partial<import('./settingsApi').UserSettings>>({});
+  const [form] = Form.useForm<Partial<import('./settingsApi').UserSettings>>();
 
   useEffect(() => {
     if (data?.data) {

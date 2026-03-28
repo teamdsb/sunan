@@ -2,6 +2,7 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { appEnv } from 'src/config/env';
 import { CertificateTypeEntity } from 'src/database/entities/certificate-type.entity';
+import { CertificateReminderEntity } from 'src/database/entities/certificate-reminder.entity';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
 import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.entity';
@@ -21,6 +22,7 @@ import { Wave31710000002000 } from 'src/database/migrations/1710000002000-wave3-
 import { Wave31710000003000 } from 'src/database/migrations/1710000003000-wave3-enterprise-policy';
 import { Wave31710000004000 } from 'src/database/migrations/1710000004000-wave3-monitor-settings';
 import { Wave31710000005000 } from 'src/database/migrations/1710000005000-wave3-certificates';
+import { Wave41710000006000 } from 'src/database/migrations/1710000006000-wave4-certificate-reminders';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -37,6 +39,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     VehicleEntity,
     PersonnelEntity,
     CertificateTypeEntity,
+    CertificateReminderEntity,
     EnterpriseProfileEntity,
     EnterpriseProfileFileEntity,
     EnterprisePolicyEntity,
@@ -53,6 +56,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave31710000003000,
     Wave31710000004000,
     Wave31710000005000,
+    Wave41710000006000,
   ],
   synchronize: false,
 });

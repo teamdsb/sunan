@@ -93,7 +93,11 @@ export function EnterprisePolicyDetailPage() {
   const [bindFiles] = useBindEnterprisePolicyFilesMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; summary?: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    summary?: string;
+    status: import('./enterpriseApi').EnterprisePolicy['status'];
+  }>();
 
   const policy = data?.data;
 

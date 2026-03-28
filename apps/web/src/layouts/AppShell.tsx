@@ -9,6 +9,7 @@ const navItems = [
   { to: '/my/enterprise-profile', label: '企业资料' },
   { to: '/my/enterprise-policy', label: '企业制度' },
   { to: '/my/certificates', label: '电子证照' },
+  { to: '/my/reminders', label: '证书提醒' },
   { to: '/my/monitors', label: '船舶监控' },
   { to: '/my/settings', label: '设置' },
 ];
@@ -37,7 +38,18 @@ export function AppShell() {
           </div>
           <Space wrap size="middle">
             {navItems.map((item) => (
-              <Button key={item.to} type={location.pathname === item.to ? 'primary' : 'default'}>
+              <Button
+                key={item.to}
+                type={
+                  item.to === '/my'
+                    ? location.pathname === item.to
+                      ? 'primary'
+                      : 'default'
+                    : location.pathname.startsWith(item.to)
+                      ? 'primary'
+                      : 'default'
+                }
+              >
                 <Link to={item.to}>{item.label}</Link>
               </Button>
             ))}
@@ -59,4 +71,3 @@ export function AppShell() {
     </Layout>
   );
 }
-

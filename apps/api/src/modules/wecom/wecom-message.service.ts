@@ -11,6 +11,12 @@ interface SendTextCardOptions {
   btnText?: string;
 }
 
+export interface SendTextCardResult {
+  success: boolean;
+  invalidUser: string[];
+  failureReason?: string;
+}
+
 @Injectable()
 export class WecomMessageService {
   private readonly logger = new Logger(WecomMessageService.name);
@@ -20,7 +26,7 @@ export class WecomMessageService {
     private readonly tokenService: WecomTokenService,
   ) {}
 
-  async sendTextCard(options: SendTextCardOptions): Promise<{ invalidUser: string[] }> {
+  async sendTextCard(options: SendTextCardOptions): Promise<SendTextCardResult> {
     const invalidUser = new Set<string>();
     let accessToken = await this.tokenService.getAccessToken();
 
@@ -51,7 +57,7 @@ export class WecomMessageService {
           if (data.invaliduser) {
             data.invaliduser.split('|').filter(Boolean).forEach((id) => invalidUser.add(id));
           }
-          return { invalidUser: [...invalidUser] };
+          return { success: true, invalidUser: [...invalidUser] };
         }
 
         if (data.errcode === 42001) {
@@ -64,8 +70,9 @@ export class WecomMessageService {
           data.invaliduser.split('|').filter(Boolean).forEach((id) => invalidUser.add(id));
         }
 
-        this.logger.warn(`WeCom sendTextCard failed: ${data.errcode} ${data.errmsg}`);
-        return { invalidUser: [...invalidUser] };
+        const failureReason = `WeCom API error ${data.errcode}: ${data.errmsg}`;
+        this.logger.warn(`WeCom sendTextCard failed: ${failureReason}`);
+        return { success: false, invalidUser: [...invalidUser], failureReason };
       } catch (error) {
         const axiosLike = error as { code?: string };
         if (axiosLike.code === 'ECONNABORTED' && attempt < 2) {
@@ -76,7 +83,10 @@ export class WecomMessageService {
       }
     }
 
-    return { invalidUser: [...invalidUser] };
+    return {
+      success: false,
+      invalidUser: [...invalidUser],
+      failureReason: 'WeCom API request failed after retries',
+    };
   }
 }
-
