@@ -186,7 +186,7 @@ describe('ReminderDashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /已逾期 1/ }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?foo=bar&view=list&reminderType=overdue');
+      expect(screen.getByTestId('location-search')).toHaveTextContent(/^\?foo=bar&view=list&reminderType=overdue$/);
     });
     await waitFor(() => {
       expect(mockList).toHaveBeenLastCalledWith(
