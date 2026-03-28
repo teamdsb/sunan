@@ -148,10 +148,12 @@ export function ReminderDashboardPage() {
                       : dashboard?.totalAcknowledged ?? 0;
                 return (
                   <Col xs={24} md={8} key={item.key}>
-                    <Card className="reminder-stat-card" bordered={false}>
+                    <Card className="reminder-stat-card" variant="borderless">
                       <Button
                         block
                         size="large"
+                        className="reminder-stat-button"
+                        data-testid={`reminder-stat-button-${item.key}`}
                         style={{ minHeight: 88, height: '100%' }}
                         onClick={() => handleCardClick(item)}
                       >
@@ -170,7 +172,7 @@ export function ReminderDashboardPage() {
 
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={12}>
-                <Card title="按持有对象分组" loading={dashboardQuery.isLoading}>
+                <Card title="按持有对象分组" loading={dashboardQuery.isLoading} variant="borderless">
                   <Space direction="vertical" style={{ width: '100%' }}>
                     {(dashboard?.byOwnerType ?? []).map((item) => (
                       <Space key={item.ownerType} style={{ justifyContent: 'space-between', width: '100%' }}>
@@ -182,7 +184,7 @@ export function ReminderDashboardPage() {
                 </Card>
               </Col>
               <Col xs={24} lg={12}>
-                <Card title="按证书类型分组" loading={dashboardQuery.isLoading}>
+                <Card title="按证书类型分组" loading={dashboardQuery.isLoading} variant="borderless">
                   <Space direction="vertical" style={{ width: '100%' }}>
                     {(dashboard?.byCertificateType ?? []).map((item) => (
                       <Space key={item.certificateTypeName} style={{ justifyContent: 'space-between', width: '100%' }}>
@@ -257,6 +259,7 @@ export function ReminderDashboardPage() {
             ) : null
           }
           loading={listQuery.isLoading}
+          variant="borderless"
         >
           <List
             dataSource={reminders}
@@ -273,6 +276,8 @@ export function ReminderDashboardPage() {
                   title={
                     <Link
                       to={buildDetailHref(myRouteConfig.reminders.path, item.id, location.search)}
+                      className="reminder-item-link"
+                      data-testid={`reminder-item-link-${item.id}`}
                       style={{ display: 'inline-flex', minHeight: 44, alignItems: 'center' }}
                     >
                       {item.certificateTitle}

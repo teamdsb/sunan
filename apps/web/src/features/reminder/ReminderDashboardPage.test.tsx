@@ -146,12 +146,21 @@ describe('ReminderDashboardPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('待处理')).toBeInTheDocument();
+    expect(screen.getByTestId('reminder-stat-button-pending')).toBeInTheDocument();
+    expect(screen.getByTestId('reminder-stat-button-overdue')).toBeInTheDocument();
+    expect(screen.getByTestId('reminder-stat-button-acknowledged')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /手动扫描/ })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: '国籍证书' })).toHaveLength(1);
+    expect(screen.getByTestId('reminder-item-link-r-overdue')).toHaveAttribute(
+      'href',
+      '/my/reminders/r-overdue?backTo=%2Fmy%2Freminders%3Fview%3Ddashboard',
+    );
+    expect(screen.getByTestId('reminder-item-link-r-ack')).toHaveAttribute(
+      'href',
+      '/my/reminders/r-ack?backTo=%2Fmy%2Freminders%3Fview%3Ddashboard',
+    );
     expect(screen.getByText('逾期')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /待处理 2/ }));
+    fireEvent.click(screen.getByTestId('reminder-stat-button-pending'));
     await waitFor(() => {
       expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'pending' }));
     });
@@ -165,7 +174,7 @@ describe('ReminderDashboardPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /待处理 2/ }));
+    fireEvent.click(screen.getByTestId('reminder-stat-button-pending'));
 
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&status=pending');
@@ -183,7 +192,7 @@ describe('ReminderDashboardPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /已逾期 1/ }));
+    fireEvent.click(screen.getByTestId('reminder-stat-button-overdue'));
 
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent(/^\?foo=bar&view=list&reminderType=overdue$/);

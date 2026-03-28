@@ -71,6 +71,10 @@ body {
   padding: 0 24px 24px;
 }
 
+.reminder-stat-grid {
+  align-items: stretch;
+}
+
 .placeholder-card {
   min-height: 148px;
   border-radius: 22px;
@@ -78,6 +82,50 @@ body {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 240, 231, 0.96));
   border: 1px solid rgba(20, 40, 29, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.placeholder-card .ant-card-body,
+.reminder-stat-card .ant-card-body {
+  height: 100%;
+}
+
+.placeholder-card .my-home-entry-link,
+.reminder-item-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.reminder-stat-card {
+  height: 100%;
+}
+
+.reminder-stat-card .ant-btn {
+  width: 100%;
+  white-space: normal;
+}
+
+.reminder-item {
+  align-items: flex-start;
+}
+
+.reminder-item .ant-list-item-meta {
+  min-width: 0;
+}
+
+.reminder-item .ant-list-item-meta-title,
+.reminder-item .ant-list-item-meta-description {
+  word-break: break-word;
+}
+
+.shell-header .ant-btn {
+  min-height: 44px;
+}
+
+.shell-header .ant-btn > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
 
 .callback-panel {
@@ -108,5 +156,68 @@ body {
     flex-direction: column;
     align-items: flex-start;
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shell-layout {
+    padding: 8px;
+  }
+
+  .shell-panel {
+    min-height: calc(100vh - 16px);
+    border-radius: 18px;
+  }
+
+  .shell-header {
+    gap: 12px;
+    padding: 14px 14px 12px;
+  }
+
+  .shell-header .ant-space {
+    width: 100%;
+  }
+
+  .shell-header .ant-btn {
+    flex: 1 1 auto;
+  }
+
+  .page-hero {
+    padding: 20px 16px 8px;
+  }
+
+  .page-card-grid {
+    padding: 0 16px 16px;
+    gap: 12px;
+    grid-template-columns: 1fr;
+    margin-inline: 0 !important;
+  }
+
+  .page-card-grid > .ant-col {
+    padding-inline: 0 !important;
+    min-width: 0;
+  }
+
+  .placeholder-card,
+  .reminder-stat-card {
+    min-width: 0;
+  }
+
+  .placeholder-card .ant-card-body,
+  .reminder-stat-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .reminder-stat-card .ant-btn {
+    min-height: 72px;
+  }
+
+  .reminder-item {
+    padding-inline-start: 8px;
+    padding-inline-end: 8px;
+  }
+
+  .reminder-item .ant-list-item-meta {
+    margin-bottom: 8px;
   }
 }

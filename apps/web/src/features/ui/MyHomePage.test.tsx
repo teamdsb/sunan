@@ -11,11 +11,11 @@ describe('MyHomePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: '企业资料' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '企业制度' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '电子证照' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '证书提醒' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '船舶监控' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '设置' })).toBeInTheDocument();
+    expect(screen.getByTestId('my-home-entry-my-enterprise-profile')).toHaveAttribute('href', '/my/enterprise-profile');
+    expect(screen.getByTestId('my-home-entry-my-enterprise-policy')).toHaveAttribute('href', '/my/enterprise-policy');
+    expect(screen.getByTestId('my-home-entry-my-certificates')).toHaveAttribute('href', '/my/certificates');
+    expect(screen.getByTestId('my-home-entry-my-reminders')).toHaveAttribute('href', '/my/reminders');
+    expect(screen.getByTestId('my-home-entry-my-monitors')).toHaveAttribute('href', '/my/monitors');
+    expect(screen.getByTestId('my-home-entry-my-settings')).toHaveAttribute('href', '/my/settings');
   });
 });

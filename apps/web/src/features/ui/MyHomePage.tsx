@@ -16,10 +16,16 @@ export function MyHomePage() {
       <Row gutter={[16, 16]} className="page-card-grid">
         {entries.map((entry) => (
           <Col xs={24} sm={12} md={8} key={entry.path}>
-            <Card className="placeholder-card" bordered={false}>
+            <Card className="placeholder-card" variant="borderless">
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                  <Link to={entry.path}>{entry.label}</Link>
+                  <Link
+                    to={entry.path}
+                    className="my-home-entry-link"
+                    data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
+                  >
+                    {entry.label}
+                  </Link>
                 </Typography.Title>
                 <Typography.Paragraph style={{ marginBottom: 0 }}>
                   {entry.description}
