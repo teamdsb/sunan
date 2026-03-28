@@ -74,7 +74,7 @@ export function CertificateDetailPage() {
                 <Button htmlType="submit" type="primary" loading={saving}>
                   保存
                 </Button>
-                <Button onClick={() => navigate(backHref)}>返回列表</Button>
+                <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
               </Space>
             </Form>
             <Typography.Title level={5} style={{ marginTop: 16 }}>

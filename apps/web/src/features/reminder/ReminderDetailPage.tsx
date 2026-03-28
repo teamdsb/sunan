@@ -86,7 +86,7 @@ export function ReminderDetailPage() {
           <Typography.Title level={2} style={{ marginBottom: 0 }}>
             提醒详情
           </Typography.Title>
-          <Button onClick={() => navigate(backHref)}>返回看板</Button>
+          <Button onClick={() => navigate(backHref, { replace: true })}>返回看板</Button>
         </Space>
 
         <Card loading={isLoading}>
@@ -138,7 +138,7 @@ export function ReminderDetailPage() {
                     </Button>
                   ) : null
                 ) : null}
-                <Button onClick={() => navigate(backHref)}>返回列表</Button>
+                <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
               </Space>
             </Space>
           ) : null}

@@ -6,11 +6,21 @@ import { ReminderDetailPage } from './ReminderDetailPage';
 const mockCurrentUser = vi.fn();
 const mockDetail = vi.fn();
 const mockAcknowledge = vi.fn();
+const mockNavigate = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
   useAppSelector: (selector: (state: { auth: { currentUser: { userId: string; roles: string[] } | null } }) => unknown) =>
     selector({ auth: { currentUser: mockCurrentUser() } }),
 }));
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock('./reminderApi', () => ({
   useGetReminderByIdQuery: () => mockDetail(),
@@ -129,7 +139,10 @@ describe('ReminderDetailPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /已确认/ })).toBeDisabled());
   });
 
-  it.each(['返回看板', '返回列表'])('navigates back through the router when clicking %s', async (buttonName) => {
+  it.each([
+    ['返回看板', '/my/reminders?view=list&status=pending&page=2'],
+    ['返回列表', '/my/reminders?view=list&status=pending&page=2'],
+  ])('replaces history when clicking %s', async (buttonName, expectedHref) => {
     render(
       <MemoryRouter
         initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
@@ -151,8 +164,8 @@ describe('ReminderDetailPage', () => {
 
     fireEvent.click(screen.getByText(buttonName));
 
-    await waitFor(() => expect(screen.getByText('提醒列表')).toBeInTheDocument());
-    expect(screen.getByTestId('pathname')).toHaveTextContent('/my/reminders');
-    expect(screen.getByTestId('search')).toHaveTextContent('?view=list&status=pending&page=2');
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expectedHref, { replace: true });
+    });
   });
 });

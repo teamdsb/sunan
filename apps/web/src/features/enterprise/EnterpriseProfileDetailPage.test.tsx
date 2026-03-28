@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { EnterpriseProfileDetailPage } from './EnterpriseProfileDetailPage';
 
 const mockGetById = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockNavigate = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
@@ -13,16 +14,20 @@ vi.mock('../files/FileUploadField', () => ({
   ),
 }));
 
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 vi.mock('./enterpriseApi', () => ({
   useGetEnterpriseProfileByIdQuery: () => mockGetById(),
   useUpdateEnterpriseProfileMutation: () => [mockUpdate, { isLoading: false }],
   useBindEnterpriseProfileFilesMutation: () => [mockBind],
 }));
-
-function LocationDisplay() {
-  const location = useLocation();
-  return <div data-testid="location-search">{location.search}</div>;
-}
 
 describe('EnterpriseProfileDetailPage', () => {
   beforeEach(() => {
@@ -35,7 +40,7 @@ describe('EnterpriseProfileDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('preserves the back href to the filtered list', async () => {
+  it('replaces history when returning to the filtered list', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -45,17 +50,15 @@ describe('EnterpriseProfileDetailPage', () => {
         <Routes>
           <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
         </Routes>
-        <LocationDisplay />
       </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent(
-        '?page=2&pageSize=10&category=license&status=draft',
-      );
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/my/enterprise-profile?page=2&pageSize=10&category=license&status=draft',
+      { replace: true },
+    );
   });
 
   it('supports edit and bind files', async () => {

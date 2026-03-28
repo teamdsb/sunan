@@ -1,18 +1,38 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, useLocation } from 'react-router-dom';
-import { EnterprisePolicyPage } from './EnterprisePolicyPage';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from './EnterprisePolicyPage';
 
 const mockList = vi.fn();
 const mockCreate = vi.fn();
 const mockPublish = vi.fn();
+const mockNavigate = vi.fn();
+
+vi.mock('../files/FileUploadField', () => ({
+  FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
+    <button onClick={() => props.onChange?.({ id: 'f3' })}>upload</button>
+  ),
+}));
 
 vi.mock('./enterpriseApi', () => ({
   useGetEnterprisePoliciesQuery: (params: unknown) => mockList(params),
   useCreateEnterprisePolicyMutation: () => [mockCreate, { isLoading: false }],
   usePublishEnterprisePolicyMutation: () => [mockPublish],
+  useGetEnterprisePolicyByIdQuery: () => ({ data: { data: { id: '1', title: '制度A', summary: '', status: 'draft' } }, isLoading: false }),
+  useGetEnterprisePolicyVersionsQuery: () => ({ data: { data: [] }, isLoading: false }),
+  useUpdateEnterprisePolicyMutation: () => [vi.fn(), { isLoading: false }],
+  useBindEnterprisePolicyFilesMutation: () => [vi.fn()],
 }));
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 function LocationDisplay() {
   const location = useLocation();
@@ -69,6 +89,23 @@ describe('EnterprisePolicyPage', () => {
     expect(screen.getByRole('link', { name: '详情' })).toHaveAttribute(
       'href',
       '/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar',
+    );
+  });
+
+  it('replaces history when returning from the detail page', () => {
+    render(
+      <MemoryRouter initialEntries={['/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar']}>
+        <Routes>
+          <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=bar',
+      { replace: true },
     );
   });
 });

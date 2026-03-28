@@ -1,11 +1,12 @@
-﻿import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { CertificateDetailPage } from './CertificateDetailPage';
 
 const mockGet = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockNavigate = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
@@ -13,19 +14,24 @@ vi.mock('../files/FileUploadField', () => ({
   ),
 }));
 
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
   useUpdateCertificateMutation: () => [mockUpdate, { isLoading: false }],
   useBindCertificateFilesMutation: () => [mockBind],
 }));
 
-function LocationDisplay() {
-  const location = useLocation();
-  return <div data-testid="location-search">{location.search}</div>;
-}
-
 describe('CertificateDetailPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     mockGet.mockReturnValue({
       data: { data: { id: 'c1', title: 'certificate-a', ownerName: 'vessel-012', expiryDate: '2027-12-31', status: 'active', files: [{ id: 'f1', fileName: 'doc.pdf' }] } },
       isLoading: false,
@@ -34,7 +40,7 @@ describe('CertificateDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('preserves the back target in the rendered detail navigation', () => {
+  it('replaces history when returning to the certificate list', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -44,14 +50,14 @@ describe('CertificateDetailPage', () => {
         <Routes>
           <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
         </Routes>
-        <LocationDisplay />
       </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
 
-    expect(screen.getByTestId('location-search')).toHaveTextContent(
-      '?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+      { replace: true },
     );
   });
 
