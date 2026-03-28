@@ -13,7 +13,12 @@ export function EnterpriseProfileDetailPage() {
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; category: string; description?: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    category: string;
+    description?: string;
+    status: import('./enterpriseApi').EnterpriseProfile['status'];
+  }>();
 
   const profile = data?.data;
 

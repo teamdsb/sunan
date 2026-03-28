@@ -6,9 +6,11 @@ import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from '../features/en
 import { EnterpriseProfilePage } from '../features/enterprise/EnterpriseProfilePage';
 import { EnterpriseProfileDetailPage } from '../features/enterprise/EnterpriseProfileDetailPage';
 import { MonitorPage } from '../features/monitor/MonitorPage';
+import { ReminderDashboardPage } from '../features/reminder/ReminderDashboardPage';
+import { ReminderDetailPage } from '../features/reminder/ReminderDetailPage';
+import { MyHomePage } from '../features/ui/MyHomePage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppShell } from '../layouts/AppShell';
-import { PlaceholderPage } from './PlaceholderPage';
 import { RequireAuth } from './RequireAuth';
 
 export function AppRoutes() {
@@ -17,16 +19,15 @@ export function AppRoutes() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route
-            path="/my"
-            element={<PlaceholderPage title="我的模块首页" description="Wave 3 业务页面已接入，请从导航进入各模块。" />}
-          />
+          <Route path="/my" element={<MyHomePage />} />
           <Route path="/my/enterprise-profile" element={<EnterpriseProfilePage />} />
           <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
           <Route path="/my/enterprise-policy" element={<EnterprisePolicyPage />} />
           <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
           <Route path="/my/certificates" element={<CertificateListPage />} />
           <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
+          <Route path="/my/reminders" element={<ReminderDashboardPage />} />
+          <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
           <Route path="/my/monitors" element={<MonitorPage />} />
           <Route path="/my/monitors/:vesselId" element={<MonitorPage />} />
           <Route path="/my/settings" element={<SettingsPage />} />
@@ -36,5 +37,4 @@ export function AppRoutes() {
     </Routes>
   );
 }
-
 

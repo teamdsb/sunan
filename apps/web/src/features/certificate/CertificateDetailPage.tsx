@@ -13,7 +13,11 @@ export function CertificateDetailPage() {
   const [bindFiles] = useBindCertificateFilesMutation();
   const [upload, setUpload] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; expiryDate: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    expiryDate: string;
+    status: import('./certificateApi').CertificateItem['status'];
+  }>();
   const item = data?.data;
 
   useEffect(() => {
