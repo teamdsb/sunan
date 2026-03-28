@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { DataSource } from 'typeorm';
 
-import { buildTypeOrmOptions } from 'src/database/typeorm.config';
+import { buildTypeOrmOptions } from './typeorm.config';
 
 export default new DataSource({
   ...buildTypeOrmOptions(),

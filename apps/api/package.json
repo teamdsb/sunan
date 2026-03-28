@@ -50,8 +50,8 @@
     "test": "pnpm run test:unit && pnpm run test:integration",
     "test:unit": "jest --config ./jest.unit.config.ts",
     "test:integration": "jest --config ./jest.integration.config.ts",
-    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
-    "migration:generate": "typeorm-ts-node-commonjs migration:generate src/database/migrations/auto -d src/database/data-source.ts",
-    "seed": "ts-node src/database/seeds/run-seed.ts"
+    "migration:run": "NODE_PATH=. ts-node src/database/run-migrations.ts",
+    "migration:generate": "NODE_PATH=. typeorm-ts-node-commonjs migration:generate src/database/migrations/auto -d src/database/data-source.ts",
+    "seed": "NODE_PATH=. ts-node src/database/seeds/run-seed.ts"
   }
 }
