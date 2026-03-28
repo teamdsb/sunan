@@ -129,9 +129,10 @@ describe('AppRoutes', () => {
   });
 
   it('reconstructs the list url when returning from detail pages', () => {
-    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/reminders?view=list&status=pending')}`)).toBe(
-      '/my/reminders?view=list&status=pending',
-    );
+    const detailSearch = `?backTo=${encodeURIComponent('/my/reminders?page=2&status=pending')}`;
+    expect(buildDetailHref('/my/reminders', '1', '?page=2&status=pending')).toBe(`/my/reminders/1${detailSearch}`);
+    expect(resolveBackHref('/my/reminders', detailSearch)).toBe('/my/reminders?page=2&status=pending');
+    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/settings')}`)).toBe('/my/reminders');
     expect(resolveBackHref('/my/reminders')).toBe('/my/reminders');
   });
 });

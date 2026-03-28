@@ -34,5 +34,15 @@ export function buildDetailHref(listPath: string, id: string, currentSearch = ''
 
 export function resolveBackHref(listPath: string, currentSearch = ''): string {
   const searchParams = new URLSearchParams(currentSearch);
-  return searchParams.get('backTo') || listPath;
+  const backTo = searchParams.get('backTo');
+
+  if (!backTo) {
+    return listPath;
+  }
+
+  if (backTo === listPath || backTo.startsWith(`${listPath}?`)) {
+    return backTo;
+  }
+
+  return listPath;
 }
