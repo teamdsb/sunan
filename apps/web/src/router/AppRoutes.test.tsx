@@ -113,8 +113,9 @@ describe('AppRoutes', () => {
     [myRouteConfig.monitors.path, myRouteConfig.monitors.detailPath, 'vessel-1', '/my/monitors/vessel-1', 'MONITOR_PAGE'],
   ] as const)('renders detail route %s', (listPath, detailPath, id, path, expectedText) => {
     expect(detailPath).toMatch(/\/:(id|vesselId)$/);
-    expect(buildDetailHref(listPath, id)).toBe(`${path}?backTo=${encodeURIComponent(listPath)}`);
-    renderRoute(path);
+    const href = buildDetailHref(listPath, id);
+    expect(href).toBe(`${path}?backTo=${encodeURIComponent(listPath)}`);
+    renderRoute(href);
     expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
 
@@ -132,6 +133,9 @@ describe('AppRoutes', () => {
     const detailSearch = `?backTo=${encodeURIComponent('/my/reminders?page=2&status=pending')}`;
     expect(buildDetailHref('/my/reminders', '1', '?page=2&status=pending')).toBe(`/my/reminders/1${detailSearch}`);
     expect(resolveBackHref('/my/reminders', detailSearch)).toBe('/my/reminders?page=2&status=pending');
+    expect(resolveBackHref('/my/reminders', '?backTo=https%3A%2F%2Fevil.example')).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders', '?backTo=%2F%2Fevil.example')).toBe('/my/reminders');
+    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/reminders-archive?x=1')}`)).toBe('/my/reminders');
     expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/settings')}`)).toBe('/my/reminders');
     expect(resolveBackHref('/my/reminders')).toBe('/my/reminders');
   });
