@@ -459,13 +459,13 @@ describe('CertificateReminderEngineService', () => {
     );
   });
 
-  it('skips reminder creation when a matching acknowledged reminder already exists', async () => {
+  it('skips overdue reminders when an acknowledged upcoming reminder already exists for the same cycle', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 
     const certificate = makeCertificate({
       ownerType: 'vessel',
       ownerId: randomUUID(),
-      expiryDate: '2026-04-27',
+      expiryDate: '2026-03-27',
       advanceDays: 30,
     });
 
@@ -479,7 +479,7 @@ describe('CertificateReminderEngineService', () => {
         reminderType: 'upcoming',
         status: 'acknowledged',
         scheduledDate: '2026-03-27',
-        daysBeforeExpiry: 31,
+        daysBeforeExpiry: 0,
         certificateExpiryDate: certificate.expiryDate,
         sentAt: new Date('2026-03-27T01:00:00.000Z'),
         acknowledgedAt: new Date('2026-03-27T02:00:00.000Z'),

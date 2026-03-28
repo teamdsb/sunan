@@ -92,7 +92,6 @@ export class CertificateReminderEngineService {
           this.makeReminderCycleKey(
             reminder.certificateId,
             reminder.recipientUserId,
-            reminder.reminderType,
             reminder.certificateExpiryDate,
           ),
         ),
@@ -148,7 +147,6 @@ export class CertificateReminderEngineService {
         const reminderCycleKey = this.makeReminderCycleKey(
           certificate.id,
           recipientUserId,
-          reminderType,
           certificate.expiryDate,
         );
         if (acknowledgedReminderKeys.has(reminderCycleKey)) {
@@ -409,10 +407,9 @@ export class CertificateReminderEngineService {
   private makeReminderCycleKey(
     certificateId: string,
     recipientUserId: string,
-    reminderType: string,
     certificateExpiryDate: string,
   ): string {
-    return [certificateId, recipientUserId, reminderType, certificateExpiryDate].join(':');
+    return [certificateId, recipientUserId, certificateExpiryDate].join(':');
   }
 
   private describeError(error: unknown): string {
