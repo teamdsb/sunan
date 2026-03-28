@@ -4,12 +4,14 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
 import { useGetCertificatesQuery, useGetGroupedCertificatesQuery } from './certificateApi';
+import { useGetSettingsQuery } from '../settings/settingsApi';
 
 const ownerTabs = [
   { label: '船舶', value: 'vessel' },
   { label: '车辆', value: 'vehicle' },
   { label: '人员', value: 'personnel' },
 ] as const;
+const scrollStoragePrefix = 'certificate-list-scroll:';
 
 function readPageValue(value: string | null, fallback: number): number {
   if (!value) {
@@ -20,11 +22,17 @@ function readPageValue(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function getScrollStorageKey(search: string): string {
+  return `${scrollStoragePrefix}${search}`;
+}
+
 export function CertificateListPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { data: settings } = useGetSettingsQuery();
   const ownerType = (searchParams.get('ownerType') as 'vessel' | 'vehicle' | 'personnel' | null) || 'vessel';
-  const groupBy = (searchParams.get('groupBy') as 'owner' | 'type' | null) || 'owner';
+  const groupBy =
+    (searchParams.get('groupBy') as 'owner' | 'type' | null) || settings?.data.certificateGroupBy || 'owner';
   const status = searchParams.get('status') || undefined;
   const keyword = searchParams.get('keyword') || '';
   const [keywordDraft, setKeywordDraft] = useState(keyword);
@@ -43,6 +51,23 @@ export function CertificateListPage() {
   useEffect(() => {
     setKeywordDraft(keyword);
   }, [keyword]);
+
+  useEffect(() => {
+    const storageKey = getScrollStorageKey(location.search);
+    const savedScrollTop = window.sessionStorage.getItem(storageKey);
+
+    if (savedScrollTop === null) {
+      return;
+    }
+
+    const scrollTop = Number(savedScrollTop);
+    window.scrollTo(0, Number.isFinite(scrollTop) ? scrollTop : 0);
+    window.sessionStorage.removeItem(storageKey);
+  }, [location.search]);
+
+  const rememberScrollPosition = () => {
+    window.sessionStorage.setItem(getScrollStorageKey(location.search), String(window.scrollY));
+  };
 
   return (
     <section className="page-hero">
@@ -125,7 +150,11 @@ export function CertificateListPage() {
             renderItem={(item) => (
               <List.Item>
                 <List.Item.Meta
-                  title={<Link to={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)}>{item.title}</Link>}
+                  title={
+                    <Link to={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>
+                      {item.title}
+                    </Link>
+                  }
                   description={`${item.ownerName} · ${item.expiryDate} · ${item.status}`}
                 />
               </List.Item>

@@ -5,10 +5,15 @@ import { CertificateListPage } from './CertificateListPage';
 
 const mockGet = vi.fn();
 const mockGrouped = vi.fn();
+const mockSettings = vi.fn();
 
 vi.mock('./certificateApi', () => ({
   useGetCertificatesQuery: (params: unknown) => mockGet(params),
   useGetGroupedCertificatesQuery: (params: unknown) => mockGrouped(params),
+}));
+
+vi.mock('../settings/settingsApi', () => ({
+  useGetSettingsQuery: () => mockSettings(),
 }));
 
 function LocationDisplay() {
@@ -27,6 +32,10 @@ describe('CertificateListPage', () => {
       isLoading: false,
     });
     mockGrouped.mockReturnValue({ data: { data: [{ groupKey: 'vessel:1', groupLabel: '船舶-苏南012', count: 1 }] } });
+    mockSettings.mockReturnValue({
+      data: { data: { reminderViewMode: 'dashboard', certificateGroupBy: 'owner', enablePushNotifications: true } },
+      isLoading: false,
+    });
   });
 
   it('syncs the route query to list filters and preserves it in detail links', async () => {
@@ -89,5 +98,42 @@ describe('CertificateListPage', () => {
         pageSize: 10,
       }),
     );
+  });
+
+  it('uses the certificate groupBy setting when the URL omits groupBy', () => {
+    mockSettings.mockReturnValue({
+      data: { data: { reminderViewMode: 'dashboard', certificateGroupBy: 'type', enablePushNotifications: true } },
+      isLoading: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&status=active&keyword=abc']}>
+        <CertificateListPage />
+      </MemoryRouter>,
+    );
+
+    expect(mockGrouped).toHaveBeenLastCalledWith(expect.objectContaining({ groupBy: 'type' }));
+    expect(screen.getByRole('link', { name: '国籍证书' })).toHaveAttribute(
+      'href',
+      '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D1%26pageSize%3D10%26ownerType%3Dvessel%26status%3Dactive%26keyword%3Dabc',
+    );
+  });
+
+  it('restores the certificate list scroll position when returning with the same query', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    window.sessionStorage.setItem(
+      'certificate-list-scroll:?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+      '240',
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+        <CertificateListPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(scrollTo).toHaveBeenCalledWith(0, 240);
+    });
   });
 });
