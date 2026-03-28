@@ -18,6 +18,10 @@ vi.mock('../features/enterprise/EnterpriseProfilePage', () => ({
   EnterpriseProfilePage: () => <div>ENTERPRISE_PROFILE</div>,
 }));
 
+vi.mock('../features/enterprise/EnterpriseProfileDetailPage', () => ({
+  EnterpriseProfileDetailPage: () => <div>ENTERPRISE_PROFILE_DETAIL</div>,
+}));
+
 vi.mock('../features/enterprise/EnterprisePolicyPage', () => ({
   EnterprisePolicyPage: () => <div>ENTERPRISE_POLICY</div>,
   EnterprisePolicyDetailPage: () => <div>ENTERPRISE_POLICY_DETAIL</div>,
@@ -25,6 +29,10 @@ vi.mock('../features/enterprise/EnterprisePolicyPage', () => ({
 
 vi.mock('../features/certificate/CertificateListPage', () => ({
   CertificateListPage: () => <div>CERTIFICATE_LIST</div>,
+}));
+
+vi.mock('../features/certificate/CertificateDetailPage', () => ({
+  CertificateDetailPage: () => <div>CERTIFICATE_DETAIL</div>,
 }));
 
 vi.mock('../features/reminder/ReminderDashboardPage', () => ({
@@ -98,11 +106,14 @@ describe('AppRoutes', () => {
   });
 
   it.each([
-    [myRouteConfig.reminders.path, myRouteConfig.reminders.detailPath, '/my/reminders/1', 'REMINDER_DETAIL'],
-    [myRouteConfig.enterprisePolicy.path, myRouteConfig.enterprisePolicy.detailPath, '/my/enterprise-policy/1', 'ENTERPRISE_POLICY_DETAIL'],
-  ] as const)('renders detail route %s', (listPath, detailPath, path, expectedText) => {
-    expect(detailPath).toMatch(/\/:id$/);
-    expect(buildDetailHref(listPath, '1')).toBe(path);
+    [myRouteConfig.reminders.path, myRouteConfig.reminders.detailPath, '1', '/my/reminders/1', 'REMINDER_DETAIL'],
+    [myRouteConfig.enterprisePolicy.path, myRouteConfig.enterprisePolicy.detailPath, '1', '/my/enterprise-policy/1', 'ENTERPRISE_POLICY_DETAIL'],
+    [myRouteConfig.enterpriseProfile.path, myRouteConfig.enterpriseProfile.detailPath, '1', '/my/enterprise-profile/1', 'ENTERPRISE_PROFILE_DETAIL'],
+    [myRouteConfig.certificates.path, myRouteConfig.certificates.detailPath, '1', '/my/certificates/1', 'CERTIFICATE_DETAIL'],
+    [myRouteConfig.monitors.path, myRouteConfig.monitors.detailPath, 'vessel-1', '/my/monitors/vessel-1', 'MONITOR_PAGE'],
+  ] as const)('renders detail route %s', (listPath, detailPath, id, path, expectedText) => {
+    expect(detailPath).toMatch(/\/:(id|vesselId)$/);
+    expect(buildDetailHref(listPath, id)).toBe(`${path}?backTo=${encodeURIComponent(listPath)}`);
     renderRoute(path);
     expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
@@ -118,6 +129,9 @@ describe('AppRoutes', () => {
   });
 
   it('reconstructs the list url when returning from detail pages', () => {
-    expect(resolveBackHref('/my/reminders', '?view=list&status=pending')).toBe('/my/reminders?view=list&status=pending');
+    expect(resolveBackHref('/my/reminders', `?backTo=${encodeURIComponent('/my/reminders?view=list&status=pending')}`)).toBe(
+      '/my/reminders?view=list&status=pending',
+    );
+    expect(resolveBackHref('/my/reminders')).toBe('/my/reminders');
   });
 });

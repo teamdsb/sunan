@@ -28,9 +28,11 @@ export function updateSearchParams(
 }
 
 export function buildDetailHref(listPath: string, id: string, currentSearch = ''): string {
-  return `${listPath}/${id}${currentSearch}`;
+  const backTo = encodeURIComponent(`${listPath}${currentSearch}`);
+  return `${listPath}/${id}?backTo=${backTo}`;
 }
 
 export function resolveBackHref(listPath: string, currentSearch = ''): string {
-  return `${listPath}${currentSearch}`;
+  const searchParams = new URLSearchParams(currentSearch);
+  return searchParams.get('backTo') || listPath;
 }
