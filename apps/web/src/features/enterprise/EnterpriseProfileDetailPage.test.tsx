@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { EnterpriseProfileDetailPage } from './EnterpriseProfileDetailPage';
 
 const mockGetById = vi.fn();
@@ -18,6 +18,11 @@ vi.mock('./enterpriseApi', () => ({
   useUpdateEnterpriseProfileMutation: () => [mockUpdate, { isLoading: false }],
   useBindEnterpriseProfileFilesMutation: () => [mockBind],
 }));
+
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
 
 describe('EnterpriseProfileDetailPage', () => {
   beforeEach(() => {
@@ -40,13 +45,17 @@ describe('EnterpriseProfileDetailPage', () => {
         <Routes>
           <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
         </Routes>
+        <LocationDisplay />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: '返回列表' })).toHaveAttribute(
-      'href',
-      '/my/enterprise-profile?page=2&pageSize=10&category=license&status=draft',
-    );
+    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent(
+        '?page=2&pageSize=10&category=license&status=draft',
+      );
+    });
   });
 
   it('supports edit and bind files', async () => {

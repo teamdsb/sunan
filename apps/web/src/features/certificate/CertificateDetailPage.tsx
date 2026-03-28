@@ -1,6 +1,6 @@
 import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -10,6 +10,7 @@ import { useBindCertificateFilesMutation, useGetCertificateByIdQuery, useUpdateC
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
   const [updateCertificate, { isLoading: saving }] = useUpdateCertificateMutation();
   const [bindFiles] = useBindCertificateFilesMutation();
@@ -73,7 +74,7 @@ export function CertificateDetailPage() {
                 <Button htmlType="submit" type="primary" loading={saving}>
                   保存
                 </Button>
-                <Button href={backHref}>返回列表</Button>
+                <Button onClick={() => navigate(backHref)}>返回列表</Button>
               </Space>
             </Form>
             <Typography.Title level={5} style={{ marginTop: 16 }}>

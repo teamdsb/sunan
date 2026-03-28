@@ -1,6 +1,6 @@
 import { Alert, Button, Card, Form, Input, List, Pagination, Select, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -31,6 +31,7 @@ export function EnterprisePolicyPage() {
   const pageSize = readPageValue(searchParams.get('pageSize'), 10);
   const status = searchParams.get('status') || undefined;
   const keyword = searchParams.get('keyword') || '';
+  const [keywordDraft, setKeywordDraft] = useState(keyword);
 
   const { data, isLoading } = useGetEnterprisePoliciesQuery({ page, pageSize, status, keyword: keyword || undefined });
   const [createPolicy, { isLoading: creating }] = useCreateEnterprisePolicyMutation();
@@ -42,6 +43,10 @@ export function EnterprisePolicyPage() {
   const applySearch = (updates: Record<string, string | number | null | undefined>) => {
     setSearchParams(updateSearchParams(location.search, updates));
   };
+
+  useEffect(() => {
+    setKeywordDraft(keyword);
+  }, [keyword]);
 
   return (
     <section className="page-hero">
@@ -76,14 +81,9 @@ export function EnterprisePolicyPage() {
             <Input.Search
               placeholder="关键字"
               allowClear
-              value={keyword}
+              value={keywordDraft}
               onChange={(event) => {
-                applySearch({
-                  keyword: event.target.value || null,
-                  page: 1,
-                  pageSize,
-                  status,
-                });
+                setKeywordDraft(event.target.value);
               }}
               onSearch={(v) => {
                 applySearch({
@@ -151,6 +151,7 @@ export function EnterprisePolicyPage() {
 export function EnterprisePolicyDetailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterprisePolicyByIdQuery(id, { skip: !id });
   const { data: versions } = useGetEnterprisePolicyVersionsQuery(id, { skip: !id });
   const [updatePolicy, { isLoading: saving }] = useUpdateEnterprisePolicyMutation();
@@ -212,7 +213,7 @@ export function EnterprisePolicyDetailPage() {
             <Button htmlType="submit" type="primary" loading={saving}>
               保存
             </Button>
-            <Button href={backHref}>返回列表</Button>
+            <Button onClick={() => navigate(backHref)}>返回列表</Button>
           </Space>
         </Form>
 

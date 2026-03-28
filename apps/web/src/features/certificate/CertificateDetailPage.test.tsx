@@ -1,6 +1,6 @@
 ﻿import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { CertificateDetailPage } from './CertificateDetailPage';
 
 const mockGet = vi.fn();
@@ -19,6 +19,11 @@ vi.mock('./certificateApi', () => ({
   useBindCertificateFilesMutation: () => [mockBind],
 }));
 
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
 describe('CertificateDetailPage', () => {
   beforeEach(() => {
     mockGet.mockReturnValue({
@@ -27,6 +32,27 @@ describe('CertificateDetailPage', () => {
     });
     mockUpdate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+  });
+
+  it('preserves the back target in the rendered detail navigation', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
+        ]}
+      >
+        <Routes>
+          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
+        </Routes>
+        <LocationDisplay />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
+
+    expect(screen.getByTestId('location-search')).toHaveTextContent(
+      '?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+    );
   });
 
   it('renders detail, edit and bind file', async () => {
@@ -41,10 +67,6 @@ describe('CertificateDetailPage', () => {
     const titleInput = container.querySelector('#title') as HTMLInputElement;
     expect(titleInput.value).toBe('certificate-a');
     expect(screen.getByText('doc.pdf')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '返回列表' })).toHaveAttribute(
-      'href',
-      '/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
-    );
 
     fireEvent.change(titleInput, { target: { value: 'certificate-a-updated' } });
     fireEvent.click(screen.getByRole('button', { name: 'upload' }));

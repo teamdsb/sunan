@@ -1,6 +1,6 @@
 ﻿import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -10,6 +10,7 @@ import { useBindEnterpriseProfileFilesMutation, useGetEnterpriseProfileByIdQuery
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, { skip: !id });
   const [updateProfile, { isLoading: saving }] = useUpdateEnterpriseProfileMutation();
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
@@ -68,7 +69,7 @@ export function EnterpriseProfileDetailPage() {
           </Form.Item>
           <Space>
             <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
-            <Button href={backHref}>返回列表</Button>
+            <Button onClick={() => navigate(backHref)}>返回列表</Button>
           </Space>
         </Form>
       </Card>
