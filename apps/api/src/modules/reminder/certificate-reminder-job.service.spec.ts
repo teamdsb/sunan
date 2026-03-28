@@ -49,6 +49,14 @@ describe('CertificateReminderJobService', () => {
 
         return null;
       }),
+      lrange: jest.fn(async (_key: string, start: number, end: number) => {
+        if (start === 0 && end === -1) {
+          return [...state.processing];
+        }
+
+        return [];
+      }),
+      hgetall: jest.fn(async (key: string) => state.hashes.get(key) ?? {}),
       lrem: jest.fn(async (_key: string, _count: number, value: string) => {
         const index = state.processing.indexOf(value);
         if (index >= 0) {
@@ -259,5 +267,75 @@ describe('CertificateReminderJobService', () => {
 
     expect(state.lockToken).toBeNull();
     jest.useRealTimers();
+  });
+
+  it('reclaims stale processing jobs on a later worker tick without restarting the worker', async () => {
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    const engine = {
+      runScan: jest.fn(async () => ({ createdCount: 1, sentCount: 1, failedCount: 0 })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T00:10:00.000Z')),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+
+    const payload = JSON.stringify({ jobId: 'stale-job', source: 'manual' });
+    state.processing.push(payload);
+    state.hashes.set('certificate-reminder:job:stale-job', {
+      jobId: 'stale-job',
+      source: 'manual',
+      status: 'running',
+      acceptedAt: '2026-03-28T00:00:00.000Z',
+      startedAt: '2026-03-28T00:00:00.000Z',
+      heartbeatAt: '2026-03-28T00:00:00.000Z',
+    });
+
+    await (service as any).recoverStalledJobs();
+
+    expect(state.processing).toHaveLength(0);
+    expect(state.queue).toHaveLength(1);
+
+    await (service as any).processQueueOnce();
+
+    expect(engine.runScan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: 'stale-job',
+        source: 'manual',
+      }),
+    );
+  });
+
+  it('keeps a fresh processing job in place during recovery ticks', async () => {
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    const engine = {
+      runScan: jest.fn(async () => ({ createdCount: 1, sentCount: 1, failedCount: 0 })),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T00:01:00.000Z')),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+
+    const payload = JSON.stringify({ jobId: 'fresh-job', source: 'manual' });
+    state.processing.push(payload);
+    state.hashes.set('certificate-reminder:job:fresh-job', {
+      jobId: 'fresh-job',
+      source: 'manual',
+      status: 'running',
+      acceptedAt: '2026-03-28T00:00:00.000Z',
+      startedAt: '2026-03-28T00:00:30.000Z',
+      heartbeatAt: '2026-03-28T00:01:00.000Z',
+    });
+
+    await (service as any).recoverStalledJobs();
+
+    expect(state.processing).toHaveLength(1);
+    expect(state.queue).toHaveLength(0);
+    expect(engine.runScan).not.toHaveBeenCalled();
   });
 });

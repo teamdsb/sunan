@@ -14,6 +14,8 @@ const SCAN_LOCK_KEY = 'certificate-reminder:scan-lock';
 const CRON_MARKER_PREFIX = 'certificate-reminder:cron:';
 const SCAN_LOCK_TTL_MS = 30 * 60 * 1000;
 const SCAN_LOCK_HEARTBEAT_MS = 5 * 60 * 1000;
+const PROCESSING_HEARTBEAT_MS = 60 * 1000;
+const PROCESSING_STALE_AFTER_MS = 3 * PROCESSING_HEARTBEAT_MS;
 const CRON_MARKER_TTL_SECONDS = 172_800;
 const WORKER_IDLE_DELAY_MS = 250;
 
@@ -119,10 +121,9 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
   }
 
   private async runWorkerLoop(): Promise<void> {
-    await this.recoverStalledJobs();
-
     while (this.workerActive && !this.stopped) {
       try {
+        await this.recoverStalledJobs();
         const processed = await this.processQueueOnce();
         if (!processed) {
           await this.sleep(WORKER_IDLE_DELAY_MS);
@@ -136,10 +137,25 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
   }
 
   private async recoverStalledJobs(): Promise<void> {
-    while (true) {
-      const payload = await this.redis.rpoplpush(PROCESSING_KEY, QUEUE_KEY);
-      if (!payload) {
-        return;
+    const payloads = await this.redis.lrange(PROCESSING_KEY, 0, -1);
+    for (const payload of payloads) {
+      const envelope = this.parseEnvelope(payload);
+      if (!envelope) {
+        continue;
+      }
+
+      const key = this.buildKey(envelope.jobId);
+      const job = await this.redis.hgetall(key);
+      if (!this.shouldRequeueJob(job)) {
+        continue;
+      }
+
+      const removed = await this.redis.lrem(PROCESSING_KEY, 1, payload);
+      if (removed > 0) {
+        await this.redis.lpush(QUEUE_KEY, payload);
+        await this.redis.hset(key, {
+          status: 'queued',
+        });
       }
     }
   }
@@ -179,18 +195,22 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
   private async runJob(envelope: ReminderJobEnvelope): Promise<void> {
     const key = this.buildKey(envelope.jobId);
     const startedAt = this.clock.now().toISOString();
+    let stopHeartbeat: () => void = () => undefined;
 
     try {
       await this.redis.hset(key, {
         status: 'running',
         startedAt,
+        heartbeatAt: startedAt,
       });
+      stopHeartbeat = this.startJobHeartbeat(key);
 
       const result = await this.engine.runScan(envelope);
 
       await this.redis.hset(key, {
         status: 'completed',
         finishedAt: this.clock.now().toISOString(),
+        heartbeatAt: this.clock.now().toISOString(),
         createdCount: String(result.createdCount),
         sentCount: String(result.sentCount),
         failedCount: String(result.failedCount),
@@ -201,8 +221,11 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
       await this.redis.hset(key, {
         status: 'failed',
         finishedAt: this.clock.now().toISOString(),
+        heartbeatAt: this.clock.now().toISOString(),
         error: message,
       });
+    } finally {
+      stopHeartbeat();
     }
   }
 
@@ -225,6 +248,43 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     return () => {
       clearInterval(timer);
     };
+  }
+
+  private startJobHeartbeat(jobKey: string): () => void {
+    const renew = () => {
+      void this.redis.hset(jobKey, {
+        heartbeatAt: this.clock.now().toISOString(),
+      });
+    };
+
+    const timer = setInterval(renew, PROCESSING_HEARTBEAT_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }
+
+  private shouldRequeueJob(job: Record<string, string>): boolean {
+    const status = job.status;
+    if (status === 'completed' || status === 'failed') {
+      return false;
+    }
+
+    const timestamp = job.heartbeatAt ?? job.startedAt ?? job.acceptedAt;
+    if (!timestamp) {
+      return true;
+    }
+
+    const ageMs = this.clock.now().getTime() - new Date(timestamp).getTime();
+    return ageMs >= PROCESSING_STALE_AFTER_MS;
+  }
+
+  private parseEnvelope(payload: string): ReminderJobEnvelope | null {
+    try {
+      return JSON.parse(payload) as ReminderJobEnvelope;
+    } catch (error) {
+      this.logger.warn(`failed to parse reminder queue payload: ${error instanceof Error ? error.message : 'invalid payload'}`);
+      return null;
+    }
   }
 
   private async renewScanLock(token: string): Promise<boolean> {

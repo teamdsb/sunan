@@ -44,6 +44,7 @@ const redisMock = {
   lpush: jest.fn(async () => 1),
   rpush: jest.fn(async () => 1),
   rpoplpush: jest.fn(async () => null),
+  lrange: jest.fn(async () => []),
   lrem: jest.fn(async () => 0),
   get: jest.fn(async () => null),
   set: jest.fn(async () => 'OK'),
