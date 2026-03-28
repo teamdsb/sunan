@@ -348,11 +348,12 @@ describe('CertificateReminderJobService', () => {
     jest.useRealTimers();
   });
 
-  it('fails the job when scan lock renewal is lost mid-run', async () => {
+  it('requeues a lease-lost job instead of failing it permanently', async () => {
     jest.useFakeTimers();
 
     const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
 
+    let now = new Date('2026-03-28T01:00:00.000Z');
     const engine = {
       runScan: jest.fn(async (_envelope: unknown, options?: { isLeaseValid?: () => boolean }) => {
         await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
@@ -361,7 +362,7 @@ describe('CertificateReminderJobService', () => {
       }),
     };
     const clock = {
-      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      now: jest.fn(() => now),
       today: jest.fn(() => '2026-03-28'),
     };
     const { redis, state } = createRedisMock();
@@ -376,10 +377,18 @@ describe('CertificateReminderJobService', () => {
     const jobRecord = state.hashes.get(`certificate-reminder:job:${enqueueResult.jobId}`);
     expect(jobRecord).toEqual(
       expect.objectContaining({
-        status: 'failed',
-        error: 'scan lock lost',
+        status: 'retryable',
+        abortReason: 'lease_lost',
+        retryCount: '1',
+        nextRetryAt: expect.any(String),
       }),
     );
+
+    now = new Date('2026-03-28T01:00:02.000Z');
+    await (service as any).recoverStalledJobs();
+
+    expect(state.processing).toHaveLength(0);
+    expect(state.queue).toHaveLength(1);
     jest.useRealTimers();
   });
 

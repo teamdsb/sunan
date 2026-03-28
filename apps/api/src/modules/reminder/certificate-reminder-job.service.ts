@@ -16,8 +16,17 @@ const SCAN_LOCK_TTL_MS = 30 * 60 * 1000;
 const SCAN_LOCK_HEARTBEAT_MS = 5 * 60 * 1000;
 const PROCESSING_HEARTBEAT_MS = 60 * 1000;
 const PROCESSING_STALE_AFTER_MS = 3 * PROCESSING_HEARTBEAT_MS;
+const RETRY_BACKOFF_BASE_MS = 1000;
+const MAX_RETRY_COUNT = 3;
 const CRON_MARKER_TTL_SECONDS = 172_800;
 const WORKER_IDLE_DELAY_MS = 250;
+
+class RecoverableScanAbortError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RecoverableScanAbortError';
+  }
+}
 
 @Injectable()
 export class CertificateReminderJobService implements OnModuleInit, OnModuleDestroy {
@@ -170,6 +179,7 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
 
     let payload: string | null = null;
     let stopHeartbeat: () => void = () => undefined;
+    let retainProcessingPayload = false;
     try {
       payload = await this.redis.rpoplpush(QUEUE_KEY, PROCESSING_KEY);
       if (!payload) {
@@ -184,11 +194,15 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
       await this.runJob(envelope, () => leaseValid);
       return true;
     } catch (error) {
+      if (error instanceof RecoverableScanAbortError) {
+        retainProcessingPayload = true;
+      }
+
       const message = error instanceof Error ? error.message : 'queue processing failed';
       this.logger.warn(`reminder queue processing failed: ${message}`);
       return false;
     } finally {
-      if (payload) {
+      if (payload && !retainProcessingPayload) {
         await this.redis.lrem(PROCESSING_KEY, 1, payload);
       }
 
@@ -221,6 +235,35 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
         failedCount: String(result.failedCount),
       });
     } catch (error) {
+      if (this.isRecoverableLeaseLoss(error)) {
+        const job = await this.redis.hgetall(key);
+        const retryCount = Number(job.retryCount ?? 0);
+        const nextRetryCount = retryCount + 1;
+        const now = this.clock.now();
+        const abortedAt = now.toISOString();
+
+        if (nextRetryCount > MAX_RETRY_COUNT) {
+          await this.redis.hset(key, {
+            status: 'failed',
+            finishedAt: abortedAt,
+            heartbeatAt: abortedAt,
+            abortReason: 'lease_lost',
+            error: 'scan lock lost',
+            retryCount: String(retryCount),
+          });
+          throw new Error('scan lock lost');
+        }
+
+        await this.redis.hset(key, {
+          status: 'retryable',
+          abortReason: 'lease_lost',
+          retryCount: String(nextRetryCount),
+          nextRetryAt: new Date(now.getTime() + this.retryBackoffMs(nextRetryCount)).toISOString(),
+          heartbeatAt: abortedAt,
+        });
+        throw new RecoverableScanAbortError('scan lock lost');
+      }
+
       const message = error instanceof Error ? error.message : 'scan failed';
       this.logger.warn(`reminder scan job ${envelope.jobId} failed: ${message}`);
       await this.redis.hset(key, {
@@ -275,6 +318,15 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
       return false;
     }
 
+    if (status === 'retryable') {
+      const nextRetryAt = job.nextRetryAt;
+      if (!nextRetryAt) {
+        return true;
+      }
+
+      return this.clock.now().getTime() >= new Date(nextRetryAt).getTime();
+    }
+
     const timestamp = job.heartbeatAt ?? job.startedAt ?? job.acceptedAt;
     if (!timestamp) {
       return true;
@@ -291,6 +343,14 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
       this.logger.warn(`failed to parse reminder queue payload: ${error instanceof Error ? error.message : 'invalid payload'}`);
       return null;
     }
+  }
+
+  private isRecoverableLeaseLoss(error: unknown): boolean {
+    return error instanceof Error && error.message === 'scan lock lost';
+  }
+
+  private retryBackoffMs(retryCount: number): number {
+    return Math.min(RETRY_BACKOFF_BASE_MS * retryCount, 15 * 60 * 1000);
   }
 
   private async renewScanLock(token: string): Promise<boolean> {
