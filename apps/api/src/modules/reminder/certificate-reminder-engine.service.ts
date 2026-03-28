@@ -169,6 +169,14 @@ export class CertificateReminderEngineService {
           failureReason: null,
         });
 
+        const persistedReminder = { ...reminder };
+        await this.reminderRepository.upsert(persistedReminder, [
+          'certificateId',
+          'recipientUserId',
+          'scheduledDate',
+          'reminderType',
+        ]);
+
         const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
         try {
           const result = await this.wecomMessageService.sendTextCard({

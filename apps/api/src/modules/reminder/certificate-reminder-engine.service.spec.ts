@@ -4,17 +4,50 @@ type AnyRepo<T> = {
   find: jest.Mock<Promise<T[]>, [unknown?]>;
   findOne: jest.Mock<Promise<T | null>, [unknown?]>;
   save: jest.Mock<Promise<T>, [T | T[]]>;
+  upsert: jest.Mock<Promise<unknown>, any[]>;
   create: jest.Mock<T, [Partial<T>]>;
+  rows: T[];
 };
 
 function createRepo<T>(rows: T[] = []): AnyRepo<T> {
   return {
+    rows,
     find: jest.fn(async () => [...rows]),
     findOne: jest.fn(async () => rows[0] ?? null),
     save: jest.fn(async (value) => {
       const list = Array.isArray(value) ? value : [value];
-      rows.push(...(list as T[]));
+      for (const item of list as T[]) {
+        const record = item as Record<string, unknown>;
+        const index = rows.findIndex((row) => (row as Record<string, unknown>).id === record.id);
+        if (index >= 0) {
+          rows[index] = { ...(rows[index] as Record<string, unknown>), ...record } as T;
+        } else {
+          rows.push(item);
+        }
+      }
       return value as T;
+    }),
+    upsert: jest.fn(async (value) => {
+      const list = Array.isArray(value) ? value : [value];
+      for (const item of list as T[]) {
+        const record = item as Record<string, unknown>;
+        const index = rows.findIndex((row) => {
+          const existing = row as Record<string, unknown>;
+          return (
+            existing.certificateId === record.certificateId &&
+            existing.recipientUserId === record.recipientUserId &&
+            existing.scheduledDate === record.scheduledDate &&
+            existing.reminderType === record.reminderType
+          );
+        });
+
+        if (index >= 0) {
+          rows[index] = { ...(rows[index] as Record<string, unknown>), ...record } as T;
+        } else {
+          rows.push(item);
+        }
+      }
+      return undefined;
     }),
     create: jest.fn((value) => value as T),
   };
@@ -152,7 +185,7 @@ describe('CertificateReminderEngineService', () => {
       advanceDays: 30,
     });
 
-    const reminderRepo = createRepo([]);
+    const reminderRepo = createRepo<any>([]);
     const certificateRepo = createRepo([certificate]);
     const certificateTypeRepo = createRepo([
       makeCertificateType(certificate.certificateTypeId as string, 'nationality_cert', 'certificate', 30),
@@ -196,7 +229,11 @@ describe('CertificateReminderEngineService', () => {
     const result = await service.runScan({ jobId: 'job-1', source: 'manual' });
 
     expect(result.createdCount).toBe(2);
+    expect(reminderRepo.upsert).toHaveBeenCalledTimes(2);
     expect(wecomMessageService.sendTextCard).toHaveBeenCalledTimes(2);
+    expect(reminderRepo.upsert.mock.invocationCallOrder[0] ?? 0).toBeLessThan(
+      wecomMessageService.sendTextCard.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
+    );
     expect(wecomMessageService.sendTextCard).toHaveBeenCalledWith(
       expect.objectContaining({
         title: '证书到期提醒',
@@ -237,7 +274,7 @@ describe('CertificateReminderEngineService', () => {
       advanceDays: 30,
     });
 
-    const reminderRepo = createRepo([]);
+    const reminderRepo = createRepo<any>([]);
     const certificateRepo = createRepo([certificate]);
     const certificateTypeRepo = createRepo([
       makeCertificateType(certificate.certificateTypeId as string, 'nationality_cert', 'certificate', 30),
@@ -406,6 +443,13 @@ describe('CertificateReminderEngineService', () => {
     expect(result.createdCount).toBe(1);
     expect(result.sentCount).toBe(0);
     expect(result.failedCount).toBe(1);
+    expect(reminderRepo.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientUserId: 'logistics-user',
+        status: 'pending',
+      }),
+      expect.arrayContaining(['certificateId', 'recipientUserId', 'scheduledDate', 'reminderType']),
+    );
     expect(reminderRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         recipientUserId: 'logistics-user',
@@ -563,7 +607,87 @@ describe('CertificateReminderEngineService', () => {
     const result = await service.runScan({ jobId: 'job-5', source: 'manual' });
 
     expect(result.createdCount).toBe(1);
+    expect(reminderRepo.upsert).toHaveBeenCalledTimes(1);
     expect(reminderRepo.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('persists a reminder row before sending and avoids blind resend when the row already exists', async () => {
+    const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
+
+    const certificate = makeCertificate({
+      ownerType: 'vehicle',
+      ownerId: randomUUID(),
+      expiryDate: '2026-04-27',
+      advanceDays: 30,
+      certificateTypeId: randomUUID(),
+    });
+
+    const reminderRepo = createRepo([]);
+    const certificateRepo = createRepo([certificate]);
+    const certificateTypeRepo = createRepo([
+      makeCertificateType(certificate.certificateTypeId as string, 'insurance', 'certificate', 30),
+    ]);
+    const vesselRepo = createRepo([]);
+    const vehicleRepo = createRepo([makeVehicle(certificate.ownerId as string)]);
+    const personnelRepo = createRepo([]);
+    const wecomUserRepo = createRepo([
+      makeWecomUser('logistics-user', ['logistics_dept'], ['后勤部'], { position: '主管' }),
+    ]);
+    const sendTextCard = jest.fn(async () => ({ success: true, invalidUser: [] }));
+    const wecomMessageService = { sendTextCard };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => dateOnly('2026-03-28')),
+    };
+    const redis = {
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      expire: jest.fn(),
+    };
+
+    const service = new CertificateReminderEngineService(
+      reminderRepo as never,
+      certificateRepo as never,
+      certificateTypeRepo as never,
+      vesselRepo as never,
+      vehicleRepo as never,
+      personnelRepo as never,
+      wecomUserRepo as never,
+      wecomMessageService as never,
+      clock as never,
+      redis as never,
+    );
+
+    const firstRun = await service.runScan({ jobId: 'job-8', source: 'manual' });
+    expect(firstRun.createdCount).toBe(1);
+    expect(reminderRepo.upsert).toHaveBeenCalledTimes(1);
+    expect(sendTextCard).toHaveBeenCalledTimes(1);
+    expect(reminderRepo.upsert.mock.invocationCallOrder[0] ?? 0).toBeLessThan(
+      sendTextCard.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
+    );
+
+    const existingReminder = reminderRepo.rows[0] as any as {
+      status: string;
+      sentAt: Date | null;
+      failureReason: string | null;
+    };
+    (reminderRepo.rows as any[])[0] = {
+      ...existingReminder,
+      status: 'pending',
+      sentAt: null,
+      failureReason: null,
+    };
+    sendTextCard.mockClear();
+    reminderRepo.upsert.mockClear();
+    reminderRepo.save.mockClear();
+
+    const secondRun = await service.runScan({ jobId: 'job-9', source: 'manual' });
+    expect(secondRun.createdCount).toBe(0);
+    expect(sendTextCard).not.toHaveBeenCalled();
+    expect(reminderRepo.upsert).not.toHaveBeenCalled();
   });
 
   it('routes ordinary personnel reminders only to the owner and approved same-department managers', async () => {

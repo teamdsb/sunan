@@ -10,6 +10,7 @@ describe('CertificateReminderJobService', () => {
       hashes: new Map<string, Record<string, string>>(),
       lockToken: null as string | null,
       cronMarkers: new Set<string>(),
+      lockRenewals: 0,
     };
 
     const redis = {
@@ -109,6 +110,17 @@ describe('CertificateReminderJobService', () => {
           state.cronMarkers.add(markerKey);
           state.queue.unshift(payload);
           return 1;
+        }
+
+        if (script.includes('PEXPIRE')) {
+          const [lockKey, token, ttlMs] = args as [string, string, string];
+          void ttlMs;
+          if (lockKey === 'certificate-reminder:scan-lock' && state.lockToken === token) {
+            state.lockRenewals += 1;
+            return 1;
+          }
+
+          return 0;
         }
 
         const [lockKey, token] = args as [string, string];
@@ -212,5 +224,40 @@ describe('CertificateReminderJobService', () => {
     expect(engine.runScan).not.toHaveBeenCalled();
     expect(state.queue).toHaveLength(1);
     expect(state.processing).toHaveLength(0);
+  });
+
+  it('renews the redis scan lock while a job is still running', async () => {
+    jest.useFakeTimers();
+
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    let resolveRun: (() => void) | null = null;
+    const engine = {
+      runScan: jest.fn(
+        async () =>
+          new Promise<{ createdCount: number; sentCount: number; failedCount: number }>((resolve) => {
+            resolveRun = () => resolve({ createdCount: 1, sentCount: 1, failedCount: 0 });
+          }),
+      ),
+    };
+    const clock = {
+      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+    await service.enqueueScan({ source: 'manual' });
+
+    const processing = (service as any).processQueueOnce();
+
+    await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+    expect(state.lockRenewals).toBeGreaterThan(0);
+
+    (resolveRun as unknown as () => void)();
+    await processing;
+
+    expect(state.lockToken).toBeNull();
+    jest.useRealTimers();
   });
 });

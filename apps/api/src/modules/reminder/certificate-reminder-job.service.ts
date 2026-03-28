@@ -13,6 +13,7 @@ const PROCESSING_KEY = 'certificate-reminder:queue:processing';
 const SCAN_LOCK_KEY = 'certificate-reminder:scan-lock';
 const CRON_MARKER_PREFIX = 'certificate-reminder:cron:';
 const SCAN_LOCK_TTL_MS = 30 * 60 * 1000;
+const SCAN_LOCK_HEARTBEAT_MS = 5 * 60 * 1000;
 const CRON_MARKER_TTL_SECONDS = 172_800;
 const WORKER_IDLE_DELAY_MS = 250;
 
@@ -150,12 +151,14 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     }
 
     let payload: string | null = null;
+    let stopHeartbeat: () => void = () => undefined;
     try {
       payload = await this.redis.rpoplpush(QUEUE_KEY, PROCESSING_KEY);
       if (!payload) {
         return false;
       }
 
+      stopHeartbeat = this.startLockHeartbeat(lockToken);
       const envelope = JSON.parse(payload) as ReminderJobEnvelope;
       await this.runJob(envelope);
       return true;
@@ -168,6 +171,7 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
         await this.redis.lrem(PROCESSING_KEY, 1, payload);
       }
 
+      stopHeartbeat();
       await this.releaseScanLock(lockToken);
     }
   }
@@ -206,6 +210,38 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     const token = randomUUID();
     const result = await this.redis.set(SCAN_LOCK_KEY, token, 'PX', SCAN_LOCK_TTL_MS, 'NX');
     return result === 'OK' ? token : null;
+  }
+
+  private startLockHeartbeat(token: string): () => void {
+    const renew = () => {
+      void this.renewScanLock(token).then((renewed) => {
+        if (!renewed) {
+          this.logger.warn('reminder scan lock renewal failed');
+        }
+      });
+    };
+
+    const timer = setInterval(renew, SCAN_LOCK_HEARTBEAT_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }
+
+  private async renewScanLock(token: string): Promise<boolean> {
+    const result = await this.redis.eval(
+      `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        return redis.call('PEXPIRE', KEYS[1], ARGV[2])
+      end
+      return 0
+      `,
+      1,
+      SCAN_LOCK_KEY,
+      token,
+      String(SCAN_LOCK_TTL_MS),
+    );
+
+    return Number(result) === 1;
   }
 
   private async releaseScanLock(token: string | null): Promise<void> {
