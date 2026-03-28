@@ -1,5 +1,5 @@
 export type ReminderOwnerType = 'vessel' | 'vehicle' | 'personnel';
-export type ReminderStatus = 'pending' | 'sent' | 'acknowledged' | 'failed';
+export type ReminderStatus = 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed';
 export type ReminderType = 'upcoming' | 'overdue';
 
 export interface ReminderJobEnvelope {

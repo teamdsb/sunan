@@ -51,7 +51,7 @@ export class CertificateReminderEntity {
   reminderType!: 'upcoming' | 'overdue';
 
   @Column({ type: 'varchar', length: 16, default: 'pending' })
-  status!: 'pending' | 'sent' | 'acknowledged' | 'failed';
+  status!: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed';
 
   @Column({ name: 'scheduled_date', type: dateColumnType })
   scheduledDate!: string;

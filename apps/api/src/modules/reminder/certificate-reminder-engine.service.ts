@@ -19,6 +19,9 @@ import { isManagementPosition, resolveRolesFromDepartmentNames } from './reminde
 import { ReminderClockService } from './reminder-clock.service';
 import type { ReminderJobEnvelope, ReminderOwnerType, ReminderType } from './reminder.types';
 
+const SEND_LOCK_TTL_MS = 15 * 60 * 1000;
+const DISPATCHING_STALE_AFTER_MS = SEND_LOCK_TTL_MS;
+
 interface ReminderRecipient {
   userId: string;
   roles: string[];
@@ -160,6 +163,13 @@ export class CertificateReminderEngineService {
             continue;
           }
 
+          if (
+            existingReminder.status === 'dispatching' &&
+            this.isFreshDispatchingReminder(existingReminder, now)
+          ) {
+            continue;
+          }
+
           if (existingReminder.status === 'failed' && !this.isRecoverableFailure(existingReminder.failureReason)) {
             continue;
           }
@@ -177,7 +187,7 @@ export class CertificateReminderEngineService {
           ownerName: this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById),
           recipientUserId,
           reminderType,
-          status: 'pending',
+          status: 'dispatching',
           scheduledDate,
           daysBeforeExpiry: daysUntilExpiry,
           sentAt: null,
@@ -186,16 +196,13 @@ export class CertificateReminderEngineService {
           failureReason: null,
         });
 
-        if (!existingReminder) {
-          const persistedReminder = { ...reminder };
-          await this.reminderRepository.upsert(persistedReminder, [
-            'certificateId',
-            'recipientUserId',
-            'scheduledDate',
-            'reminderType',
-          ]);
-          createdCount += 1;
-        } else {
+        const sendLockToken = await this.acquireSendLock(reminder);
+        if (!sendLockToken) {
+          reminderByKey.set(reminderKey, reminder);
+          continue;
+        }
+
+        try {
           reminder.certificateTypeId = certificate.certificateTypeId;
           reminder.certificateTypeName = type?.name ?? type?.code ?? certificate.certificateTypeId;
           reminder.certificateTitle = certificate.title;
@@ -206,21 +213,26 @@ export class CertificateReminderEngineService {
           reminder.reminderType = reminderType;
           reminder.scheduledDate = scheduledDate;
           reminder.daysBeforeExpiry = daysUntilExpiry;
-          reminder.status = 'pending';
+          reminder.status = 'dispatching';
           reminder.sentAt = null;
           reminder.acknowledgedAt = null;
           reminder.acknowledgedBy = null;
           reminder.failureReason = null;
-        }
 
-        const sendLockToken = await this.acquireSendLock(reminder);
-        if (!sendLockToken) {
-          reminderByKey.set(reminderKey, reminder);
-          continue;
-        }
+          if (!existingReminder) {
+            const persistedReminder = { ...reminder };
+            await this.reminderRepository.upsert(persistedReminder, [
+              'certificateId',
+              'recipientUserId',
+              'scheduledDate',
+              'reminderType',
+            ]);
+            createdCount += 1;
+          } else {
+            await this.reminderRepository.save(reminder);
+          }
 
-        const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
-        try {
+          const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
           assertLeaseValid();
           const result = await this.wecomMessageService.sendTextCard({
             userIds: [recipientUserId],
@@ -370,7 +382,7 @@ export class CertificateReminderEngineService {
   private async acquireSendLock(reminder: CertificateReminderEntity): Promise<string | null> {
     const token = randomUUID();
     const key = this.buildSendLockKey(reminder);
-    const result = await this.redis.set(key, token, 'PX', 15 * 60 * 1000, 'NX');
+    const result = await this.redis.set(key, token, 'PX', SEND_LOCK_TTL_MS, 'NX');
     if (result === null) {
       return null;
     }
@@ -421,6 +433,15 @@ export class CertificateReminderEngineService {
     }
 
     return failureReason === 'scan lock lost' || failureReason.startsWith('retryable:');
+  }
+
+  private isFreshDispatchingReminder(reminder: CertificateReminderEntity, now: Date): boolean {
+    const timestamp = reminder.updatedAt ?? reminder.createdAt;
+    if (!timestamp) {
+      return false;
+    }
+
+    return now.getTime() - timestamp.getTime() < DISPATCHING_STALE_AFTER_MS;
   }
 
   private diffDays(expiryDate: string, scheduledDate: string): number {

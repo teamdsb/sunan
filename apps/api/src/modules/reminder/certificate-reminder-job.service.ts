@@ -285,12 +285,18 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
 
   private startLockHeartbeat(token: string, onLeaseLost: () => void): () => void {
     const renew = () => {
-      void this.renewScanLock(token).then((renewed) => {
-        if (!renewed) {
-          this.logger.warn('reminder scan lock renewal failed');
+      void this.renewScanLock(token)
+        .then((renewed) => {
+          if (!renewed) {
+            this.logger.warn('reminder scan lock renewal failed');
+            onLeaseLost();
+          }
+        })
+        .catch((error) => {
+          const message = error instanceof Error ? error.message : 'unknown renewal error';
+          this.logger.warn(`reminder scan lock renewal failed: ${message}`);
           onLeaseLost();
-        }
-      });
+        });
     };
 
     const timer = setInterval(renew, SCAN_LOCK_HEARTBEAT_MS);

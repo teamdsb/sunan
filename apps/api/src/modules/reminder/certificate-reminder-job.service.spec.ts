@@ -12,6 +12,7 @@ describe('CertificateReminderJobService', () => {
       cronMarkers: new Set<string>(),
       lockRenewals: 0,
       failNextRenewal: false,
+      rejectNextRenewal: false,
     };
 
     const redis = {
@@ -166,6 +167,10 @@ describe('CertificateReminderJobService', () => {
         if (script.includes('PEXPIRE')) {
           const [lockKey, token, ttlMs] = args as [string, string, string];
           void ttlMs;
+          if (state.rejectNextRenewal) {
+            state.rejectNextRenewal = false;
+            throw new Error('scan lock renewal failed');
+          }
           if (state.failNextRenewal) {
             state.failNextRenewal = false;
             return 0;
@@ -367,6 +372,50 @@ describe('CertificateReminderJobService', () => {
     };
     const { redis, state } = createRedisMock();
     state.failNextRenewal = true;
+
+    const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+    const enqueueResult = await service.enqueueScan({ source: 'manual' });
+
+    const processing = (service as any).processQueueOnce();
+    await processing;
+
+    const jobRecord = state.hashes.get(`certificate-reminder:job:${enqueueResult.jobId}`);
+    expect(jobRecord).toEqual(
+      expect.objectContaining({
+        status: 'retryable',
+        abortReason: 'lease_lost',
+        retryCount: '1',
+        nextRetryAt: expect.any(String),
+      }),
+    );
+
+    now = new Date('2026-03-28T01:00:02.000Z');
+    await (service as any).recoverStalledJobs();
+
+    expect(state.processing).toHaveLength(0);
+    expect(state.queue).toHaveLength(1);
+    jest.useRealTimers();
+  });
+
+  it('treats a rejected lock renewal as lease loss and requeues the job', async () => {
+    jest.useFakeTimers();
+
+    const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
+
+    let now = new Date('2026-03-28T01:00:00.000Z');
+    const engine = {
+      runScan: jest.fn(async (_envelope: unknown, options?: { isLeaseValid?: () => boolean }) => {
+        await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+        expect(options?.isLeaseValid?.()).toBe(false);
+        throw new Error('scan lock lost');
+      }),
+    };
+    const clock = {
+      now: jest.fn(() => now),
+      today: jest.fn(() => '2026-03-28'),
+    };
+    const { redis, state } = createRedisMock();
+    state.rejectNextRenewal = true;
 
     const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
     const enqueueResult = await service.enqueueScan({ source: 'manual' });
