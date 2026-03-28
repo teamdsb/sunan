@@ -118,4 +118,25 @@ describe('ReminderDetailPage', () => {
 
     await waitFor(() => expect(screen.getByRole('button', { name: /已确认/ })).toBeDisabled());
   });
+
+  it('returns to the reminder list with the current query preserved', () => {
+    render(
+      <MemoryRouter
+        initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
+      >
+        <Routes>
+          <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('link', { name: /返回看板/ })).toHaveAttribute(
+      'href',
+      '/my/reminders?view=list&status=pending&page=2',
+    );
+    expect(screen.getByRole('link', { name: /返回列表/ })).toHaveAttribute(
+      'href',
+      '/my/reminders?view=list&status=pending&page=2',
+    );
+  });
 });

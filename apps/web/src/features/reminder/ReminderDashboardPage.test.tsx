@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ReminderDashboardPage } from './ReminderDashboardPage';
 
 const mockCurrentUser = vi.fn();
+const mockSettings = vi.fn();
 const mockDashboard = vi.fn();
 const mockList = vi.fn();
 const mockScan = vi.fn();
@@ -28,11 +29,20 @@ vi.mock('../../app/hooks', () => ({
     selector({ auth: { currentUser: mockCurrentUser() } }),
 }));
 
+vi.mock('../settings/settingsApi', () => ({
+  useGetSettingsQuery: () => mockSettings(),
+}));
+
 vi.mock('./reminderApi', () => ({
   useGetReminderDashboardQuery: () => mockDashboard(),
   useGetReminderListQuery: (_params: unknown) => mockList(_params),
   useTriggerReminderScanMutation: () => [mockScan, { isLoading: false }],
 }));
+
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
 
 describe('ReminderDashboardPage', () => {
   beforeEach(() => {
@@ -97,14 +107,41 @@ describe('ReminderDashboardPage', () => {
       isLoading: false,
       refetch: listRefetch,
     });
+    mockSettings.mockReturnValue({
+      data: { data: { reminderViewMode: 'dashboard' } },
+      isLoading: false,
+    });
     mockScan.mockReturnValue({
       unwrap: () => Promise.resolve({ data: { jobId: 'job-1', acceptedAt: '2026-03-28T10:00:00+08:00' } }),
     });
   });
 
+  it('falls back to the settings view when the URL omits view, but lets the URL win when present', () => {
+    mockSettings.mockReturnValue({
+      data: { data: { reminderViewMode: 'list' } },
+      isLoading: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/my/reminders']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: '提醒列表' })).toBeInTheDocument();
+
+    render(
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: '证书提醒看板' })).toBeInTheDocument();
+  });
+
   it('shows summary, filters recent reminders, and exposes scan for managers', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -120,9 +157,42 @@ describe('ReminderDashboardPage', () => {
     });
   });
 
+  it('writes stat card selections into the URL and the list query', async () => {
+    render(
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+        <ReminderDashboardPage />
+        <LocationDisplay />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /待处理 2/ }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&status=pending');
+    });
+    await waitFor(() => {
+      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 5, status: 'pending' }));
+    });
+  });
+
+  it('preserves the current query when linking to detail pages', () => {
+    render(
+      <MemoryRouter
+        initialEntries={['/my/reminders?view=list&page=2&pageSize=10&status=pending&ownerType=vessel']}
+      >
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('link', { name: '国籍证书' })).toHaveAttribute(
+      'href',
+      '/my/reminders/r-overdue?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26page%3D2%26pageSize%3D10%26status%3Dpending%26ownerType%3Dvessel',
+    );
+  });
+
   it('refreshes dashboard and list after a manual scan', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -141,7 +211,7 @@ describe('ReminderDashboardPage', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
