@@ -41,6 +41,9 @@ export class CertificateReminderEntity {
   @Column({ name: 'owner_name', type: 'varchar', length: 128 })
   ownerName!: string;
 
+  @Column({ name: 'certificate_expiry_date', type: dateColumnType })
+  certificateExpiryDate!: string;
+
   @Column({ name: 'recipient_user_id', type: 'varchar', length: 64 })
   recipientUserId!: string;
 

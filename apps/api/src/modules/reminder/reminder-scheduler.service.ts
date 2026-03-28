@@ -25,7 +25,7 @@ export class ReminderSchedulerService implements OnModuleInit, OnModuleDestroy {
     const delay = Math.max(nextRun.getTime() - now.getTime(), 0);
 
     this.timer = setTimeout(() => {
-      void this.jobService.enqueueScan({ source: 'cron' });
+      void this.jobService.enqueueCronScan();
       this.scheduleNextRun();
     }, delay);
   }

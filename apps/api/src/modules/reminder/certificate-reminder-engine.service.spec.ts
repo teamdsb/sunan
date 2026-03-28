@@ -212,6 +212,7 @@ describe('CertificateReminderEngineService', () => {
         status: 'sent',
         scheduledDate: '2026-03-28',
         daysBeforeExpiry: 30,
+        certificateExpiryDate: certificate.expiryDate,
       }),
     );
     expect(reminderRepo.save).toHaveBeenCalledWith(
@@ -435,6 +436,7 @@ describe('CertificateReminderEngineService', () => {
         status: 'acknowledged',
         scheduledDate: '2026-03-27',
         daysBeforeExpiry: 31,
+        certificateExpiryDate: certificate.expiryDate,
         sentAt: new Date('2026-03-27T01:00:00.000Z'),
         acknowledgedAt: new Date('2026-03-27T02:00:00.000Z'),
         acknowledgedBy: 'shipping-user',
@@ -510,6 +512,7 @@ describe('CertificateReminderEngineService', () => {
         status: 'sent',
         scheduledDate: '2026-03-27',
         daysBeforeExpiry: 31,
+        certificateExpiryDate: certificate.expiryDate,
         sentAt: new Date('2026-03-27T01:00:00.000Z'),
         acknowledgedAt: null,
         acknowledgedBy: null,

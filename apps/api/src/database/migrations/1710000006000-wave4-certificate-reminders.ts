@@ -14,6 +14,7 @@ export class Wave41710000006000 implements MigrationInterface {
         "owner_type" VARCHAR(16) NOT NULL,
         "owner_id" UUID NOT NULL,
         "owner_name" VARCHAR(128) NOT NULL,
+        "certificate_expiry_date" DATE NOT NULL,
         "recipient_user_id" VARCHAR(64) NOT NULL,
         "reminder_type" VARCHAR(16) NOT NULL,
         "status" VARCHAR(16) NOT NULL DEFAULT 'pending',

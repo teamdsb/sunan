@@ -85,7 +85,14 @@ export class CertificateReminderEngineService {
     const acknowledgedReminderKeys = new Set(
       reminders
         .filter((reminder) => reminder.status === 'acknowledged')
-        .map((reminder) => this.makeReminderCycleKey(reminder.certificateId, reminder.recipientUserId, reminder.reminderType)),
+        .map((reminder) =>
+          this.makeReminderCycleKey(
+            reminder.certificateId,
+            reminder.recipientUserId,
+            reminder.reminderType,
+            reminder.certificateExpiryDate,
+          ),
+        ),
     );
 
     let createdCount = 0;
@@ -127,7 +134,12 @@ export class CertificateReminderEngineService {
 
       for (const recipientUserId of recipients) {
         const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType);
-        const reminderCycleKey = this.makeReminderCycleKey(certificate.id, recipientUserId, reminderType);
+        const reminderCycleKey = this.makeReminderCycleKey(
+          certificate.id,
+          recipientUserId,
+          reminderType,
+          certificate.expiryDate,
+        );
         if (acknowledgedReminderKeys.has(reminderCycleKey)) {
           continue;
         }
@@ -142,6 +154,7 @@ export class CertificateReminderEngineService {
           certificateTypeId: certificate.certificateTypeId,
           certificateTypeName: type?.name ?? type?.code ?? certificate.certificateTypeId,
           certificateTitle: certificate.title,
+          certificateExpiryDate: certificate.expiryDate,
           ownerType: certificate.ownerType,
           ownerId: certificate.ownerId,
           ownerName: this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById),
@@ -313,8 +326,13 @@ export class CertificateReminderEngineService {
     return [certificateId, recipientUserId, scheduledDate, reminderType].join(':');
   }
 
-  private makeReminderCycleKey(certificateId: string, recipientUserId: string, reminderType: string): string {
-    return [certificateId, recipientUserId, reminderType].join(':');
+  private makeReminderCycleKey(
+    certificateId: string,
+    recipientUserId: string,
+    reminderType: string,
+    certificateExpiryDate: string,
+  ): string {
+    return [certificateId, recipientUserId, reminderType, certificateExpiryDate].join(':');
   }
 
   private describeError(error: unknown): string {

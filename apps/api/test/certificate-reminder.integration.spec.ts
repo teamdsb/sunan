@@ -41,9 +41,14 @@ const redisMock = {
   hset: jest.fn(async () => 1),
   hgetall: jest.fn(async () => ({})),
   expire: jest.fn(async () => 1),
+  lpush: jest.fn(async () => 1),
+  rpush: jest.fn(async () => 1),
+  rpoplpush: jest.fn(async () => null),
+  lrem: jest.fn(async () => 0),
   get: jest.fn(async () => null),
   set: jest.fn(async () => 'OK'),
   del: jest.fn(async () => 1),
+  eval: jest.fn(async () => 0),
 };
 
 const wecomMessageMock = {
@@ -241,6 +246,7 @@ describe('ReminderController integration', () => {
           status: 'sent',
           scheduledDate: '2026-03-28',
           daysBeforeExpiry: 30,
+          certificateExpiryDate: '2026-04-27',
           sentAt: new Date('2026-03-28T01:00:00.000Z'),
           acknowledgedAt: null,
           acknowledgedBy: null,
@@ -264,6 +270,7 @@ describe('ReminderController integration', () => {
           status: 'sent',
           scheduledDate: '2026-03-28',
           daysBeforeExpiry: 30,
+          certificateExpiryDate: '2026-04-27',
           sentAt: new Date('2026-03-28T01:00:00.000Z'),
           acknowledgedAt: null,
           acknowledgedBy: null,
@@ -287,6 +294,7 @@ describe('ReminderController integration', () => {
           status: 'pending',
           scheduledDate: '2026-03-28',
           daysBeforeExpiry: -1,
+          certificateExpiryDate: '2026-03-27',
           sentAt: null,
           acknowledgedAt: null,
           acknowledgedBy: null,
