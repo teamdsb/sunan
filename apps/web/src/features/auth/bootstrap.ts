@@ -1,12 +1,24 @@
 import type { AppDispatch } from '../../app/store';
-import { bootstrapFromStorage, loginSucceeded, setAuthStatus } from './authSlice';
+import { env } from '../../app/env';
+import {
+  bootstrapFromStorage,
+  bootstrapMockAuth,
+  loginSucceeded,
+  setAuthStatus,
+} from './authSlice';
 import { getStoredToken } from './oauth';
 
 function shouldBypassAuthForLocalPreview(): boolean {
   return import.meta.env.VITE_LOCAL_BYPASS_AUTH === 'true';
 }
 
-export function bootstrapAuth(dispatch: AppDispatch): void {
+export async function bootstrapAuth(dispatch: AppDispatch): Promise<void> {
+  if (import.meta.env.DEV && env.mockMode) {
+    const { mockAuthPayload } = await import('../../mocks/fixtures/auth');
+    dispatch(bootstrapMockAuth(mockAuthPayload));
+    return;
+  }
+
   dispatch(bootstrapFromStorage());
 
   if (!getStoredToken() && shouldBypassAuthForLocalPreview()) {

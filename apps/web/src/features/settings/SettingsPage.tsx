@@ -1,13 +1,13 @@
 ﻿import { Alert, Card, Form, Select, Switch, Typography, message } from 'antd';
 import { useEffect, useState } from 'react';
-import { useGetSettingsQuery, useUpdateSettingsMutation } from './settingsApi';
+import { type UserSettings, useGetSettingsQuery, useUpdateSettingsMutation } from './settingsApi';
 
 export function SettingsPage() {
   const { data, isLoading } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [lastSaved, setLastSaved] = useState<Partial<import('./settingsApi').UserSettings>>({});
-  const [form] = Form.useForm<Partial<import('./settingsApi').UserSettings>>();
+  const [lastSaved, setLastSaved] = useState<Partial<UserSettings>>({});
+  const [form] = Form.useForm<Partial<UserSettings>>();
 
   useEffect(() => {
     if (data?.data) {

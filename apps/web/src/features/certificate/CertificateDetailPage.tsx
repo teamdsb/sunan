@@ -1,11 +1,16 @@
 import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { FileUploadField } from '../files/FileUploadField';
-import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { resolveBackHref } from '../../router/myRouteState';
-import { useBindCertificateFilesMutation, useGetCertificateByIdQuery, useUpdateCertificateMutation } from './certificateApi';
+import { FileUploadField } from '../files/FileUploadField';
+import type { FileRecord } from '../files/types';
+import {
+  type CertificateItem,
+  useBindCertificateFilesMutation,
+  useGetCertificateByIdQuery,
+  useUpdateCertificateMutation,
+} from './certificateApi';
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
@@ -19,7 +24,7 @@ export function CertificateDetailPage() {
   const [form] = Form.useForm<{
     title: string;
     expiryDate: string;
-    status: import('./certificateApi').CertificateItem['status'];
+    status: CertificateItem['status'];
   }>();
   const item = data?.data;
   const backHref = resolveBackHref(myRouteConfig.certificates.path, location.search);

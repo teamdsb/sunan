@@ -10,9 +10,13 @@ dist
 coverage
 .pnpm-store
 .turbo
+.worktrees
 .env
 .env.local
 .env.test
 .env.*.local
+!apps/web/.env.mock.local
 *.tsbuildinfo
+# local editor settings
+.vscode/settings.json
 .worktrees/

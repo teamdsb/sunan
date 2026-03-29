@@ -1,11 +1,16 @@
 ﻿import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { FileUploadField } from '../files/FileUploadField';
-import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { resolveBackHref } from '../../router/myRouteState';
-import { useBindEnterpriseProfileFilesMutation, useGetEnterpriseProfileByIdQuery, useUpdateEnterpriseProfileMutation } from './enterpriseApi';
+import { FileUploadField } from '../files/FileUploadField';
+import type { FileRecord } from '../files/types';
+import {
+  type EnterpriseProfile,
+  useBindEnterpriseProfileFilesMutation,
+  useGetEnterpriseProfileByIdQuery,
+  useUpdateEnterpriseProfileMutation,
+} from './enterpriseApi';
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
@@ -20,7 +25,7 @@ export function EnterpriseProfileDetailPage() {
     title: string;
     category: string;
     description?: string;
-    status: import('./enterpriseApi').EnterpriseProfile['status'];
+    status: EnterpriseProfile['status'];
   }>();
 
   const profile = data?.data;

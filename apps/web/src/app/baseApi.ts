@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import {
   BaseQueryApi,
+  type QueryReturnValue,
   type BaseQueryFn,
   createApi,
 } from '@reduxjs/toolkit/query/react';
@@ -32,6 +33,23 @@ export interface AxiosBaseQueryOptions {
   baseUrl?: string;
   client?: AxiosInstance;
   onAuthFailure?: (target: string) => void;
+}
+
+type BaseQueryError = {
+  status: number | string;
+  data: unknown;
+};
+
+type BaseQueryResult = QueryReturnValue<unknown, BaseQueryError, {}>;
+
+interface MockRuntimeLike {
+  execute(args: AxiosBaseQueryArgs): Promise<BaseQueryResult>;
+}
+
+type MockRuntimeLoader = (() => Promise<MockRuntimeLike>) | null;
+
+export interface CreateBaseQueryOptions extends AxiosBaseQueryOptions {
+  mockRuntimeLoader?: MockRuntimeLoader;
 }
 
 interface RefreshResponse {
@@ -94,9 +112,49 @@ function toQueryError(error: unknown) {
   };
 }
 
+function toMockRuntimeError(error: unknown): BaseQueryError {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : 'Mock runtime failed';
+
+  return {
+    status: 'MOCK_RUNTIME_ERROR',
+    data: {
+      message,
+    },
+  };
+}
+
+async function executeMockRuntime(
+  mockRuntimeLoader: MockRuntimeLoader,
+  args: AxiosBaseQueryArgs,
+): Promise<BaseQueryResult> {
+  if (!mockRuntimeLoader) {
+    return {
+      error: {
+        status: 'MOCK_RUNTIME_UNAVAILABLE',
+        data: {
+          message:
+            'Mock mode is enabled, but the mock runtime is not available in this build.',
+        },
+      },
+    };
+  }
+
+  try {
+    const runtime = await mockRuntimeLoader();
+    return await runtime.execute(args);
+  } catch (error) {
+    return { error: toMockRuntimeError(error) };
+  }
+}
+
 export function createAxiosBaseQuery(
   options: AxiosBaseQueryOptions = {},
-): BaseQueryFn<AxiosBaseQueryArgs, unknown, { status: number | string; data: unknown }> {
+): BaseQueryFn<AxiosBaseQueryArgs, unknown, BaseQueryError> {
   const client =
     options.client ??
     axios.create({
@@ -154,9 +212,56 @@ export function createAxiosBaseQuery(
   };
 }
 
+function createDefaultMockRuntimeLoader(): MockRuntimeLoader {
+  if (import.meta.env.DEV) {
+    return async () => {
+      const { getMockRuntime } = await import('../mocks/store/mockRuntime');
+      return getMockRuntime();
+    };
+  }
+
+  return null;
+}
+
+export function createBaseQuery(): BaseQueryFn<
+  AxiosBaseQueryArgs,
+  unknown,
+  BaseQueryError
+>;
+export function createBaseQuery(
+  options: CreateBaseQueryOptions,
+): BaseQueryFn<AxiosBaseQueryArgs, unknown, BaseQueryError>;
+export function createBaseQuery(
+  options: CreateBaseQueryOptions = {},
+): BaseQueryFn<AxiosBaseQueryArgs, unknown, BaseQueryError> {
+  let axiosBaseQuery:
+    | BaseQueryFn<AxiosBaseQueryArgs, unknown, BaseQueryError>
+    | undefined;
+  const mockRuntimeLoader =
+    options.mockRuntimeLoader === undefined
+      ? createDefaultMockRuntimeLoader()
+      : options.mockRuntimeLoader;
+
+  if (import.meta.env.DEV) {
+    return async (args, api, extraOptions) => {
+      if (env.mockMode) {
+        return executeMockRuntime(mockRuntimeLoader, args);
+      }
+
+      axiosBaseQuery ??= createAxiosBaseQuery(options);
+      return axiosBaseQuery(args, api, extraOptions);
+    };
+  }
+
+  return async (args, api, extraOptions) => {
+    axiosBaseQuery ??= createAxiosBaseQuery(options);
+    return axiosBaseQuery(args, api, extraOptions);
+  };
+}
+
 export const baseApi = createApi({
   reducerPath: 'baseApi',
-  baseQuery: createAxiosBaseQuery(),
+  baseQuery: createBaseQuery(),
   tagTypes: [
     'Auth',
     'CurrentUser',

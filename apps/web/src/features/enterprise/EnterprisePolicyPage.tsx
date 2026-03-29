@@ -6,6 +6,7 @@ import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, resolveBackHref, updateSearchParams } from '../../router/myRouteState';
 import {
+  type EnterprisePolicy,
   useBindEnterprisePolicyFilesMutation,
   useCreateEnterprisePolicyMutation,
   useGetEnterprisePoliciesQuery,
@@ -161,7 +162,7 @@ export function EnterprisePolicyDetailPage() {
   const [form] = Form.useForm<{
     title: string;
     summary?: string;
-    status: import('./enterpriseApi').EnterprisePolicy['status'];
+    status: EnterprisePolicy['status'];
   }>();
   const policy = data?.data;
   const backHref = resolveBackHref(myRouteConfig.enterprisePolicy.path, location.search);

@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import {
   authReducer,
   bootstrapFromStorage,
+  bootstrapMockAuth,
   loginSucceeded,
   logout,
 } from './authSlice';
@@ -53,6 +54,26 @@ describe('authSlice', () => {
     expect(state.currentUser?.name).toBe('张三');
     expect(window.localStorage.getItem('sunan_token')).toBe('token-1');
     expect(window.localStorage.getItem('sunan_token_expires_at')).toMatch(/T/);
+  });
+
+  it('bootstraps mock auth without persisting token', () => {
+    const state = authReducer(
+      initialState,
+      bootstrapMockAuth({
+        accessToken: 'mock-access-token',
+        expiresIn: 3600,
+        user: {
+          userId: 'mock-admin',
+          name: '调试管理员',
+          department: ['苏南船舶管理'],
+          roles: ['system_admin', 'business'],
+        },
+      }),
+    );
+
+    expect(state.token).toBe('mock-access-token');
+    expect(state.currentUser?.roles).toContain('system_admin');
+    expect(window.localStorage.getItem('sunan_token')).toBeNull();
   });
 
   it('clears auth state on logout', () => {

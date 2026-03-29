@@ -1,6 +1,7 @@
-﻿import { Avatar, Button, Layout, Space, Tag, Typography } from 'antd';
+import { Avatar, Button, Layout, Space, Tag, Typography } from 'antd';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { env } from '../app/env';
 import { logout } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
 import { myRouteNavItems } from '../router/myRouteConfig';
@@ -11,6 +12,10 @@ export function AppShell() {
   const location = useLocation();
 
   const reauthorize = () => {
+    if (env.mockMode) {
+      return;
+    }
+
     dispatch(logout());
     redirectToOAuth(location.pathname + location.search + location.hash);
   };
