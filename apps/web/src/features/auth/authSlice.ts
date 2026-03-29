@@ -35,6 +35,12 @@ const authSlice = createSlice({
       state.currentUser = action.payload.user;
       state.authStatus = 'authenticated';
     },
+    bootstrapMockAuth(state, action: PayloadAction<AuthSuccessPayload>) {
+      state.token = action.payload.accessToken;
+      state.tokenExpiresAt = new Date(Date.now() + action.payload.expiresIn * 1000).toISOString();
+      state.currentUser = action.payload.user;
+      state.authStatus = 'authenticated';
+    },
     logout(state) {
       clearToken();
       state.token = null;
@@ -58,6 +64,7 @@ const authSlice = createSlice({
 
 export const {
   bootstrapFromStorage,
+  bootstrapMockAuth,
   loginSucceeded,
   logout,
   setAuthStatus,

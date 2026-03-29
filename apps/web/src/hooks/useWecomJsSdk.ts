@@ -93,6 +93,15 @@ export function useWecomJsSdk({
     let mounted = true;
 
     const initSdk = async () => {
+      if (env.mockMode) {
+        if (mounted) {
+          setIsReady(true);
+          setError(null);
+          dispatch(setJssdkStatus('ready'));
+        }
+        return;
+      }
+
       if (!window.wx) {
         if (mounted) {
           setError('企业微信 JS-SDK 未注入');

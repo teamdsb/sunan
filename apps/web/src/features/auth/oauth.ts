@@ -75,7 +75,7 @@ export function buildWecomOAuthUrl(targetPath: string): string {
 }
 
 export function redirectToOAuth(targetPath: string): void {
-  if (!isBrowser()) {
+  if (env.mockMode || !isBrowser()) {
     return;
   }
   window.location.assign(buildWecomOAuthUrl(targetPath));

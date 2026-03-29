@@ -1,6 +1,9 @@
 ﻿import { baseApi } from '../../app/baseApi';
 
-interface ApiEnvelope<T> { data: T; meta?: { page: number; pageSize: number; total: number } }
+interface ApiEnvelope<T> {
+  data: T;
+  meta?: { page: number; pageSize: number; total: number; totalPages: number };
+}
 
 export interface EnterpriseFile { id: string; fileName: string; ossKey: string; mimeType: string; fileSize: number }
 export interface EnterpriseProfile {
