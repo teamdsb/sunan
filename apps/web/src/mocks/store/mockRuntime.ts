@@ -10,7 +10,8 @@ type MockQueryResult = QueryReturnValue<
   {
     status: number | string;
     data: unknown;
-  }
+  },
+  {}
 >;
 
 export interface MockRuntime {

@@ -1,5 +1,4 @@
 import type { CertificateItem } from '../../features/certificate/certificateApi';
-import type { FileRecord } from '../../features/files/types';
 import {
   createCertificateAttachment,
   createMockCertificateRecord,

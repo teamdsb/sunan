@@ -3,7 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
-import { useBindEnterpriseProfileFilesMutation, useGetEnterpriseProfileByIdQuery, useUpdateEnterpriseProfileMutation } from './enterpriseApi';
+import {
+  type EnterpriseProfile,
+  useBindEnterpriseProfileFilesMutation,
+  useGetEnterpriseProfileByIdQuery,
+  useUpdateEnterpriseProfileMutation,
+} from './enterpriseApi';
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
@@ -13,7 +18,12 @@ export function EnterpriseProfileDetailPage() {
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; category: string; description?: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    category: string;
+    description?: string;
+    status: EnterpriseProfile['status'];
+  }>();
 
   const profile = data?.data;
 

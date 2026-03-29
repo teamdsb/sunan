@@ -2,6 +2,8 @@ import type { AxiosRequestConfig } from 'axios';
 import type { CertificatesMockState } from './fixtures/certificates';
 import type { EnterpriseMockState } from './fixtures/enterprise';
 import type { FilesMockState } from './fixtures/files';
+import type { MonitorMockState } from './fixtures/monitor';
+import type { SettingsMockState } from './fixtures/settings';
 
 export interface MockRequest {
   url: string;
@@ -20,6 +22,8 @@ export interface MockRuntimeState {
   enterprise: EnterpriseMockState;
   files: FilesMockState;
   certificates: CertificatesMockState;
+  monitor: MonitorMockState;
+  settings: SettingsMockState;
 }
 
 export interface MockHandlerContext {

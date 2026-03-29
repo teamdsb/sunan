@@ -40,7 +40,7 @@ type BaseQueryError = {
   data: unknown;
 };
 
-type BaseQueryResult = QueryReturnValue<unknown, BaseQueryError>;
+type BaseQueryResult = QueryReturnValue<unknown, BaseQueryError, {}>;
 
 interface MockRuntimeLike {
   execute(args: AxiosBaseQueryArgs): Promise<BaseQueryResult>;

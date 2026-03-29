@@ -1,4 +1,4 @@
-import type { FileCategory, FileRecord } from '../../features/files/types';
+import type { FileRecord } from '../../features/files/types';
 import { createMockFileRecord, buildFileDownloadUrl, buildFileOssKey, buildFileUploadUrl } from '../fixtures/files';
 import type { FilesMockState, FileRecordSeed } from '../fixtures/files';
 import type { MockHandlerContext, MockRouteDefinition } from '../types';

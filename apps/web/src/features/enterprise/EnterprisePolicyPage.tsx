@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import {
+  type EnterprisePolicy,
   useBindEnterprisePolicyFilesMutation,
   useCreateEnterprisePolicyMutation,
   useGetEnterprisePoliciesQuery,
@@ -93,7 +94,11 @@ export function EnterprisePolicyDetailPage() {
   const [bindFiles] = useBindEnterprisePolicyFilesMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; summary?: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    summary?: string;
+    status: EnterprisePolicy['status'];
+  }>();
 
   const policy = data?.data;
 

@@ -3,7 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
-import { useBindCertificateFilesMutation, useGetCertificateByIdQuery, useUpdateCertificateMutation } from './certificateApi';
+import {
+  type CertificateItem,
+  useBindCertificateFilesMutation,
+  useGetCertificateByIdQuery,
+  useUpdateCertificateMutation,
+} from './certificateApi';
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
@@ -13,7 +18,11 @@ export function CertificateDetailPage() {
   const [bindFiles] = useBindCertificateFilesMutation();
   const [upload, setUpload] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [form] = Form.useForm<{ title: string; expiryDate: string; status: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    expiryDate: string;
+    status: CertificateItem['status'];
+  }>();
   const item = data?.data;
 
   useEffect(() => {

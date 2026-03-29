@@ -451,7 +451,7 @@ describe('baseApi mock mode', () => {
         handler: (context) =>
           createMockResponse({
             data: {
-              id: (context as { params: { id: string } }).params.id,
+              id: context.params.id,
             },
           }),
       },
