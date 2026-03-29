@@ -4,15 +4,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { env } from '../app/env';
 import { logout } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
-
-const navItems = [
-  { to: '/my', label: '我的首页' },
-  { to: '/my/enterprise-profile', label: '企业资料' },
-  { to: '/my/enterprise-policy', label: '企业制度' },
-  { to: '/my/certificates', label: '电子证照' },
-  { to: '/my/monitors', label: '船舶监控' },
-  { to: '/my/settings', label: '设置' },
-];
+import { myRouteNavItems } from '../router/myRouteConfig';
 
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
@@ -41,9 +33,20 @@ export function AppShell() {
             </Typography.Paragraph>
           </div>
           <Space wrap size="middle">
-            {navItems.map((item) => (
-              <Button key={item.to} type={location.pathname === item.to ? 'primary' : 'default'}>
-                <Link to={item.to}>{item.label}</Link>
+            {myRouteNavItems.map((item) => (
+              <Button
+                key={item.path}
+                type={
+                  item.path === '/my'
+                    ? location.pathname === item.path
+                      ? 'primary'
+                      : 'default'
+                    : location.pathname.startsWith(item.path)
+                      ? 'primary'
+                      : 'default'
+                }
+              >
+                <Link to={item.path}>{item.label}</Link>
               </Button>
             ))}
             {user ? (

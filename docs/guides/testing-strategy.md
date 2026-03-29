@@ -1,25 +1,36 @@
-# 测试策略
+﻿# 测试策略
 
 ## 分层
 
-| 层级 | 工具建议 | 目标 |
+| 层级 | 工具 | 目标 |
 |---|---|---|
-| 规格校验 | `swagger-cli`、Markdown Review | 保证文档可用 |
-| 单元测试 | Vitest / Jest | 领域规则、工具函数、Reducer |
-| 集成测试 | NestJS Testing + Testcontainers | API、数据库、Redis、企业微信适配层 |
-| 组件测试 | React Testing Library | 页面状态切换、表单校验 |
-| 端到端测试 | Playwright | 企业微信 H5 关键流程的浏览器替身验证 |
+| 规格校验 | `swagger-cli`、文档评审 | 确保契约可执行 |
+| 单元测试 | Jest / Vitest | 规则与函数正确性 |
+| 集成测试 | NestJS Testing + `@testcontainers/postgresql` | API + 数据库真实行为 |
+| 组件测试 | React Testing Library | 页面交互与状态切换 |
+| 手动测试 | QA 场景执行、真实设备验证 | 覆盖视觉、企微、打印、弱网等自动化盲区 |
 
-## 里程碑 1 测试重点
+## 里程碑 M1 重点
 
-1. OAuth2 回调与 JWT 刷新。
-2. 证照创建、更新、分组查询。
-3. 定时扫描生成提醒。
-4. 提醒确认权限。
-5. 文件预签名上传与回调。
+1. OAuth2 回调与 JWT 刷新
+2. 证照 CRUD 与分组查询
+3. 证书提醒生成与确认
+4. 文件上传（presign/callback）
+
+## 运行命令
+
+```bash
+pnpm --filter api test:unit
+pnpm --filter api test:integration
+pnpm --filter web test
+```
 
 ## 约束
 
-- 规格变更后先补测试，再改实现。
-- OpenAPI 与前端 endpoint 定义需做一致性检查。
-- 影响提醒规则的逻辑必须覆盖边界日期测试。
+- 集成测试必须基于 migration（`synchronize: false`）。
+- 修改 API 契约后需先更新测试，再更新实现。
+- 影响提醒逻辑时必须覆盖边界日期测试。
+
+## 手动测试补充
+
+M1 "我的"模块进入 mock 模式开发与 QA 阶段后，手动测试执行基线见 [qa-testing-my-module.md](./qa-testing-my-module.md)。

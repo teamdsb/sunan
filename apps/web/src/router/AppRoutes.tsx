@@ -6,10 +6,13 @@ import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from '../features/en
 import { EnterpriseProfilePage } from '../features/enterprise/EnterpriseProfilePage';
 import { EnterpriseProfileDetailPage } from '../features/enterprise/EnterpriseProfileDetailPage';
 import { MonitorPage } from '../features/monitor/MonitorPage';
+import { ReminderDashboardPage } from '../features/reminder/ReminderDashboardPage';
+import { ReminderDetailPage } from '../features/reminder/ReminderDetailPage';
+import { MyHomePage } from '../features/ui/MyHomePage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppShell } from '../layouts/AppShell';
-import { PlaceholderPage } from './PlaceholderPage';
 import { RequireAuth } from './RequireAuth';
+import { myRouteConfig } from './myRouteConfig';
 
 export function AppRoutes() {
   return (
@@ -17,24 +20,21 @@ export function AppRoutes() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route
-            path="/my"
-            element={<PlaceholderPage title="我的模块首页" description="Wave 3 业务页面已接入，请从导航进入各模块。" />}
-          />
-          <Route path="/my/enterprise-profile" element={<EnterpriseProfilePage />} />
-          <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
-          <Route path="/my/enterprise-policy" element={<EnterprisePolicyPage />} />
-          <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
-          <Route path="/my/certificates" element={<CertificateListPage />} />
-          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
-          <Route path="/my/monitors" element={<MonitorPage />} />
-          <Route path="/my/monitors/:vesselId" element={<MonitorPage />} />
-          <Route path="/my/settings" element={<SettingsPage />} />
+          <Route path={myRouteConfig.myHome.path} element={<MyHomePage />} />
+          <Route path={myRouteConfig.enterpriseProfile.path} element={<EnterpriseProfilePage />} />
+          <Route path={myRouteConfig.enterpriseProfile.detailPath} element={<EnterpriseProfileDetailPage />} />
+          <Route path={myRouteConfig.enterprisePolicy.path} element={<EnterprisePolicyPage />} />
+          <Route path={myRouteConfig.enterprisePolicy.detailPath} element={<EnterprisePolicyDetailPage />} />
+          <Route path={myRouteConfig.certificates.path} element={<CertificateListPage />} />
+          <Route path={myRouteConfig.certificates.detailPath} element={<CertificateDetailPage />} />
+          <Route path={myRouteConfig.reminders.path} element={<ReminderDashboardPage />} />
+          <Route path={myRouteConfig.reminders.detailPath} element={<ReminderDetailPage />} />
+          <Route path={myRouteConfig.monitors.path} element={<MonitorPage />} />
+          <Route path={myRouteConfig.monitors.detailPath} element={<MonitorPage />} />
+          <Route path={myRouteConfig.settings.path} element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />
     </Routes>
   );
 }
-
-

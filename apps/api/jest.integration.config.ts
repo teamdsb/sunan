@@ -1,4 +1,4 @@
-import type { Config } from 'jest';
+﻿import type { Config } from 'jest';
 
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
@@ -15,6 +15,7 @@ const config: Config = {
   },
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   testTimeout: 30000,
+  maxWorkers: 1,
 };
 
 export default config;

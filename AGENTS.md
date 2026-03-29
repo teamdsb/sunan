@@ -1,42 +1,56 @@
-# Repository Guidelines
+﻿# Repository Guidelines
 
 ## Project Structure & Module Organization
 
-This repository is document-first. Core materials live under `docs/`:
+Core materials:
 
-- `docs/architecture/`: system overview, deployment, security, and tech stack.
-- `docs/guides/`: workflow and contributor guidance such as `sdd-workflow.md`, `testing-strategy.md`, and setup notes.
-- `docs/requirements/`: milestone-level requirement documents.
-- `docs/specs/`: implementation contracts by domain. Current domains include `common/`, `wecom/`, `my/`, plus placeholder modules `office/`, `procurement/`, and `workbench/`.
+- `apps/api`: backend service (NestJS + TypeORM)
+- `apps/web`: frontend application (React + Vite)
+- `docs/architecture`: architecture and technical decisions
+- `docs/guides`: setup, workflow, testing strategy
+- `docs/requirements`: milestone requirements
+- `docs/specs`: API/DB/UI/state specs by domain
 
-Keep new specs close to their domain, for example `docs/specs/my/api/` or `docs/specs/common/`.
+Keep new specs in their domain folder, such as `docs/specs/my/api/`.
 
 ## Build, Test, and Development Commands
 
-There is no application build system checked into this repo yet. Use lightweight validation commands while editing specs:
+Use the following commands as defaults:
 
-- `npx swagger-cli validate docs/specs/my/api/certificate-api.yaml`: validate an OpenAPI file before review.
-- `npx @stoplight/prism-cli mock docs/specs/my/api/certificate-api.yaml`: run a mock server from an API contract.
-- `git diff -- docs/`: review doc-only changes before committing.
+- `pnpm install`
+- `make db-up` / `make db-down` / `make db-reset`
+- `make migration-run`
+- `make seed`
+- `make start-api`
+- `make dev`
+- `make test-api`
+- `make test-web`
 
-Follow the workflow in `docs/guides/sdd-workflow.md`: spec first, tests second, implementation last.
+Useful contract tooling:
+
+- `npx swagger-cli validate docs/specs/my/api/certificate-api.yaml`
+- `npx @stoplight/prism-cli mock docs/specs/my/api/certificate-api.yaml`
 
 ## Coding Style & Naming Conventions
 
-Write concise Markdown with clear headings and short sections. Match the existing directory language and naming style: Chinese filenames are acceptable in requirements, while shared specs use lowercase English kebab-case such as `api-conventions.md`.
-
-Use fenced code blocks for commands and examples. Prefer stable, explicit paths like `docs/specs/wecom/oauth2-spec.md` when cross-referencing. Do not rename or reshuffle spec folders without updating all references.
+- Keep Markdown concise and structured.
+- Shared specs use lowercase kebab-case English file names.
+- Chinese file names are acceptable for requirements and business docs.
+- Use explicit absolute or repo-root-relative paths when cross-referencing.
 
 ## Testing Guidelines
 
-For this repo, testing primarily means contract validation and reviewability:
-
-- Validate OpenAPI specs before merging.
-- Check that updated specs still align with `docs/specs/common/api-conventions.md` and `docs/specs/common/db-conventions.md`.
-- When a spec changes, update related testing notes and downstream implementation expectations in the same PR.
+- Validate OpenAPI specs before merge.
+- Keep implementation aligned with:
+  - `docs/specs/common/api-conventions.md`
+  - `docs/specs/common/db-conventions.md`
+- For backend integration tests, use PostgreSQL testcontainers, not SQLite emulation.
 
 ## Commit & Pull Request Guidelines
 
-Recent history uses short, scope-first commit subjects, often in Chinese, such as `SPEC架构&me` and `需求文档与忽略`. Keep commits focused and descriptive.
-
-PRs should summarize the changed domain, list affected files, and explain downstream impact. Link the related requirement or milestone document. Include screenshots only when the change alters UI flows or rendered mock outputs.
+- Use focused, scope-first commit messages.
+- PR descriptions should include:
+  - changed domain/module
+  - key file list
+  - downstream impact
+  - linked requirement/milestone docs

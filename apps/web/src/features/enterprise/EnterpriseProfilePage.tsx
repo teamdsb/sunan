@@ -1,13 +1,30 @@
-﻿import { Button, Card, Form, Input, List, Pagination, Select, Space, Tag, Typography } from 'antd';
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useCreateEnterpriseProfileMutation, useDeleteEnterpriseProfileMutation, useGetEnterpriseProfilesQuery } from './enterpriseApi';
+import { Button, Card, Form, Input, List, Pagination, Select, Space, Tag, Typography } from 'antd';
+import { useMemo } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
+import {
+  useCreateEnterpriseProfileMutation,
+  useDeleteEnterpriseProfileMutation,
+  useGetEnterpriseProfilesQuery,
+} from './enterpriseApi';
+
+function readPageValue(value: string | null, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 export function EnterpriseProfilePage() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [category, setCategory] = useState<string | undefined>();
-  const [status, setStatus] = useState<string | undefined>();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = readPageValue(searchParams.get('page'), 1);
+  const pageSize = readPageValue(searchParams.get('pageSize'), 10);
+  const category = searchParams.get('category') || undefined;
+  const status = searchParams.get('status') || undefined;
 
   const { data, isLoading } = useGetEnterpriseProfilesQuery({ page, pageSize, category, status });
   const [createProfile, { isLoading: creating }] = useCreateEnterpriseProfileMutation();
@@ -15,6 +32,10 @@ export function EnterpriseProfilePage() {
   const [form] = Form.useForm<{ title: string; category: string }>();
 
   const profiles = useMemo(() => data?.data ?? [], [data]);
+
+  const applySearch = (updates: Record<string, string | number | null | undefined>) => {
+    setSearchParams(updateSearchParams(location.search, updates));
+  };
 
   return (
     <section className="page-hero">
@@ -38,7 +59,9 @@ export function EnterpriseProfilePage() {
                 options={[{ value: 'license', label: '资质' }, { value: 'notice', label: '公告' }]}
               />
             </Form.Item>
-            <Button htmlType="submit" type="primary" loading={creating}>新建资料</Button>
+            <Button htmlType="submit" type="primary" loading={creating}>
+              新建资料
+            </Button>
           </Form>
         </Card>
 
@@ -49,7 +72,12 @@ export function EnterpriseProfilePage() {
               placeholder="按分类筛选"
               style={{ width: 180 }}
               value={category}
-              onChange={(v) => { setCategory(v); setPage(1); }}
+              onChange={(v) => {
+                applySearch({
+                  category: v || null,
+                  page: 1,
+                });
+              }}
               options={[{ value: 'license', label: '资质' }, { value: 'notice', label: '公告' }]}
             />
             <Select
@@ -57,7 +85,12 @@ export function EnterpriseProfilePage() {
               placeholder="按状态筛选"
               style={{ width: 180 }}
               value={status}
-              onChange={(v) => { setStatus(v); setPage(1); }}
+              onChange={(v) => {
+                applySearch({
+                  status: v || null,
+                  page: 1,
+                });
+              }}
               options={[{ value: 'draft', label: '草稿' }, { value: 'published', label: '已发布' }, { value: 'archived', label: '已归档' }]}
             />
           </Space>
@@ -68,8 +101,12 @@ export function EnterpriseProfilePage() {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  <Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>删除</Button>,
-                  <Button key="detail" type="link"><Link to={`/my/enterprise-profile/${item.id}`}>详情</Link></Button>,
+                  <Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>
+                    删除
+                  </Button>,
+                  <Button key="detail" type="link">
+                    <Link to={buildDetailHref(myRouteConfig.enterpriseProfile.path, item.id, location.search)}>详情</Link>
+                  </Button>,
                 ]}
               >
                 <List.Item.Meta title={item.title} description={`${item.category} · ${item.status}`} />
@@ -84,8 +121,12 @@ export function EnterpriseProfilePage() {
             pageSize={pageSize}
             total={data?.meta?.total ?? 0}
             onChange={(nextPage, nextPageSize) => {
-              setPage(nextPage);
-              setPageSize(nextPageSize);
+              applySearch({
+                page: nextPage,
+                pageSize: nextPageSize,
+                category,
+                status,
+              });
             }}
           />
         </Card>

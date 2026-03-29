@@ -1,29 +1,53 @@
-# 快速开始
+﻿# 快速开始
 
 ## 环境要求
 
 | 组件 | 建议版本 |
 |---|---|
 | Node.js | 20 LTS |
-| pnpm | 9.x |
-| PostgreSQL | 16.x |
-| Redis | 7.x |
-| Docker | 最新稳定版 |
+| pnpm | 9+ |
+| Docker Desktop | 最新稳定版 |
 
-## 启动顺序
+## Quick Start
 
-1. 安装依赖。
-2. 启动 PostgreSQL 和 Redis。
-3. 配置 `.env.local` 中的企业微信、数据库、Redis、OSS 参数。
-4. 执行数据库 migration 和种子初始化。
-5. 启动前端和后端开发服务。
+```bash
+pnpm install
 
-## 本地验证
+make db-up
+make migration-run
+make seed
 
-- 打开接口文档确认后端正常启动
-- 检查 OAuth2 回调地址是否与开发域名一致
-- 验证文件预签名接口是否可用
+make start-api
+make dev
+```
 
-## 文档驱动要求
+默认服务：
 
-开始编码前，先确认目标功能在 `docs/specs/` 下已有对应规格。
+- API: `http://127.0.0.1:3000`
+- Web: `http://127.0.0.1:5173`
+
+## Mock 模式
+
+如需在本地跳过企微认证进行 M1 页面预览，可在前端环境中设置：
+
+```bash
+VITE_LOCAL_BYPASS_AUTH=true
+```
+
+开启后会自动注入本地预览用户，默认角色为 `all_authenticated + shipping`。
+
+详细的 QA 启动步骤、限制说明与手动测试场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
+
+## 常用命令
+
+```bash
+make db-down
+make db-reset
+make test-api
+make test-web
+```
+
+## 说明
+
+- 后端 `.env` 由 `make ensure-api-env` 自动从 `apps/api/.env.example` 生成。
+- 前端 `.env` 由 `make ensure-web-env` 自动从 `apps/web/.env.example` 生成。
