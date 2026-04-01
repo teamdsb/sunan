@@ -13,7 +13,7 @@ function shouldBypassAuthForLocalPreview(): boolean {
 }
 
 export async function bootstrapAuth(dispatch: AppDispatch): Promise<void> {
-  if (import.meta.env.DEV && env.mockMode) {
+  if (env.mockMode) {
     const { mockAuthPayload } = await import('../../mocks/fixtures/auth');
     dispatch(bootstrapMockAuth(mockAuthPayload));
     return;

@@ -7,6 +7,7 @@
   font-family: "Source Han Serif SC", "Noto Serif SC", serif;
   line-height: 1.5;
   font-weight: 400;
+  color-scheme: light;
 }
 
 body {
@@ -26,13 +27,13 @@ body {
 
 .shell-layout {
   min-height: 100vh;
-  padding: 20px;
+  padding: 12px;
 }
 
 .shell-panel {
-  min-height: calc(100vh - 40px);
+  min-height: calc(100vh - 24px);
   border: 1px solid rgba(20, 40, 29, 0.08);
-  border-radius: 28px;
+  border-radius: 20px;
   overflow: hidden;
   background: rgba(255, 251, 245, 0.9);
   backdrop-filter: blur(14px);
@@ -40,18 +41,44 @@ body {
 }
 
 .shell-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid rgba(20, 40, 29, 0.08);
-  background: linear-gradient(90deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.08));
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px 6px;
+  border-bottom: none;
+  background: transparent;
+}
+
+.shell-mobile-topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.shell-mobile-page-title.ant-typography {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.shell-mobile-more-button.ant-btn {
+  padding-inline: 0;
+  color: #14281d;
+  box-shadow: none;
+}
+
+.shell-mobile-more-button.ant-btn .ant-btn-icon {
+  font-size: 18px;
+}
+
+.shell-brand {
+  display: none;
+  gap: 14px;
 }
 
 .shell-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   letter-spacing: 0.04em;
 }
 
@@ -60,83 +87,91 @@ body {
   color: rgba(20, 40, 29, 0.72);
 }
 
+.shell-desktop-actions {
+  display: none;
+}
+
+.shell-content {
+  min-width: 0;
+}
+
+.shell-mobile-drawer .ant-drawer-body .ant-btn {
+  min-height: 44px;
+}
+
+.shell-mobile-drawer-user {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(20, 40, 29, 0.08);
+}
+
 .page-hero {
-  padding: 28px 24px 8px;
+  padding: 10px 16px 8px;
 }
 
 .page-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  padding: 0 24px 24px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 0 16px 16px;
 }
 
 .my-home-hero {
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
 .my-home-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  padding: 0 24px 28px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 0 16px 16px;
 }
 
-.my-home-tile {
-  position: relative;
-  min-height: 220px;
-  border-radius: 28px;
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 235, 225, 0.96)),
-    linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(180, 83, 9, 0.1));
-  border: 1px solid rgba(20, 40, 29, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 18px 36px rgba(20, 40, 29, 0.07);
+.my-home-icon-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 10px;
 }
 
-.my-home-tile .ant-card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+.my-home-shortcut {
+  display: grid;
+  justify-items: center;
+  align-content: start;
   gap: 10px;
-  height: 100%;
-  padding: 24px;
+  min-width: 0;
+  padding: 10px 4px;
+  text-align: center;
+  color: inherit;
+  text-decoration: none;
 }
 
-.my-home-tile-accent {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 72px;
-  height: 72px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(15, 118, 110, 0.3), transparent 55%),
-    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.16));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+.my-home-shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  color: #147d74;
 }
 
-.my-home-tile-caption {
-  color: rgba(20, 40, 29, 0.5);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.my-home-shortcut-icon-plain {
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.my-home-tile-title.ant-typography {
-  margin: 0;
-  max-width: calc(100% - 88px);
-  font-size: 30px;
-  line-height: 1.15;
+.my-home-shortcut-label.ant-typography {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(20, 40, 29, 0.84);
 }
 
-.my-home-tile-description.ant-typography {
-  margin: 0;
-  max-width: min(22ch, 100%);
-  color: rgba(20, 40, 29, 0.72);
-  font-size: 16px;
+.my-home-shortcut:hover .my-home-shortcut-icon,
+.my-home-shortcut:focus-visible .my-home-shortcut-icon {
+  transform: translateY(-1px);
+}
+
+.my-home-shortcut:focus-visible {
+  outline: none;
 }
 
 .reminder-stat-grid {
@@ -192,7 +227,11 @@ body {
   word-break: break-word;
 }
 
-.shell-header .ant-btn {
+.shell-header .ant-btn,
+.filter-panel-toggle,
+.page-primary-action,
+.detail-action-bar .ant-btn,
+.detail-header-actions .ant-btn {
   min-height: 44px;
 }
 
@@ -200,6 +239,121 @@ body {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
+}
+
+.filter-panel-toggle {
+  width: 100%;
+}
+
+.filter-panel {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.filter-field {
+  display: grid;
+  gap: 8px;
+}
+
+.status-card,
+.stacked-form,
+.list-pagination {
+  width: 100%;
+}
+
+.stacked-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.stacked-form .ant-btn {
+  min-height: 44px;
+}
+
+.list-pagination {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+.page-primary-action {
+  width: 100%;
+}
+
+.detail-action-bar,
+.detail-header-actions {
+  width: 100%;
+}
+
+.detail-action-bar .ant-space-item,
+.detail-header-actions .ant-space-item {
+  flex: 1 1 180px;
+}
+
+.detail-action-bar .ant-btn,
+.detail-header-actions .ant-btn {
+  width: 100%;
+}
+
+.ant-list-item {
+  align-items: flex-start;
+}
+
+.ant-list-item-action {
+  margin-inline-start: 12px;
+}
+
+.ant-list-item-action > li {
+  white-space: normal;
+}
+
+.shell-mobile-nav-item.ant-btn {
+  position: relative;
+  justify-content: flex-start;
+  padding-inline: 0;
+  border-radius: 0;
+  color: rgba(20, 40, 29, 0.82);
+}
+
+.shell-mobile-nav-item.ant-btn::before {
+  display: none;
+}
+
+.shell-mobile-nav-item.is-active.ant-btn {
+  color: #147d74;
+  font-weight: 600;
+}
+
+.shell-mobile-nav-item.is-active.ant-btn::after {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.shell-mobile-reauthorize.ant-btn {
+  margin-top: 8px;
+  border-top: 1px solid rgba(20, 40, 29, 0.08);
+  padding-top: 14px;
+}
+
+.ant-card .ant-card-head {
+  min-height: 52px;
+}
+
+.ant-segmented {
+  max-width: 100%;
+}
+
+.ant-segmented-group {
+  flex-wrap: wrap;
+}
+
+.ant-pagination {
+  flex-wrap: wrap;
 }
 
 .callback-panel {
@@ -216,43 +370,67 @@ body {
   box-shadow: 0 24px 60px rgba(20, 40, 29, 0.12);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 769px) {
   .shell-layout {
-    padding: 12px;
-  }
-
-  .shell-panel {
-    min-height: calc(100vh - 24px);
-    border-radius: 22px;
-  }
-
-  .shell-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px;
-  }
-
-  .my-home-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 0 16px 20px;
-    gap: 14px;
-  }
-
-  .my-home-tile {
-    min-height: 188px;
-    border-radius: 24px;
-  }
-
-  .my-home-tile .ant-card-body {
     padding: 20px;
   }
 
-  .my-home-tile-title.ant-typography {
-    font-size: 24px;
+  .shell-panel {
+    min-height: calc(100vh - 40px);
+    border-radius: 28px;
   }
 
-  .my-home-tile-description.ant-typography {
-    font-size: 14px;
+  .shell-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 18px 24px;
+    gap: 16px;
+    border-bottom: 1px solid rgba(20, 40, 29, 0.08);
+    background: linear-gradient(90deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.08));
+  }
+
+  .shell-mobile-topbar {
+    display: none;
+  }
+
+  .shell-brand {
+    display: grid;
+  }
+
+  .shell-desktop-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .page-hero {
+    padding: 28px 24px 8px;
+  }
+
+  .page-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 0 24px 24px;
+  }
+
+  .my-home-grid {
+    padding: 0 24px 24px;
+    gap: 14px;
+  }
+
+  .page-primary-action {
+    width: auto;
+  }
+
+  .list-pagination {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 1024px) {
+  .my-home-icon-grid {
+    grid-template-columns: repeat(4, minmax(0, 120px));
+    justify-content: start;
   }
 }
 
@@ -266,60 +444,27 @@ body {
     border-radius: 18px;
   }
 
-  .shell-header {
-    gap: 12px;
-    padding: 14px 14px 12px;
-  }
-
-  .shell-header .ant-space {
-    width: 100%;
-  }
-
-  .shell-header .ant-btn {
-    flex: 1 1 auto;
-  }
-
-  .page-hero {
-    padding: 20px 16px 8px;
-  }
-
-  .page-card-grid {
-    padding: 0 16px 16px;
-    gap: 12px;
-    grid-template-columns: 1fr;
-    margin-inline: 0 !important;
-  }
-
-  .my-home-grid {
-    grid-template-columns: 1fr;
-    padding: 0 16px 16px;
-    gap: 12px;
-  }
-
-  .my-home-tile {
-    min-height: 176px;
-    border-radius: 22px;
-  }
-
-  .my-home-tile .ant-card-body {
-    padding: 18px;
-  }
-
-  .my-home-tile-accent {
-    top: 14px;
-    right: 14px;
-    width: 60px;
-    height: 60px;
-    border-radius: 20px;
-  }
-
-  .my-home-tile-title.ant-typography {
-    max-width: calc(100% - 74px);
+  .shell-title {
     font-size: 22px;
   }
 
-  .my-home-tile-description.ant-typography {
-    max-width: 100%;
+  .my-home-icon-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 6px;
+  }
+
+  .my-home-shortcut {
+    padding-inline: 2px;
+  }
+
+  .my-home-shortcut-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .my-home-shortcut-label.ant-typography {
+    font-size: 12px;
   }
 
   .page-card-grid > .ant-col {

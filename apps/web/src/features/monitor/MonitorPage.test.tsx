@@ -52,4 +52,14 @@ describe('MonitorPage', () => {
     );
     expect(mockByVessel).toHaveBeenCalled();
   });
+
+  it('uses a vertical monitor creation form for mobile-friendly entry', () => {
+    render(
+      <MemoryRouter>
+        <MonitorPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('monitor-create-form')).not.toHaveClass('ant-form-inline');
+  });
 });

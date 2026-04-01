@@ -3,6 +3,7 @@ import { createCertificatesMockState } from '../fixtures/certificates';
 import { createFilesMockState } from '../fixtures/files';
 import { createEnterpriseMockState } from '../fixtures/enterprise';
 import { createMonitorsMockState } from '../fixtures/monitor';
+import { createReminderMockState } from '../fixtures/reminders';
 import { createSettingsMockState } from '../fixtures/settings';
 import {
   buildRouteKey,
@@ -54,6 +55,7 @@ export function createMockState(handlers: MockRouteDefinition[]): MockState {
       enterprise: createEnterpriseMockState(),
       files: createFilesMockState(),
       certificates: createCertificatesMockState(),
+      reminder: createReminderMockState(),
       settings: createSettingsMockState(),
       monitor: createMonitorsMockState(),
     },

@@ -82,7 +82,7 @@ export function ReminderDetailPage() {
   return (
     <section className="page-hero">
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Space align="center" wrap>
+        <Space align="center" wrap className="detail-header-actions">
           <Typography.Title level={2} style={{ marginBottom: 0 }}>
             提醒详情
           </Typography.Title>
@@ -128,7 +128,7 @@ export function ReminderDetailPage() {
                 </Descriptions>
               </Card>
 
-              <Space wrap>
+              <Space wrap className="detail-action-bar">
                 {canShowAction ? (
                   isAcknowledged ? (
                     <Button disabled>已确认</Button>

@@ -808,6 +808,169 @@ describe('baseApi mock mode', () => {
     );
   });
 
+  it('supports reminder dashboard, list, detail, acknowledge, and scan routes in mock runtime', async () => {
+    vi.stubEnv('VITE_MOCK_MODE', 'true');
+
+    const { createBaseQuery } = await import('./baseApi');
+    const runtime = createMockRuntime();
+    const baseQuery = createBaseQuery({
+      mockRuntimeLoader: async () => runtime,
+    });
+
+    const dashboardResult = await baseQuery(
+      {
+        url: '/certificate-reminders/dashboard',
+      },
+      createApiStub(),
+      {},
+    );
+
+    expect(dashboardResult).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.objectContaining({
+            totalPending: 1,
+            totalOverdue: 1,
+            totalAcknowledged: 1,
+            byOwnerType: expect.arrayContaining([
+              expect.objectContaining({
+                ownerType: 'vessel',
+                count: 2,
+              }),
+            ]),
+          }),
+        }),
+      }),
+    );
+
+    const listResult = await baseQuery(
+      {
+        url: '/certificate-reminders',
+        params: {
+          page: 1,
+          pageSize: 5,
+        },
+      },
+      createApiStub(),
+      {},
+    );
+
+    expect(listResult).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'reminder-1',
+              certificateId: '1',
+              ownerType: 'vessel',
+              status: 'pending',
+            }),
+          ]),
+          meta: expect.objectContaining({
+            total: 3,
+            page: 1,
+            pageSize: 5,
+            totalPages: 1,
+          }),
+        }),
+      }),
+    );
+
+    const detailResult = await baseQuery(
+      {
+        url: '/certificate-reminders/reminder-1',
+      },
+      createApiStub(),
+      {},
+    );
+
+    expect(detailResult).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.objectContaining({
+            id: 'reminder-1',
+            certificateTitle: '国籍证书',
+          }),
+        }),
+      }),
+    );
+
+    const acknowledgeResult = await baseQuery(
+      {
+        url: '/certificate-reminders/reminder-1/acknowledge',
+        method: 'POST',
+        data: {
+          comment: '已确认',
+        },
+      },
+      createApiStub(),
+      {},
+    );
+
+    expect(acknowledgeResult).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.objectContaining({
+            id: 'reminder-1',
+            status: 'acknowledged',
+            acknowledgedBy: expect.any(String),
+            acknowledgedAt: expect.any(String),
+          }),
+        }),
+      }),
+    );
+
+    const scanResult = await baseQuery(
+      {
+        url: '/certificate-reminders/actions/scan',
+        method: 'POST',
+      },
+      createApiStub(),
+      {},
+    );
+
+    expect(scanResult).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.objectContaining({
+            jobId: expect.stringMatching(/^scan-job-/),
+            acceptedAt: expect.any(String),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('routes mock mode through the mock runtime even when the build is not dev', async () => {
+    vi.stubEnv('VITE_MOCK_MODE', 'true');
+    vi.stubEnv('DEV', 'false');
+
+    const axiosModule = await import('axios');
+    const axiosCreateSpy = vi.spyOn(axiosModule.default, 'create').mockReturnValue({
+      request: vi.fn().mockResolvedValue({ data: { data: { source: 'axios' } } }),
+      post: vi.fn(),
+    } as never);
+
+    const runtime = createMockRuntime();
+    const { createBaseQuery } = await import('./baseApi');
+    const baseQuery = createBaseQuery({
+      mockRuntimeLoader: async () => runtime,
+    });
+
+    const result = await baseQuery({ url: '/certificate-reminders/dashboard' }, createApiStub(), {});
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          data: expect.objectContaining({
+            totalPending: 1,
+          }),
+        }),
+      }),
+    );
+    expect(axiosCreateSpy).not.toHaveBeenCalled();
+  });
+
   it('stores uploaded files in runtime state and binds them to certificates', async () => {
     vi.stubEnv('VITE_MOCK_MODE', 'true');
 

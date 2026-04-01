@@ -136,4 +136,15 @@ describe('CertificateListPage', () => {
       expect(scrollTo).toHaveBeenCalledWith(0, 240);
     });
   });
+
+  it('hides advanced filters behind an expandable panel by default', () => {
+    render(
+      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+        <CertificateListPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: '展开筛选' })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('状态')).not.toBeInTheDocument();
+  });
 });

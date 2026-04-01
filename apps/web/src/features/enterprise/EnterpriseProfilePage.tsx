@@ -1,5 +1,7 @@
 import { Button, Card, Form, Input, List, Pagination, Select, Space, Tag, Typography } from 'antd';
+import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
@@ -30,6 +32,7 @@ export function EnterpriseProfilePage() {
   const [createProfile, { isLoading: creating }] = useCreateEnterpriseProfileMutation();
   const [deleteProfile] = useDeleteEnterpriseProfileMutation();
   const [form] = Form.useForm<{ title: string; category: string }>();
+  const [showFilters, setShowFilters] = useState(false);
 
   const profiles = useMemo(() => data?.data ?? [], [data]);
 
@@ -44,18 +47,19 @@ export function EnterpriseProfilePage() {
         <Card>
           <Form
             form={form}
-            layout="inline"
+            data-testid="enterprise-profile-create-form"
+            layout="vertical"
+            className="stacked-form"
             onFinish={async (values) => {
               await createProfile({ ...values, status: 'draft' }).unwrap();
               form.resetFields();
             }}
           >
-            <Form.Item name="title" rules={[{ required: true }]}>
+            <Form.Item name="title" label="标题" rules={[{ required: true }]}>
               <Input placeholder="标题" />
             </Form.Item>
-            <Form.Item name="category" rules={[{ required: true }]}>
+            <Form.Item name="category" label="分类" rules={[{ required: true }]}>
               <Select
-                style={{ width: 180 }}
                 options={[{ value: 'license', label: '资质' }, { value: 'notice', label: '公告' }]}
               />
             </Form.Item>
@@ -66,34 +70,49 @@ export function EnterpriseProfilePage() {
         </Card>
 
         <Card loading={isLoading}>
-          <Space wrap style={{ marginBottom: 12 }}>
-            <Select
-              allowClear
-              placeholder="按分类筛选"
-              style={{ width: 180 }}
-              value={category}
-              onChange={(v) => {
-                applySearch({
-                  category: v || null,
-                  page: 1,
-                });
-              }}
-              options={[{ value: 'license', label: '资质' }, { value: 'notice', label: '公告' }]}
-            />
-            <Select
-              allowClear
-              placeholder="按状态筛选"
-              style={{ width: 180 }}
-              value={status}
-              onChange={(v) => {
-                applySearch({
-                  status: v || null,
-                  page: 1,
-                });
-              }}
-              options={[{ value: 'draft', label: '草稿' }, { value: 'published', label: '已发布' }, { value: 'archived', label: '已归档' }]}
-            />
-          </Space>
+          <Button
+            className="filter-panel-toggle"
+            icon={showFilters ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setShowFilters((current) => !current)}
+          >
+            {showFilters ? '收起筛选' : '展开筛选'}
+          </Button>
+          {showFilters ? (
+            <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Select
+                  allowClear
+                  placeholder="按分类筛选"
+                  style={{ width: '100%' }}
+                  value={category}
+                  onChange={(v) => {
+                    applySearch({
+                      category: v || null,
+                      page: 1,
+                    });
+                  }}
+                  options={[{ value: 'license', label: '资质' }, { value: 'notice', label: '公告' }]}
+                />
+                <Select
+                  allowClear
+                  placeholder="按状态筛选"
+                  style={{ width: '100%' }}
+                  value={status}
+                  onChange={(v) => {
+                    applySearch({
+                      status: v || null,
+                      page: 1,
+                    });
+                  }}
+                  options={[
+                    { value: 'draft', label: '草稿' },
+                    { value: 'published', label: '已发布' },
+                    { value: 'archived', label: '已归档' },
+                  ]}
+                />
+              </Space>
+            </Card>
+          ) : null}
 
           <List
             dataSource={profiles}
@@ -116,10 +135,12 @@ export function EnterpriseProfilePage() {
           />
 
           <Pagination
-            style={{ marginTop: 16, textAlign: 'right' }}
+            className="list-pagination"
             current={page}
             pageSize={pageSize}
             total={data?.meta?.total ?? 0}
+            responsive
+            showLessItems
             onChange={(nextPage, nextPageSize) => {
               applySearch({
                 page: nextPage,

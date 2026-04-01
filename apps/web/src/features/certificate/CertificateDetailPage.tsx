@@ -75,7 +75,7 @@ export function CertificateDetailPage() {
               <Form.Item label="附件上传/预览">
                 <FileUploadField category="certificates" value={upload} onChange={setUpload} />
               </Form.Item>
-              <Space>
+              <Space wrap className="detail-action-bar">
                 <Button htmlType="submit" type="primary" loading={saving}>
                   保存
                 </Button>

@@ -1,5 +1,6 @@
 import { Button, Card, Col, List, Pagination, Row, Select, Space, Tag, Typography, message } from 'antd';
-import { useMemo } from 'react';
+import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
+import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -73,6 +74,7 @@ export function ReminderDashboardPage() {
   }, [isListMode, page, pageSize, reminderType, ownerType, status]);
   const listQuery = useGetReminderListQuery(listQueryArgs, shouldWaitForSettings ? { skip: true } : undefined);
   const [triggerScan, { isLoading: scanning }] = useTriggerReminderScanMutation();
+  const [showFilters, setShowFilters] = useState(false);
 
   const dashboard = dashboardQuery.data?.data;
   const reminders = useMemo(() => listQuery.data?.data ?? [], [listQuery.data]);
@@ -210,44 +212,59 @@ export function ReminderDashboardPage() {
           </>
         ) : (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Space wrap>
-              <Typography.Text>对象类型</Typography.Text>
-              <Select
-                style={{ minWidth: 160 }}
-                value={ownerType || undefined}
-                allowClear
-                placeholder="全部"
-                options={[
-                  { value: 'vessel', label: 'vessel' },
-                  { value: 'vehicle', label: 'vehicle' },
-                  { value: 'personnel', label: 'personnel' },
-                ]}
-                onChange={(nextOwnerType) =>
-                  applySearch({
-                    view: 'list',
-                    ownerType: nextOwnerType || null,
-                    page: 1,
-                  })
-                }
-              />
-              <Typography.Text>每页条数</Typography.Text>
-              <Select
-                style={{ width: 120 }}
-                value={pageSize}
-                options={[
-                  { value: 5, label: '5' },
-                  { value: 10, label: '10' },
-                  { value: 20, label: '20' },
-                ]}
-                onChange={(nextPageSize) =>
-                  applySearch({
-                    view: 'list',
-                    page: 1,
-                    pageSize: nextPageSize,
-                  })
-                }
-              />
-            </Space>
+            <Button
+              className="filter-panel-toggle"
+              icon={showFilters ? <UpOutlined /> : <DownOutlined />}
+              onClick={() => setShowFilters((current) => !current)}
+            >
+              {showFilters ? '收起筛选' : '展开筛选'}
+            </Button>
+            {showFilters ? (
+              <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <div className="filter-field">
+                    <Typography.Text>对象类型</Typography.Text>
+                    <Select
+                      style={{ width: '100%' }}
+                      value={ownerType || undefined}
+                      allowClear
+                      placeholder="全部"
+                      options={[
+                        { value: 'vessel', label: 'vessel' },
+                        { value: 'vehicle', label: 'vehicle' },
+                        { value: 'personnel', label: 'personnel' },
+                      ]}
+                      onChange={(nextOwnerType) =>
+                        applySearch({
+                          view: 'list',
+                          ownerType: nextOwnerType || null,
+                          page: 1,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="filter-field">
+                    <Typography.Text>每页条数</Typography.Text>
+                    <Select
+                      style={{ width: '100%' }}
+                      value={pageSize}
+                      options={[
+                        { value: 5, label: '5' },
+                        { value: 10, label: '10' },
+                        { value: 20, label: '20' },
+                      ]}
+                      onChange={(nextPageSize) =>
+                        applySearch({
+                          view: 'list',
+                          page: 1,
+                          pageSize: nextPageSize,
+                        })
+                      }
+                    />
+                  </div>
+                </Space>
+              </Card>
+            ) : null}
           </Space>
         )}
 
@@ -277,6 +294,7 @@ export function ReminderDashboardPage() {
             locale={{ emptyText: '暂无提醒，请调整筛选。' }}
             renderItem={(item) => (
               <List.Item
+                actions={[]}
                 className={isOverdueReminder(item) ? 'reminder-item reminder-item-overdue' : 'reminder-item'}
                 style={{
                   paddingInlineStart: 12,
@@ -306,12 +324,14 @@ export function ReminderDashboardPage() {
             )}
           />
           {isListMode ? (
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="list-pagination">
               <Pagination
                 current={page}
                 pageSize={pageSize}
                 total={listTotal}
                 showSizeChanger
+                responsive
+                showLessItems
                 onChange={(nextPage, nextPageSize) =>
                   applySearch({
                     view: 'list',

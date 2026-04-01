@@ -28,16 +28,18 @@ export function MonitorPage() {
         {isManager ? (
           <Card>
             <Form
+              data-testid="monitor-create-form"
               form={form}
-              layout="inline"
+              layout="vertical"
+              className="stacked-form"
               onFinish={async (values) => {
                 await createMonitor(values).unwrap();
                 form.resetFields();
               }}
             >
-              <Form.Item name="vesselId" rules={[{ required: true }]}><Input placeholder="船舶ID" /></Form.Item>
-              <Form.Item name="monitorName" rules={[{ required: true }]}><Input placeholder="监控名称" /></Form.Item>
-              <Form.Item name="endpointUrl" rules={[{ required: true }]}><Input placeholder="监控地址" /></Form.Item>
+              <Form.Item name="vesselId" label="船舶ID" rules={[{ required: true }]}><Input placeholder="船舶ID" /></Form.Item>
+              <Form.Item name="monitorName" label="监控名称" rules={[{ required: true }]}><Input placeholder="监控名称" /></Form.Item>
+              <Form.Item name="endpointUrl" label="监控地址" rules={[{ required: true }]}><Input placeholder="监控地址" /></Form.Item>
               <Button htmlType="submit" type="primary">新增监控</Button>
             </Form>
           </Card>
@@ -46,7 +48,7 @@ export function MonitorPage() {
           <List
             dataSource={monitors}
             renderItem={(item) => (
-              <List.Item actions={[<a key="open" href={item.endpointUrl} target="_blank" rel="noreferrer">打开</a>]}> 
+              <List.Item actions={[<a key="open" href={item.endpointUrl} target="_blank" rel="noreferrer">打开</a>]}>
                 <List.Item.Meta title={item.monitorName} description={item.endpointUrl} />
                 <Tag color={item.isActive ? 'green' : 'default'}>{item.isActive ? '启用' : '禁用'}</Tag>
               </List.Item>

@@ -108,4 +108,14 @@ describe('EnterprisePolicyPage', () => {
       { replace: true },
     );
   });
+
+  it('uses a vertical creation form for narrow screens', () => {
+    render(
+      <MemoryRouter>
+        <EnterprisePolicyPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('enterprise-policy-create-form')).not.toHaveClass('ant-form-inline');
+  });
 });

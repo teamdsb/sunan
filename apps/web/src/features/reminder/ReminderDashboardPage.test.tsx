@@ -307,4 +307,28 @@ describe('ReminderDashboardPage', () => {
 
     expect(screen.queryByRole('button', { name: /手动扫描/ })).toBeNull();
   });
+
+  it('keeps list filters collapsed until the user expands them', () => {
+    render(
+      <MemoryRouter initialEntries={['/my/reminders?view=list&status=pending']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: '展开筛选' })).toBeInTheDocument();
+    expect(screen.queryByText('对象类型')).not.toBeInTheDocument();
+  });
+
+  it('reveals list filters when the filter panel is expanded', () => {
+    render(
+      <MemoryRouter initialEntries={['/my/reminders?view=list&status=pending']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '展开筛选' }));
+
+    expect(screen.getByText('对象类型')).toBeInTheDocument();
+    expect(screen.getByText('每页条数')).toBeInTheDocument();
+  });
 });

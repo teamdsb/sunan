@@ -1,4 +1,4 @@
-﻿.PHONY: help ensure-api-env ensure-web-env db-up db-down db-reset migration-run seed start-api dev build preview test-api test-web
+﻿.PHONY: help ensure-api-env ensure-web-env db-up db-down db-reset migration-run seed start-api dev mock build preview test-api test-web
 
 HOST ?= 127.0.0.1
 API_ENV_FILE := apps/api/.env
@@ -17,6 +17,7 @@ help:
 	@printf "  make seed            Seed backend reference data\n"
 	@printf "  make start-api       Start backend in watch mode\n"
 	@printf "  make dev             Start web Vite dev server on http://%s:5173\n" "$(HOST)"
+	@printf "  make mock            Start web Vite dev server in mock mode on http://%s:5173\n" "$(HOST)"
 	@printf "  make build           Build the web app\n"
 	@printf "  make preview         Preview the built web app on http://%s:4173\n" "$(HOST)"
 	@printf "  make test-api        Run backend tests\n"
@@ -63,6 +64,9 @@ start-api: ensure-api-env db-up
 
 dev: ensure-web-env
 	pnpm --filter web dev -- --host $(HOST)
+
+mock: ensure-web-env
+	pnpm --filter web dev --mode mock -- --host $(HOST)
 
 build: ensure-web-env
 	pnpm --filter web build

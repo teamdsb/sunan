@@ -1,8 +1,26 @@
-import { Card, Typography } from 'antd';
+import {
+  BellOutlined,
+  FileProtectOutlined,
+  FileSearchOutlined,
+  MonitorOutlined,
+  SafetyCertificateOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
+import { Typography } from 'antd';
+import type { ComponentType } from 'react';
 import { Link } from 'react-router-dom';
 import { myRouteNavItems } from '../../router/myRouteConfig';
 
 const entries = myRouteNavItems.filter((item) => item.path !== '/my');
+
+const entryIcons: Record<string, ComponentType> = {
+  '/my/enterprise-profile': FileSearchOutlined,
+  '/my/enterprise-policy': FileProtectOutlined,
+  '/my/certificates': SafetyCertificateOutlined,
+  '/my/reminders': BellOutlined,
+  '/my/monitors': MonitorOutlined,
+  '/my/settings': SettingOutlined,
+};
 
 export function MyHomePage() {
   return (
@@ -10,29 +28,30 @@ export function MyHomePage() {
       <section className="page-hero my-home-hero">
         <Typography.Title level={2}>我的模块首页</Typography.Title>
         <Typography.Paragraph type="secondary">
-          从这里进入证照、提醒、监控和设置。
+          快捷进入常用业务模块。
         </Typography.Paragraph>
       </section>
 
-      <section className="my-home-grid" data-testid="my-home-grid">
-        {entries.map((entry) => (
-          <Card className="my-home-tile" data-testid="my-home-tile" key={entry.path} variant="borderless">
-            <div className="my-home-tile-accent" aria-hidden="true" />
-            <Typography.Text className="my-home-tile-caption">我的模块</Typography.Text>
-            <Typography.Title level={3} className="my-home-tile-title">
-              <Link
-                to={entry.path}
-                className="my-home-entry-link"
-                data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
-              >
-                {entry.label}
-              </Link>
-            </Typography.Title>
-            <Typography.Paragraph className="my-home-tile-description">
-              {entry.description}
-            </Typography.Paragraph>
-          </Card>
-        ))}
+      <section className="my-home-grid my-home-icon-grid" data-testid="my-home-grid">
+        {entries.map((entry) => {
+          const Icon = entryIcons[entry.path] ?? FileSearchOutlined;
+
+          return (
+            <Link
+              to={entry.path}
+              className="my-home-shortcut"
+              data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
+              data-shortcut="true"
+              key={entry.path}
+              aria-label={entry.label}
+            >
+              <span className="my-home-shortcut-icon my-home-shortcut-icon-plain" data-testid="my-home-shortcut-icon" aria-hidden="true">
+                <Icon />
+              </span>
+              <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
+            </Link>
+          );
+        })}
       </section>
     </>
   );
