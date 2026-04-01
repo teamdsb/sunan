@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redirectToOAuth = vi.hoisted(() => vi.fn());
@@ -28,6 +28,11 @@ describe('AppShell mock mode', () => {
       value: width,
     });
     window.dispatchEvent(new Event('resize'));
+  }
+
+  function LocationDisplay() {
+    const location = useLocation();
+    return <div data-testid="location-path">{location.pathname}</div>;
   }
 
   it('keeps the mock user and does not redirect on reauthorize', async () => {
@@ -79,5 +84,38 @@ describe('AppShell mock mode', () => {
     expect(screen.getByRole('link', { name: '我的首页' })).toHaveAttribute('href', '/my');
     expect(screen.getByRole('link', { name: '电子证照' })).toHaveAttribute('href', '/my/certificates');
     expect(screen.getByRole('link', { name: '证书提醒' })).toHaveAttribute('href', '/my/reminders');
+  });
+
+  it('navigates when tapping a mobile drawer button body', async () => {
+    setViewport(375);
+
+    const { createStore } = await import('../app/store');
+    const { bootstrapAuth } = await import('../features/auth/bootstrap');
+    const { AppShell } = await import('./AppShell');
+    const store = createStore();
+    const user = userEvent.setup();
+
+    await bootstrapAuth(store.dispatch);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/my/reminders']}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/my" element={<LocationDisplay />} />
+              <Route path="/my/reminders" element={<LocationDisplay />} />
+              <Route path="/my/certificates" element={<LocationDisplay />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my/reminders');
+
+    await user.click(screen.getByRole('button', { name: '更多' }));
+    await user.click(screen.getByRole('button', { name: '电子证照' }));
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my/certificates');
   });
 });

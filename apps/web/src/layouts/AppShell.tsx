@@ -1,7 +1,7 @@
 import { Avatar, Button, Drawer, Layout, Space, Tag, Typography } from 'antd';
 import { MenuOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { env } from '../app/env';
 import { logout } from '../features/auth/authSlice';
@@ -12,6 +12,7 @@ export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
   const dispatch = useAppDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const currentNavItem = useMemo(() => {
@@ -29,6 +30,11 @@ export function AppShell() {
 
     dispatch(logout());
     redirectToOAuth(location.pathname + location.search + location.hash);
+  };
+
+  const navigateTo = (path: string) => {
+    setMobileNavOpen(false);
+    navigate(path);
   };
 
   return (
@@ -136,9 +142,9 @@ export function AppShell() {
                         : 'default'
                   }
                   block
-                  onClick={() => setMobileNavOpen(false)}
+                  onClick={() => navigateTo(item.path)}
                 >
-                  <Link to={item.path}>{item.label}</Link>
+                  {item.label}
                 </Button>
               ))}
             </Space>
