@@ -41,6 +41,19 @@ export function AppShell() {
     <Layout className="shell-layout">
       <div className="shell-panel">
         <header className="shell-header">
+          <div className="shell-mobile-topbar">
+            <Typography.Title level={3} className="shell-mobile-page-title">
+              {currentNavItem.label}
+            </Typography.Title>
+            <Button
+              type="text"
+              className="shell-mobile-more-button"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileNavOpen(true)}
+            >
+              更多
+            </Button>
+          </div>
           <div className="shell-brand">
             <div>
               <Typography.Title level={1} className="shell-title">
@@ -49,23 +62,6 @@ export function AppShell() {
               <Typography.Paragraph className="shell-subtitle">
                 企业微信 H5 工作台
               </Typography.Paragraph>
-            </div>
-            <div className="shell-mobile-summary">
-              <div className="shell-mobile-context">
-                <Typography.Text className="shell-mobile-label">当前页面</Typography.Text>
-                <Typography.Title level={4} className="shell-mobile-title">
-                  {currentNavItem.label}
-                </Typography.Title>
-                <Typography.Paragraph className="shell-mobile-description">
-                  {currentNavItem.description}
-                </Typography.Paragraph>
-              </div>
-              {user ? (
-                <Space size="small" className="shell-mobile-user">
-                  <Avatar size="small">{user.name.slice(0, 1)}</Avatar>
-                  <Typography.Text>{user.name}</Typography.Text>
-                </Space>
-              ) : null}
             </div>
           </div>
           <Space wrap size="middle" className="shell-desktop-actions">
@@ -99,11 +95,6 @@ export function AppShell() {
               重新认证
             </Button>
           </Space>
-          <div className="shell-mobile-actions">
-            <Button type="default" icon={<MenuOutlined />} onClick={() => setMobileNavOpen(true)}>
-              更多
-            </Button>
-          </div>
         </header>
         <div className="shell-content">
           <Outlet />
@@ -132,23 +123,36 @@ export function AppShell() {
               {myRouteNavItems.map((item) => (
                 <Button
                   key={item.path}
-                  type={
+                  type="text"
+                  block
+                  className={[
+                    'shell-mobile-nav-item',
                     item.path === '/my'
                       ? location.pathname === item.path
-                        ? 'primary'
-                        : 'default'
+                        ? 'is-active'
+                        : ''
                       : location.pathname.startsWith(item.path)
-                        ? 'primary'
-                        : 'default'
+                        ? 'is-active'
+                        : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  aria-current={
+                    item.path === '/my'
+                      ? location.pathname === item.path
+                        ? 'page'
+                        : undefined
+                      : location.pathname.startsWith(item.path)
+                        ? 'page'
+                        : undefined
                   }
-                  block
                   onClick={() => navigateTo(item.path)}
                 >
                   {item.label}
                 </Button>
               ))}
             </Space>
-            <Button onClick={reauthorize} icon={<ReloadOutlined />} block>
+            <Button onClick={reauthorize} icon={<ReloadOutlined />} block type="text" className="shell-mobile-nav-item shell-mobile-reauthorize">
               重新认证
             </Button>
           </Space>

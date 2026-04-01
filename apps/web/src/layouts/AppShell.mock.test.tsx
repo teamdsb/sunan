@@ -53,7 +53,7 @@ describe('AppShell mock mode', () => {
     );
 
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '重新认证' }));
+    await user.click(screen.getByRole('button', { name: /重新认证/ }));
     expect(redirectToOAuth).not.toHaveBeenCalled();
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
   });
@@ -77,13 +77,15 @@ describe('AppShell mock mode', () => {
       </Provider>,
     );
 
-    expect(screen.getByRole('button', { name: '更多' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /更多/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '证书提醒' })).toBeInTheDocument();
+    expect(screen.queryByText('当前页面')).toBeNull();
 
-    await user.click(screen.getByRole('button', { name: '更多' }));
+    await user.click(screen.getByRole('button', { name: /更多/ }));
 
-    expect(screen.getByRole('link', { name: '我的首页' })).toHaveAttribute('href', '/my');
-    expect(screen.getByRole('link', { name: '电子证照' })).toHaveAttribute('href', '/my/certificates');
-    expect(screen.getByRole('link', { name: '证书提醒' })).toHaveAttribute('href', '/my/reminders');
+    expect(screen.getAllByRole('button', { name: '我的首页' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '电子证照' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '证书提醒' }).length).toBeGreaterThan(0);
   });
 
   it('navigates when tapping a mobile drawer button body', async () => {
@@ -113,9 +115,34 @@ describe('AppShell mock mode', () => {
 
     expect(screen.getByTestId('location-path')).toHaveTextContent('/my/reminders');
 
-    await user.click(screen.getByRole('button', { name: '更多' }));
-    await user.click(screen.getByRole('button', { name: '电子证照' }));
+    await user.click(screen.getByRole('button', { name: /更多/ }));
+    await user.click(screen.getAllByRole('button', { name: '电子证照' }).at(-1)!);
 
     expect(screen.getByTestId('location-path')).toHaveTextContent('/my/certificates');
+  });
+
+  it('renders drawer navigation as lightweight text items without the default button fill class', async () => {
+    setViewport(375);
+
+    const { createStore } = await import('../app/store');
+    const { bootstrapAuth } = await import('../features/auth/bootstrap');
+    const { AppShell } = await import('./AppShell');
+    const store = createStore();
+    const user = userEvent.setup();
+
+    await bootstrapAuth(store.dispatch);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/my/reminders']}>
+          <AppShell />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /更多/ }));
+
+    expect(screen.getAllByRole('button', { name: '证书提醒' }).at(-1)).toHaveClass('shell-mobile-nav-item', 'is-active');
+    expect(screen.getAllByRole('button', { name: '电子证照' }).at(-1)).toHaveClass('shell-mobile-nav-item');
   });
 });

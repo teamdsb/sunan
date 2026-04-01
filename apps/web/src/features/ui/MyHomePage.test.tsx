@@ -27,7 +27,7 @@ describe('MyHomePage', () => {
     );
 
     expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-icon-grid');
-    expect(screen.getAllByTestId('my-home-shortcut')).toHaveLength(6);
+    expect(screen.getAllByRole('link')).toHaveLength(6);
   });
 
   it('keeps the home page as a lightweight hub with a single-column friendly list hook', () => {
@@ -51,5 +51,16 @@ describe('MyHomePage', () => {
     expect(screen.queryByTestId('my-home-tile')).toBeNull();
     expect(screen.getByRole('link', { name: '企业资料' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '电子证照' })).toBeInTheDocument();
+  });
+
+  it('renders shortcuts with plain icons instead of icon background plates', () => {
+    render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getAllByTestId('my-home-shortcut-icon')).toHaveLength(6);
+    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass('my-home-shortcut-icon', 'my-home-shortcut-icon-plain');
   });
 });

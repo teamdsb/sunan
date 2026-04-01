@@ -40,11 +40,12 @@ export function MyHomePage() {
             <Link
               to={entry.path}
               className="my-home-shortcut"
-              data-testid="my-home-shortcut"
+              data-testid={`my-home-entry-${entry.path.slice(1).replace(/\//g, '-')}`}
+              data-shortcut="true"
               key={entry.path}
               aria-label={entry.label}
             >
-              <span className="my-home-shortcut-icon" aria-hidden="true">
+              <span className="my-home-shortcut-icon my-home-shortcut-icon-plain" data-testid="my-home-shortcut-icon" aria-hidden="true">
                 <Icon />
               </span>
               <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
