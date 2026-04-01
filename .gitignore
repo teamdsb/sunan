@@ -17,6 +17,8 @@ coverage
 .env.*.local
 !apps/web/.env.mock.local
 *.tsbuildinfo
+*.py[cod]
+__pycache__/
 # local editor settings
 .vscode/settings.json
 .worktrees/
