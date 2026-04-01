@@ -213,14 +213,10 @@ export function createAxiosBaseQuery(
 }
 
 function createDefaultMockRuntimeLoader(): MockRuntimeLoader {
-  if (import.meta.env.DEV) {
-    return async () => {
-      const { getMockRuntime } = await import('../mocks/store/mockRuntime');
-      return getMockRuntime();
-    };
-  }
-
-  return null;
+  return async () => {
+    const { getMockRuntime } = await import('../mocks/store/mockRuntime');
+    return getMockRuntime();
+  };
 }
 
 export function createBaseQuery(): BaseQueryFn<
@@ -242,18 +238,11 @@ export function createBaseQuery(
       ? createDefaultMockRuntimeLoader()
       : options.mockRuntimeLoader;
 
-  if (import.meta.env.DEV) {
-    return async (args, api, extraOptions) => {
-      if (env.mockMode) {
-        return executeMockRuntime(mockRuntimeLoader, args);
-      }
-
-      axiosBaseQuery ??= createAxiosBaseQuery(options);
-      return axiosBaseQuery(args, api, extraOptions);
-    };
-  }
-
   return async (args, api, extraOptions) => {
+    if (env.mockMode) {
+      return executeMockRuntime(mockRuntimeLoader, args);
+    }
+
     axiosBaseQuery ??= createAxiosBaseQuery(options);
     return axiosBaseQuery(args, api, extraOptions);
   };
