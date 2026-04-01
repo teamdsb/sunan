@@ -137,65 +137,53 @@ body {
   padding: 0 16px 16px;
 }
 
-.my-home-grid-compact {
-  gap: 12px;
+.my-home-icon-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 10px;
 }
 
-.my-home-tile {
-  position: relative;
-  min-height: 176px;
-  border-radius: 22px;
-  overflow: hidden;
+.my-home-shortcut {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 4px;
+  text-align: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.my-home-shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 235, 225, 0.96)),
     linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(180, 83, 9, 0.1));
   border: 1px solid rgba(20, 40, 29, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 18px 36px rgba(20, 40, 29, 0.07);
-}
-
-.my-home-tile .ant-card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 10px;
-  height: 100%;
-  padding: 18px;
-}
-
-.my-home-tile-accent {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(15, 118, 110, 0.3), transparent 55%),
-    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.16));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
-
-.my-home-tile-caption {
-  color: rgba(20, 40, 29, 0.5);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.my-home-tile-title.ant-typography {
-  margin: 0;
-  max-width: calc(100% - 72px);
+  box-shadow: 0 10px 24px rgba(20, 40, 29, 0.08);
   font-size: 22px;
-  line-height: 1.15;
+  color: #147d74;
 }
 
-.my-home-tile-description.ant-typography {
-  margin: 0;
-  max-width: min(24ch, 100%);
-  color: rgba(20, 40, 29, 0.72);
-  font-size: 14px;
+.my-home-shortcut-label.ant-typography {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(20, 40, 29, 0.84);
+}
+
+.my-home-shortcut:hover .my-home-shortcut-icon,
+.my-home-shortcut:focus-visible .my-home-shortcut-icon {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(20, 40, 29, 0.12);
+}
+
+.my-home-shortcut:focus-visible {
+  outline: none;
 }
 
 .reminder-stat-grid {
@@ -398,23 +386,8 @@ body {
   }
 
   .my-home-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 0 24px 24px;
     gap: 14px;
-  }
-
-  .my-home-tile {
-    min-height: 188px;
-    border-radius: 24px;
-  }
-
-  .my-home-tile .ant-card-body {
-    padding: 20px;
-  }
-
-  .my-home-tile-title.ant-typography {
-    max-width: calc(100% - 84px);
-    font-size: 24px;
   }
 
   .page-primary-action {
@@ -427,8 +400,9 @@ body {
 }
 
 @media (min-width: 1024px) {
-  .my-home-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .my-home-icon-grid {
+    grid-template-columns: repeat(4, minmax(0, 120px));
+    justify-content: start;
   }
 }
 
@@ -454,13 +428,24 @@ body {
     font-size: 20px;
   }
 
-  .my-home-tile-description.ant-typography {
-    max-width: 100%;
-    font-size: 13px;
+  .my-home-icon-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 6px;
   }
 
-  .my-home-tile-caption {
-    letter-spacing: 0.12em;
+  .my-home-shortcut {
+    padding-inline: 2px;
+  }
+
+  .my-home-shortcut-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    font-size: 20px;
+  }
+
+  .my-home-shortcut-label.ant-typography {
+    font-size: 12px;
   }
 
   .page-card-grid > .ant-col {

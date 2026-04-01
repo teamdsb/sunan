@@ -26,8 +26,8 @@ describe('MyHomePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid');
-    expect(screen.getAllByTestId('my-home-tile')).toHaveLength(6);
+    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-icon-grid');
+    expect(screen.getAllByTestId('my-home-shortcut')).toHaveLength(6);
   });
 
   it('keeps the home page as a lightweight hub with a single-column friendly list hook', () => {
@@ -38,6 +38,18 @@ describe('MyHomePage', () => {
     );
 
     expect(screen.getByText('快捷进入常用业务模块。')).toBeInTheDocument();
-    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-grid-compact');
+    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-icon-grid');
+  });
+
+  it('renders compact icon shortcuts instead of large cards', () => {
+    render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByTestId('my-home-tile')).toBeNull();
+    expect(screen.getByRole('link', { name: '企业资料' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '电子证照' })).toBeInTheDocument();
   });
 });
