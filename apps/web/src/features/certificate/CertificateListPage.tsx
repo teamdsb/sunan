@@ -1,4 +1,5 @@
 import { Button, Card, Input, List, Pagination, Segmented, Select, Space, Typography } from 'antd';
+import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -38,6 +39,7 @@ export function CertificateListPage() {
   const [keywordDraft, setKeywordDraft] = useState(keyword);
   const page = readPageValue(searchParams.get('page'), 1);
   const pageSize = readPageValue(searchParams.get('pageSize'), 10);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading } = useGetCertificatesQuery({ ownerType, status, keyword: keyword || undefined, page, pageSize });
   const { data: grouped } = useGetGroupedCertificatesQuery({ groupBy });
@@ -74,6 +76,7 @@ export function CertificateListPage() {
       <Typography.Title level={2}>电子证照</Typography.Title>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Segmented
+          block
           options={ownerTabs as unknown as Array<{ label: string; value: string }>}
           value={ownerType}
           onChange={(value) => {
@@ -87,60 +90,75 @@ export function CertificateListPage() {
             });
           }}
         />
-        <Space wrap>
-          <Segmented
-            options={[{ label: '按对象分组', value: 'owner' }, { label: '按类型分组', value: 'type' }]}
-            value={groupBy}
-            onChange={(value) =>
-              applySearch({
-                groupBy: value as 'owner' | 'type',
-                ownerType,
-                page,
-                pageSize,
-                status,
-                keyword,
-              })
-            }
-          />
-          <Select
-            allowClear
-            placeholder="状态"
-            style={{ width: 160 }}
-            value={status}
-            onChange={(v) => {
-              applySearch({
-                status: v || null,
-                ownerType,
-                groupBy,
-                page: 1,
-                pageSize,
-                keyword,
-              });
-            }}
-            options={[{ value: 'active', label: '有效' }, { value: 'expired', label: '已过期' }, { value: 'archived', label: '已归档' }]}
-          />
-          <Input.Search
-            placeholder="关键字"
-            allowClear
-            value={keywordDraft}
-            onChange={(event) => {
-              setKeywordDraft(event.target.value);
-            }}
-            onSearch={(v) => {
-              applySearch({
-                keyword: v || null,
-                ownerType,
-                groupBy,
-                page: 1,
-                pageSize,
-                status,
-              });
-            }}
-            style={{ width: 220 }}
-          />
-        </Space>
+        <Button
+          className="filter-panel-toggle"
+          icon={showFilters ? <UpOutlined /> : <DownOutlined />}
+          onClick={() => setShowFilters((current) => !current)}
+        >
+          {showFilters ? '收起筛选' : '展开筛选'}
+        </Button>
+        {showFilters ? (
+          <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Segmented
+                block
+                options={[{ label: '按对象分组', value: 'owner' }, { label: '按类型分组', value: 'type' }]}
+                value={groupBy}
+                onChange={(value) =>
+                  applySearch({
+                    groupBy: value as 'owner' | 'type',
+                    ownerType,
+                    page,
+                    pageSize,
+                    status,
+                    keyword,
+                  })
+                }
+              />
+              <Select
+                allowClear
+                placeholder="状态"
+                style={{ width: '100%' }}
+                value={status}
+                onChange={(v) => {
+                  applySearch({
+                    status: v || null,
+                    ownerType,
+                    groupBy,
+                    page: 1,
+                    pageSize,
+                    keyword,
+                  });
+                }}
+                options={[
+                  { value: 'active', label: '有效' },
+                  { value: 'expired', label: '已过期' },
+                  { value: 'archived', label: '已归档' },
+                ]}
+              />
+              <Input.Search
+                placeholder="关键字"
+                allowClear
+                value={keywordDraft}
+                onChange={(event) => {
+                  setKeywordDraft(event.target.value);
+                }}
+                onSearch={(v) => {
+                  applySearch({
+                    keyword: v || null,
+                    ownerType,
+                    groupBy,
+                    page: 1,
+                    pageSize,
+                    status,
+                  });
+                }}
+              />
+            </Space>
+          </Card>
+        ) : null}
 
-        <Card>
+        <Card className="status-card">
           <Typography.Text type="secondary">当前分组总数：{grouped?.data?.length ?? 0}</Typography.Text>
         </Card>
 
@@ -161,10 +179,12 @@ export function CertificateListPage() {
             )}
           />
           <Pagination
-            style={{ marginTop: 16, textAlign: 'right' }}
+            className="list-pagination"
             current={page}
             pageSize={pageSize}
             total={data?.meta?.total ?? 0}
+            responsive
+            showLessItems
             onChange={(nextPage, nextPageSize) => {
               applySearch({
                 page: nextPage,
@@ -178,7 +198,9 @@ export function CertificateListPage() {
           />
         </Card>
 
-        <Button type="primary">新增证照</Button>
+        <Button type="primary" className="page-primary-action">
+          新增证照
+        </Button>
       </Space>
     </section>
   );

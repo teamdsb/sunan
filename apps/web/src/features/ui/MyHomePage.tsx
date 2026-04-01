@@ -10,15 +10,15 @@ export function MyHomePage() {
       <section className="page-hero my-home-hero">
         <Typography.Title level={2}>我的模块首页</Typography.Title>
         <Typography.Paragraph type="secondary">
-          从这里进入证照、提醒、监控和设置。
+          快捷进入常用业务模块。
         </Typography.Paragraph>
       </section>
 
-      <section className="my-home-grid" data-testid="my-home-grid">
+      <section className="my-home-grid my-home-grid-compact" data-testid="my-home-grid">
         {entries.map((entry) => (
           <Card className="my-home-tile" data-testid="my-home-tile" key={entry.path} variant="borderless">
             <div className="my-home-tile-accent" aria-hidden="true" />
-            <Typography.Text className="my-home-tile-caption">我的模块</Typography.Text>
+            <Typography.Text className="my-home-tile-caption">业务入口</Typography.Text>
             <Typography.Title level={3} className="my-home-tile-title">
               <Link
                 to={entry.path}

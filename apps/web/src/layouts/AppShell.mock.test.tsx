@@ -21,6 +21,15 @@ describe('AppShell mock mode', () => {
     vi.stubEnv('VITE_MOCK_MODE', 'true');
   });
 
+  function setViewport(width: number) {
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: width,
+    });
+    window.dispatchEvent(new Event('resize'));
+  }
+
   it('keeps the mock user and does not redirect on reauthorize', async () => {
     const { createStore } = await import('../app/store');
     const { bootstrapAuth } = await import('../features/auth/bootstrap');
@@ -42,5 +51,33 @@ describe('AppShell mock mode', () => {
     await user.click(screen.getByRole('button', { name: '重新认证' }));
     expect(redirectToOAuth).not.toHaveBeenCalled();
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
+  });
+
+  it('shows a mobile more menu that exposes navigation links on small screens', async () => {
+    setViewport(375);
+
+    const { createStore } = await import('../app/store');
+    const { bootstrapAuth } = await import('../features/auth/bootstrap');
+    const { AppShell } = await import('./AppShell');
+    const store = createStore();
+    const user = userEvent.setup();
+
+    await bootstrapAuth(store.dispatch);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/my/reminders']}>
+          <AppShell />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    expect(screen.getByRole('button', { name: '更多' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '更多' }));
+
+    expect(screen.getByRole('link', { name: '我的首页' })).toHaveAttribute('href', '/my');
+    expect(screen.getByRole('link', { name: '电子证照' })).toHaveAttribute('href', '/my/certificates');
+    expect(screen.getByRole('link', { name: '证书提醒' })).toHaveAttribute('href', '/my/reminders');
   });
 });

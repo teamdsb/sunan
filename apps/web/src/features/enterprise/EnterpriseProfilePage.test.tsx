@@ -62,4 +62,14 @@ describe('EnterpriseProfilePage', () => {
       );
     });
   });
+
+  it('uses a vertical creation form for mobile-friendly input flow', () => {
+    render(
+      <MemoryRouter>
+        <EnterpriseProfilePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('enterprise-profile-create-form')).not.toHaveClass('ant-form-inline');
+  });
 });

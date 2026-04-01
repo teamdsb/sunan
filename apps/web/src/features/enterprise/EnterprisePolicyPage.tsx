@@ -1,4 +1,5 @@
 import { Alert, Button, Card, Form, Input, List, Pagination, Select, Space, Typography } from 'antd';
+import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
@@ -38,6 +39,7 @@ export function EnterprisePolicyPage() {
   const [createPolicy, { isLoading: creating }] = useCreateEnterprisePolicyMutation();
   const [publishPolicy] = usePublishEnterprisePolicyMutation();
   const [form] = Form.useForm<{ title: string; policyCode: string; version: string }>();
+  const [showFilters, setShowFilters] = useState(false);
 
   const policies = useMemo(() => data?.data ?? [], [data]);
 
@@ -56,19 +58,21 @@ export function EnterprisePolicyPage() {
         <Card>
           <Form
             form={form}
-            layout="inline"
+            data-testid="enterprise-policy-create-form"
+            layout="vertical"
+            className="stacked-form"
             onFinish={async (values) => {
               await createPolicy(values).unwrap();
               form.resetFields();
             }}
           >
-            <Form.Item name="title" rules={[{ required: true }]}>
+            <Form.Item name="title" label="制度标题" rules={[{ required: true }]}>
               <Input placeholder="制度标题" />
             </Form.Item>
-            <Form.Item name="policyCode" rules={[{ required: true }]}>
+            <Form.Item name="policyCode" label="制度编码" rules={[{ required: true }]}>
               <Input placeholder="制度编码" />
             </Form.Item>
-            <Form.Item name="version" initialValue="v1" rules={[{ required: true }]}>
+            <Form.Item name="version" label="版本" initialValue="v1" rules={[{ required: true }]}>
               <Input placeholder="版本" />
             </Form.Item>
             <Button htmlType="submit" type="primary" loading={creating}>
@@ -78,40 +82,54 @@ export function EnterprisePolicyPage() {
         </Card>
 
         <Card loading={isLoading}>
-          <Space wrap style={{ marginBottom: 12 }}>
-            <Input.Search
-              placeholder="关键字"
-              allowClear
-              value={keywordDraft}
-              onChange={(event) => {
-                setKeywordDraft(event.target.value);
-              }}
-              onSearch={(v) => {
-                applySearch({
-                  keyword: v || null,
-                  page: 1,
-                  pageSize,
-                  status,
-                });
-              }}
-              style={{ width: 220 }}
-            />
-            <Select
-              allowClear
-              placeholder="状态"
-              style={{ width: 180 }}
-              value={status}
-              onChange={(v) => {
-                applySearch({
-                  status: v || null,
-                  page: 1,
-                  pageSize,
-                  keyword,
-                });
-              }}
-              options={[{ value: 'draft', label: '草稿' }, { value: 'published', label: '已发布' }, { value: 'deprecated', label: '已废弃' }]}
-            />
-          </Space>
+          <Button
+            className="filter-panel-toggle"
+            icon={showFilters ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setShowFilters((current) => !current)}
+          >
+            {showFilters ? '收起筛选' : '展开筛选'}
+          </Button>
+          {showFilters ? (
+            <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Input.Search
+                  placeholder="关键字"
+                  allowClear
+                  value={keywordDraft}
+                  onChange={(event) => {
+                    setKeywordDraft(event.target.value);
+                  }}
+                  onSearch={(v) => {
+                    applySearch({
+                      keyword: v || null,
+                      page: 1,
+                      pageSize,
+                      status,
+                    });
+                  }}
+                />
+                <Select
+                  allowClear
+                  placeholder="状态"
+                  style={{ width: '100%' }}
+                  value={status}
+                  onChange={(v) => {
+                    applySearch({
+                      status: v || null,
+                      page: 1,
+                      pageSize,
+                      keyword,
+                    });
+                  }}
+                  options={[
+                    { value: 'draft', label: '草稿' },
+                    { value: 'published', label: '已发布' },
+                    { value: 'deprecated', label: '已废弃' },
+                  ]}
+                />
+              </Space>
+            </Card>
+          ) : null}
           <List
             dataSource={policies}
             renderItem={(item) => (
@@ -130,10 +148,12 @@ export function EnterprisePolicyPage() {
             )}
           />
           <Pagination
-            style={{ marginTop: 16, textAlign: 'right' }}
+            className="list-pagination"
             current={page}
             pageSize={pageSize}
             total={data?.meta?.total ?? 0}
+            responsive
+            showLessItems
             onChange={(nextPage, nextPageSize) => {
               applySearch({
                 page: nextPage,
@@ -210,7 +230,7 @@ export function EnterprisePolicyDetailPage() {
           <Form.Item label="文件上传/预览">
             <FileUploadField category="enterprise-policies" value={uploaded} onChange={setUploaded} />
           </Form.Item>
-          <Space>
+          <Space wrap className="detail-action-bar">
             <Button htmlType="submit" type="primary" loading={saving}>
               保存
             </Button>
@@ -221,7 +241,11 @@ export function EnterprisePolicyDetailPage() {
         <Typography.Title level={5} style={{ marginTop: 20 }}>
           版本历史
         </Typography.Title>
-        <List size="small" dataSource={versions?.data ?? []} renderItem={(item) => <List.Item>{item.version} · {item.status}</List.Item>} />
+        <List
+          size="small"
+          dataSource={versions?.data ?? []}
+          renderItem={(item) => <List.Item>{item.version} · {item.status}</List.Item>}
+        />
       </Card>
     </section>
   );

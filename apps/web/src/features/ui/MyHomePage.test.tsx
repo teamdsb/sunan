@@ -29,4 +29,15 @@ describe('MyHomePage', () => {
     expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid');
     expect(screen.getAllByTestId('my-home-tile')).toHaveLength(6);
   });
+
+  it('keeps the home page as a lightweight hub with a single-column friendly list hook', () => {
+    render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('快捷进入常用业务模块。')).toBeInTheDocument();
+    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-grid-compact');
+  });
 });
