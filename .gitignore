@@ -22,3 +22,4 @@ __pycache__/
 # local editor settings
 .vscode/settings.json
 .worktrees/
+.agents/skills/
