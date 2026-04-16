@@ -1,0 +1,240 @@
+import { PlusOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Drawer, Form, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd';
+import { useMemo, useState } from 'react';
+import type { ColumnsType } from 'antd/es/table';
+import { canManageOffice } from './officePermissions';
+import {
+  OfficeAdminEntry,
+  OfficeEntryMutationPayload,
+  useCreateOfficeEntryMutation,
+  useDisableOfficeEntryMutation,
+  useGetOfficeAdminEntriesQuery,
+  useGetOfficeCategoriesQuery,
+  usePublishOfficeEntryMutation,
+  useUpdateOfficeEntryMutation,
+} from './officeApi';
+
+const roleOptions = [
+  'all_authenticated',
+  'system_admin',
+  'general_office',
+  'finance',
+  'business',
+  'shipping',
+  'logistics',
+  'crew',
+].map((role) => ({ label: role, value: role }));
+
+const targetTypeOptions = [
+  { label: '外部地址', value: 'external_url' },
+  { label: '站内路由', value: 'internal_route' },
+];
+
+const openModeOptions = [
+  { label: '当前 WebView', value: 'current_webview' },
+  { label: '新窗口', value: 'new_window' },
+];
+
+export function OfficeAdminPage() {
+  const [messageApi, contextHolder] = message.useMessage();
+  const { data: categoryResponse } = useGetOfficeCategoriesQuery();
+  const categories = categoryResponse?.data ?? [];
+  const [query, setQuery] = useState<{
+    keyword?: string;
+    categoryCode?: string;
+    status?: 'draft' | 'published' | 'disabled';
+  }>({});
+  const { data: entryResponse, isLoading } = useGetOfficeAdminEntriesQuery(query);
+  const [createEntry, { isLoading: isCreating }] = useCreateOfficeEntryMutation();
+  const [updateEntry, { isLoading: isUpdating }] = useUpdateOfficeEntryMutation();
+  const [publishEntry, { isLoading: isPublishing }] = usePublishOfficeEntryMutation();
+  const [disableEntry, { isLoading: isDisabling }] = useDisableOfficeEntryMutation();
+  const [open, setOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<OfficeAdminEntry | null>(null);
+  const [form] = Form.useForm<OfficeEntryMutationPayload>();
+
+  const entries = entryResponse?.data ?? [];
+  const manageable = canManageOffice(categories);
+  const categoryOptions = categories.filter((category) => category.canManage).map((category) => ({ label: category.name, value: category.code }));
+
+  const columns: ColumnsType<OfficeAdminEntry> = useMemo(
+    () => [
+      { title: '标题', dataIndex: 'title', key: 'title' },
+      {
+        title: '分类',
+        dataIndex: 'categoryCode',
+        key: 'categoryCode',
+        render: (value: string) => categories.find((category) => category.code === value)?.name ?? value,
+      },
+      { title: '目标', dataIndex: 'targetValue', key: 'targetValue', ellipsis: true },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: string) => <Tag color={value === 'published' ? 'green' : value === 'disabled' ? 'default' : 'gold'}>{value}</Tag>,
+      },
+      {
+        title: '操作',
+        key: 'actions',
+        render: (_, record) => (
+          <Space wrap>
+            <Button onClick={() => handleEdit(record)}>编辑</Button>
+            <Button type="primary" ghost disabled={record.status === 'published'} loading={isPublishing} onClick={() => void handlePublish(record.id)}>
+              发布
+            </Button>
+            <Button danger ghost disabled={record.status === 'disabled'} loading={isDisabling} onClick={() => void handleDisable(record.id)}>
+              停用
+            </Button>
+          </Space>
+        ),
+      },
+    ],
+    [categories, isDisabling, isPublishing],
+  );
+
+  const handleCreate = () => {
+    setEditingEntry(null);
+    form.resetFields();
+    form.setFieldsValue({ openMode: 'current_webview', visibilityRoles: ['all_authenticated'] });
+    setOpen(true);
+  };
+
+  const handleEdit = (entry: OfficeAdminEntry) => {
+    setEditingEntry(entry);
+    form.setFieldsValue({
+      categoryCode: entry.categoryCode,
+      title: entry.title,
+      summary: entry.summary,
+      iconType: entry.iconType,
+      targetType: entry.targetType,
+      targetValue: entry.targetValue,
+      openMode: entry.openMode,
+      visibilityRoles: entry.visibilityRoles,
+      managerRoles: entry.managerRoles,
+      sortOrder: entry.sortOrder,
+    });
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
+    const values = await form.validateFields();
+    if (editingEntry) {
+      await updateEntry({ id: editingEntry.id, data: values }).unwrap();
+      messageApi.success('办事入口已更新');
+    } else {
+      await createEntry(values).unwrap();
+      messageApi.success('办事入口已创建');
+    }
+    setOpen(false);
+  };
+
+  const handlePublish = async (id: string) => {
+    await publishEntry(id).unwrap();
+    messageApi.success('办事入口已发布');
+  };
+
+  const handleDisable = async (id: string) => {
+    await disableEntry(id).unwrap();
+    messageApi.success('办事入口已停用');
+  };
+
+  if (!manageable) {
+    return (
+      <section className="page-hero">
+        <Typography.Title level={2}>办事治理台</Typography.Title>
+        <Alert type="warning" showIcon message="当前账号没有办事分类维护权限。" />
+      </section>
+    );
+  }
+
+  return (
+    <>
+      {contextHolder}
+      <section className="page-hero">
+        <Typography.Title level={2}>办事治理台</Typography.Title>
+        <Typography.Paragraph type="secondary">按分类分权维护办事入口，并执行发布与停用治理。</Typography.Paragraph>
+        <Space wrap>
+          <Input.Search
+            placeholder="搜索标题或摘要"
+            allowClear
+            onSearch={(value) => setQuery((prev) => ({ ...prev, keyword: value || undefined }))}
+            style={{ width: 260 }}
+          />
+          <Select
+            placeholder="分类"
+            allowClear
+            style={{ width: 180 }}
+            onChange={(value) => setQuery((prev) => ({ ...prev, categoryCode: value }))}
+            options={categoryOptions}
+          />
+          <Select
+            placeholder="状态"
+            allowClear
+            style={{ width: 160 }}
+            onChange={(value) => setQuery((prev) => ({ ...prev, status: value }))}
+            options={[
+              { label: '草稿', value: 'draft' },
+              { label: '已发布', value: 'published' },
+              { label: '已停用', value: 'disabled' },
+            ]}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增入口</Button>
+        </Space>
+      </section>
+
+      <section className="page-card-grid">
+        <Card bordered={false} className="placeholder-card office-admin-card">
+          <Table rowKey="id" loading={isLoading} columns={columns} dataSource={entries} pagination={false} />
+        </Card>
+      </section>
+
+      <Drawer
+        title={editingEntry ? '编辑办事入口' : '新增办事入口'}
+        width={460}
+        open={open}
+        onClose={() => setOpen(false)}
+        extra={
+          <Space>
+            <Button onClick={() => setOpen(false)}>取消</Button>
+            <Button type="primary" loading={isCreating || isUpdating} onClick={() => void handleSave()}>
+              保存
+            </Button>
+          </Space>
+        }
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="categoryCode" label="分类" rules={[{ required: true }]}>
+            <Select options={categoryOptions} />
+          </Form.Item>
+          <Form.Item name="title" label="标题" rules={[{ required: true }]}>
+            <Input maxLength={128} />
+          </Form.Item>
+          <Form.Item name="summary" label="摘要" rules={[{ required: true }]}>
+            <Input.TextArea rows={4} maxLength={500} />
+          </Form.Item>
+          <Form.Item name="iconType" label="图标类型" rules={[{ required: true }]}>
+            <Input maxLength={64} />
+          </Form.Item>
+          <Form.Item name="targetType" label="目标类型" rules={[{ required: true }]}>
+            <Select options={targetTypeOptions} />
+          </Form.Item>
+          <Form.Item name="targetValue" label="目标值" rules={[{ required: true }]}>
+            <Input maxLength={2048} placeholder="https://example.com 或 /office/search" />
+          </Form.Item>
+          <Form.Item name="openMode" label="打开方式" rules={[{ required: true }]}>
+            <Select options={openModeOptions} />
+          </Form.Item>
+          <Form.Item name="visibilityRoles" label="可见角色" rules={[{ required: true }]}>
+            <Select mode="multiple" options={roleOptions} />
+          </Form.Item>
+          <Form.Item name="managerRoles" label="管理角色">
+            <Select mode="multiple" options={roleOptions} />
+          </Form.Item>
+          <Form.Item name="sortOrder" label="排序号">
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </Drawer>
+    </>
+  );
+}

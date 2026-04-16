@@ -3,6 +3,7 @@ import { createCertificatesMockState } from '../fixtures/certificates';
 import { createFilesMockState } from '../fixtures/files';
 import { createEnterpriseMockState } from '../fixtures/enterprise';
 import { createMonitorsMockState } from '../fixtures/monitor';
+import { createOfficeMockState } from '../fixtures/office';
 import { createReminderMockState } from '../fixtures/reminders';
 import { createSettingsMockState } from '../fixtures/settings';
 import {
@@ -58,6 +59,7 @@ export function createMockState(handlers: MockRouteDefinition[]): MockState {
       reminder: createReminderMockState(),
       settings: createSettingsMockState(),
       monitor: createMonitorsMockState(),
+      office: createOfficeMockState(),
     },
   };
 }

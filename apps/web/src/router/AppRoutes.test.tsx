@@ -9,6 +9,7 @@ import { buildDetailHref, resolveBackHref } from './myRouteState';
 import { authReducer, loginSucceeded } from '../features/auth/authSlice';
 import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
+import { officeRouteConfig } from './officeRouteConfig';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
@@ -49,6 +50,18 @@ vi.mock('../features/monitor/MonitorPage', () => ({
 
 vi.mock('../features/settings/SettingsPage', () => ({
   SettingsPage: () => <div>SETTINGS_PAGE</div>,
+}));
+
+vi.mock('../features/office/OfficeHomePage', () => ({
+  OfficeHomePage: () => <div>OFFICE_HOME</div>,
+}));
+
+vi.mock('../features/office/OfficeSearchPage', () => ({
+  OfficeSearchPage: () => <div>OFFICE_SEARCH</div>,
+}));
+
+vi.mock('../features/office/OfficeAdminPage', () => ({
+  OfficeAdminPage: () => <div>OFFICE_ADMIN</div>,
 }));
 
 function BackHrefConsumer() {
@@ -139,6 +152,9 @@ describe('AppRoutes', () => {
     ['/my/reminders', 'REMINDER_DASHBOARD'],
     ['/my/monitors', 'MONITOR_PAGE'],
     ['/my/settings', 'SETTINGS_PAGE'],
+    [officeRouteConfig.officeHome.path, 'OFFICE_HOME'],
+    [officeRouteConfig.officeSearch.path, 'OFFICE_SEARCH'],
+    [officeRouteConfig.officeAdmin.path, 'OFFICE_ADMIN'],
   ] as const)('renders %s', (path, expectedText) => {
     renderRoute(path);
     expect(screen.getByText(expectedText)).toBeInTheDocument();

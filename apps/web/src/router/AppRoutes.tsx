@@ -10,9 +10,14 @@ import { ReminderDashboardPage } from '../features/reminder/ReminderDashboardPag
 import { ReminderDetailPage } from '../features/reminder/ReminderDetailPage';
 import { MyHomePage } from '../features/ui/MyHomePage';
 import { SettingsPage } from '../features/settings/SettingsPage';
+import { OfficeAdminPage } from '../features/office/OfficeAdminPage';
+import { OfficeHomePage } from '../features/office/OfficeHomePage';
+import { OfficeSearchPage } from '../features/office/OfficeSearchPage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
 import { myRouteConfig } from './myRouteConfig';
+import { officeRouteConfig } from './officeRouteConfig';
+import { PlaceholderPage } from './PlaceholderPage';
 
 export function AppRoutes() {
   return (
@@ -32,6 +37,17 @@ export function AppRoutes() {
           <Route path={myRouteConfig.monitors.path} element={<MonitorPage />} />
           <Route path={myRouteConfig.monitors.detailPath} element={<MonitorPage />} />
           <Route path={myRouteConfig.settings.path} element={<SettingsPage />} />
+          <Route path={officeRouteConfig.officeHome.path} element={<OfficeHomePage />} />
+          <Route path={officeRouteConfig.officeSearch.path} element={<OfficeSearchPage />} />
+          <Route path={officeRouteConfig.officeAdmin.path} element={<OfficeAdminPage />} />
+          <Route
+            path="/procurement"
+            element={<PlaceholderPage title="采购管理" description="采购管理将在后续里程碑接入审批、报表和打印能力。" />}
+          />
+          <Route
+            path="/workbench"
+            element={<PlaceholderPage title="工作平台" description="工作平台将在后续里程碑接入部门业务模块和工作组能力。" />}
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />
