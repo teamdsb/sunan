@@ -943,7 +943,7 @@ describe('baseApi mock mode', () => {
 
   it('routes mock mode through the mock runtime even when the build is not dev', async () => {
     vi.stubEnv('VITE_MOCK_MODE', 'true');
-    vi.stubEnv('DEV', 'false');
+    vi.stubEnv('DEV', false);
 
     const axiosModule = await import('axios');
     const axiosCreateSpy = vi.spyOn(axiosModule.default, 'create').mockReturnValue({

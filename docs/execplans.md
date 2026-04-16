@@ -7,9 +7,9 @@
 - [x] WS-1B `docs/execplans.md` 切换为 M2 主计划
 
 ### Wave 2
-- [ ] WS-2A 办事分类种子数据与后端查询接口
-- [ ] WS-2B `/office` 首页与 `/office/search` 搜索页
-- [ ] WS-2C 统一 launch helper 与打开链路
+- [x] WS-2A 办事分类种子数据与后端查询接口
+- [x] WS-2B `/office` 首页与 `/office/search` 搜索页
+- [x] WS-2C 统一 launch helper 与打开链路
 
 ### Wave 3
 - [ ] WS-3A 办事治理后台 API
