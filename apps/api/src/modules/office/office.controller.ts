@@ -3,6 +3,7 @@ import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorat
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { OfficeAdminEntryListQueryDto } from './dto/office-admin-entry-list-query.dto';
+import { OfficeAuditListQueryDto } from './dto/office-audit-list-query.dto';
 import { OfficeEntryCreateDto } from './dto/office-entry-create.dto';
 import { OfficeEntryListQueryDto } from './dto/office-entry-list-query.dto';
 import { OfficeEntryUpdateDto } from './dto/office-entry-update.dto';
@@ -36,6 +37,11 @@ export class OfficeController {
   @Get('admin/entries')
   async listAdminEntries(@Query() query: OfficeAdminEntryListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.listAdminEntries(query, user) };
+  }
+
+  @Get('admin/audits')
+  async listAdminAudits(@Query() query: OfficeAuditListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
+    return await this.service.listAudits(query, user);
   }
 
   @Post('admin/entries')

@@ -1,9 +1,12 @@
 import type { OfficeAdminEntry, OfficeCategory } from '../../features/office/officeApi';
+import type { OfficeAuditRecord } from '../../features/office/officeApi';
 
 export interface OfficeMockState {
   categories: OfficeCategory[];
   entries: OfficeAdminEntry[];
+  audits: OfficeAuditRecord[];
   nextEntryId: number;
+  nextAuditId: number;
 }
 
 export function createOfficeMockState(): OfficeMockState {
@@ -57,6 +60,19 @@ export function createOfficeMockState(): OfficeMockState {
         updatedAt: new Date('2026-04-02T08:00:00.000Z').toISOString(),
       },
     ],
+    audits: [
+      {
+        id: 'office-audit-1',
+        entryId: 'office-1',
+        entryTitle: '海事申报入口',
+        categoryCode: 'maritime',
+        action: 'open',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: { source: 'mock-seed' },
+        createdAt: new Date('2026-04-10T08:00:00.000Z').toISOString(),
+      },
+    ],
     nextEntryId: 3,
+    nextAuditId: 2,
   };
 }

@@ -31,3 +31,31 @@
 - `/auth/wecom/callback` 能换到用户信息
 - `wx.config` 与 `agentConfig` 均成功
 - 应用消息能发送到测试成员
+
+## M2 上线检查清单（Wave4）
+
+### 一次性配置核对
+
+- 企业微信工作台首页地址使用生产 HTTPS 域名。
+- 可信域名与前端实际访问域名一致。
+- OAuth2 回调域名与 `WECOM_REDIRECT_URI` 一致。
+- JS 接口安全域名包含前端实际域名。
+- 如启用消息回调：`WECOM_TOKEN` 与 `WECOM_ENCODING_AES_KEY` 已配置并验证通过。
+
+### 环境变量核对
+
+- `WECOM_CORP_ID`、`WECOM_AGENT_ID`、`WECOM_AGENT_SECRET` 为生产应用参数。
+- `WECOM_REDIRECT_URI` 指向生产可访问回调地址。
+- API 与 Web 均启用 HTTPS 域名。
+
+### 发布前回归
+
+- iOS 企业微信中 OAuth2 登录与 JS-SDK 初始化成功。
+- Android 企业微信中 OAuth2 登录与 JS-SDK 初始化成功。
+- `/office`、`/office/search`、`/office/admin` 路由可在企业微信内访问。
+- 站内路由与外部端口打开链路可正常工作。
+
+### 发布后抽检
+
+- 抽检 3 个已发布办事入口，确认可打开且目标地址正确。
+- 抽检 1 条治理动作（创建/发布/停用）和 1 条打开动作，确认审计可查询。

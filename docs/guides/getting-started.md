@@ -38,6 +38,8 @@ VITE_LOCAL_BYPASS_AUTH=true
 
 详细的 QA 启动步骤、限制说明与手动测试场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
 
+M2 企业微信上线前检查项见 [wecom-dev-setup.md](./wecom-dev-setup.md) 中的「M2 上线检查清单（Wave4）」。
+
 ## 常用命令
 
 ```bash

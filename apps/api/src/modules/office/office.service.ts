@@ -1,11 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, IsNull, Repository } from 'typeorm';
+import { Brackets, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { OfficeCategoryEntity } from 'src/database/entities/office-category.entity';
 import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit.entity';
 import { OfficeEntryEntity } from 'src/database/entities/office-entry.entity';
 import { OfficeAdminEntryListQueryDto } from './dto/office-admin-entry-list-query.dto';
+import { OfficeAuditListQueryDto } from './dto/office-audit-list-query.dto';
 import { OfficeEntryCreateDto } from './dto/office-entry-create.dto';
 import { OfficeEntryListQueryDto } from './dto/office-entry-list-query.dto';
 import { OfficeEntryUpdateDto } from './dto/office-entry-update.dto';
@@ -91,6 +92,69 @@ export class OfficeService {
 
     const rows = await qb.orderBy('entry.sortOrder', 'ASC').addOrderBy('entry.createdAt', 'DESC').getMany();
     return rows.map((row) => this.toAdminEntryDto(row, user));
+  }
+
+  async listAudits(query: OfficeAuditListQueryDto, user: CurrentUser) {
+    this.ensureAdminEntryAccess(user);
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const skip = (page - 1) * pageSize;
+
+    const where: {
+      entryId?: string;
+      action?: 'create' | 'update' | 'publish' | 'disable' | 'open';
+      operatorUserId?: string;
+    } = {};
+
+    if (query.entryId) where.entryId = query.entryId;
+    if (query.action) where.action = query.action;
+    if (query.operatorUserId) where.operatorUserId = query.operatorUserId;
+
+    const [audits, total] = await this.auditRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip,
+      take: pageSize,
+    });
+
+    const manageable = new Set(this.getManageableCategoryCodes(user));
+    const entryIds = [...new Set(audits.map((audit) => audit.entryId))];
+    const entries = entryIds.length
+      ? await this.entryRepository.find({
+          where: { id: In(entryIds), deletedAt: IsNull() },
+        })
+      : [];
+
+    const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
+    const isSystemAdmin = user.roles.includes('system_admin');
+    const filtered = audits.filter((audit) => {
+      const entry = entryMap.get(audit.entryId);
+      if (!entry) return false;
+      if (isSystemAdmin) return true;
+      return manageable.has(entry.categoryCode);
+    });
+
+    return {
+      data: filtered.map((audit) => {
+        const entry = entryMap.get(audit.entryId)!;
+        return {
+          id: audit.id,
+          entryId: audit.entryId,
+          entryTitle: entry.title,
+          categoryCode: entry.categoryCode,
+          action: audit.action,
+          operatorUserId: audit.operatorUserId,
+          payloadSnapshot: audit.payloadSnapshot,
+          createdAt: audit.createdAt.toISOString(),
+        };
+      }),
+      meta: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      },
+    };
   }
 
   async createEntry(dto: OfficeEntryCreateDto, user: CurrentUser) {

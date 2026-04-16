@@ -31,6 +31,17 @@ export interface OfficeAdminEntry extends OfficeEntry {
   updatedAt: string;
 }
 
+export interface OfficeAuditRecord {
+  id: string;
+  entryId: string;
+  entryTitle: string;
+  categoryCode: string;
+  action: 'create' | 'update' | 'publish' | 'disable' | 'open';
+  operatorUserId: string;
+  payloadSnapshot: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface OfficeOpenResult {
   id: string;
   title: string;
@@ -43,6 +54,14 @@ export interface OfficeAdminQuery {
   keyword?: string;
   categoryCode?: string;
   status?: OfficeEntry['status'];
+}
+
+export interface OfficeAuditQuery {
+  entryId?: string;
+  action?: OfficeAuditRecord['action'];
+  operatorUserId?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface OfficeEntryMutationPayload {
@@ -76,21 +95,28 @@ export const officeApi = baseApi.injectEndpoints({
       query: (params) => ({ url: '/office/admin/entries', params }),
       providesTags: ['OfficeAdminEntry'],
     }),
+    getOfficeAdminAudits: builder.query<
+      { data: OfficeAuditRecord[]; meta: { total: number; page: number; pageSize: number; totalPages: number } },
+      OfficeAuditQuery | void
+    >({
+      query: (params) => ({ url: '/office/admin/audits', params }),
+      providesTags: ['OfficeAudit'],
+    }),
     createOfficeEntry: builder.mutation<{ data: OfficeAdminEntry }, OfficeEntryMutationPayload>({
       query: (data) => ({ url: '/office/admin/entries', method: 'POST', data }),
-      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry'],
+      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
     }),
     updateOfficeEntry: builder.mutation<{ data: OfficeAdminEntry }, { id: string; data: Partial<OfficeEntryMutationPayload> }>({
       query: ({ id, data }) => ({ url: `/office/admin/entries/${id}`, method: 'PATCH', data }),
-      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry'],
+      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
     }),
     publishOfficeEntry: builder.mutation<{ data: OfficeAdminEntry }, string>({
       query: (id) => ({ url: `/office/admin/entries/${id}/publish`, method: 'POST' }),
-      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry'],
+      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
     }),
     disableOfficeEntry: builder.mutation<{ data: OfficeAdminEntry }, string>({
       query: (id) => ({ url: `/office/admin/entries/${id}/disable`, method: 'POST' }),
-      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry'],
+      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
     }),
   }),
 });
@@ -100,6 +126,7 @@ export const {
   useGetOfficeEntriesQuery,
   useOpenOfficeEntryMutation,
   useGetOfficeAdminEntriesQuery,
+  useGetOfficeAdminAuditsQuery,
   useCreateOfficeEntryMutation,
   useUpdateOfficeEntryMutation,
   usePublishOfficeEntryMutation,

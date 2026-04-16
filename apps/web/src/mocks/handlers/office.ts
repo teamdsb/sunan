@@ -1,4 +1,4 @@
-import type { OfficeAdminEntry, OfficeOpenResult } from '../../features/office/officeApi';
+import type { OfficeAdminEntry, OfficeAuditRecord, OfficeOpenResult } from '../../features/office/officeApi';
 import type { OfficeMockState } from '../fixtures/office';
 import type { MockHandlerContext, MockRouteDefinition } from '../types';
 import { createMockResponse } from '../utils';
@@ -9,6 +9,14 @@ type OfficeRuntimeState = MockHandlerContext['state'] & {
 
 function getOfficeState(context: MockHandlerContext): OfficeMockState {
   return (context.state as OfficeRuntimeState).office;
+}
+
+function pushAudit(state: OfficeMockState, params: Omit<OfficeAuditRecord, 'id' | 'createdAt'>) {
+  state.audits.unshift({
+    id: `office-audit-${state.nextAuditId++}`,
+    createdAt: new Date().toISOString(),
+    ...params,
+  });
 }
 
 function asObject(value: unknown): Record<string, unknown> {
@@ -74,8 +82,17 @@ export const officeHandlers: MockRouteDefinition[] = [
     method: 'POST',
     path: '/office/entries/:id/open',
     handler: (context) => {
-      const entry = getOfficeState(context).entries.find((item) => item.id === context.params.id && item.status === 'published');
+      const state = getOfficeState(context);
+      const entry = state.entries.find((item) => item.id === context.params.id && item.status === 'published');
       if (!entry) return createMockResponse({ message: 'Office entry not found' }, 404);
+      pushAudit(state, {
+        entryId: entry.id,
+        entryTitle: entry.title,
+        categoryCode: entry.categoryCode,
+        action: 'open',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: { targetType: entry.targetType, targetValue: entry.targetValue },
+      });
       const result: OfficeOpenResult = {
         id: entry.id,
         title: entry.title,
@@ -84,6 +101,30 @@ export const officeHandlers: MockRouteDefinition[] = [
         openMode: entry.openMode,
       };
       return createMockResponse({ data: result }, 201);
+    },
+  },
+  {
+    method: 'GET',
+    path: '/office/admin/audits',
+    handler: (context) => {
+      const state = getOfficeState(context);
+      const params = asObject(context.request.params);
+      const action = toText(params.action);
+      const entryId = toText(params.entryId);
+      const rows = state.audits.filter((audit) => {
+        if (action && audit.action !== action) return false;
+        if (entryId && audit.entryId !== entryId) return false;
+        return true;
+      });
+      return createMockResponse({
+        data: rows,
+        meta: {
+          total: rows.length,
+          page: 1,
+          pageSize: rows.length || 20,
+          totalPages: 1,
+        },
+      });
     },
   },
   {
@@ -98,6 +139,14 @@ export const officeHandlers: MockRouteDefinition[] = [
       const state = getOfficeState(context);
       const entry = toEntry(asObject(context.request.data), `office-${state.nextEntryId++}`);
       state.entries.unshift(entry);
+      pushAudit(state, {
+        entryId: entry.id,
+        entryTitle: entry.title,
+        categoryCode: entry.categoryCode,
+        action: 'create',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: { targetType: entry.targetType, targetValue: entry.targetValue },
+      });
       return createMockResponse({ data: entry }, 201);
     },
   },
@@ -109,6 +158,14 @@ export const officeHandlers: MockRouteDefinition[] = [
       const current = state.entries.find((item) => item.id === context.params.id);
       if (!current) return createMockResponse({ message: 'Office entry not found' }, 404);
       Object.assign(current, asObject(context.request.data), { updatedAt: new Date().toISOString() });
+      pushAudit(state, {
+        entryId: current.id,
+        entryTitle: current.title,
+        categoryCode: current.categoryCode,
+        action: 'update',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: asObject(context.request.data),
+      });
       return createMockResponse({ data: current });
     },
   },
@@ -120,6 +177,14 @@ export const officeHandlers: MockRouteDefinition[] = [
       if (!current) return createMockResponse({ message: 'Office entry not found' }, 404);
       current.status = 'published';
       current.updatedAt = new Date().toISOString();
+      pushAudit(getOfficeState(context), {
+        entryId: current.id,
+        entryTitle: current.title,
+        categoryCode: current.categoryCode,
+        action: 'publish',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: { status: 'published' },
+      });
       return createMockResponse({ data: current }, 201);
     },
   },
@@ -131,6 +196,14 @@ export const officeHandlers: MockRouteDefinition[] = [
       if (!current) return createMockResponse({ message: 'Office entry not found' }, 404);
       current.status = 'disabled';
       current.updatedAt = new Date().toISOString();
+      pushAudit(getOfficeState(context), {
+        entryId: current.id,
+        entryTitle: current.title,
+        categoryCode: current.categoryCode,
+        action: 'disable',
+        operatorUserId: 'mock-admin',
+        payloadSnapshot: { status: 'disabled' },
+      });
       return createMockResponse({ data: current }, 201);
     },
   },

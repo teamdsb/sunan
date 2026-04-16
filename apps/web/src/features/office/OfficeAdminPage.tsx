@@ -5,9 +5,11 @@ import type { ColumnsType } from 'antd/es/table';
 import { canManageOffice } from './officePermissions';
 import {
   OfficeAdminEntry,
+  OfficeAuditRecord,
   OfficeEntryMutationPayload,
   useCreateOfficeEntryMutation,
   useDisableOfficeEntryMutation,
+  useGetOfficeAdminAuditsQuery,
   useGetOfficeAdminEntriesQuery,
   useGetOfficeCategoriesQuery,
   usePublishOfficeEntryMutation,
@@ -51,11 +53,20 @@ export function OfficeAdminPage() {
   const [disableEntry, { isLoading: isDisabling }] = useDisableOfficeEntryMutation();
   const [open, setOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<OfficeAdminEntry | null>(null);
+  const [auditAction, setAuditAction] = useState<OfficeAuditRecord['action'] | undefined>(undefined);
+  const [auditEntryId, setAuditEntryId] = useState<string | undefined>(undefined);
+  const { data: auditResponse, isLoading: isAuditLoading } = useGetOfficeAdminAuditsQuery({
+    action: auditAction,
+    entryId: auditEntryId,
+    page: 1,
+    pageSize: 20,
+  });
   const [form] = Form.useForm<OfficeEntryMutationPayload>();
 
   const entries = entryResponse?.data ?? [];
   const manageable = canManageOffice(categories);
   const categoryOptions = categories.filter((category) => category.canManage).map((category) => ({ label: category.name, value: category.code }));
+  const audits = auditResponse?.data ?? [];
 
   const columns: ColumnsType<OfficeAdminEntry> = useMemo(
     () => [
@@ -90,6 +101,17 @@ export function OfficeAdminPage() {
       },
     ],
     [categories, isDisabling, isPublishing],
+  );
+
+  const auditColumns: ColumnsType<OfficeAuditRecord> = useMemo(
+    () => [
+      { title: '时间', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => new Date(value).toLocaleString('zh-CN') },
+      { title: '动作', dataIndex: 'action', key: 'action' },
+      { title: '入口', dataIndex: 'entryTitle', key: 'entryTitle' },
+      { title: '分类', dataIndex: 'categoryCode', key: 'categoryCode' },
+      { title: '操作人', dataIndex: 'operatorUserId', key: 'operatorUserId' },
+    ],
+    [],
   );
 
   const handleCreate = () => {
@@ -185,6 +207,42 @@ export function OfficeAdminPage() {
       <section className="page-card-grid">
         <Card bordered={false} className="placeholder-card office-admin-card">
           <Table rowKey="id" loading={isLoading} columns={columns} dataSource={entries} pagination={false} />
+        </Card>
+      </section>
+
+      <section className="page-card-grid">
+        <Card
+          bordered={false}
+          className="placeholder-card office-admin-card"
+          title="最近审计记录"
+          extra={
+            <Space wrap>
+              <Select
+                allowClear
+                placeholder="动作"
+                style={{ width: 140 }}
+                value={auditAction}
+                onChange={(value) => setAuditAction(value)}
+                options={[
+                  { label: 'create', value: 'create' },
+                  { label: 'update', value: 'update' },
+                  { label: 'publish', value: 'publish' },
+                  { label: 'disable', value: 'disable' },
+                  { label: 'open', value: 'open' },
+                ]}
+              />
+              <Select
+                allowClear
+                placeholder="入口"
+                style={{ width: 220 }}
+                value={auditEntryId}
+                onChange={(value) => setAuditEntryId(value)}
+                options={entries.map((entry) => ({ label: entry.title, value: entry.id }))}
+              />
+            </Space>
+          }
+        >
+          <Table rowKey="id" loading={isAuditLoading} columns={auditColumns} dataSource={audits} pagination={false} />
         </Card>
       </section>
 
