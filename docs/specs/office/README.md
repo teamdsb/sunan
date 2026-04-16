@@ -40,3 +40,11 @@
 - 分类维护权固定绑定到角色，不做动态权限配置。
 - 入口访问与治理动作均需具备最小审计能力。
 - 企业微信上线约束复用 `docs/specs/wecom/` 下现有底座规格。
+
+## Phase5 扩展映射（新增）
+
+| 扩展项 | 规格映射 | 实现映射 |
+|---|---|---|
+| 壳层导航从单模块扩展为多模块导航 | `ui/page-map.md` | `apps/web/src/layouts/AppShell.tsx`、`apps/web/src/router/moduleNav.ts`、`apps/web/src/router/AppRoutes.tsx` |
+| 新增 office 领域实体、接口、状态与页面 | `db/*`、`api/*`、`state/*`、`ui/*` | `apps/api/src/database/entities/office-*.entity.ts`、`apps/api/src/modules/office/*`、`apps/web/src/features/office/*` |
+| 增加端口打开与治理审计 | `api/office-entry-api.yaml`、`api/office-admin-api.yaml`、`db/office-entry-audits.md`、`ui/office-admin-page.md` | `apps/api/src/modules/office/office.service.ts`、`apps/web/src/features/office/launchOfficeEntry.ts`、`apps/web/src/features/office/OfficeAdminPage.tsx` |
