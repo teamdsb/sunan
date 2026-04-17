@@ -19,4 +19,19 @@ export const procurementRouteConfig = {
     label: '采购审批',
     description: '处理采购待审批任务。',
   },
+  reports: {
+    path: '/procurement/reports',
+    label: '采购报表',
+    description: '查询月报/年报/明细并发起报表审批。',
+  },
+  reportRequestDetail: {
+    path: '/procurement/report-requests/:id',
+    label: '报表审批单详情',
+    description: '查看报表审批单快照与审批轨迹。',
+  },
+  reportApprovals: {
+    path: '/procurement/report-approvals',
+    label: '报表审批',
+    description: '处理报表审批待办。',
+  },
 } as const;

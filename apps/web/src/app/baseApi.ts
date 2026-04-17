@@ -265,6 +265,8 @@ export const baseApi = createApi({
     'OfficeAudit',
     'ProcurementOrder',
     'ProcurementApproval',
+    'ProcurementReport',
+    'ProcurementReportApproval',
     'Reminder',
     'ReminderDashboard',
     'ShipMonitor',

@@ -17,6 +17,9 @@ import { ProcurementApprovalPage } from '../features/procurement/ProcurementAppr
 import { ProcurementOrderCreatePage } from '../features/procurement/ProcurementOrderCreatePage';
 import { ProcurementOrderDetailPage } from '../features/procurement/ProcurementOrderDetailPage';
 import { ProcurementOrderListPage } from '../features/procurement/ProcurementOrderListPage';
+import { ProcurementReportApprovalPage } from '../features/procurement/ProcurementReportApprovalPage';
+import { ProcurementReportPage } from '../features/procurement/ProcurementReportPage';
+import { ProcurementReportRequestDetailPage } from '../features/procurement/ProcurementReportRequestDetailPage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
 import { myRouteConfig } from './myRouteConfig';
@@ -49,6 +52,9 @@ export function AppRoutes() {
           <Route path={procurementRouteConfig.orderCreate.path} element={<ProcurementOrderCreatePage />} />
           <Route path={procurementRouteConfig.orderDetail.path} element={<ProcurementOrderDetailPage />} />
           <Route path={procurementRouteConfig.approvals.path} element={<ProcurementApprovalPage />} />
+          <Route path={procurementRouteConfig.reports.path} element={<ProcurementReportPage />} />
+          <Route path={procurementRouteConfig.reportRequestDetail.path} element={<ProcurementReportRequestDetailPage />} />
+          <Route path={procurementRouteConfig.reportApprovals.path} element={<ProcurementReportApprovalPage />} />
           <Route
             path="/workbench"
             element={<PlaceholderPage title="工作平台" description="工作平台将在后续里程碑接入部门业务模块和工作组能力。" />}

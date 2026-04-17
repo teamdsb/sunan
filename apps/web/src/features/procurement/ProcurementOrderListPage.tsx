@@ -144,6 +144,8 @@ export function ProcurementOrderListPage() {
             新建采购单
           </Button>
           <Button onClick={() => navigate(procurementRouteConfig.approvals.path)}>进入审批页</Button>
+          <Button onClick={() => navigate(procurementRouteConfig.reports.path)}>进入报表页</Button>
+          <Button onClick={() => navigate(procurementRouteConfig.reportApprovals.path)}>报表审批页</Button>
         </Space>
       </section>
 

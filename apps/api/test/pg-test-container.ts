@@ -18,6 +18,8 @@ import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
 import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
 import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.entity';
+import { ProcurementReportApprovalEntity } from 'src/database/entities/procurement-report-approval.entity';
+import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
 import { ShipMonitorEntity } from 'src/database/entities/ship-monitor.entity';
 import { UserSettingsEntity } from 'src/database/entities/user-settings.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
@@ -32,6 +34,7 @@ import { Wave31710000005000 } from 'src/database/migrations/1710000005000-wave3-
 import { Wave41710000006000 } from 'src/database/migrations/1710000006000-wave4-certificate-reminders';
 import { Wave21710000007000 } from 'src/database/migrations/1710000007000-wave2-office-portal';
 import { Wave31710000008000 } from 'src/database/migrations/1710000008000-wave3-procurement-core';
+import { Wave31710000009000 } from 'src/database/migrations/1710000009000-wave3-procurement-reports';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -53,6 +56,8 @@ const ALL_TEST_ENTITIES = [
   ProcurementOrderEntity,
   ProcurementOrderApprovalEntity,
   ProcurementOrderFileEntity,
+  ProcurementReportEntity,
+  ProcurementReportApprovalEntity,
   ShipMonitorEntity,
   UserSettingsEntity,
 ];
@@ -67,6 +72,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave41710000006000,
   Wave21710000007000,
   Wave31710000008000,
+  Wave31710000009000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

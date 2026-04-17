@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ProcurementDepartmentCode,
   ProcurementPendingTask,
-  useActionProcurementOrderApprovalMutation,
+  useActionProcurementReportApprovalMutation,
   useGetProcurementPendingApprovalsQuery,
 } from './procurementApi';
 
@@ -17,12 +17,13 @@ const departmentOptions = [
   { label: '后勤部', value: 'logistics_dept' },
 ];
 
-export function ProcurementApprovalPage() {
+export function ProcurementReportApprovalPage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode | undefined>(undefined);
-  const { data: response, isLoading, refetch } = useGetProcurementPendingApprovalsQuery({ entityType: 'order', departmentCode });
-  const [actionApproval, { isLoading: isActing }] = useActionProcurementOrderApprovalMutation();
+
+  const { data: response, isLoading, refetch } = useGetProcurementPendingApprovalsQuery({ entityType: 'report', departmentCode });
+  const [actionApproval, { isLoading: isActing }] = useActionProcurementReportApprovalMutation();
 
   const rows = response?.data ?? [];
 
@@ -53,7 +54,7 @@ export function ProcurementApprovalPage() {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
-        width: 140,
+        width: 160,
         render: (value: string) => <Tag color={value === 'submitted' ? 'gold' : 'blue'}>{value}</Tag>,
       },
       {
@@ -69,7 +70,7 @@ export function ProcurementApprovalPage() {
         width: 280,
         render: (_, record) => (
           <Space wrap>
-            <Button type="link" onClick={() => navigate(`/procurement/orders/${record.entityId}`)}>
+            <Button type="link" onClick={() => navigate(`/procurement/report-requests/${record.entityId}`)}>
               查看详情
             </Button>
             <Button type="primary" ghost loading={isActing} onClick={() => void handleAction(record, 'approve')}>
@@ -92,8 +93,8 @@ export function ProcurementApprovalPage() {
     <>
       {contextHolder}
       <section className="page-hero">
-        <Typography.Title level={2}>采购审批</Typography.Title>
-        <Typography.Paragraph type="secondary">处理待审批采购单，支持通过、退回、驳回。</Typography.Paragraph>
+        <Typography.Title level={2}>报表审批</Typography.Title>
+        <Typography.Paragraph type="secondary">{'处理报表审批单待办，审批链：部门主管 → 财务部 → 总经办。'}</Typography.Paragraph>
         <Space wrap>
           <Select
             allowClear
@@ -103,7 +104,7 @@ export function ProcurementApprovalPage() {
             value={departmentCode}
             onChange={(value) => setDepartmentCode(value)}
           />
-          <Button onClick={() => navigate('/procurement')}>返回列表</Button>
+          <Button onClick={() => navigate('/procurement/reports')}>返回报表页</Button>
         </Space>
       </section>
 
