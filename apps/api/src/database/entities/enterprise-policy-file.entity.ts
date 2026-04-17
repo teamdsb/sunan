@@ -1,7 +1,7 @@
 ﻿import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Entity({ name: 'enterprise_policy_files' })
 export class EnterprisePolicyFileEntity {

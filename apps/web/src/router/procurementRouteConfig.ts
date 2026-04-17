@@ -34,4 +34,9 @@ export const procurementRouteConfig = {
     label: '报表审批',
     description: '处理报表审批待办。',
   },
+  dictionaries: {
+    path: '/procurement/dictionaries',
+    label: '字典治理',
+    description: '维护船舶/后勤细分项字典。',
+  },
 } as const;

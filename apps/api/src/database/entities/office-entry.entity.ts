@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Index('idx_office_entries_category_status_sort', ['categoryCode', 'status', 'sortOrder'])
 @Entity({ name: 'office_entries' })

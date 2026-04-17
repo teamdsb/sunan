@@ -7,7 +7,7 @@ import type {
   ProcurementReportType,
 } from 'src/modules/procurement/procurement.constants';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Index('idx_procurement_reports_type_period', ['reportType', 'periodYear', 'periodMonth'])
 @Index('idx_procurement_reports_department_status', ['departmentCode', 'status'])

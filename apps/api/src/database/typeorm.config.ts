@@ -15,6 +15,7 @@ import { OfficeEntryAuditEntity } from './entities/office-entry-audit.entity';
 import { OfficeEntryEntity } from './entities/office-entry.entity';
 import { PersonnelEntity } from './entities/personnel.entity';
 import { ProcurementOrderApprovalEntity } from './entities/procurement-order-approval.entity';
+import { ProcurementDimensionItemEntity } from './entities/procurement-dimension-item.entity';
 import { ProcurementOrderFileEntity } from './entities/procurement-order-file.entity';
 import { ProcurementOrderEntity } from './entities/procurement-order.entity';
 import { ProcurementReportApprovalEntity } from './entities/procurement-report-approval.entity';
@@ -34,6 +35,7 @@ import { Wave41710000006000 } from './migrations/1710000006000-wave4-certificate
 import { Wave21710000007000 } from './migrations/1710000007000-wave2-office-portal';
 import { Wave31710000008000 } from './migrations/1710000008000-wave3-procurement-core';
 import { Wave31710000009000 } from './migrations/1710000009000-wave3-procurement-reports';
+import { Wave41710000010000 } from './migrations/1710000010000-wave4-procurement-dimension-items';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -60,6 +62,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     OfficeCategoryEntity,
     OfficeEntryEntity,
     OfficeEntryAuditEntity,
+    ProcurementDimensionItemEntity,
     ProcurementOrderEntity,
     ProcurementOrderApprovalEntity,
     ProcurementOrderFileEntity,
@@ -79,6 +82,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave21710000007000,
     Wave31710000008000,
     Wave31710000009000,
+    Wave41710000010000,
   ],
   synchronize: false,
 });

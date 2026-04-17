@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 
 import { appEnv } from 'src/config/env';
 import type { ProcurementApprovalAction, ProcurementApprovalLevel, ProcurementApprovalSource } from 'src/modules/procurement/procurement.constants';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Index('idx_procurement_order_approvals_order_created', ['orderId', 'approvedAt'])
 @Index('idx_procurement_order_approvals_level_action', ['approvalLevel', 'action'])

@@ -80,8 +80,8 @@ describe('CertificateController integration', () => {
     vesselId = (
       await vesselRepo.save(
         vesselRepo.create({
-          code: 'SN012',
-          name: '苏南012',
+          code: 'SN012-CERT',
+          name: '苏南012-证书测试',
           category: 'main_vessel',
           status: 'active',
         }),
@@ -90,7 +90,7 @@ describe('CertificateController integration', () => {
     vehicleId = (
       await vehicleRepo.save(
         vehicleRepo.create({
-          plateNumber: '桂A0001',
+          plateNumber: '桂A1001',
           vehicleType: 'car',
           status: 'active',
         }),
@@ -99,8 +99,8 @@ describe('CertificateController integration', () => {
     typeId = (
       await typeRepo.save(
         typeRepo.create({
-          code: 'nationality_cert',
-          name: '国籍证书',
+          code: 'nationality_cert_integration',
+          name: '国籍证书-证书测试',
           ownerScope: 'mixed',
           reminderCategory: 'certificate',
           defaultAdvanceDays: 30,

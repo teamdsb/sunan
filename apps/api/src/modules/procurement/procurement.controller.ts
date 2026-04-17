@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { ProcurementApprovalActionDto } from './dto/procurement-approval-action.dto';
 import { ProcurementApprovalListQueryDto } from './dto/procurement-approval-list-query.dto';
+import { ProcurementDimensionCreateDto } from './dto/procurement-dimension-create.dto';
+import { ProcurementDimensionListQueryDto } from './dto/procurement-dimension-list-query.dto';
+import { ProcurementDimensionUpdateDto } from './dto/procurement-dimension-update.dto';
 import { ProcurementOrderBindFilesDto } from './dto/procurement-order-bind-files.dto';
 import { ProcurementOrderCreateDto } from './dto/procurement-order-create.dto';
 import { ProcurementOrderListQueryDto } from './dto/procurement-order-list-query.dto';
@@ -20,6 +23,27 @@ import { ProcurementService } from './procurement.service';
 @UseGuards(JwtAuthGuard)
 export class ProcurementController {
   constructor(private readonly service: ProcurementService) {}
+
+  @Get('dimensions')
+  async listDimensionItems(@Query() query: ProcurementDimensionListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.listDimensionItems(query, user) };
+  }
+
+  @Post('admin/dimensions')
+  async createDimensionItem(@Body() dto: ProcurementDimensionCreateDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.createDimensionItem(dto, user) };
+  }
+
+  @Patch('admin/dimensions/:id')
+  async updateDimensionItem(@Param('id') id: string, @Body() dto: ProcurementDimensionUpdateDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.updateDimensionItem(id, dto, user) };
+  }
+
+  @Delete('admin/dimensions/:id')
+  @HttpCode(204)
+  async disableDimensionItem(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
+    await this.service.disableDimensionItem(id, user);
+  }
 
   @Get('orders')
   async listOrders(@Query() query: ProcurementOrderListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
@@ -54,6 +78,11 @@ export class ProcurementController {
   @Post('orders/:id/attachments')
   async bindOrderAttachments(@Param('id') id: string, @Body() dto: ProcurementOrderBindFilesDto, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.bindOrderAttachments(id, dto, user) };
+  }
+
+  @Post('orders/:id/print')
+  async printOrder(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.printOrder(id, user) };
   }
 
   @Get('approvals/pending')
@@ -109,6 +138,11 @@ export class ProcurementController {
   @Post('report-requests/:id/submit')
   async submitReportRequest(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.submitReportRequest(id, user) };
+  }
+
+  @Post('report-requests/:id/print')
+  async printReportRequest(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.printReportRequest(id, user) };
   }
 
   @Get('reports/:id/approvals')

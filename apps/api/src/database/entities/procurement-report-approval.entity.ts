@@ -6,7 +6,7 @@ import type {
   ProcurementReportApprovalLevel,
 } from 'src/modules/procurement/procurement.constants';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Index('idx_procurement_report_approvals_report_created', ['reportId', 'approvedAt'])
 @Index('idx_procurement_report_approvals_level_action', ['approvalLevel', 'action'])

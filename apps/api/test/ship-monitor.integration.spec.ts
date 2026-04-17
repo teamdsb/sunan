@@ -69,8 +69,8 @@ describe('ShipMonitorController integration', () => {
     vesselId = (
       await vesselRepo.save(
         vesselRepo.create({
-          code: 'SN012',
-          name: '苏南012',
+          code: 'SN012-MON',
+          name: '苏南012-监控测试',
           category: 'main_vessel',
           status: 'active',
         }),

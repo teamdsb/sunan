@@ -14,6 +14,7 @@ import { OfficeAdminPage } from '../features/office/OfficeAdminPage';
 import { OfficeHomePage } from '../features/office/OfficeHomePage';
 import { OfficeSearchPage } from '../features/office/OfficeSearchPage';
 import { ProcurementApprovalPage } from '../features/procurement/ProcurementApprovalPage';
+import { ProcurementDictionaryAdminPage } from '../features/procurement/ProcurementDictionaryAdminPage';
 import { ProcurementOrderCreatePage } from '../features/procurement/ProcurementOrderCreatePage';
 import { ProcurementOrderDetailPage } from '../features/procurement/ProcurementOrderDetailPage';
 import { ProcurementOrderListPage } from '../features/procurement/ProcurementOrderListPage';
@@ -55,6 +56,7 @@ export function AppRoutes() {
           <Route path={procurementRouteConfig.reports.path} element={<ProcurementReportPage />} />
           <Route path={procurementRouteConfig.reportRequestDetail.path} element={<ProcurementReportRequestDetailPage />} />
           <Route path={procurementRouteConfig.reportApprovals.path} element={<ProcurementReportApprovalPage />} />
+          <Route path={procurementRouteConfig.dictionaries.path} element={<ProcurementDictionaryAdminPage />} />
           <Route
             path="/workbench"
             element={<PlaceholderPage title="工作平台" description="工作平台将在后续里程碑接入部门业务模块和工作组能力。" />}

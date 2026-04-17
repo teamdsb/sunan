@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Index('uq_procurement_order_files_order_file', ['orderId', 'fileId'], { unique: true })
 @Index('idx_procurement_order_files_order_id', ['orderId'])

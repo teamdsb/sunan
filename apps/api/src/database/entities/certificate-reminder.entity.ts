@@ -9,7 +9,7 @@ import {
 
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 const dateColumnType = 'date';
 
 @Index('idx_certificate_reminders_certificate_id', ['certificateId'])

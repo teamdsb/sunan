@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ProcurementDepartmentCode,
   ProcurementDimensionType,
+  useGetProcurementDimensionsQuery,
   useCreateProcurementOrderMutation,
   useSubmitProcurementOrderMutation,
 } from './procurementApi';
@@ -33,6 +34,14 @@ export function ProcurementOrderCreatePage() {
   const [createOrder, { isLoading: isCreating }] = useCreateProcurementOrderMutation();
   const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
   const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode>('general_office');
+  const { data: dimensionResponse, isLoading: isDimensionLoading } = useGetProcurementDimensionsQuery(
+    departmentCode === 'shipping_dept' || departmentCode === 'logistics_dept'
+      ? {
+          departmentCode,
+          isEnabled: true,
+        }
+      : undefined,
+  );
 
   const dimensionTypeOptions = useMemo(() => {
     if (departmentCode === 'shipping_dept') {
@@ -60,6 +69,17 @@ export function ProcurementOrderCreatePage() {
 
     form.setFieldsValue({ dimensionType: 'none', dimensionKey: undefined });
   };
+
+  const dimensionItemOptions = useMemo(
+    () =>
+      (dimensionResponse?.data ?? [])
+        .filter((item) => item.departmentCode === departmentCode && item.isEnabled)
+        .map((item) => ({
+          label: `${item.dimensionName} (${item.dimensionKey})`,
+          value: item.dimensionKey,
+        })),
+    [departmentCode, dimensionResponse?.data],
+  );
 
   const normalizePayload = (values: ProcurementOrderFormValues) => {
     const payload = {
@@ -133,7 +153,13 @@ export function ProcurementOrderCreatePage() {
 
             {departmentCode === 'shipping_dept' || departmentCode === 'logistics_dept' ? (
               <Form.Item name="dimensionKey" label="细分对象" rules={[{ required: true, message: '请填写细分对象' }]}>
-                <Input maxLength={64} placeholder={departmentCode === 'shipping_dept' ? '例如 su-nan-012' : '例如 canteen'} />
+                <Select
+                  showSearch
+                  loading={isDimensionLoading}
+                  options={dimensionItemOptions}
+                  placeholder={departmentCode === 'shipping_dept' ? '请选择船舶' : '请选择后勤类别'}
+                  optionFilterProp="label"
+                />
               </Form.Item>
             ) : null}
 

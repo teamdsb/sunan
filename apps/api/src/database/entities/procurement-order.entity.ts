@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, PrimaryGener
 import { appEnv } from 'src/config/env';
 import type { ProcurementApprovalChannel, ProcurementDepartmentCode, ProcurementDimensionType, ProcurementOrderStatus } from 'src/modules/procurement/procurement.constants';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 const numericTransformer = {
   to(value: number): number {

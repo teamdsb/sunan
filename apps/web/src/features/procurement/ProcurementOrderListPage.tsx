@@ -2,6 +2,7 @@ import { Alert, Button, Card, Input, Pagination, Select, Space, Table, Tag, Typo
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../../app/hooks';
 import { procurementRouteConfig } from '../../router/procurementRouteConfig';
 import {
   ProcurementDepartmentCode,
@@ -40,6 +41,7 @@ function formatDepartment(code: ProcurementDepartmentCode) {
 
 export function ProcurementOrderListPage() {
   const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [keyword, setKeyword] = useState<string>('');
   const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode | undefined>(undefined);
   const [status, setStatus] = useState<ProcurementOrderStatus | undefined>(undefined);
@@ -56,6 +58,7 @@ export function ProcurementOrderListPage() {
 
   const rows = response?.data ?? [];
   const meta = response?.meta ?? { total: 0, page, pageSize, totalPages: 0 };
+  const canManageDictionary = Boolean(currentUser && (currentUser.roles.includes('system_admin') || currentUser.roles.includes('general_office')));
 
   const columns: ColumnsType<ProcurementOrder> = useMemo(
     () => [
@@ -146,6 +149,7 @@ export function ProcurementOrderListPage() {
           <Button onClick={() => navigate(procurementRouteConfig.approvals.path)}>进入审批页</Button>
           <Button onClick={() => navigate(procurementRouteConfig.reports.path)}>进入报表页</Button>
           <Button onClick={() => navigate(procurementRouteConfig.reportApprovals.path)}>报表审批页</Button>
+          {canManageDictionary ? <Button onClick={() => navigate(procurementRouteConfig.dictionaries.path)}>字典治理</Button> : null}
         </Space>
       </section>
 

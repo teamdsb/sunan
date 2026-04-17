@@ -8,7 +8,7 @@ import {
 
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Entity({ name: 'certificate_types' })
 export class CertificateTypeEntity {

@@ -10,6 +10,7 @@ import {
   useBindProcurementOrderAttachmentsMutation,
   useGetProcurementOrderApprovalsQuery,
   useGetProcurementOrderQuery,
+  usePrintProcurementOrderMutation,
   useResubmitProcurementOrderMutation,
   useSubmitProcurementOrderMutation,
   useUpdateProcurementOrderMutation,
@@ -55,6 +56,7 @@ export function ProcurementOrderDetailPage() {
   const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
   const [resubmitOrder, { isLoading: isResubmitting }] = useResubmitProcurementOrderMutation();
   const [bindAttachments, { isLoading: isBinding }] = useBindProcurementOrderAttachmentsMutation();
+  const [printOrder, { isLoading: isPrinting }] = usePrintProcurementOrderMutation();
 
   const order = orderResponse?.data;
   const approvals = approvalResponse?.data ?? [];
@@ -151,6 +153,16 @@ export function ProcurementOrderDetailPage() {
     await refetch();
   };
 
+  const handlePrint = async () => {
+    if (!id) {
+      return;
+    }
+
+    const result = await printOrder(id).unwrap();
+    window.open(result.data.downloadUrl, '_blank', 'noopener,noreferrer');
+    messageApi.success('PDF 已生成');
+  };
+
   if (!id) {
     return null;
   }
@@ -163,6 +175,9 @@ export function ProcurementOrderDetailPage() {
         <Space wrap>
           <Button onClick={() => navigate('/procurement')}>返回列表</Button>
           <Button onClick={() => navigate('/procurement/approvals')}>进入审批页</Button>
+          <Button loading={isPrinting} onClick={() => void handlePrint()}>
+            导出 PDF
+          </Button>
         </Space>
       </section>
 

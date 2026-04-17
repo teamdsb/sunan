@@ -4,20 +4,30 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'node:crypto';
 import { Brackets, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { appEnv } from 'src/config/env';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
 import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
 import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
 import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.entity';
 import { ProcurementReportApprovalEntity } from 'src/database/entities/procurement-report-approval.entity';
 import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { OssService } from 'src/modules/files/oss.service';
+import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 import { ProcurementApprovalActionDto } from './dto/procurement-approval-action.dto';
 import { ProcurementApprovalListQueryDto } from './dto/procurement-approval-list-query.dto';
+import { ProcurementDimensionCreateDto } from './dto/procurement-dimension-create.dto';
+import { ProcurementDimensionListQueryDto } from './dto/procurement-dimension-list-query.dto';
+import { ProcurementDimensionUpdateDto } from './dto/procurement-dimension-update.dto';
 import { ProcurementOrderBindFilesDto } from './dto/procurement-order-bind-files.dto';
 import { ProcurementOrderCreateDto } from './dto/procurement-order-create.dto';
 import { ProcurementOrderListQueryDto } from './dto/procurement-order-list-query.dto';
@@ -47,6 +57,14 @@ import {
 
 const INCLUDED_REPORT_ORDER_STATUSES: ProcurementOrderStatus[] = ['submitted', 'dept_approved', 'final_approved', 'rejected'];
 const PENDING_REPORT_REQUEST_STATUSES: ProcurementReportRequestStatus[] = ['submitted', 'dept_approved', 'finance_approved'];
+const DICTIONARY_DEPARTMENT_CODES = ['shipping_dept', 'logistics_dept'] as const;
+const DICTIONARY_DIMENSION_TYPES = ['vessel', 'logistics_category'] as const;
+const PDF_PAGE_WIDTH = 595;
+const PDF_PAGE_HEIGHT = 842;
+const PDF_MARGIN_LEFT = 56;
+const PDF_MARGIN_TOP = 48;
+const PDF_LINE_HEIGHT = 20;
+const PDF_MAX_LINES_PER_PAGE = 35;
 
 interface NormalizedDimension {
   dimensionType: ProcurementDimensionType;
@@ -70,9 +88,32 @@ interface ReportDetailRow {
   submitted_at: Date | null;
 }
 
+interface DimensionItemDto {
+  id: string;
+  departmentCode: 'shipping_dept' | 'logistics_dept';
+  dimensionType: 'vessel' | 'logistics_category';
+  dimensionKey: string;
+  dimensionName: string;
+  sortOrder: number;
+  isEnabled: boolean;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PrintResultDto {
+  fileId: string;
+  downloadUrl: string;
+}
+
 @Injectable()
 export class ProcurementService {
+  private readonly logger = new Logger(ProcurementService.name);
+
   constructor(
+    @InjectRepository(ProcurementDimensionItemEntity)
+    private readonly dimensionItemRepository: Repository<ProcurementDimensionItemEntity>,
     @InjectRepository(ProcurementOrderEntity)
     private readonly orderRepository: Repository<ProcurementOrderEntity>,
     @InjectRepository(ProcurementOrderApprovalEntity)
@@ -85,7 +126,112 @@ export class ProcurementService {
     private readonly reportApprovalRepository: Repository<ProcurementReportApprovalEntity>,
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    @InjectRepository(WecomUserEntity)
+    private readonly wecomUserRepository: Repository<WecomUserEntity>,
+    private readonly ossService: OssService,
+    private readonly wecomMessageService: WecomMessageService,
   ) {}
+
+  async listDimensionItems(query: ProcurementDimensionListQueryDto, user: CurrentUser): Promise<DimensionItemDto[]> {
+    this.assertCanViewReports(user);
+
+    const qb = this.dimensionItemRepository.createQueryBuilder('item').where('item.deletedAt IS NULL');
+
+    if (query.departmentCode) {
+      qb.andWhere('item.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+    }
+
+    if (typeof query.isEnabled === 'boolean') {
+      qb.andWhere('item.isEnabled = :isEnabled', { isEnabled: query.isEnabled });
+    }
+
+    const rows = await qb
+      .orderBy('item.departmentCode', 'ASC')
+      .addOrderBy('item.dimensionType', 'ASC')
+      .addOrderBy('item.sortOrder', 'ASC')
+      .addOrderBy('item.createdAt', 'ASC')
+      .getMany();
+
+    return rows.map((row) => this.toDimensionItemDto(row));
+  }
+
+  async createDimensionItem(dto: ProcurementDimensionCreateDto, user: CurrentUser): Promise<DimensionItemDto> {
+    this.assertCanManageDimensionDictionary(user);
+    this.assertDimensionScope(dto.departmentCode, dto.dimensionType);
+
+    const normalizedKey = dto.dimensionKey.trim();
+    const normalizedName = dto.dimensionName.trim();
+    if (!normalizedKey || !normalizedName) {
+      throw new BadRequestException('dimension key and name are required');
+    }
+
+    const existed = await this.dimensionItemRepository.exist({
+      where: {
+        departmentCode: dto.departmentCode,
+        dimensionType: dto.dimensionType,
+        dimensionKey: normalizedKey,
+        deletedAt: IsNull(),
+      },
+    });
+    if (existed) {
+      throw new ConflictException('dimension key already exists');
+    }
+
+    const item = await this.dimensionItemRepository.save(
+      this.dimensionItemRepository.create({
+        departmentCode: dto.departmentCode,
+        dimensionType: dto.dimensionType,
+        dimensionKey: normalizedKey,
+        dimensionName: normalizedName,
+        sortOrder: dto.sortOrder ?? 0,
+        isEnabled: true,
+        createdBy: user.userId,
+        updatedBy: user.userId,
+      }),
+    );
+
+    return this.toDimensionItemDto(item);
+  }
+
+  async updateDimensionItem(id: string, dto: ProcurementDimensionUpdateDto, user: CurrentUser): Promise<DimensionItemDto> {
+    this.assertCanManageDimensionDictionary(user);
+    const item = await this.mustFindDimensionItem(id);
+
+    const nextName = dto.dimensionName?.trim();
+    if (typeof nextName === 'string' && !nextName) {
+      throw new BadRequestException('dimension name cannot be empty');
+    }
+
+    if (typeof dto.dimensionName === 'string') {
+      item.dimensionName = nextName ?? item.dimensionName;
+    }
+
+    if (typeof dto.sortOrder === 'number') {
+      item.sortOrder = dto.sortOrder;
+    }
+
+    if (typeof dto.isEnabled === 'boolean') {
+      item.isEnabled = dto.isEnabled;
+    }
+
+    item.updatedBy = user.userId;
+    await this.dimensionItemRepository.save(item);
+
+    return this.toDimensionItemDto(item);
+  }
+
+  async disableDimensionItem(id: string, user: CurrentUser): Promise<void> {
+    this.assertCanManageDimensionDictionary(user);
+    const item = await this.mustFindDimensionItem(id);
+
+    if (!item.isEnabled) {
+      return;
+    }
+
+    item.isEnabled = false;
+    item.updatedBy = user.userId;
+    await this.dimensionItemRepository.save(item);
+  }
 
   async listOrders(query: ProcurementOrderListQueryDto, user: CurrentUser) {
     const page = query.page ?? 1;
@@ -221,6 +367,7 @@ export class ProcurementService {
     order.updatedBy = user.userId;
 
     await this.orderRepository.save(order);
+    await this.notifyOrderPendingApproval(order, 'dept');
     return this.getOrderDetail(id, user);
   }
 
@@ -233,6 +380,7 @@ export class ProcurementService {
     order.updatedBy = user.userId;
 
     await this.orderRepository.save(order);
+    await this.notifyOrderPendingApproval(order, 'dept');
     return this.getOrderDetail(id, user);
   }
 
@@ -264,6 +412,94 @@ export class ProcurementService {
     }
 
     return this.getOrderDetail(id, user);
+  }
+
+  async printOrder(id: string, user: CurrentUser): Promise<PrintResultDto> {
+    const order = await this.mustFindOrder(id);
+    this.assertCanViewOrder(order, user);
+
+    const detail = await this.toOrderDetail(order);
+    const generatedAt = new Date();
+    const lines = [
+      `Order No: ${order.orderNo}`,
+      `Generated At: ${this.formatDateTime(generatedAt)}`,
+      '',
+      'Procurement Order',
+      `Title: ${order.title}`,
+      `Department: ${order.departmentCode}`,
+      `Dimension: ${order.dimensionType}${order.dimensionKey ? ` / ${order.dimensionKey}` : ''}`,
+      `Applicant: ${order.createdBy}`,
+      `Status: ${order.status}`,
+      `Submitted At: ${order.submittedAt ? this.formatDateTime(order.submittedAt) : '-'}`,
+      `Final Approved At: ${order.finalApprovedAt ? this.formatDateTime(order.finalApprovedAt) : '-'}`,
+      '',
+      'Summary:',
+      ...this.wrapTextLines(order.summary, 72),
+      '',
+      `Amount (CNY): ${order.amount.toFixed(2)}`,
+      '',
+      'Attachments:',
+      ...(detail.files?.length
+        ? detail.files.map((file, index) => `${index + 1}. ${file.fileName} (${file.mimeType}, ${file.fileSize} bytes)`)
+        : ['-']),
+    ];
+
+    const amountLineIndex = lines.findIndex((line) => line.startsWith('Amount (CNY):'));
+    const pdfBuffer = this.buildA4Pdf({
+      title: 'Procurement Order',
+      lines,
+      rightAlignedLineIndexes: amountLineIndex >= 0 ? [amountLineIndex] : [],
+    });
+
+    return this.persistExportPdf({
+      fileName: `${order.orderNo}.pdf`,
+      category: 'procurement_exports',
+      buffer: pdfBuffer,
+      uploadedBy: user.userId,
+    });
+  }
+
+  async printReportRequest(id: string, user: CurrentUser): Promise<PrintResultDto> {
+    const report = await this.mustFindReport(id);
+    this.assertCanViewReport(report, user);
+
+    const generatedAt = new Date();
+    const snapshotSummary = JSON.stringify(report.snapshotSummary, null, 2);
+    const lines = [
+      `Report No: ${report.reportNo}`,
+      `Generated At: ${this.formatDateTime(generatedAt)}`,
+      '',
+      'Procurement Report Request',
+      `Report Type: ${report.reportType}`,
+      `Period: ${report.periodMonth ? `${report.periodYear}-${String(report.periodMonth).padStart(2, '0')}` : report.periodYear}`,
+      `Department: ${report.departmentCode ?? '-'}`,
+      `Applicant: ${report.createdBy}`,
+      `Status: ${report.status}`,
+      `Submitted At: ${report.submittedAt ? this.formatDateTime(report.submittedAt) : '-'}`,
+      `Final Approved At: ${report.finalApprovedAt ? this.formatDateTime(report.finalApprovedAt) : '-'}`,
+      '',
+      'Snapshot Summary:',
+      ...this.wrapTextLines(snapshotSummary, 72),
+    ];
+
+    const pdfBuffer = this.buildA4Pdf({
+      title: 'Procurement Report Request',
+      lines,
+      rightAlignedLineIndexes: [],
+    });
+
+    const printResult = await this.persistExportPdf({
+      fileName: `${report.reportNo}.pdf`,
+      category: 'procurement_exports',
+      buffer: pdfBuffer,
+      uploadedBy: user.userId,
+    });
+
+    report.exportPdfFileId = printResult.fileId;
+    report.updatedBy = user.userId;
+    await this.reportRepository.save(report);
+
+    return printResult;
   }
 
   async listPendingApprovals(query: ProcurementApprovalListQueryDto, user: CurrentUser) {
@@ -407,6 +643,8 @@ export class ProcurementService {
         },
       }),
     );
+
+    await this.notifyOrderApprovalResult(order, dto.action);
 
     return {
       entityId: order.id,
@@ -653,6 +891,7 @@ export class ProcurementService {
     report.updatedBy = user.userId;
 
     await this.reportRepository.save(report);
+    await this.notifyReportPendingApproval(report, 'dept');
     return this.getReportRequestDetail(id, user);
   }
 
@@ -713,6 +952,8 @@ export class ProcurementService {
       }),
     );
 
+    await this.notifyReportApprovalResult(report, dto.action);
+
     return {
       entityId: report.id,
       status: report.status,
@@ -737,6 +978,36 @@ export class ProcurementService {
       return;
     }
     throw new ForbiddenException('forbidden');
+  }
+
+  private canManageDimensionDictionary(user: CurrentUser) {
+    return user.roles.includes('system_admin') || user.roles.includes('general_office');
+  }
+
+  private assertCanManageDimensionDictionary(user: CurrentUser) {
+    if (this.canManageDimensionDictionary(user)) {
+      return;
+    }
+
+    throw new ForbiddenException('forbidden');
+  }
+
+  private assertDimensionScope(departmentCode: string, dimensionType: string) {
+    if (!DICTIONARY_DEPARTMENT_CODES.includes(departmentCode as (typeof DICTIONARY_DEPARTMENT_CODES)[number])) {
+      throw new BadRequestException('invalid department code');
+    }
+
+    if (!DICTIONARY_DIMENSION_TYPES.includes(dimensionType as (typeof DICTIONARY_DIMENSION_TYPES)[number])) {
+      throw new BadRequestException('invalid dimension type');
+    }
+
+    if (departmentCode === 'shipping_dept' && dimensionType !== 'vessel') {
+      throw new BadRequestException('shipping_dept only supports vessel dimensionType');
+    }
+
+    if (departmentCode === 'logistics_dept' && dimensionType !== 'logistics_category') {
+      throw new BadRequestException('logistics_dept only supports logistics_category dimensionType');
+    }
   }
 
   private canViewReportRequestsAll(user: CurrentUser) {
@@ -1070,6 +1341,399 @@ export class ProcurementService {
     };
   }
 
+  private async notifyOrderPendingApproval(order: ProcurementOrderEntity, approvalLevel: 'dept' | 'final') {
+    const approverUserIds = await this.resolveOrderApproverUserIds(order.departmentCode, approvalLevel);
+    if (approverUserIds.length === 0) {
+      return;
+    }
+
+    await this.safeSendTextCard(
+      approverUserIds,
+      '采购审批待处理',
+      `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.toDepartmentLabel(order.departmentCode)} · ${this.escapeHtml(order.title)}</div><div class="highlight">金额：¥${Number(order.amount).toFixed(2)}</div>`,
+      `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
+      '立即审批',
+    );
+  }
+
+  private async notifyOrderApprovalResult(order: ProcurementOrderEntity, action: 'approve' | 'reject' | 'return') {
+    if (action === 'approve' && order.status === 'dept_approved') {
+      await this.notifyOrderPendingApproval(order, 'final');
+      return;
+    }
+
+    if (action === 'approve' && order.status === 'final_approved') {
+      await this.safeSendTextCard(
+        [order.createdBy],
+        '采购审批结果通知',
+        `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.escapeHtml(order.title)}</div><div class="highlight">审批结果：已通过</div>`,
+        `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
+        '查看详情',
+      );
+      return;
+    }
+
+    if (action === 'reject' || action === 'return') {
+      const resultText = action === 'reject' ? '已驳回' : '已退回';
+      await this.safeSendTextCard(
+        [order.createdBy],
+        '采购审批结果通知',
+        `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.escapeHtml(order.title)}</div><div class="highlight">审批结果：${resultText}</div>`,
+        `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
+        '查看详情',
+      );
+    }
+  }
+
+  private async notifyReportPendingApproval(report: ProcurementReportEntity, approvalLevel: ProcurementReportApprovalLevel) {
+    const approverUserIds = await this.resolveReportApproverUserIds(report, approvalLevel);
+    if (approverUserIds.length === 0) {
+      return;
+    }
+
+    await this.safeSendTextCard(
+      approverUserIds,
+      '报表审批待处理',
+      `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">请在系统中完成审批</div>`,
+      `https://${appEnv.APP_DOMAIN}/procurement/report-approvals`,
+      '查看报表',
+    );
+  }
+
+  private async notifyReportApprovalResult(report: ProcurementReportEntity, action: 'approve' | 'reject' | 'return') {
+    if (action === 'approve' && report.status === 'dept_approved') {
+      await this.notifyReportPendingApproval(report, 'finance');
+      return;
+    }
+
+    if (action === 'approve' && report.status === 'finance_approved') {
+      await this.notifyReportPendingApproval(report, 'final');
+      return;
+    }
+
+    if (action === 'approve' && report.status === 'final_approved') {
+      await this.safeSendTextCard(
+        [report.createdBy],
+        '报表审批结果通知',
+        `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">审批结果：已通过</div>`,
+        `https://${appEnv.APP_DOMAIN}/procurement/report-requests/${report.id}`,
+        '查看详情',
+      );
+      return;
+    }
+
+    if (action === 'reject' || action === 'return') {
+      const resultText = action === 'reject' ? '已驳回' : '已退回';
+      await this.safeSendTextCard(
+        [report.createdBy],
+        '报表审批结果通知',
+        `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">审批结果：${resultText}</div>`,
+        `https://${appEnv.APP_DOMAIN}/procurement/report-requests/${report.id}`,
+        '查看详情',
+      );
+    }
+  }
+
+  private async resolveOrderApproverUserIds(
+    departmentCode: ProcurementDepartmentCode,
+    approvalLevel: 'dept' | 'final',
+  ): Promise<string[]> {
+    if (approvalLevel === 'dept') {
+      return this.listWecomUserIdsByDepartmentCode(departmentCode);
+    }
+
+    return this.listGeneralOfficeApproverUserIds();
+  }
+
+  private async resolveReportApproverUserIds(
+    report: ProcurementReportEntity,
+    approvalLevel: ProcurementReportApprovalLevel,
+  ): Promise<string[]> {
+    if (approvalLevel === 'dept') {
+      if (report.departmentCode) {
+        return this.listWecomUserIdsByDepartmentCode(report.departmentCode);
+      }
+
+      return this.listGeneralOfficeApproverUserIds();
+    }
+
+    if (approvalLevel === 'finance') {
+      return this.listFinanceApproverUserIds();
+    }
+
+    return this.listGeneralOfficeApproverUserIds();
+  }
+
+  private async listWecomUserIdsByDepartmentCode(departmentCode: ProcurementDepartmentCode): Promise<string[]> {
+    const rows = await this.wecomUserRepository.find();
+    const userIds = rows
+      .filter((row) => row.departmentCodes.includes(departmentCode) || row.isSystemAdmin)
+      .map((row) => row.userId);
+
+    return [...new Set(userIds)];
+  }
+
+  private async listFinanceApproverUserIds(): Promise<string[]> {
+    const rows = await this.wecomUserRepository.find();
+    const userIds = rows
+      .filter((row) => row.departmentCodes.includes('finance_dept') || row.isSystemAdmin)
+      .map((row) => row.userId);
+
+    return [...new Set(userIds)];
+  }
+
+  private async listGeneralOfficeApproverUserIds(): Promise<string[]> {
+    const rows = await this.wecomUserRepository.find();
+    const userIds = rows
+      .filter((row) => row.departmentCodes.includes('general_office') || row.isSystemAdmin)
+      .map((row) => row.userId);
+
+    return [...new Set(userIds)];
+  }
+
+  private async safeSendTextCard(
+    userIds: string[],
+    title: string,
+    description: string,
+    url: string,
+    btnText = '查看详情',
+  ): Promise<void> {
+    const uniqueUserIds = [...new Set(userIds.map((item) => item.trim()).filter(Boolean))];
+    if (uniqueUserIds.length === 0) {
+      return;
+    }
+
+    const resolvedUsers = await this.wecomUserRepository.find({ where: { userId: In(uniqueUserIds) } });
+    const resolvedUserIds = [...new Set(resolvedUsers.map((item) => item.userId))];
+    if (resolvedUserIds.length === 0) {
+      return;
+    }
+
+    try {
+      const result = await this.wecomMessageService.sendTextCard({
+        userIds: resolvedUserIds,
+        title,
+        description,
+        url,
+        btnText,
+      });
+
+      if (!result.success || result.invalidUser.length > 0) {
+        this.logger.warn(
+          `wecom push partial failure: success=${String(result.success)} invalidUser=${result.invalidUser.join('|') || '-'} reason=${result.failureReason ?? '-'}`,
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.warn(`wecom push failed: ${message}`);
+    }
+  }
+
+  private async persistExportPdf(params: {
+    fileName: string;
+    category: string;
+    buffer: Buffer;
+    uploadedBy: string;
+  }): Promise<PrintResultDto> {
+    const ossKey = this.buildExportOssKey(params.category);
+
+    try {
+      await this.ossService.uploadBuffer(ossKey, params.buffer, 'application/pdf', params.fileName);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.warn(`oss upload failed for ${ossKey}: ${message}`);
+    }
+
+    const file = await this.fileRepository.save(
+      this.fileRepository.create({
+        ossKey,
+        fileName: params.fileName,
+        mimeType: 'application/pdf',
+        fileSize: params.buffer.length,
+        category: params.category,
+        uploadedBy: params.uploadedBy,
+      }),
+    );
+
+    const signature = this.ossService.createDownloadSignature(ossKey);
+    return {
+      fileId: file.id,
+      downloadUrl: signature.downloadUrl,
+    };
+  }
+
+  private buildExportOssKey(category: string): string {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+    return `${category}/${year}/${month}/${randomUUID()}.pdf`;
+  }
+
+  private buildA4Pdf(input: {
+    title: string;
+    lines: string[];
+    rightAlignedLineIndexes: number[];
+  }): Buffer {
+    const pages: string[][] = [];
+    for (let index = 0; index < input.lines.length; index += PDF_MAX_LINES_PER_PAGE) {
+      pages.push(input.lines.slice(index, index + PDF_MAX_LINES_PER_PAGE));
+    }
+
+    const pageStreams = pages.map((pageLines, pageIndex) => {
+      const commands: string[] = ['BT', '/F1 12 Tf'];
+
+      const pageTitle = `${input.title}  Page ${pageIndex + 1}/${pages.length}`;
+      commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`);
+
+      pageLines.forEach((line, lineIndex) => {
+        const globalLineIndex = pageIndex * PDF_MAX_LINES_PER_PAGE + lineIndex;
+        const isRightAligned = input.rightAlignedLineIndexes.includes(globalLineIndex);
+        const y = PDF_PAGE_HEIGHT - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
+        const x = isRightAligned
+          ? Math.max(PDF_MARGIN_LEFT, PDF_PAGE_WIDTH - PDF_MARGIN_LEFT - this.estimatePdfTextWidth(line, 12))
+          : PDF_MARGIN_LEFT;
+
+        commands.push(`1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`);
+      });
+
+      commands.push('ET');
+      return commands.join('\n');
+    });
+
+    return this.composePdf(pageStreams);
+  }
+
+  private composePdf(pageStreams: string[]): Buffer {
+    const objects: string[] = [];
+    const pageObjectIds: number[] = [];
+
+    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+
+    let nextObjectId = 4;
+    pageStreams.forEach((stream) => {
+      const pageObjectId = nextObjectId;
+      const contentObjectId = nextObjectId + 1;
+
+      pageObjectIds.push(pageObjectId);
+      objects[pageObjectId] =
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
+      objects[contentObjectId] = `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
+
+      nextObjectId += 2;
+    });
+
+    objects[2] = `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageObjectIds.length} >>`;
+
+    const maxObjectId = nextObjectId - 1;
+    let pdf = '%PDF-1.4\n';
+    const offsets: number[] = [0];
+
+    for (let id = 1; id <= maxObjectId; id += 1) {
+      const objectBody = objects[id] ?? '<< >>';
+      offsets[id] = Buffer.byteLength(pdf, 'utf8');
+      pdf += `${id} 0 obj\n${objectBody}\nendobj\n`;
+    }
+
+    const xrefOffset = Buffer.byteLength(pdf, 'utf8');
+    pdf += `xref\n0 ${maxObjectId + 1}\n`;
+    pdf += '0000000000 65535 f \n';
+
+    for (let id = 1; id <= maxObjectId; id += 1) {
+      pdf += `${String(offsets[id] ?? 0).padStart(10, '0')} 00000 n \n`;
+    }
+
+    pdf += `trailer\n<< /Size ${maxObjectId + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    return Buffer.from(pdf, 'utf8');
+  }
+
+  private wrapTextLines(text: string, maxUnitsPerLine: number): string[] {
+    const rawLines = text.replace(/\r\n/g, '\n').split('\n');
+    const wrapped: string[] = [];
+
+    rawLines.forEach((rawLine) => {
+      if (!rawLine) {
+        wrapped.push('');
+        return;
+      }
+
+      let currentLine = '';
+      let currentUnits = 0;
+      for (const char of rawLine) {
+        const charUnits = char.charCodeAt(0) > 255 ? 2 : 1;
+        if (currentUnits + charUnits > maxUnitsPerLine) {
+          wrapped.push(currentLine);
+          currentLine = char;
+          currentUnits = charUnits;
+          continue;
+        }
+
+        currentLine += char;
+        currentUnits += charUnits;
+      }
+
+      if (currentLine) {
+        wrapped.push(currentLine);
+      }
+    });
+
+    return wrapped;
+  }
+
+  private estimatePdfTextWidth(text: string, fontSize: number): number {
+    const units = Array.from(text).reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
+    return units * fontSize * 0.48;
+  }
+
+  private escapePdfText(text: string): string {
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '');
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private formatDateTime(value: Date): string {
+    return value.toISOString().replace('T', ' ').slice(0, 19);
+  }
+
+  private getReportTitle(report: ProcurementReportEntity): string {
+    if (report.reportType === 'monthly' && report.periodMonth) {
+      return `${report.periodYear}年${String(report.periodMonth).padStart(2, '0')}月采购月报`;
+    }
+
+    return `${report.periodYear}年采购年报`;
+  }
+
+  private toDepartmentLabel(code: ProcurementDepartmentCode): string {
+    const labels: Record<ProcurementDepartmentCode, string> = {
+      general_office: '总经办',
+      business_dept: '业务部',
+      finance_dept: '财务部',
+      shipping_dept: '船务部',
+      logistics_dept: '后勤部',
+    };
+    return labels[code];
+  }
+
+  private async mustFindDimensionItem(id: string): Promise<ProcurementDimensionItemEntity> {
+    const item = await this.dimensionItemRepository.findOne({ where: { id, deletedAt: IsNull() } });
+    if (!item) {
+      throw new NotFoundException('procurement dimension item not found');
+    }
+    return item;
+  }
+
   private async mustFindOrder(id: string) {
     const order = await this.orderRepository.findOne({ where: { id, deletedAt: IsNull() } });
     if (!order) {
@@ -1202,6 +1866,22 @@ export class ProcurementService {
       amount: Number(row.amount),
       status: row.status,
       submittedAt: row.submitted_at ? new Date(row.submitted_at).toISOString() : null,
+    };
+  }
+
+  private toDimensionItemDto(item: ProcurementDimensionItemEntity): DimensionItemDto {
+    return {
+      id: item.id,
+      departmentCode: item.departmentCode,
+      dimensionType: item.dimensionType,
+      dimensionKey: item.dimensionKey,
+      dimensionName: item.dimensionName,
+      sortOrder: item.sortOrder,
+      isEnabled: item.isEnabled,
+      createdBy: item.createdBy,
+      updatedBy: item.updatedBy,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
     };
   }
 

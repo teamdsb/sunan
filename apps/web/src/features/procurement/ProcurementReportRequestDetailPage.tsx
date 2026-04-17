@@ -8,6 +8,7 @@ import {
   ProcurementReportRequestStatus,
   useGetProcurementReportApprovalsQuery,
   useGetProcurementReportRequestQuery,
+  usePrintProcurementReportRequestMutation,
   useSubmitProcurementReportRequestMutation,
 } from './procurementApi';
 
@@ -29,6 +30,7 @@ export function ProcurementReportRequestDetailPage() {
   const { data: detailResponse, isLoading, refetch } = useGetProcurementReportRequestQuery(id ?? '', { skip: !id });
   const { data: approvalsResponse } = useGetProcurementReportApprovalsQuery(id ?? '', { skip: !id });
   const [submitRequest, { isLoading: isSubmitting }] = useSubmitProcurementReportRequestMutation();
+  const [printReportRequest, { isLoading: isPrinting }] = usePrintProcurementReportRequestMutation();
 
   const report = detailResponse?.data;
   const approvals = approvalsResponse?.data ?? [];
@@ -57,6 +59,16 @@ export function ProcurementReportRequestDetailPage() {
     await refetch();
   };
 
+  const handlePrint = async () => {
+    if (!id) {
+      return;
+    }
+
+    const result = await printReportRequest(id).unwrap();
+    window.open(result.data.downloadUrl, '_blank', 'noopener,noreferrer');
+    messageApi.success('PDF 已生成');
+  };
+
   if (!id) {
     return null;
   }
@@ -69,6 +81,9 @@ export function ProcurementReportRequestDetailPage() {
         <Space wrap>
           <Button onClick={() => navigate('/procurement/reports')}>返回报表页</Button>
           <Button onClick={() => navigate('/procurement/report-approvals')}>进入报表审批页</Button>
+          <Button loading={isPrinting} onClick={() => void handlePrint()}>
+            导出 PDF
+          </Button>
           {canSubmit ? (
             <Button type="primary" loading={isSubmitting} onClick={() => void handleSubmit()}>
               提交审批

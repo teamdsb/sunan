@@ -93,6 +93,10 @@ vi.mock('../features/procurement/ProcurementReportApprovalPage', () => ({
   ProcurementReportApprovalPage: () => <div>PROCUREMENT_REPORT_APPROVAL</div>,
 }));
 
+vi.mock('../features/procurement/ProcurementDictionaryAdminPage', () => ({
+  ProcurementDictionaryAdminPage: () => <div>PROCUREMENT_DICTIONARY_ADMIN</div>,
+}));
+
 function BackHrefConsumer() {
   const location = useLocation();
   const backHref = resolveBackHref('/my/reminders', location.search);
@@ -191,6 +195,7 @@ describe('AppRoutes', () => {
     [procurementRouteConfig.reports.path, 'PROCUREMENT_REPORT'],
     ['/procurement/report-requests/request-1', 'PROCUREMENT_REPORT_REQUEST_DETAIL'],
     [procurementRouteConfig.reportApprovals.path, 'PROCUREMENT_REPORT_APPROVAL'],
+    [procurementRouteConfig.dictionaries.path, 'PROCUREMENT_DICTIONARY_ADMIN'],
   ] as const)('renders %s', (path, expectedText) => {
     renderRoute(path);
     expect(screen.getByText(expectedText)).toBeInTheDocument();

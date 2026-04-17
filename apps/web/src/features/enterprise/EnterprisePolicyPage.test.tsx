@@ -70,6 +70,7 @@ describe('EnterprisePolicyPage', () => {
         keyword: 'foo',
       }),
     );
+    fireEvent.click(screen.getByRole('button', { name: /展开筛选/ }));
     const searchInput = screen.getByPlaceholderText('关键字');
     await userEvent.clear(searchInput);
     await userEvent.type(searchInput, 'bar');

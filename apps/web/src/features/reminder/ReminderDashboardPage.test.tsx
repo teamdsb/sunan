@@ -315,7 +315,7 @@ describe('ReminderDashboardPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: '展开筛选' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /展开筛选/ })).toBeInTheDocument();
     expect(screen.queryByText('对象类型')).not.toBeInTheDocument();
   });
 
@@ -326,7 +326,7 @@ describe('ReminderDashboardPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '展开筛选' }));
+    fireEvent.click(screen.getByRole('button', { name: /展开筛选/ }));
 
     expect(screen.getByText('对象类型')).toBeInTheDocument();
     expect(screen.getByText('每页条数')).toBeInTheDocument();

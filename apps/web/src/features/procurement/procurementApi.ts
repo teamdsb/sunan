@@ -8,6 +8,20 @@ export type ProcurementApprovalAction = 'approve' | 'reject' | 'return';
 export type ProcurementReportType = 'monthly' | 'yearly';
 export type ProcurementReportRequestStatus = 'draft' | 'submitted' | 'dept_approved' | 'finance_approved' | 'final_approved' | 'rejected';
 
+export interface ProcurementDimensionItem {
+  id: string;
+  departmentCode: 'shipping_dept' | 'logistics_dept';
+  dimensionType: 'vessel' | 'logistics_category';
+  dimensionKey: string;
+  dimensionName: string;
+  sortOrder: number;
+  isEnabled: boolean;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProcurementFile {
   id: string;
   fileName: string;
@@ -145,6 +159,20 @@ export interface ProcurementReportRequestCreatePayload {
   approvalChannel?: 'internal' | 'wecom_native';
 }
 
+export interface ProcurementDimensionCreatePayload {
+  departmentCode: 'shipping_dept' | 'logistics_dept';
+  dimensionType: 'vessel' | 'logistics_category';
+  dimensionKey: string;
+  dimensionName: string;
+  sortOrder?: number;
+}
+
+export interface ProcurementDimensionUpdatePayload {
+  dimensionName?: string;
+  sortOrder?: number;
+  isEnabled?: boolean;
+}
+
 export interface ProcurementReportRequestListQuery {
   reportType?: ProcurementReportType;
   periodYear?: number;
@@ -156,6 +184,28 @@ export interface ProcurementReportRequestListQuery {
 
 export const procurementApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getProcurementDimensions: builder.query<
+      { data: ProcurementDimensionItem[] },
+      { departmentCode?: 'shipping_dept' | 'logistics_dept'; isEnabled?: boolean } | void
+    >({
+      query: (params) => ({ url: '/procurement/dimensions', params }),
+      providesTags: ['ProcurementReport'],
+    }),
+    createProcurementDimension: builder.mutation<{ data: ProcurementDimensionItem }, ProcurementDimensionCreatePayload>({
+      query: (data) => ({ url: '/procurement/admin/dimensions', method: 'POST', data }),
+      invalidatesTags: ['ProcurementReport'],
+    }),
+    updateProcurementDimension: builder.mutation<
+      { data: ProcurementDimensionItem },
+      { id: string; data: ProcurementDimensionUpdatePayload }
+    >({
+      query: ({ id, data }) => ({ url: `/procurement/admin/dimensions/${id}`, method: 'PATCH', data }),
+      invalidatesTags: ['ProcurementReport'],
+    }),
+    disableProcurementDimension: builder.mutation<void, { id: string }>({
+      query: ({ id }) => ({ url: `/procurement/admin/dimensions/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['ProcurementReport'],
+    }),
     getProcurementOrders: builder.query<
       { data: ProcurementOrder[]; meta: { total: number; page: number; pageSize: number; totalPages: number } },
       ProcurementOrderListQuery | void
@@ -186,6 +236,9 @@ export const procurementApi = baseApi.injectEndpoints({
     bindProcurementOrderAttachments: builder.mutation<{ data: ProcurementOrder }, { id: string; fileIds: string[] }>({
       query: ({ id, fileIds }) => ({ url: `/procurement/orders/${id}/attachments`, method: 'POST', data: { fileIds } }),
       invalidatesTags: (_result, _error, { id }) => ['ProcurementOrder', { type: 'ProcurementOrder', id }],
+    }),
+    printProcurementOrder: builder.mutation<{ data: { fileId: string; downloadUrl: string } }, string>({
+      query: (id) => ({ url: `/procurement/orders/${id}/print`, method: 'POST' }),
     }),
     getProcurementPendingApprovals: builder.query<
       { data: ProcurementPendingTask[] },
@@ -256,6 +309,10 @@ export const procurementApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/procurement/report-requests/${id}/submit`, method: 'POST' }),
       invalidatesTags: (_result, _error, id) => ['ProcurementReportApproval', 'ProcurementApproval', { type: 'ProcurementReportApproval', id }],
     }),
+    printProcurementReportRequest: builder.mutation<{ data: { fileId: string; downloadUrl: string } }, string>({
+      query: (id) => ({ url: `/procurement/report-requests/${id}/print`, method: 'POST' }),
+      invalidatesTags: (_result, _error, id) => ['ProcurementReportApproval', { type: 'ProcurementReportApproval', id }],
+    }),
     getProcurementReportApprovals: builder.query<{ data: ProcurementApprovalRecord[] }, string>({
       query: (id) => ({ url: `/procurement/reports/${id}/approvals` }),
       providesTags: (_result, _error, id) => [{ type: 'ProcurementReportApproval', id }],
@@ -275,6 +332,10 @@ export const procurementApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetProcurementDimensionsQuery,
+  useCreateProcurementDimensionMutation,
+  useUpdateProcurementDimensionMutation,
+  useDisableProcurementDimensionMutation,
   useGetProcurementOrdersQuery,
   useGetProcurementOrderQuery,
   useCreateProcurementOrderMutation,
@@ -282,6 +343,7 @@ export const {
   useSubmitProcurementOrderMutation,
   useResubmitProcurementOrderMutation,
   useBindProcurementOrderAttachmentsMutation,
+  usePrintProcurementOrderMutation,
   useGetProcurementPendingApprovalsQuery,
   useGetProcurementOrderApprovalsQuery,
   useActionProcurementOrderApprovalMutation,
@@ -293,6 +355,7 @@ export const {
   useCreateProcurementReportRequestMutation,
   useGetProcurementReportRequestQuery,
   useSubmitProcurementReportRequestMutation,
+  usePrintProcurementReportRequestMutation,
   useGetProcurementReportApprovalsQuery,
   useActionProcurementReportApprovalMutation,
 } = procurementApi;
