@@ -68,3 +68,8 @@
 - DB 约定遵循 `docs/specs/common/db-conventions.md`
 - 认证授权遵循 `docs/specs/common/auth-spec.md`
 - 企业微信相关约束遵循 `docs/specs/wecom/*.md`
+
+## Wave 5 交付与验收
+
+- 验收归档：`docs/specs/procurement/acceptance-wave5.md`
+- 上线清单：`docs/specs/wecom/procurement-go-live-checklist.md`
