@@ -11,7 +11,13 @@ import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.
 import { EnterpriseProfileFileEntity } from 'src/database/entities/enterprise-profile-file.entity';
 import { EnterpriseProfileEntity } from 'src/database/entities/enterprise-profile.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { OfficeCategoryEntity } from 'src/database/entities/office-category.entity';
+import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit.entity';
+import { OfficeEntryEntity } from 'src/database/entities/office-entry.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
+import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
+import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
+import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.entity';
 import { ShipMonitorEntity } from 'src/database/entities/ship-monitor.entity';
 import { UserSettingsEntity } from 'src/database/entities/user-settings.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
@@ -24,6 +30,8 @@ import { Wave31710000003000 } from 'src/database/migrations/1710000003000-wave3-
 import { Wave31710000004000 } from 'src/database/migrations/1710000004000-wave3-monitor-settings';
 import { Wave31710000005000 } from 'src/database/migrations/1710000005000-wave3-certificates';
 import { Wave41710000006000 } from 'src/database/migrations/1710000006000-wave4-certificate-reminders';
+import { Wave21710000007000 } from 'src/database/migrations/1710000007000-wave2-office-portal';
+import { Wave31710000008000 } from 'src/database/migrations/1710000008000-wave3-procurement-core';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -39,6 +47,12 @@ const ALL_TEST_ENTITIES = [
   EnterprisePolicyFileEntity,
   CertificateEntity,
   CertificateFileEntity,
+  OfficeCategoryEntity,
+  OfficeEntryEntity,
+  OfficeEntryAuditEntity,
+  ProcurementOrderEntity,
+  ProcurementOrderApprovalEntity,
+  ProcurementOrderFileEntity,
   ShipMonitorEntity,
   UserSettingsEntity,
 ];
@@ -51,6 +65,8 @@ const ALL_TEST_MIGRATIONS = [
   Wave31710000004000,
   Wave31710000005000,
   Wave41710000006000,
+  Wave21710000007000,
+  Wave31710000008000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

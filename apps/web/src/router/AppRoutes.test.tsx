@@ -10,6 +10,7 @@ import { authReducer, loginSucceeded } from '../features/auth/authSlice';
 import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
 import { officeRouteConfig } from './officeRouteConfig';
+import { procurementRouteConfig } from './procurementRouteConfig';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
@@ -62,6 +63,22 @@ vi.mock('../features/office/OfficeSearchPage', () => ({
 
 vi.mock('../features/office/OfficeAdminPage', () => ({
   OfficeAdminPage: () => <div>OFFICE_ADMIN</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderListPage', () => ({
+  ProcurementOrderListPage: () => <div>PROCUREMENT_ORDER_LIST</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderCreatePage', () => ({
+  ProcurementOrderCreatePage: () => <div>PROCUREMENT_ORDER_CREATE</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderDetailPage', () => ({
+  ProcurementOrderDetailPage: () => <div>PROCUREMENT_ORDER_DETAIL</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementApprovalPage', () => ({
+  ProcurementApprovalPage: () => <div>PROCUREMENT_APPROVAL</div>,
 }));
 
 function BackHrefConsumer() {
@@ -155,6 +172,10 @@ describe('AppRoutes', () => {
     [officeRouteConfig.officeHome.path, 'OFFICE_HOME'],
     [officeRouteConfig.officeSearch.path, 'OFFICE_SEARCH'],
     [officeRouteConfig.officeAdmin.path, 'OFFICE_ADMIN'],
+    [procurementRouteConfig.orderList.path, 'PROCUREMENT_ORDER_LIST'],
+    [procurementRouteConfig.orderCreate.path, 'PROCUREMENT_ORDER_CREATE'],
+    ['/procurement/orders/order-1', 'PROCUREMENT_ORDER_DETAIL'],
+    [procurementRouteConfig.approvals.path, 'PROCUREMENT_APPROVAL'],
   ] as const)('renders %s', (path, expectedText) => {
     renderRoute(path);
     expect(screen.getByText(expectedText)).toBeInTheDocument();

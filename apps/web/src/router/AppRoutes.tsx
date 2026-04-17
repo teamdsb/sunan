@@ -13,10 +13,15 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { OfficeAdminPage } from '../features/office/OfficeAdminPage';
 import { OfficeHomePage } from '../features/office/OfficeHomePage';
 import { OfficeSearchPage } from '../features/office/OfficeSearchPage';
+import { ProcurementApprovalPage } from '../features/procurement/ProcurementApprovalPage';
+import { ProcurementOrderCreatePage } from '../features/procurement/ProcurementOrderCreatePage';
+import { ProcurementOrderDetailPage } from '../features/procurement/ProcurementOrderDetailPage';
+import { ProcurementOrderListPage } from '../features/procurement/ProcurementOrderListPage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
 import { myRouteConfig } from './myRouteConfig';
 import { officeRouteConfig } from './officeRouteConfig';
+import { procurementRouteConfig } from './procurementRouteConfig';
 import { PlaceholderPage } from './PlaceholderPage';
 
 export function AppRoutes() {
@@ -40,10 +45,10 @@ export function AppRoutes() {
           <Route path={officeRouteConfig.officeHome.path} element={<OfficeHomePage />} />
           <Route path={officeRouteConfig.officeSearch.path} element={<OfficeSearchPage />} />
           <Route path={officeRouteConfig.officeAdmin.path} element={<OfficeAdminPage />} />
-          <Route
-            path="/procurement"
-            element={<PlaceholderPage title="采购管理" description="采购管理将在后续里程碑接入审批、报表和打印能力。" />}
-          />
+          <Route path={procurementRouteConfig.orderList.path} element={<ProcurementOrderListPage />} />
+          <Route path={procurementRouteConfig.orderCreate.path} element={<ProcurementOrderCreatePage />} />
+          <Route path={procurementRouteConfig.orderDetail.path} element={<ProcurementOrderDetailPage />} />
+          <Route path={procurementRouteConfig.approvals.path} element={<ProcurementApprovalPage />} />
           <Route
             path="/workbench"
             element={<PlaceholderPage title="工作平台" description="工作平台将在后续里程碑接入部门业务模块和工作组能力。" />}
