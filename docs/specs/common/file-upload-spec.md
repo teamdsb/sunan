@@ -14,6 +14,9 @@ sunan-files/
 │   └── {year}/{month}/{uuid}.{ext}
 ├── enterprise-policies/   # 企业制度
 │   └── {year}/{month}/{uuid}.{ext}
+├── procurement/           # 采购管理附件与导出文件
+│   ├── attachments/{year}/{month}/{uuid}.{ext}
+│   └── exports/{year}/{month}/{uuid}.pdf
 ├── inspection-photos/     # 检查/整改照片
 │   └── {year}/{month}/{uuid}.{ext}
 └── meeting-records/       # 会议记录
@@ -149,6 +152,8 @@ POST /api/v1/files/from-wecom
 |---|---|---|
 | 证书文件 | PDF, JPG, PNG, JPEG | 20MB |
 | 企业制度 | PDF, DOC, DOCX | 50MB |
+| 采购附件 | PDF, JPG, PNG, DOC, DOCX, XLS, XLSX | 20MB |
+| 采购导出 | PDF | 20MB |
 | 检查照片 | JPG, PNG, JPEG | 10MB |
 | 通用附件 | PDF, JPG, PNG, DOC, DOCX, XLS, XLSX | 20MB |
 

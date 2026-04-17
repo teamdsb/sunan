@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Procurement Order API
+  version: 1.0.0
+paths:
+  /api/v1/procurement/orders:
+    get:
+      summary: 查询采购单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+            enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        - in: query
+          name: dimensionType
+          schema:
+            type: string
+            enum: [none, vessel, logistics_category]
+        - in: query
+          name: dimensionKey
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, submitted, dept_approved, final_approved, rejected]
+        - in: query
+          name: approvalChannel
+          schema:
+            type: string
+            enum: [internal, wecom_native]
+        - in: query
+          name: submittedFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: submittedTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: 新建采购单草稿
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderCreateRequest'
+      responses:
+        '201':
+          description: Created
+  /api/v1/procurement/orders/{id}:
+    get:
+      summary: 获取采购单详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: 更新采购单草稿
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderUpdateRequest'
+      responses:
+        '200':
+          description: OK
+  /api/v1/procurement/orders/{id}/submit:
+    post:
+      summary: 提交采购单进入审批
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+  /api/v1/procurement/orders/{id}/resubmit:
+    post:
+      summary: 退回后重新提交采购单
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+  /api/v1/procurement/orders/{id}/attachments:
+    post:
+      summary: 绑定采购单附件
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileIds]
+              properties:
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '201':
+          description: Created
+  /api/v1/procurement/orders/{id}/print:
+    post:
+      summary: 生成采购单 A4 PDF
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    ProcurementOrderCreateRequest:
+      type: object
+      required:
+        - departmentCode
+        - title
+        - amount
+      properties:
+        departmentCode:
+          type: string
+          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        dimensionType:
+          type: string
+          enum: [none, vessel, logistics_category]
+          default: none
+        dimensionKey:
+          type: string
+          nullable: true
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+        amount:
+          type: number
+          format: double
+        expenseDate:
+          type: string
+          format: date
+          nullable: true
+        approvalChannel:
+          type: string
+          enum: [internal, wecom_native]
+          default: internal
+    ProcurementOrderUpdateRequest:
+      type: object
+      properties:
+        dimensionType:
+          type: string
+          enum: [none, vessel, logistics_category]
+        dimensionKey:
+          type: string
+          nullable: true
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+        amount:
+          type: number
+          format: double
+        expenseDate:
+          type: string
+          format: date
+          nullable: true
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

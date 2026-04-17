@@ -2,18 +2,32 @@
 
 ## 概述
 
-使用企业微信应用消息推送 API 向指定成员发送通知。里程碑1主要用于证书到期提醒。
+系统通过企业微信应用消息 API 推送业务通知。
+
+- M1：证书到期提醒
+- M3：采购审批与报表审批提醒
+
+本期不接入企业微信原生审批流，只发送应用消息提醒。
 
 ## 推送接口
 
-**企业微信 API：**
+企业微信 API：
+
 ```
 POST https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={ACCESS_TOKEN}
 ```
 
+## 通用发送规则
+
+1. `touser` 多成员使用 `|` 分隔。
+2. `agentid` 使用自建应用 AgentID。
+3. `safe=0`（非密级消息）。
+4. 发送失败要记录 `errcode/errmsg` 与失败对象。
+5. `42001` 触发 token 刷新后重试。
+
 ## 消息类型规格
 
-### 证书到期提醒（文本卡片消息）
+### 证书到期提醒（文本卡片）
 
 ```json
 {
@@ -29,71 +43,68 @@ POST https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={ACCESS_TOKEN
 }
 ```
 
-**消息内容规则：**
-- `title`：始终为"证书到期提醒"
-- `description`：包含证书持有对象、证书类型、剩余天数、到期日期
-- `url`：深链接到系统内对应提醒详情页
-- `btntxt`："查看详情"
+### 采购审批提醒（文本卡片）
 
-### 消息发送参数规则
+适用节点：
 
-| 字段 | 规则 |
-|---|---|
-| `touser` | 多人用 `\|` 分隔；单发用具体 UserId；全员发送用 `@all`（不推荐） |
-| `agentid` | 使用系统自建应用的 AgentID |
-| `safe` | 设为 `0`（非保密消息，允许转发） |
+- 采购单提交后通知部门主管
+- 部门通过后通知总经办
+- 审批结果通知申请人
 
-## NestJS Service 接口规格
-
-```typescript
-// services/WecomMessageService
-
-interface SendTextCardOptions {
-  userIds: string[];       // 接收人 UserId 列表
-  title: string;
-  description: string;
-  url: string;
-  btnText?: string;        // 默认"查看详情"
-}
-
-interface WecomMessageService {
-  sendTextCard(options: SendTextCardOptions): Promise<{
-    invalidUser: string[];   // 发送失败的 UserId（不在企业通讯录等）
-  }>;
+```json
+{
+  "touser": "ApproverUserId",
+  "msgtype": "textcard",
+  "agentid": "{AGENT_ID}",
+  "textcard": {
+    "title": "采购审批待处理",
+    "description": "<div class=\"gray\">单号：CG202604170001</div><div class=\"normal\">后勤部 · 食堂物资采购</div><div class=\"highlight\">金额：¥12800.00</div>",
+    "url": "https://{APP_DOMAIN}/procurement/orders/{orderId}",
+    "btntxt": "立即审批"
+  }
 }
 ```
 
-## 证书提醒定时任务规格
+### 报表审批提醒（文本卡片）
 
-```typescript
-// 每日 09:00 执行
-// @Cron('0 9 * * *')
-// CertificateReminderJob
+适用节点：
 
-// 执行步骤：
-// 1. 查询 certificates 表，找出以下条件的记录：
-//    - expiry_date <= NOW() + advance_days
-//    - expiry_date > NOW()（未过期）
-//    - deleted_at IS NULL
-// 2. 查询 certificate_reminders 表，排除当天已发送且已确认的记录
-// 3. 根据 notification-spec.md 中的路由规则确定接收人
-// 4. 调用 WecomMessageService.sendTextCard
-// 5. 写入/更新 certificate_reminders 记录（status: 'sent'）
-// 6. 对于已过期的证书，同样发送提醒，status 标记为 'overdue'
+- 报表审批单提交后通知部门主管
+- 部门通过后通知财务部
+- 财务通过后通知总经办
+- 审批结果通知发起人
+
+```json
+{
+  "touser": "ApproverUserId",
+  "msgtype": "textcard",
+  "agentid": "{AGENT_ID}",
+  "textcard": {
+    "title": "报表审批待处理",
+    "description": "<div class=\"gray\">单号：BG202604170001</div><div class=\"normal\">2026年03月采购月报</div><div class=\"highlight\">请在系统中完成审批</div>",
+    "url": "https://{APP_DOMAIN}/procurement/report-approvals",
+    "btntxt": "查看报表"
+  }
+}
 ```
+
+## 频率与调用建议
+
+1. 避免在每小时 `00` 分和 `30` 分集中推送。
+2. 单成员推送频率控制在企业微信上限以内（以官方实时规则为准）。
+3. 批量消息按业务优先级拆批，避免一次全量失败。
 
 ## 错误处理
 
 | 错误 | 处理方式 |
 |---|---|
-| 接收人不存在（`invalidUser` 非空） | 记录日志，不重试 |
-| access_token 失效 | 自动刷新后重试一次 |
-| 网络超时 | 最多重试3次，间隔30秒 |
-| 全部失败 | 记录告警日志，人工处理 |
+| 接收人不存在（`invaliduser`） | 记录日志，不重试 |
+| `access_token` 失效（`42001`） | 强制刷新 token 并重试一次 |
+| 网络超时 | 最多重试 3 次，间隔 30 秒 |
+| 频率超限 | 记录告警并降速重试 |
 
-## 环境变量
+## M3 约束声明
 
-| 变量名 | 说明 |
-|---|---|
-| `WECOM_AGENT_ID` | 自建应用 AgentID |
-| `APP_DOMAIN` | 系统域名（用于生成深链接 URL） |
+1. 本期不对接企业微信原生审批 API。
+2. 本期不启用审批回调地址。
+3. 审批流消息仅作提醒，不作为审批状态唯一来源。

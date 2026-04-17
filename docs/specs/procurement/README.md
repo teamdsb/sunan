@@ -1,44 +1,61 @@
-# 采购管理模块规格索引
+# 采购管理模块规格（里程碑 M3）
 
-本目录用于承载里程碑 3 "采购管理"模块的详细规格。方向性说明见 [../../requirements/M3-采购管理.md](../../requirements/M3-%E9%87%87%E8%B4%AD%E7%AE%A1%E7%90%86.md)。
+## 模块定位
 
-当前状态：目录结构已确定，以下文件待 Codex 逐步编写。
+“采购管理”模块负责采购录单、审批、报表、打印导出与附件留存，并支持近 3 年历史查询。
 
-## API
+本期采用内部审批流实现；同时在 API/DB/状态机/审计层预留企业微信原生审批接入字段与契约。
 
-| 文件 | 状态 | 说明 |
+## 规格文档清单
+
+| 层次 | 文件 | 状态 |
 |---|---|---|
-| `api/procurement-order-api.yaml` | 待编写 | 采购申请单创建、查询、更新、提交等接口 |
-| `api/procurement-approval-api.yaml` | 待编写 | 审批动作、审批记录查询等接口 |
-| `api/procurement-report-api.yaml` | 待编写 | 月报、年报、部门明细、细分明细报表接口 |
+| API | `api/procurement-order-api.yaml` | 编写中（待评审） |
+| API | `api/procurement-approval-api.yaml` | 编写中（待评审） |
+| API | `api/procurement-report-api.yaml` | 编写中（待评审） |
+| API | `api/procurement-dictionary-api.yaml` | 编写中（待评审） |
+| DB | `db/schema.md` | 编写中（待评审） |
+| DB | `db/procurement-orders.md` | 编写中（待评审） |
+| DB | `db/procurement-order-approvals.md` | 编写中（待评审） |
+| DB | `db/procurement-order-files.md` | 编写中（待评审） |
+| DB | `db/procurement-reports.md` | 编写中（待评审） |
+| DB | `db/procurement-report-approvals.md` | 编写中（待评审） |
+| DB | `db/procurement-dimension-items.md` | 编写中（待评审） |
+| State | `state/procurement-slice.md` | 编写中（待评审） |
+| State | `state/report-slice.md` | 编写中（待评审） |
+| State | `state/dictionary-slice.md` | 编写中（待评审） |
+| UI | `ui/page-map.md` | 编写中（待评审） |
+| UI | `ui/order-create-page.md` | 编写中（待评审） |
+| UI | `ui/order-list-page.md` | 编写中（待评审） |
+| UI | `ui/approval-page.md` | 编写中（待评审） |
+| UI | `ui/report-page.md` | 编写中（待评审） |
+| UI | `ui/report-approval-page.md` | 编写中（待评审） |
+| UI | `ui/dictionary-admin-page.md` | 编写中（待评审） |
+| UI | `ui/print-export.md` | 编写中（待评审） |
 
-## DB
+## 核心范围
 
-| 文件 | 状态 | 说明 |
-|---|---|---|
-| `db/schema.md` | 待编写 | 采购模块数据库关系总览 |
-| `db/procurement-orders.md` | 待编写 | 采购申请单表设计 |
-| `db/procurement-approvals.md` | 待编写 | 审批记录表设计 |
+- 采购单：录单、草稿、提交、审批、退回、驳回
+- 报表：月报、年报、部门明细、部门细分明细
+- 报表审批：独立报表审批单（部门主管 -> 财务部 -> 总经办）
+- A4 导出：采购单与报表模板分离
+- 附件留存：采购附件上传与绑定
+- 历史查询：默认支持近 3 年
+- 字典治理：船舶部/后勤部细分项由总经办与系统管理员维护
 
-## State
+## 原生审批预留策略
 
-| 文件 | 状态 | 说明 |
-|---|---|---|
-| `state/procurement-slice.md` | 待编写 | 采购录单、列表、详情相关前端状态 |
-| `state/report-slice.md` | 待编写 | 报表筛选、聚合结果与导出状态 |
+- `approval_channel`：`internal`（本期启用）/`wecom_native`（预留）
+- 外部流程字段（可空）：
+  - `external_process_instance_id`
+  - `external_status`
+  - `external_synced_at`
+- 审批动作来源：`source=internal|external`（本期仅 `internal`）
+- 未来扩展接口仅在规格定义，不在本期生产路由上线
 
-## UI
+## 约束对齐
 
-| 文件 | 状态 | 说明 |
-|---|---|---|
-| `ui/page-map.md` | 待编写 | 页面入口、路由与权限映射 |
-| `ui/order-create-page.md` | 待编写 | 采购录单页规格 |
-| `ui/order-list-page.md` | 待编写 | 采购单列表与查询页规格 |
-| `ui/approval-page.md` | 待编写 | 审批处理页规格 |
-| `ui/report-page.md` | 待编写 | 报表页与打印导出交互规格 |
-
-## 编写顺序建议
-
-1. API 与 DB 规格先行，先固定实体、状态和查询口径。
-2. State 规格随后补齐，确保前后端状态命名一致。
-3. UI 规格最后展开，并补充打印导出细节。
+- API 约定遵循 `docs/specs/common/api-conventions.md`
+- DB 约定遵循 `docs/specs/common/db-conventions.md`
+- 认证授权遵循 `docs/specs/common/auth-spec.md`
+- 企业微信相关约束遵循 `docs/specs/wecom/*.md`
