@@ -33,6 +33,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApprovalListResponse'
   /api/v1/procurement/orders/{id}/approvals:
     get:
       summary: 查询采购单审批记录
@@ -48,6 +52,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalHistoryResponse'
   /api/v1/procurement/orders/{id}/approvals/actions:
     post:
       summary: 执行采购单审批动作
@@ -69,6 +77,10 @@ paths:
       responses:
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalActionResponse'
   /api/v1/procurement/reports/{id}/approvals:
     get:
       summary: 查询报表审批单审批记录
@@ -84,6 +96,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalHistoryResponse'
   /api/v1/procurement/reports/{id}/approvals/actions:
     post:
       summary: 执行报表审批单审批动作
@@ -105,8 +121,99 @@ paths:
       responses:
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalActionResponse'
 components:
   schemas:
+    PendingApprovalTask:
+      type: object
+      required: [entityType, entityId, approvalLevel, status, title, submittedAt]
+      properties:
+        entityType:
+          type: string
+          enum: [order, report]
+        entityId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        departmentCode:
+          type: string
+          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        approvalLevel:
+          type: string
+          enum: [dept, finance, final]
+        status:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+        approvalChannel:
+          type: string
+          enum: [internal, wecom_native]
+        externalStatus:
+          type: string
+          nullable: true
+    PendingApprovalListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PendingApprovalTask'
+    ApprovalRecord:
+      type: object
+      required: [id, approvalLevel, action, source, approvedBy, approvedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        approvalLevel:
+          type: string
+          enum: [dept, finance, final]
+        action:
+          type: string
+          enum: [approve, reject, return]
+        comment:
+          type: string
+          nullable: true
+        source:
+          type: string
+          enum: [internal, external]
+        externalEventId:
+          type: string
+          nullable: true
+        approvedBy:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+    ApprovalHistoryResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalRecord'
+    ApprovalActionResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [entityId, status]
+          properties:
+            entityId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            latestApproval:
+              $ref: '#/components/schemas/ApprovalRecord'
     ApprovalActionRequest:
       type: object
       required:

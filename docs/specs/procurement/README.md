@@ -10,28 +10,28 @@
 
 | 层次 | 文件 | 状态 |
 |---|---|---|
-| API | `api/procurement-order-api.yaml` | 编写中（待评审） |
-| API | `api/procurement-approval-api.yaml` | 编写中（待评审） |
-| API | `api/procurement-report-api.yaml` | 编写中（待评审） |
-| API | `api/procurement-dictionary-api.yaml` | 编写中（待评审） |
-| DB | `db/schema.md` | 编写中（待评审） |
-| DB | `db/procurement-orders.md` | 编写中（待评审） |
-| DB | `db/procurement-order-approvals.md` | 编写中（待评审） |
-| DB | `db/procurement-order-files.md` | 编写中（待评审） |
-| DB | `db/procurement-reports.md` | 编写中（待评审） |
-| DB | `db/procurement-report-approvals.md` | 编写中（待评审） |
-| DB | `db/procurement-dimension-items.md` | 编写中（待评审） |
-| State | `state/procurement-slice.md` | 编写中（待评审） |
-| State | `state/report-slice.md` | 编写中（待评审） |
-| State | `state/dictionary-slice.md` | 编写中（待评审） |
-| UI | `ui/page-map.md` | 编写中（待评审） |
-| UI | `ui/order-create-page.md` | 编写中（待评审） |
-| UI | `ui/order-list-page.md` | 编写中（待评审） |
-| UI | `ui/approval-page.md` | 编写中（待评审） |
-| UI | `ui/report-page.md` | 编写中（待评审） |
-| UI | `ui/report-approval-page.md` | 编写中（待评审） |
-| UI | `ui/dictionary-admin-page.md` | 编写中（待评审） |
-| UI | `ui/print-export.md` | 编写中（待评审） |
+| API | `api/procurement-order-api.yaml` | Wave 1 已收口 |
+| API | `api/procurement-approval-api.yaml` | Wave 1 已收口 |
+| API | `api/procurement-report-api.yaml` | Wave 1 已收口 |
+| API | `api/procurement-dictionary-api.yaml` | Wave 1 已收口 |
+| DB | `db/schema.md` | Wave 1 已收口 |
+| DB | `db/procurement-orders.md` | Wave 1 已收口 |
+| DB | `db/procurement-order-approvals.md` | Wave 1 已收口 |
+| DB | `db/procurement-order-files.md` | Wave 1 已收口 |
+| DB | `db/procurement-reports.md` | Wave 1 已收口 |
+| DB | `db/procurement-report-approvals.md` | Wave 1 已收口 |
+| DB | `db/procurement-dimension-items.md` | Wave 1 已收口 |
+| State | `state/procurement-slice.md` | Wave 1 已收口 |
+| State | `state/report-slice.md` | Wave 1 已收口 |
+| State | `state/dictionary-slice.md` | Wave 1 已收口 |
+| UI | `ui/page-map.md` | Wave 1 已收口 |
+| UI | `ui/order-create-page.md` | Wave 1 已收口 |
+| UI | `ui/order-list-page.md` | Wave 1 已收口 |
+| UI | `ui/approval-page.md` | Wave 1 已收口 |
+| UI | `ui/report-page.md` | Wave 1 已收口 |
+| UI | `ui/report-approval-page.md` | Wave 1 已收口 |
+| UI | `ui/dictionary-admin-page.md` | Wave 1 已收口 |
+| UI | `ui/print-export.md` | Wave 1 已收口 |
 
 ## 核心范围
 
@@ -52,6 +52,15 @@
   - `external_synced_at`
 - 审批动作来源：`source=internal|external`（本期仅 `internal`）
 - 未来扩展接口仅在规格定义，不在本期生产路由上线
+
+## Wave 1 验收对照
+
+| 验收项 | 对应规格 |
+|---|---|
+| 采购单包含 `approval_channel` 与外部流程预留字段 | `db/procurement-orders.md`、`api/procurement-order-api.yaml` |
+| 报表审批单包含 `approval_channel` 与外部流程预留字段 | `db/procurement-reports.md`、`api/procurement-report-api.yaml` |
+| 审批动作明确 `source=internal|external` | `db/procurement-order-approvals.md`、`db/procurement-report-approvals.md`、`api/procurement-approval-api.yaml` |
+| 未来桥接接口 `501 Not Implemented` 契约 | `docs/specs/wecom/approval-native-bridge-spec.md` |
 
 ## 约束对齐
 
