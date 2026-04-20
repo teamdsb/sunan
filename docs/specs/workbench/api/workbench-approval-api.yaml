@@ -1,0 +1,154 @@
+openapi: 3.0.3
+info:
+  title: Workbench Approval API
+  version: 1.0.0
+  description: 工作平台审批桥接口，定义企业微信审批发起、回调、查询与对账。
+servers:
+  - url: /api/v1
+paths:
+  /wecom/approval/launch:
+    post:
+      summary: 发起企业微信审批
+      tags: [Workbench Approval]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LaunchApprovalRequest'
+      responses:
+        '200':
+          description: Approval launched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApprovalLaunchResult'
+  /wecom/approval/callback:
+    post:
+      summary: 接收企业微信审批回调
+      tags: [Workbench Approval]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalCallbackPayload'
+      responses:
+        '200':
+          description: Callback accepted
+  /wecom/approval/instances/{processInstanceId}:
+    get:
+      summary: 获取审批实例镜像状态
+      tags: [Workbench Approval]
+      parameters:
+        - in: path
+          name: processInstanceId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApprovalInstance'
+  /wecom/approval/reconcile:
+    post:
+      summary: 对账审批实例
+      tags: [Workbench Approval]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [processInstanceIds]
+              properties:
+                processInstanceIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '202':
+          description: Reconcile queued
+components:
+  schemas:
+    LaunchApprovalRequest:
+      type: object
+      required: [moduleCode, businessRecordId, templateCode, title, applicantUserId]
+      properties:
+        moduleCode:
+          type: string
+        businessRecordId:
+          type: string
+        templateCode:
+          type: string
+        title:
+          type: string
+        applicantUserId:
+          type: string
+        summary:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+    ApprovalLaunchResult:
+      type: object
+      properties:
+        processInstanceId:
+          type: string
+        approvalChannel:
+          type: string
+          enum: [wecom_native]
+        launchStatus:
+          type: string
+          enum: [queued, started]
+        mirrorStatus:
+          type: string
+          enum: [approval_pending]
+    ApprovalCallbackPayload:
+      type: object
+      properties:
+        eventId:
+          type: string
+        processInstanceId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, canceled, terminated]
+        callbackVersion:
+          type: integer
+        payload:
+          type: object
+          additionalProperties: true
+    ApprovalInstance:
+      type: object
+      properties:
+        processInstanceId:
+          type: string
+        businessRecordId:
+          type: string
+        moduleCode:
+          type: string
+        externalStatus:
+          type: string
+        mirrorStatus:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        lastCallbackAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastReconciledAt:
+          type: string
+          format: date-time
+          nullable: true

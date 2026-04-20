@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: Workbench Statistics API
+  version: 1.0.0
+  description: 工作平台统计类接口，覆盖考勤、作业时长、油耗与月度汇总。
+servers:
+  - url: /api/v1
+paths:
+  /workbench/statistics/attendance/monthly:
+    get:
+      summary: 获取月度考勤统计
+      tags: [Workbench Statistics]
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            example: 2026-04
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+        - in: query
+          name: vesselId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceMonthlyResponse'
+  /workbench/statistics/operation-hours/monthly:
+    get:
+      summary: 获取月度作业时长统计
+      tags: [Workbench Statistics]
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            example: 2026-04
+        - in: query
+          name: moduleCode
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationHoursMonthlyResponse'
+  /workbench/statistics/fuel/monthly:
+    get:
+      summary: 获取月度油耗统计
+      tags: [Workbench Statistics]
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            example: 2026-04
+        - in: query
+          name: assetType
+          schema:
+            type: string
+            enum: [vessel, vehicle]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuelMonthlyResponse'
+components:
+  schemas:
+    AttendanceMonthlyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            month:
+              type: string
+            summary:
+              type: object
+              properties:
+                attendanceCount:
+                  type: integer
+                businessTripCount:
+                  type: integer
+                dispatchCount:
+                  type: integer
+            records:
+              type: array
+              items:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  userName:
+                    type: string
+                  morningCount:
+                    type: integer
+                  afternoonCount:
+                    type: integer
+                  businessTripCount:
+                    type: integer
+                  dispatchCount:
+                    type: integer
+    OperationHoursMonthlyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            month:
+              type: string
+            records:
+              type: array
+              items:
+                type: object
+                properties:
+                  moduleCode:
+                    type: string
+                  vesselId:
+                    type: string
+                    nullable: true
+                  workerCount:
+                    type: integer
+                  totalHours:
+                    type: number
+                    format: float
+    FuelMonthlyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            month:
+              type: string
+            records:
+              type: array
+              items:
+                type: object
+                properties:
+                  assetId:
+                    type: string
+                  assetName:
+                    type: string
+                  fuelAdded:
+                    type: number
+                    format: float
+                  fuelConsumed:
+                    type: number
+                    format: float
+                  fuelRemaining:
+                    type: number
+                    format: float
