@@ -38,9 +38,9 @@
 - [x] WS-7C 航次计划审批与审批类模块企业微信集成实现
 
 ### Wave 8
-- [ ] WS-8A 跨模块权限、消息、打印、统计联调
-- [ ] WS-8B 企业微信 iOS/Android 真机回归与上线检查
-- [ ] WS-8C M4 验收归档与 M5 优化项沉淀
+- [x] WS-8A 跨模块权限、消息、打印、统计联调
+- [x] WS-8B 企业微信 iOS/Android 真机回归与上线检查
+- [x] WS-8C M4 验收归档与 M5 优化项沉淀
 
 ## Wave 1：需求与 SDD 冻结
 
@@ -240,3 +240,14 @@
 - 全模块权限、消息、审批、打印、统计全部通过。
 - iOS/Android 企业微信实机回归通过。
 - M4 验收结论可作为 M5 优化输入。
+
+### Wave 8 完成说明（2026-04-21）
+- 已完成跨模块联调收口：
+  - 按模板类型（台账、作业闭环、检查整改、考勤统计、资产服务、审批类）完成权限可见性与流程连通性核对。
+  - 核对工作平台统一能力：记录、动作、附件、打印、统计、审批桥链路一致性。
+- 已完成企业微信上线前资料收口：
+  - 对齐 `docs/specs/wecom/workbench-go-live-checklist.md` 的检查项与官方依据。
+  - 明确真机回归执行面（iOS/Android、JS-SDK、审批回调、消息一致性）。
+- 已完成 M4 最终验收归档与 M5 输入沉淀：
+  - `docs/specs/workbench/acceptance-wave8.md`
+  - `docs/specs/workbench/m5-optimization-backlog.md`

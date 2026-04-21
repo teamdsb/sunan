@@ -29,6 +29,8 @@
 | Acceptance | `acceptance-wave5.md` | Wave 5 已归档 |
 | Acceptance | `acceptance-wave6.md` | Wave 6 已归档 |
 | Acceptance | `acceptance-wave7.md` | Wave 7 已归档 |
+| Acceptance | `acceptance-wave8.md` | Wave 8 已归档 |
+| Planning | `m5-optimization-backlog.md` | Wave 8 已沉淀 |
 
 ## 核心设计原则
 
@@ -150,3 +152,5 @@
 - Wave 5 验收归档：`docs/specs/workbench/acceptance-wave5.md`
 - Wave 6 验收归档：`docs/specs/workbench/acceptance-wave6.md`
 - Wave 7 验收归档：`docs/specs/workbench/acceptance-wave7.md`
+- Wave 8 验收归档：`docs/specs/workbench/acceptance-wave8.md`
+- M5 优化输入：`docs/specs/workbench/m5-optimization-backlog.md`
