@@ -3,9 +3,9 @@
 ## Wave 状态
 
 ### Wave 1
-- [ ] WS-1A M5 需求文档与执行计划冻结
-- [ ] WS-1B 工作平台运行时存储与接口规格冻结
-- [ ] WS-1C 企业微信审批运维与真机回归规格冻结
+- [x] WS-1A M5 需求文档与执行计划冻结
+- [x] WS-1B 工作平台运行时存储与接口规格冻结
+- [x] WS-1C 企业微信审批运维与真机回归规格冻结
 
 ### Wave 2
 - [ ] WS-2A 工作平台运行时持久化与审批实例落库
@@ -44,6 +44,28 @@
 - 工作平台运行时存储对象和审批运维对象完成冻结。
 - 遗留模块已进入工作平台模块矩阵与 UI 边界文档。
 - 企业微信真机回归与上线留痕模板可直接执行。
+
+### Wave 1 完成说明（2026-04-22）
+- 已完成 M5 需求与执行计划冻结：
+  - `docs/requirements/M5-上线强化与遗留收口.md`
+  - `docs/execplans.md`
+  - `docs/M5-execplans.md`
+- 已完成工作平台运行时存储与接口规格冻结：
+  - `docs/specs/workbench/db/workbench-runtime-schema.md`
+  - `docs/specs/workbench/api/workbench-platform-api.yaml`
+  - `docs/specs/workbench/api/workbench-approval-api.yaml`
+  - `docs/specs/workbench/state/workbench-records.md`
+  - `docs/specs/workbench/state/workbench-approval-sync.md`
+- 已完成企业微信审批运维与真机回归规格冻结：
+  - `docs/specs/wecom/approval-ops-spec.md`
+  - `docs/specs/wecom/workbench-go-live-checklist.md`
+  - `docs/specs/wecom/workbench-real-device-regression.md`
+- 已完成遗留模块边界纳入：
+  - `docs/specs/workbench/db/workbench-module-matrix.md`
+  - `docs/specs/workbench/ui/workbench-department-modules.md`
+  - `docs/specs/workbench/m5-optimization-backlog.md`
+- 已完成 Wave 1 验收归档：
+  - `docs/specs/workbench/acceptance-m5-wave1.md`
 
 ## Wave 2：工作平台底座正式化
 
