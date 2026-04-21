@@ -15,22 +15,22 @@ export class WorkbenchController {
 
   @Get('modules')
   async listModules(@CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.listModules(user) };
+    return { data: await this.service.listModules(user) };
   }
 
   @Get('modules/:moduleCode/schema')
   async getModuleSchema(@Param('moduleCode') moduleCode: string, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getModuleSchema(moduleCode, user) };
+    return { data: await this.service.getModuleSchema(moduleCode, user) };
   }
 
   @Get('dashboard')
   async getDashboard(@CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getDashboard(user) };
+    return { data: await this.service.getDashboard(user) };
   }
 
   @Get('statistics/attendance')
   async getAttendanceStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getAttendanceStatistics(user, month) };
+    return { data: await this.service.getAttendanceStatistics(user, month) };
   }
 
   @Get('records')
@@ -40,17 +40,17 @@ export class WorkbenchController {
 
   @Post('records')
   async createRecord(@Body() dto: WorkbenchRecordCreateDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.createRecord(dto, user) };
+    return { data: await this.service.createRecord(dto, user) };
   }
 
   @Get('records/:recordId')
   async getRecordDetail(@Param('recordId') recordId: string, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getRecordDetail(recordId, user) };
+    return { data: await this.service.getRecordDetail(recordId, user) };
   }
 
   @Post('records/:recordId/actions')
   async performAction(@Param('recordId') recordId: string, @Body() dto: WorkbenchRecordActionDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.performRecordAction(recordId, dto, user) };
+    return { data: await this.service.performRecordAction(recordId, dto, user) };
   }
 
   @Post('records/:recordId/attachments')
@@ -59,11 +59,11 @@ export class WorkbenchController {
     @Body() dto: WorkbenchRecordUploadAttachmentDto,
     @CurrentUserDecorator() user: CurrentUser,
   ) {
-    return { data: this.service.uploadAttachment(recordId, dto, user) };
+    return { data: await this.service.uploadAttachment(recordId, dto, user) };
   }
 
   @Get('records/:recordId/print')
   async getPrintSnapshot(@Param('recordId') recordId: string, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getPrintSnapshot(recordId, user) };
+    return { data: await this.service.getPrintSnapshot(recordId, user) };
   }
 }

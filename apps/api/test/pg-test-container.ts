@@ -26,6 +26,15 @@ import { UserSettingsEntity } from 'src/database/entities/user-settings.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
+import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
+import { WorkbenchModuleEntity } from 'src/database/entities/workbench-module.entity';
+import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
+import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
+import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
+import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { BootstrapAuth1710000000000 } from 'src/database/migrations/1710000000000-bootstrap-auth';
 import { Wave21710000001000 } from 'src/database/migrations/1710000001000-wave2-files-reference-data';
 import { Wave31710000002000 } from 'src/database/migrations/1710000002000-wave3-enterprise-profile';
@@ -37,6 +46,7 @@ import { Wave21710000007000 } from 'src/database/migrations/1710000007000-wave2-
 import { Wave31710000008000 } from 'src/database/migrations/1710000008000-wave3-procurement-core';
 import { Wave31710000009000 } from 'src/database/migrations/1710000009000-wave3-procurement-reports';
 import { Wave41710000010000 } from 'src/database/migrations/1710000010000-wave4-procurement-dimension-items';
+import { Wave51710000011000 } from 'src/database/migrations/1710000011000-wave5-workbench-runtime';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -63,6 +73,15 @@ const ALL_TEST_ENTITIES = [
   ProcurementReportApprovalEntity,
   ShipMonitorEntity,
   UserSettingsEntity,
+  WorkbenchModuleEntity,
+  WorkbenchTemplateEntity,
+  WorkbenchRecordEntity,
+  WorkbenchRecordStepEntity,
+  WorkbenchRecordAttachmentEntity,
+  WorkbenchRecordActionLogEntity,
+  WorkbenchPrintSnapshotEntity,
+  WecomApprovalTemplateBindingEntity,
+  WecomApprovalInstanceSyncEntity,
 ];
 
 const ALL_TEST_MIGRATIONS = [
@@ -77,6 +96,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave31710000008000,
   Wave31710000009000,
   Wave41710000010000,
+  Wave51710000011000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

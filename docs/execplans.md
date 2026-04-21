@@ -8,9 +8,9 @@
 - [x] WS-1C 企业微信审批运维与真机回归规格冻结
 
 ### Wave 2
-- [ ] WS-2A 工作平台运行时持久化与审批实例落库
-- [ ] WS-2B 工作平台集成测试基线建立
-- [ ] WS-2C 记录/附件/打印/步骤运行时迁移与索引治理
+- [x] WS-2A 工作平台运行时持久化与审批实例落库
+- [x] WS-2B 工作平台集成测试基线建立
+- [x] WS-2C 记录/附件/打印/步骤运行时迁移与索引治理
 
 ### Wave 3
 - [ ] WS-3A 审批桥验签、幂等、重试、对账能力实现
@@ -82,6 +82,24 @@
 - `workbench` 记录与审批实例不再依赖内存 `Map`。
 - 运行时实体可支持列表、详情、动作、附件、打印和审批查询。
 - 集成测试使用 PostgreSQL testcontainers，覆盖核心工作平台链路。
+
+### Wave 2 完成说明（2026-04-22）
+- 已完成工作平台运行时实体与迁移落地：
+  - `apps/api/src/database/entities/workbench-*.entity.ts`
+  - `apps/api/src/database/entities/wecom-approval-*.entity.ts`
+  - `apps/api/src/database/migrations/1710000011000-wave5-workbench-runtime.ts`
+- 已完成 `workbench` 服务从内存态到 PostgreSQL 持久化改造：
+  - `apps/api/src/modules/workbench/workbench.service.ts`
+  - `apps/api/src/modules/workbench/workbench.module.ts`
+  - `apps/api/src/modules/workbench/workbench.controller.ts`
+  - `apps/api/src/modules/workbench/workbench-approval.controller.ts`
+- 已完成测试基线与数据源接入：
+  - `apps/api/test/workbench.integration.spec.ts`
+  - `apps/api/test/pg-test-container.ts`
+  - `apps/api/src/database/typeorm.config.ts`
+- 本地验证结果：
+  - `pnpm --filter api build` 通过。
+  - `pnpm --filter api test -- workbench.integration.spec.ts` 在当前环境因 testcontainers 无可用容器运行时失败（`Could not find a working container runtime strategy`），需要在具备 Docker/兼容 runtime 的环境执行集成测试。
 
 ## Wave 3：企业微信审批桥强化与上线留痕
 

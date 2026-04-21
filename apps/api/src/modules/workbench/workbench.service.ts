@@ -1,6 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
+import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
+import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
+import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
+import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
 import { WorkbenchApprovalReconcileDto } from './dto/workbench-approval-reconcile.dto';
@@ -1111,16 +1119,24 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
 
 @Injectable()
 export class WorkbenchService {
-  private readonly records = new Map<string, WorkbenchRecord>();
-  private readonly approvalInstances = new Map<string, ApprovalInstance>();
+  constructor(
+    @InjectRepository(WorkbenchRecordEntity)
+    private readonly recordRepository: Repository<WorkbenchRecordEntity>,
+    @InjectRepository(WorkbenchRecordStepEntity)
+    private readonly stepRepository: Repository<WorkbenchRecordStepEntity>,
+    @InjectRepository(WorkbenchRecordAttachmentEntity)
+    private readonly attachmentRepository: Repository<WorkbenchRecordAttachmentEntity>,
+    @InjectRepository(WorkbenchRecordActionLogEntity)
+    private readonly actionLogRepository: Repository<WorkbenchRecordActionLogEntity>,
+    @InjectRepository(WorkbenchPrintSnapshotEntity)
+    private readonly printSnapshotRepository: Repository<WorkbenchPrintSnapshotEntity>,
+    @InjectRepository(WecomApprovalInstanceSyncEntity)
+    private readonly approvalSyncRepository: Repository<WecomApprovalInstanceSyncEntity>,
+  ) {}
 
-  constructor() {
-    this.seedRecords();
-  }
-
-  listModules(user: CurrentUser) {
+  async listModules(user: CurrentUser) {
     const visibleModules = this.listVisibleModules(user);
-    const pendingMap = this.computePendingCounts(user);
+    const pendingMap = await this.computePendingCounts(user);
 
     return visibleModules.map((moduleItem) => ({
       moduleCode: moduleItem.moduleCode,
@@ -1135,7 +1151,7 @@ export class WorkbenchService {
     }));
   }
 
-  getModuleSchema(moduleCode: string, user: CurrentUser) {
+  async getModuleSchema(moduleCode: string, user: CurrentUser) {
     const moduleItem = this.mustGetModule(moduleCode);
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
@@ -1155,9 +1171,9 @@ export class WorkbenchService {
     return schema;
   }
 
-  getDashboard(user: CurrentUser) {
-    const modules = this.listModules(user);
-    const visibleRecords = this.listVisibleRecords(user);
+  async getDashboard(user: CurrentUser) {
+    const modules = await this.listModules(user);
+    const visibleRecords = await this.listVisibleRecords(user);
     const pendingTotal = visibleRecords.filter((record) => PENDING_STATUSES.has(record.status)).length;
     const approvalPendingTotal = visibleRecords.filter((record) => record.status === 'approval_pending').length;
 
@@ -1177,9 +1193,9 @@ export class WorkbenchService {
     };
   }
 
-  getAttendanceStatistics(user: CurrentUser, month?: string) {
+  async getAttendanceStatistics(user: CurrentUser, month?: string) {
     const monthPrefix = this.normalizeMonth(month);
-    const visibleRecords = this.listVisibleRecords(user);
+    const visibleRecords = await this.listVisibleRecords(user);
     const recordsInMonth = visibleRecords.filter((record) => record.occurredAt.startsWith(monthPrefix));
 
     const attendanceModules = WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics');
@@ -1243,11 +1259,11 @@ export class WorkbenchService {
     };
   }
 
-  listRecords(query: WorkbenchRecordListQueryDto, user: CurrentUser) {
+  async listRecords(query: WorkbenchRecordListQueryDto, user: CurrentUser) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
 
-    let records = this.listVisibleRecords(user);
+    let records = await this.listVisibleRecords(user);
 
     if (query.moduleCode) {
       records = records.filter((record) => record.moduleCode === query.moduleCode);
@@ -1287,7 +1303,7 @@ export class WorkbenchService {
     };
   }
 
-  createRecord(dto: WorkbenchRecordCreateDto, user: CurrentUser) {
+  async createRecord(dto: WorkbenchRecordCreateDto, user: CurrentUser) {
     const moduleItem = this.mustGetModule(dto.moduleCode);
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
@@ -1314,7 +1330,8 @@ export class WorkbenchService {
       throw new BadRequestException('Wave 7 unsupported template type');
     }
 
-    const nowIso = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
     const steps = this.buildInitialSteps(moduleItem.moduleCode);
     const initialStatus =
       moduleItem.templateType === 'ledger_form'
@@ -1323,28 +1340,55 @@ export class WorkbenchService {
           ? 'submitted'
           : 'assigned';
 
-    const record: WorkbenchRecord = {
-      id: randomUUID(),
+    const recordEntity = this.recordRepository.create({
       moduleCode: dto.moduleCode,
       templateCode: `${dto.moduleCode}_v1`,
+      recordNo: this.buildRecordNo(),
+      recordSource: 'manual',
       title: dto.title.trim(),
       summary: dto.summary.trim(),
       status: initialStatus,
+      departmentCode: moduleItem.departmentCode,
       vesselId: dto.vesselId?.trim() || null,
-      occurredAt: dto.occurredAt ?? nowIso,
       approvalChannel: 'internal',
       externalProcessInstanceId: null,
       externalStatus: null,
       ownerUserId: user.userId,
-      visibleRoles: [...moduleItem.visibleRoles],
+      applicantUserId: user.userId,
+      assigneeUserId: null,
+      reviewerUserId: null,
+      occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : now,
+      submittedAt: initialStatus === 'submitted' ? now : null,
+      closedAt: null,
       payload: dto.payload ?? {},
-      steps,
-      attachments: [],
-      actionLogs: [],
-    };
+    });
 
-    this.appendActionLog(record, {
+    const savedRecord = await this.recordRepository.save(recordEntity);
+
+    if (steps.length > 0) {
+      await this.stepRepository.save(
+        steps.map((step, index) =>
+          this.stepRepository.create({
+            businessRecordId: savedRecord.id,
+            stepCode: step.stepCode,
+            stepName: step.stepName,
+            stepType: 'normal',
+            sequenceNo: index + 1,
+            status: step.status,
+            rectificationRequired: step.rectificationRequired,
+            rectificationStatus: step.rectificationStatus,
+            checkResult: null,
+            completedBy: null,
+            completedAt: null,
+            stepPayload: {},
+          }),
+        ),
+      );
+    }
+
+    await this.appendActionLog(savedRecord.id, {
       actionType: 'create_record',
+      source: 'manual',
       operatorUserId: user.userId,
       fromStatus: initialStatus,
       toStatus: initialStatus,
@@ -1359,31 +1403,36 @@ export class WorkbenchService {
                 ? 'Wave 7 资产服务录单'
                 : moduleItem.templateType === 'wecom_approval'
                   ? 'Wave 7 审批类录单'
-            : 'Wave 3 台账录单',
+                  : 'Wave 3 台账录单',
+      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
     });
 
-    this.records.set(record.id, record);
-
-    return this.toRecordDetail(record);
+    return this.getRecordDetail(savedRecord.id, user);
   }
 
-  getRecordDetail(recordId: string, user: CurrentUser) {
-    const record = this.mustGetRecord(recordId);
+  async getRecordDetail(recordId: string, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
-    return this.toRecordDetail(record);
+    const hydrated = await this.hydrateRecord(record);
+    return this.toRecordDetail(hydrated);
   }
 
-  performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
-    const record = this.mustGetRecord(recordId);
+  async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
+
+    const steps = await this.stepRepository.find({
+      where: { businessRecordId: record.id },
+      order: { sequenceNo: 'ASC', createdAt: 'ASC' },
+    });
 
     const fromStatus = record.status;
 
     const moduleItem = this.mustGetModule(record.moduleCode);
     const isInspectionRectification = moduleItem.templateType === 'inspection_rectification';
 
-    if (dto.actionType === 'start' && record.steps.length > 0) {
-      const firstPending = record.steps.find((step) => step.status === 'pending');
+    if (dto.actionType === 'start' && steps.length > 0) {
+      const firstPending = steps.find((step) => step.status === 'pending');
       if (firstPending) {
         firstPending.status = 'in_progress';
       }
@@ -1394,7 +1443,7 @@ export class WorkbenchService {
         throw new BadRequestException('payload.stepCode is required for complete_step');
       }
 
-      const step = record.steps.find((item) => item.stepCode === stepCode);
+      const step = steps.find((item) => item.stepCode === stepCode);
       if (!step) {
         throw new NotFoundException('step not found');
       }
@@ -1415,9 +1464,11 @@ export class WorkbenchService {
 
       if (step.status !== 'completed') {
         step.status = 'completed';
+        step.completedBy = user.userId;
+        step.completedAt = new Date();
       }
 
-      const nextPending = record.steps.find((item) => item.status === 'pending');
+      const nextPending = steps.find((item) => item.status === 'pending');
       if (nextPending) {
         nextPending.status = 'in_progress';
         record.status = 'in_progress';
@@ -1425,7 +1476,7 @@ export class WorkbenchService {
         record.status = 'pending_review';
       }
     } else if (dto.actionType === 'request_rework' && isInspectionRectification) {
-      const inProgressStep = record.steps.find((step) => step.status === 'in_progress');
+      const inProgressStep = steps.find((step) => step.status === 'in_progress');
       if (inProgressStep) {
         inProgressStep.rectificationRequired = true;
         inProgressStep.rectificationStatus = 'rework_required';
@@ -1435,12 +1486,26 @@ export class WorkbenchService {
       record.status = this.resolveNextStatus(fromStatus, dto.actionType);
     }
 
-    this.appendActionLog(record, {
+    if (record.status === 'closed') {
+      record.closedAt = new Date();
+    }
+    if (dto.actionType === 'submit' && !record.submittedAt) {
+      record.submittedAt = new Date();
+    }
+
+    await this.recordRepository.save(record);
+    if (steps.length > 0) {
+      await this.stepRepository.save(steps);
+    }
+
+    await this.appendActionLog(record.id, {
       actionType: dto.actionType,
+      source: 'manual',
       operatorUserId: user.userId,
       fromStatus,
       toStatus: record.status,
       comment: dto.comment ?? null,
+      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
     });
 
     return {
@@ -1450,53 +1515,97 @@ export class WorkbenchService {
     };
   }
 
-  uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
-    const record = this.mustGetRecord(recordId);
+  async uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
 
-    const uploadedAt = new Date().toISOString();
-    const attachment: WorkbenchAttachment = {
-      id: randomUUID(),
-      category: dto.category,
-      fileId: dto.fileId,
-      fileName: `附件-${dto.fileId}`,
-      uploadedAt,
-    };
+    let stepId: string | null = null;
+    if (dto.stepCode?.trim()) {
+      const step = await this.stepRepository.findOne({
+        where: {
+          businessRecordId: record.id,
+          stepCode: dto.stepCode.trim(),
+        },
+      });
+      if (!step) {
+        throw new NotFoundException('step not found');
+      }
+      stepId = step.id;
+    }
 
-    record.attachments = [...record.attachments, attachment];
-    this.appendActionLog(record, {
+    const uploadedAt = new Date();
+    const attachment = await this.attachmentRepository.save(
+      this.attachmentRepository.create({
+        businessRecordId: record.id,
+        stepId,
+        category: dto.category,
+        fileId: dto.fileId,
+        fileName: `附件-${dto.fileId}`,
+        mimeType: 'application/octet-stream',
+        storagePath: null,
+        uploadedBy: user.userId,
+        uploadedAt,
+        remark: dto.remark ?? null,
+      }),
+    );
+
+    await this.appendActionLog(record.id, {
       actionType: 'upload_attachment',
+      source: 'manual',
       operatorUserId: user.userId,
       fromStatus: record.status,
       toStatus: record.status,
       comment: dto.remark ?? null,
+      payloadDigest: null,
     });
 
-    return attachment;
-  }
-
-  getPrintSnapshot(recordId: string, user: CurrentUser) {
-    const record = this.mustGetRecord(recordId);
-    this.assertRecordVisible(record, user);
-
     return {
-      businessRecordId: record.id,
-      templateVersion: 'v1',
-      renderedFileId: `print-${record.id}`,
-      renderedAt: new Date().toISOString(),
-      snapshotData: {
-        title: record.title,
-        status: record.status,
-        moduleCode: record.moduleCode,
-        summary: record.summary,
-        payload: record.payload,
-        steps: record.steps,
-      },
+      id: attachment.id,
+      category: attachment.category,
+      fileId: attachment.fileId,
+      fileName: attachment.fileName,
+      uploadedAt: attachment.uploadedAt.toISOString(),
     };
   }
 
-  launchApproval(dto: WorkbenchApprovalLaunchDto, user: CurrentUser) {
-    const record = this.mustGetRecord(dto.businessRecordId);
+  async getPrintSnapshot(recordId: string, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId);
+    this.assertRecordVisible(record, user);
+    const hydrated = await this.hydrateRecord(record);
+
+    const renderedAt = new Date();
+    const snapshotData = {
+      title: hydrated.title,
+      status: hydrated.status,
+      moduleCode: hydrated.moduleCode,
+      summary: hydrated.summary,
+      payload: hydrated.payload,
+      steps: hydrated.steps,
+    };
+
+    const snapshot = await this.printSnapshotRepository.save(
+      this.printSnapshotRepository.create({
+        businessRecordId: hydrated.id,
+        templateVersion: 'v1',
+        renderedFileId: `print-${hydrated.id}`,
+        renderedFormat: 'pdf',
+        renderedAt,
+        renderedBy: user.userId,
+        snapshotData,
+      }),
+    );
+
+    return {
+      businessRecordId: hydrated.id,
+      templateVersion: snapshot.templateVersion,
+      renderedFileId: snapshot.renderedFileId,
+      renderedAt: snapshot.renderedAt.toISOString(),
+      snapshotData,
+    };
+  }
+
+  async launchApproval(dto: WorkbenchApprovalLaunchDto, user: CurrentUser) {
+    const record = await this.mustGetRecord(dto.businessRecordId);
     this.assertRecordVisible(record, user);
     const moduleItem = this.mustGetModule(record.moduleCode);
 
@@ -1509,32 +1618,45 @@ export class WorkbenchService {
     }
 
     const processInstanceId = `wbpi_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const now = new Date().toISOString();
+    const now = new Date();
 
-    const instance: ApprovalInstance = {
-      processInstanceId,
-      businessRecordId: record.id,
-      moduleCode: record.moduleCode,
-      externalStatus: 'pending',
-      mirrorStatus: 'approval_pending',
-      startedAt: now,
-      lastCallbackAt: null,
-      lastReconciledAt: null,
-      callbackVersion: 0,
-    };
+    await this.approvalSyncRepository.save(
+      this.approvalSyncRepository.create({
+        businessRecordId: record.id,
+        moduleCode: record.moduleCode,
+        approvalChannel: 'wecom_native',
+        processInstanceId,
+        wecomTemplateId: null,
+        externalStatus: 'pending',
+        internalMirrorStatus: 'approval_pending',
+        approvalSyncStatus: 'pending',
+        startedBy: user.userId,
+        startedAt: now,
+        lastCallbackAt: null,
+        lastReconciledAt: null,
+        callbackVersion: 0,
+        retryCount: 0,
+        lastRetryAt: null,
+        syncErrorCode: null,
+        syncErrorMessage: null,
+        rawPayloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
+      }),
+    );
 
-    this.approvalInstances.set(processInstanceId, instance);
     record.approvalChannel = 'wecom_native';
     record.externalProcessInstanceId = processInstanceId;
     record.externalStatus = 'pending';
     record.status = 'approval_pending';
+    await this.recordRepository.save(record);
 
-    this.appendActionLog(record, {
+    await this.appendActionLog(record.id, {
       actionType: 'launch_approval',
+      source: 'manual',
       operatorUserId: user.userId,
       fromStatus: 'submitted',
       toStatus: 'approval_pending',
       comment: dto.summary ?? null,
+      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
     });
 
     const launchStatus: LaunchStatus = 'started';
@@ -1543,12 +1665,14 @@ export class WorkbenchService {
       processInstanceId,
       approvalChannel: 'wecom_native' as const,
       launchStatus,
-      mirrorStatus: instance.mirrorStatus,
+      mirrorStatus: 'approval_pending',
     };
   }
 
-  handleApprovalCallback(dto: WorkbenchApprovalCallbackDto) {
-    const instance = this.approvalInstances.get(dto.processInstanceId);
+  async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto) {
+    const instance = await this.approvalSyncRepository.findOne({
+      where: { processInstanceId: dto.processInstanceId },
+    });
     if (!instance) {
       throw new NotFoundException('approval instance not found');
     }
@@ -1562,24 +1686,30 @@ export class WorkbenchService {
     }
 
     const mirrorStatus = this.toMirrorStatus(dto.status);
-    const now = new Date().toISOString();
+    const now = new Date();
 
     instance.externalStatus = dto.status;
-    instance.mirrorStatus = mirrorStatus;
+    instance.internalMirrorStatus = mirrorStatus;
+    instance.approvalSyncStatus = 'callback_received';
     instance.lastCallbackAt = now;
     instance.callbackVersion = dto.callbackVersion;
+    instance.rawPayloadDigest = dto.payload ? JSON.stringify(dto.payload) : null;
 
-    const record = this.mustGetRecord(instance.businessRecordId);
+    const record = await this.mustGetRecord(instance.businessRecordId);
     const fromStatus = record.status;
     record.externalStatus = dto.status;
     record.status = mirrorStatus;
 
-    this.appendActionLog(record, {
+    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.save(record)]);
+
+    await this.appendActionLog(record.id, {
       actionType: 'approval_callback',
-      operatorUserId: 'wecom_callback',
+      source: 'callback',
+      operatorUserId: null,
       fromStatus,
       toStatus: mirrorStatus,
       comment: `eventId=${dto.eventId}`,
+      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
     });
 
     return {
@@ -1590,13 +1720,13 @@ export class WorkbenchService {
     };
   }
 
-  getApprovalInstance(processInstanceId: string, user: CurrentUser) {
-    const instance = this.approvalInstances.get(processInstanceId);
+  async getApprovalInstance(processInstanceId: string, user: CurrentUser) {
+    const instance = await this.approvalSyncRepository.findOne({ where: { processInstanceId } });
     if (!instance) {
       throw new NotFoundException('approval instance not found');
     }
 
-    const record = this.mustGetRecord(instance.businessRecordId);
+    const record = await this.mustGetRecord(instance.businessRecordId);
     this.assertRecordVisible(record, user);
 
     return {
@@ -1604,27 +1734,36 @@ export class WorkbenchService {
       businessRecordId: instance.businessRecordId,
       moduleCode: instance.moduleCode,
       externalStatus: instance.externalStatus,
-      mirrorStatus: instance.mirrorStatus,
-      startedAt: instance.startedAt,
-      lastCallbackAt: instance.lastCallbackAt,
-      lastReconciledAt: instance.lastReconciledAt,
+      mirrorStatus: instance.internalMirrorStatus,
+      startedAt: instance.startedAt.toISOString(),
+      lastCallbackAt: instance.lastCallbackAt ? instance.lastCallbackAt.toISOString() : null,
+      lastReconciledAt: instance.lastReconciledAt ? instance.lastReconciledAt.toISOString() : null,
     };
   }
 
-  reconcileApprovals(dto: WorkbenchApprovalReconcileDto, user: CurrentUser) {
-    const reconciled: string[] = [];
+  async reconcileApprovals(dto: WorkbenchApprovalReconcileDto, user: CurrentUser) {
+    const instances = await this.approvalSyncRepository.find({
+      where: { processInstanceId: In(dto.processInstanceIds) },
+    });
+    const instanceMap = new Map(instances.map((instance) => [instance.processInstanceId, instance]));
 
+    const reconciled: string[] = [];
     for (const processInstanceId of dto.processInstanceIds) {
-      const instance = this.approvalInstances.get(processInstanceId);
+      const instance = instanceMap.get(processInstanceId);
       if (!instance) {
         continue;
       }
 
-      const record = this.mustGetRecord(instance.businessRecordId);
+      const record = await this.mustGetRecord(instance.businessRecordId);
       this.assertRecordVisible(record, user);
 
-      instance.lastReconciledAt = new Date().toISOString();
+      instance.lastReconciledAt = new Date();
+      instance.approvalSyncStatus = 'reconciled';
       reconciled.push(processInstanceId);
+    }
+
+    if (instances.length > 0) {
+      await this.approvalSyncRepository.save(instances);
     }
 
     return {
@@ -1637,22 +1776,47 @@ export class WorkbenchService {
     return WORKBENCH_MODULES.filter((moduleItem) => this.hasRoleAccess(user, moduleItem.visibleRoles)).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
-  private listVisibleRecords(user: CurrentUser) {
-    return [...this.records.values()]
-      .filter((record) => this.hasRoleAccess(user, record.visibleRoles))
-      .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1));
+  private async listVisibleRecords(user: CurrentUser) {
+    const visibleModules = this.listVisibleModules(user);
+    const moduleCodes = visibleModules.map((moduleItem) => moduleItem.moduleCode);
+    if (moduleCodes.length === 0) {
+      return [];
+    }
+
+    const records = await this.recordRepository.find({
+      where: {
+        moduleCode: In(moduleCodes),
+      },
+      order: {
+        occurredAt: 'DESC',
+      },
+    });
+
+    return records.map((record) => this.toRecordModel(record));
   }
 
-  private computePendingCounts(user: CurrentUser) {
-    const result = new Map<string, number>();
-    const visibleRecords = this.listVisibleRecords(user);
+  private async computePendingCounts(user: CurrentUser) {
+    const moduleCodes = this.listVisibleModules(user).map((moduleItem) => moduleItem.moduleCode);
+    if (moduleCodes.length === 0) {
+      return new Map<string, number>();
+    }
 
-    for (const record of visibleRecords) {
-      if (!PENDING_STATUSES.has(record.status)) {
-        continue;
+    const rows = (await this.recordRepository
+      .createQueryBuilder('record')
+      .select('record.module_code', 'moduleCode')
+      .addSelect('COUNT(*)', 'pendingCount')
+      .where('record.module_code IN (:...moduleCodes)', { moduleCodes })
+      .andWhere('record.status IN (:...statuses)', { statuses: [...PENDING_STATUSES] })
+      .groupBy('record.module_code')
+      .getRawMany()) as Array<{ modulecode?: string; moduleCode?: string; pendingcount?: string; pendingCount?: string }>;
+
+    const result = new Map<string, number>();
+    for (const row of rows) {
+      const moduleCode = row.moduleCode ?? row.modulecode;
+      const pendingCount = Number(row.pendingCount ?? row.pendingcount ?? 0);
+      if (moduleCode) {
+        result.set(moduleCode, pendingCount);
       }
-      const current = result.get(record.moduleCode) ?? 0;
-      result.set(record.moduleCode, current + 1);
     }
 
     return result;
@@ -1725,8 +1889,8 @@ export class WorkbenchService {
     };
   }
 
-  private mustGetRecord(recordId: string) {
-    const record = this.records.get(recordId);
+  private async mustGetRecord(recordId: string) {
+    const record = await this.recordRepository.findOne({ where: { id: recordId } });
     if (!record) {
       throw new NotFoundException('workbench record not found');
     }
@@ -1741,8 +1905,9 @@ export class WorkbenchService {
     return moduleItem;
   }
 
-  private assertRecordVisible(record: WorkbenchRecord, user: CurrentUser) {
-    if (!this.hasRoleAccess(user, record.visibleRoles)) {
+  private assertRecordVisible(record: WorkbenchRecordEntity, user: CurrentUser) {
+    const moduleItem = this.mustGetModule(record.moduleCode);
+    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
     }
   }
@@ -1757,6 +1922,64 @@ export class WorkbenchService {
       occurredAt: record.occurredAt,
       approvalChannel: record.approvalChannel,
     };
+  }
+
+  private toRecordModel(record: WorkbenchRecordEntity, steps: WorkbenchStep[] = [], attachments: WorkbenchAttachment[] = [], actionLogs: WorkbenchActionLog[] = []) {
+    const moduleItem = this.mustGetModule(record.moduleCode);
+    return {
+      id: record.id,
+      moduleCode: record.moduleCode,
+      templateCode: record.templateCode,
+      title: record.title,
+      summary: record.summary,
+      status: record.status,
+      vesselId: record.vesselId,
+      occurredAt: record.occurredAt.toISOString(),
+      approvalChannel: record.approvalChannel as ApprovalChannel,
+      externalProcessInstanceId: record.externalProcessInstanceId,
+      externalStatus: record.externalStatus,
+      ownerUserId: record.ownerUserId,
+      visibleRoles: [...moduleItem.visibleRoles],
+      payload: record.payload ?? {},
+      steps,
+      attachments,
+      actionLogs,
+    };
+  }
+
+  private async hydrateRecord(record: WorkbenchRecordEntity) {
+    const [steps, attachments, actionLogs] = await Promise.all([
+      this.stepRepository.find({ where: { businessRecordId: record.id }, order: { sequenceNo: 'ASC', createdAt: 'ASC' } }),
+      this.attachmentRepository.find({ where: { businessRecordId: record.id }, order: { uploadedAt: 'DESC', createdAt: 'DESC' } }),
+      this.actionLogRepository.find({ where: { businessRecordId: record.id }, order: { createdAt: 'DESC' } }),
+    ]);
+
+    return this.toRecordModel(
+      record,
+      steps.map((item) => ({
+        stepCode: item.stepCode,
+        stepName: item.stepName,
+        status: item.status as WorkbenchStep['status'],
+        rectificationRequired: item.rectificationRequired,
+        rectificationStatus: item.rectificationStatus,
+      })),
+      attachments.map((item) => ({
+        id: item.id,
+        category: item.category,
+        fileId: item.fileId,
+        fileName: item.fileName,
+        uploadedAt: item.uploadedAt.toISOString(),
+      })),
+      actionLogs.map((item) => ({
+        id: item.id,
+        actionType: item.actionType,
+        operatorUserId: item.operatorUserId ?? 'system',
+        fromStatus: item.fromStatus ?? '',
+        toStatus: item.toStatus ?? '',
+        comment: item.comment,
+        createdAt: item.createdAt.toISOString(),
+      })),
+    );
   }
 
   private resolveNextStatus(currentStatus: string, actionType: WorkbenchRecordActionDto['actionType']) {
@@ -1799,347 +2022,38 @@ export class WorkbenchService {
     }
   }
 
-  private appendActionLog(
-    record: WorkbenchRecord,
+  private async appendActionLog(
+    businessRecordId: string,
     log: {
       actionType: string;
-      operatorUserId: string;
-      fromStatus: string;
-      toStatus: string;
+      source: string;
+      operatorUserId: string | null;
+      fromStatus: string | null;
+      toStatus: string | null;
       comment: string | null;
+      payloadDigest: string | null;
     },
   ) {
-    const actionLog: WorkbenchActionLog = {
-      id: randomUUID(),
-      actionType: log.actionType,
-      operatorUserId: log.operatorUserId,
-      fromStatus: log.fromStatus,
-      toStatus: log.toStatus,
-      comment: log.comment,
-      createdAt: new Date().toISOString(),
-    };
-
-    record.actionLogs = [actionLog, ...record.actionLogs];
+    await this.actionLogRepository.save(
+      this.actionLogRepository.create({
+        businessRecordId,
+        actionType: log.actionType,
+        source: log.source,
+        operatorUserId: log.operatorUserId,
+        fromStatus: log.fromStatus,
+        toStatus: log.toStatus,
+        comment: log.comment,
+        payloadDigest: log.payloadDigest,
+      }),
+    );
   }
 
-  private seedRecords() {
-    const seedRows: WorkbenchRecord[] = [
-      {
-        id: 'wb-record-ledger-001',
-        moduleCode: 'goa_training',
-        templateCode: 'goa_training_v1',
-        title: '岗前培训记录（新入职船员）',
-        summary: '完成岗前安全培训并记录学习进度。',
-        status: 'submitted',
-        vesselId: null,
-        occurredAt: '2026-04-21T02:00:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'goa_admin_1',
-        visibleRoles: ['system_admin', 'general_office'],
-        payload: {
-          trainingType: '岗前培训',
-          trainer: '王教官',
-          hours: 4,
-          participants: '苏南012、苏南022新入职船员',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-ledger-004',
-        moduleCode: 'business_ship_sign',
-        templateCode: 'business_ship_sign_v1',
-        title: '签船记录-远洋货轮A',
-        summary: '客户现场签船与费用确认记录。',
-        status: 'submitted',
-        vesselId: null,
-        occurredAt: '2026-04-21T03:20:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'business_user_1',
-        visibleRoles: ['system_admin', 'general_office', 'business'],
-        payload: {
-          customerName: '陈先生',
-          vesselName: '远洋货轮A',
-          imoOrCallSign: 'IMO9988776',
-          agreementNo: 'XY-2026-0401',
-          fee: 12000,
-          serviceOwner: '赵主管',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-attendance-001',
-        moduleCode: 'finance_attendance',
-        templateCode: 'finance_attendance_v1',
-        title: '财务统计-4月上旬打卡汇总',
-        summary: '财务部员工打卡与外派统计。',
-        status: 'submitted',
-        vesselId: null,
-        occurredAt: '2026-04-21T01:10:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'finance_user_1',
-        visibleRoles: ['system_admin', 'general_office', 'finance'],
-        payload: {
-          employeeName: '李会计',
-          period: 'am',
-          locationInRange: 'true',
-          dutyType: 'normal',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-attendance-002',
-        moduleCode: 'shipping_attendance',
-        templateCode: 'shipping_attendance_v1',
-        title: '船员考勤-苏南012（4月21日）',
-        summary: '船员早班签到与出勤类型记录。',
-        status: 'submitted',
-        vesselId: 'sunan-012',
-        occurredAt: '2026-04-21T08:10:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'crew_012',
-        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
-        payload: {
-          crewName: '周水手',
-          period: 'pm',
-          locationInRange: 'true',
-          dutyType: 'dispatch',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-asset-001',
-        moduleCode: 'logistics_warehouse',
-        templateCode: 'logistics_warehouse_v1',
-        title: '仓库盘点记录（4月）',
-        summary: '后勤仓库月度盘点并补齐缺口。',
-        status: 'submitted',
-        vesselId: null,
-        occurredAt: '2026-04-21T02:40:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'logistics_user_1',
-        visibleRoles: ['system_admin', 'general_office', 'logistics'],
-        payload: {
-          materialName: '吸油毡',
-          quantity: 320,
-          operationType: '盘点',
-          remark: '缺口12件，已申请补货',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-approval-002',
-        moduleCode: 'shipping_fuel_bunkering_approval',
-        templateCode: 'shipping_fuel_bunkering_approval_v1',
-        title: '燃油加注审批（苏南012）',
-        summary: '申请加注低硫燃油用于下个航次。',
-        status: 'submitted',
-        vesselId: 'sunan-012',
-        occurredAt: '2026-04-21T03:50:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'crew_012',
-        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
-        payload: {
-          vesselName: '苏南012',
-          fuelType: '低硫燃油',
-          requestedAmount: 25,
-          reason: '执行北海至钦州航次保障需求',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-flow-001',
-        moduleCode: 'business_operation_flow',
-        templateCode: 'business_operation_flow_v1',
-        title: '围油栏作业流程（泊位B3）',
-        summary: '业务部作业闭环四步执行。',
-        status: 'in_progress',
-        vesselId: 'sunan-012',
-        occurredAt: '2026-04-21T05:10:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'business_op_001',
-        visibleRoles: ['system_admin', 'general_office', 'business'],
-        payload: {
-          operationName: '围油栏布设',
-          vesselName: '苏南012',
-          berth: 'B3',
-          teamLead: '赵班长',
-        },
-        steps: [
-          { stepCode: 'pre_shift_meeting', stepName: '班前会议', status: 'completed', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'pre_operation_check', stepName: '作业前检查工作', status: 'in_progress', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'patrol_record', stepName: '巡查记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'completion_confirmation', stepName: '完工确认记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-        ],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-flow-002',
-        moduleCode: 'zhongchuan_operation_flow',
-        templateCode: 'zhongchuan_operation_flow_v1',
-        title: '中船工作组日常作业（4月21日）',
-        summary: '中船工作组五步闭环。',
-        status: 'assigned',
-        vesselId: 'sunan-022',
-        occurredAt: '2026-04-21T06:00:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'group_lead_001',
-        visibleRoles: ['system_admin', 'general_office', 'business', 'shipping'],
-        payload: {
-          operationName: '污油水接收协同作业',
-          vesselName: '苏南022',
-          workArea: '钦州港东区',
-          shiftLeader: '王班长',
-        },
-        steps: [
-          { stepCode: 'pre_shift_meeting', stepName: '班前会议', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'work_attendance', stepName: '工作考勤', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'pre_operation_check', stepName: '作业前检查工作', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'patrol_record', stepName: '巡航记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-          { stepCode: 'completion_confirmation', stepName: '完工确认记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
-        ],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-legacy-001',
-        moduleCode: 'shipping_self_inspection',
-        templateCode: 'inspection_self_v1',
-        title: '苏南012船舶月度自查（4月）',
-        summary: '由上至下提单，检查机舱消防设施与密闭空间通风记录。',
-        status: 'pending_review',
-        vesselId: 'sunan-012',
-        occurredAt: '2026-04-20T08:20:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'captain_012',
-        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
-        payload: {
-          department: 'shipping',
-          riskLevel: 'high',
-        },
-        steps: [
-          {
-            stepCode: 'inspection',
-            stepName: '现场检查',
-            status: 'completed',
-            rectificationRequired: true,
-            rectificationStatus: 'submitted',
-          },
-          {
-            stepCode: 'review',
-            stepName: '审核关闭',
-            status: 'pending',
-            rectificationRequired: false,
-            rectificationStatus: null,
-          },
-        ],
-        attachments: [
-          {
-            id: randomUUID(),
-            category: 'before_rectification',
-            fileId: 'seed-file-before-001',
-            fileName: '整改前-机舱消防泵.jpg',
-            uploadedAt: '2026-04-20T08:30:00.000Z',
-          },
-        ],
-        actionLogs: [
-          {
-            id: randomUUID(),
-            actionType: 'submit_review',
-            operatorUserId: 'captain_012',
-            fromStatus: 'in_progress',
-            toStatus: 'pending_review',
-            comment: '已上传整改照片，待审核。',
-            createdAt: '2026-04-20T09:00:00.000Z',
-          },
-        ],
-      },
-      {
-        id: 'wb-record-legacy-002',
-        moduleCode: 'shipping_voyage_approval',
-        templateCode: 'voyage_plan_v1',
-        title: '苏南022航次计划审批（北海-钦州）',
-        summary: '船员下至上提单，待企业微信审批流处理。',
-        status: 'approval_pending',
-        vesselId: 'sunan-022',
-        occurredAt: '2026-04-21T01:20:00.000Z',
-        approvalChannel: 'wecom_native',
-        externalProcessInstanceId: 'wbpi_seed_001',
-        externalStatus: 'pending',
-        ownerUserId: 'crew_022',
-        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
-        payload: {
-          originPort: '北海',
-          destinationPort: '钦州',
-        },
-        steps: [
-          {
-            stepCode: 'submit',
-            stepName: '提单',
-            status: 'completed',
-            rectificationRequired: false,
-            rectificationStatus: null,
-          },
-        ],
-        attachments: [],
-        actionLogs: [
-          {
-            id: randomUUID(),
-            actionType: 'launch_approval',
-            operatorUserId: 'crew_022',
-            fromStatus: 'submitted',
-            toStatus: 'approval_pending',
-            comment: '发起企业微信审批。',
-            createdAt: '2026-04-21T01:23:00.000Z',
-          },
-        ],
-      },
-    ];
-
-    for (const row of seedRows) {
-      this.records.set(row.id, row);
-    }
-
-    this.approvalInstances.set('wbpi_seed_001', {
-      processInstanceId: 'wbpi_seed_001',
-      businessRecordId: 'wb-record-legacy-002',
-      moduleCode: 'shipping_voyage_approval',
-      externalStatus: 'pending',
-      mirrorStatus: 'approval_pending',
-      startedAt: '2026-04-21T01:23:00.000Z',
-      lastCallbackAt: null,
-      lastReconciledAt: null,
-      callbackVersion: 0,
-    });
+  private buildRecordNo() {
+    const now = new Date();
+    const y = now.getUTCFullYear();
+    const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(now.getUTCDate()).padStart(2, '0');
+    const randomSuffix = randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+    return `WB${y}${m}${d}${randomSuffix}`;
   }
 }

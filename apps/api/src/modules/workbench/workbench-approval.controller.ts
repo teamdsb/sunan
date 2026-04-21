@@ -14,23 +14,23 @@ export class WorkbenchApprovalController {
   @Post('launch')
   @UseGuards(JwtAuthGuard)
   async launchApproval(@Body() dto: WorkbenchApprovalLaunchDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.launchApproval(dto, user) };
+    return { data: await this.service.launchApproval(dto, user) };
   }
 
   @Post('callback')
   async handleCallback(@Body() dto: WorkbenchApprovalCallbackDto) {
-    return { data: this.service.handleApprovalCallback(dto) };
+    return { data: await this.service.handleApprovalCallback(dto) };
   }
 
   @Get('instances/:processInstanceId')
   @UseGuards(JwtAuthGuard)
   async getInstance(@Param('processInstanceId') processInstanceId: string, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.getApprovalInstance(processInstanceId, user) };
+    return { data: await this.service.getApprovalInstance(processInstanceId, user) };
   }
 
   @Post('reconcile')
   @UseGuards(JwtAuthGuard)
   async reconcile(@Body() dto: WorkbenchApprovalReconcileDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.reconcileApprovals(dto, user) };
+    return { data: await this.service.reconcileApprovals(dto, user) };
   }
 }

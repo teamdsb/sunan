@@ -24,6 +24,15 @@ import { ShipMonitorEntity } from './entities/ship-monitor.entity';
 import { UserSettingsEntity } from './entities/user-settings.entity';
 import { VesselEntity } from './entities/vessel.entity';
 import { VehicleEntity } from './entities/vehicle.entity';
+import { WecomApprovalInstanceSyncEntity } from './entities/wecom-approval-instance-sync.entity';
+import { WecomApprovalTemplateBindingEntity } from './entities/wecom-approval-template-binding.entity';
+import { WorkbenchModuleEntity } from './entities/workbench-module.entity';
+import { WorkbenchPrintSnapshotEntity } from './entities/workbench-print-snapshot.entity';
+import { WorkbenchRecordActionLogEntity } from './entities/workbench-record-action-log.entity';
+import { WorkbenchRecordAttachmentEntity } from './entities/workbench-record-attachment.entity';
+import { WorkbenchRecordEntity } from './entities/workbench-record.entity';
+import { WorkbenchRecordStepEntity } from './entities/workbench-record-step.entity';
+import { WorkbenchTemplateEntity } from './entities/workbench-template.entity';
 import { WecomUserEntity } from './entities/wecom-user.entity';
 import { BootstrapAuth1710000000000 } from './migrations/1710000000000-bootstrap-auth';
 import { Wave21710000001000 } from './migrations/1710000001000-wave2-files-reference-data';
@@ -36,6 +45,7 @@ import { Wave21710000007000 } from './migrations/1710000007000-wave2-office-port
 import { Wave31710000008000 } from './migrations/1710000008000-wave3-procurement-core';
 import { Wave31710000009000 } from './migrations/1710000009000-wave3-procurement-reports';
 import { Wave41710000010000 } from './migrations/1710000010000-wave4-procurement-dimension-items';
+import { Wave51710000011000 } from './migrations/1710000011000-wave5-workbench-runtime';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -70,6 +80,15 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     ProcurementReportApprovalEntity,
     ShipMonitorEntity,
     UserSettingsEntity,
+    WorkbenchModuleEntity,
+    WorkbenchTemplateEntity,
+    WorkbenchRecordEntity,
+    WorkbenchRecordStepEntity,
+    WorkbenchRecordAttachmentEntity,
+    WorkbenchRecordActionLogEntity,
+    WorkbenchPrintSnapshotEntity,
+    WecomApprovalTemplateBindingEntity,
+    WecomApprovalInstanceSyncEntity,
   ],
   migrations: [
     BootstrapAuth1710000000000,
@@ -83,6 +102,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave31710000008000,
     Wave31710000009000,
     Wave41710000010000,
+    Wave51710000011000,
   ],
   synchronize: false,
 });
