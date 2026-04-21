@@ -45,7 +45,7 @@ interface WorkbenchModuleSummary {
 interface WorkbenchStep {
   stepCode: string;
   stepName: string;
-  status: string;
+  status: 'pending' | 'in_progress' | 'completed';
   rectificationRequired: boolean;
   rectificationStatus: string | null;
 }
@@ -108,6 +108,11 @@ interface ModuleSchemaField {
   placeholder?: string;
 }
 
+interface ModuleSchemaStepTemplate {
+  stepCode: string;
+  stepName: string;
+}
+
 interface ModuleSchemaDefinition {
   moduleCode: string;
   templateType: TemplateType;
@@ -116,6 +121,7 @@ interface ModuleSchemaDefinition {
     title: string;
     fields: ModuleSchemaField[];
   }>;
+  stepTemplates?: ModuleSchemaStepTemplate[];
 }
 
 const PENDING_STATUSES = new Set(['submitted', 'assigned', 'in_progress', 'pending_review', 'approval_pending', 'rework_required']);
@@ -562,6 +568,77 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
   },
 };
 
+const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  business_operation_flow: {
+    moduleCode: 'business_operation_flow',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'operation',
+        title: '作业基本信息',
+        fields: [
+          { key: 'operationName', label: '作业名称', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '作业船名', required: true, inputType: 'text' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'teamLead', label: '带班负责人', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  zhongchuan_operation_flow: {
+    moduleCode: 'zhongchuan_operation_flow',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'operation',
+        title: '工作组作业信息',
+        fields: [
+          { key: 'operationName', label: '作业名称', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '作业船舶', required: true, inputType: 'text' },
+          { key: 'workArea', label: '作业区域', required: true, inputType: 'text' },
+          { key: 'shiftLeader', label: '班组长', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'work_attendance', stepName: '工作考勤' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡航记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  pinglu_operation_flow: {
+    moduleCode: 'pinglu_operation_flow',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'operation',
+        title: '平陆运河作业信息',
+        fields: [
+          { key: 'operationName', label: '作业名称', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '作业船舶', required: true, inputType: 'text' },
+          { key: 'workArea', label: '作业区域', required: true, inputType: 'text' },
+          { key: 'shiftLeader', label: '班组长', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'work_attendance', stepName: '工作考勤' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡航记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+};
+
 @Injectable()
 export class WorkbenchService {
   private readonly records = new Map<string, WorkbenchRecord>();
@@ -594,7 +671,7 @@ export class WorkbenchService {
       throw new ForbiddenException('forbidden');
     }
 
-    const schema = LEDGER_MODULE_SCHEMAS[moduleCode];
+    const schema = LEDGER_MODULE_SCHEMAS[moduleCode] ?? OPERATION_FLOW_MODULE_SCHEMAS[moduleCode];
     if (!schema) {
       throw new NotFoundException('module schema not found');
     }
@@ -674,22 +751,27 @@ export class WorkbenchService {
       throw new ForbiddenException('forbidden');
     }
 
-    if (moduleItem.templateType !== 'ledger_form') {
-      throw new BadRequestException('Wave 3 only supports ledger_form creation');
+    const ledgerSchema = LEDGER_MODULE_SCHEMAS[dto.moduleCode];
+    const operationFlowSchema = OPERATION_FLOW_MODULE_SCHEMAS[dto.moduleCode];
+    if (!ledgerSchema && !operationFlowSchema) {
+      throw new BadRequestException('module schema not found');
     }
 
-    if (!LEDGER_MODULE_SCHEMAS[dto.moduleCode]) {
-      throw new BadRequestException('ledger module schema not found');
+    if (moduleItem.templateType !== 'ledger_form' && moduleItem.templateType !== 'operation_flow') {
+      throw new BadRequestException('Wave 4 only supports ledger_form and operation_flow creation');
     }
 
     const nowIso = new Date().toISOString();
+    const steps = this.buildInitialSteps(moduleItem.moduleCode);
+    const initialStatus = moduleItem.templateType === 'operation_flow' ? 'assigned' : 'draft';
+
     const record: WorkbenchRecord = {
       id: randomUUID(),
       moduleCode: dto.moduleCode,
       templateCode: `${dto.moduleCode}_v1`,
       title: dto.title.trim(),
       summary: dto.summary.trim(),
-      status: 'draft',
+      status: initialStatus,
       vesselId: dto.vesselId?.trim() || null,
       occurredAt: dto.occurredAt ?? nowIso,
       approvalChannel: 'internal',
@@ -698,7 +780,7 @@ export class WorkbenchService {
       ownerUserId: user.userId,
       visibleRoles: [...moduleItem.visibleRoles],
       payload: dto.payload ?? {},
-      steps: [],
+      steps,
       attachments: [],
       actionLogs: [],
     };
@@ -706,39 +788,20 @@ export class WorkbenchService {
     this.appendActionLog(record, {
       actionType: 'create_record',
       operatorUserId: user.userId,
-      fromStatus: 'draft',
-      toStatus: 'draft',
-      comment: 'Wave 3 台账录单',
+      fromStatus: initialStatus,
+      toStatus: initialStatus,
+      comment: moduleItem.templateType === 'operation_flow' ? 'Wave 4 作业闭环录单' : 'Wave 3 台账录单',
     });
 
     this.records.set(record.id, record);
 
-    return {
-      ...this.toRecordSummary(record),
-      summary: record.summary,
-      externalProcessInstanceId: record.externalProcessInstanceId,
-      externalStatus: record.externalStatus,
-      steps: record.steps,
-      attachments: record.attachments,
-      actionLogs: record.actionLogs,
-      payload: record.payload,
-    };
+    return this.toRecordDetail(record);
   }
 
   getRecordDetail(recordId: string, user: CurrentUser) {
     const record = this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
-
-    return {
-      ...this.toRecordSummary(record),
-      summary: record.summary,
-      externalProcessInstanceId: record.externalProcessInstanceId,
-      externalStatus: record.externalStatus,
-      steps: record.steps,
-      attachments: record.attachments,
-      actionLogs: record.actionLogs,
-      payload: record.payload,
-    };
+    return this.toRecordDetail(record);
   }
 
   performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
@@ -746,14 +809,44 @@ export class WorkbenchService {
     this.assertRecordVisible(record, user);
 
     const fromStatus = record.status;
-    const toStatus = this.resolveNextStatus(fromStatus, dto.actionType);
-    record.status = toStatus;
+
+    if (dto.actionType === 'start' && record.steps.length > 0) {
+      const firstPending = record.steps.find((step) => step.status === 'pending');
+      if (firstPending) {
+        firstPending.status = 'in_progress';
+      }
+      record.status = 'in_progress';
+    } else if (dto.actionType === 'complete_step') {
+      const stepCode = String(dto.payload?.stepCode ?? '').trim();
+      if (!stepCode) {
+        throw new BadRequestException('payload.stepCode is required for complete_step');
+      }
+
+      const step = record.steps.find((item) => item.stepCode === stepCode);
+      if (!step) {
+        throw new NotFoundException('step not found');
+      }
+
+      if (step.status !== 'completed') {
+        step.status = 'completed';
+      }
+
+      const nextPending = record.steps.find((item) => item.status === 'pending');
+      if (nextPending) {
+        nextPending.status = 'in_progress';
+        record.status = 'in_progress';
+      } else {
+        record.status = 'pending_review';
+      }
+    } else {
+      record.status = this.resolveNextStatus(fromStatus, dto.actionType);
+    }
 
     this.appendActionLog(record, {
       actionType: dto.actionType,
       operatorUserId: user.userId,
       fromStatus,
-      toStatus,
+      toStatus: record.status,
       comment: dto.comment ?? null,
     });
 
@@ -804,6 +897,7 @@ export class WorkbenchService {
         moduleCode: record.moduleCode,
         summary: record.summary,
         payload: record.payload,
+        steps: record.steps,
       },
     };
   }
@@ -979,6 +1073,34 @@ export class WorkbenchService {
     return user.roles.some((role) => visibleRoles.includes(role));
   }
 
+  private buildInitialSteps(moduleCode: string): WorkbenchStep[] {
+    const schema = OPERATION_FLOW_MODULE_SCHEMAS[moduleCode];
+    if (!schema?.stepTemplates?.length) {
+      return [];
+    }
+
+    return schema.stepTemplates.map((step) => ({
+      stepCode: step.stepCode,
+      stepName: step.stepName,
+      status: 'pending',
+      rectificationRequired: false,
+      rectificationStatus: null,
+    }));
+  }
+
+  private toRecordDetail(record: WorkbenchRecord) {
+    return {
+      ...this.toRecordSummary(record),
+      summary: record.summary,
+      externalProcessInstanceId: record.externalProcessInstanceId,
+      externalStatus: record.externalStatus,
+      steps: record.steps,
+      attachments: record.attachments,
+      actionLogs: record.actionLogs,
+      payload: record.payload,
+    };
+  }
+
   private mustGetRecord(recordId: string) {
     const record = this.records.get(recordId);
     if (!record) {
@@ -1022,7 +1144,7 @@ export class WorkbenchService {
       case 'start':
         return 'in_progress';
       case 'complete_step':
-        return 'in_progress';
+        return currentStatus;
       case 'submit_review':
         return 'pending_review';
       case 'request_rework':
@@ -1103,54 +1225,6 @@ export class WorkbenchService {
         actionLogs: [],
       },
       {
-        id: 'wb-record-ledger-002',
-        moduleCode: 'goa_meeting',
-        templateCode: 'goa_meeting_v1',
-        title: '季度安全会议记录（2026Q2）',
-        summary: '季度安全与制度执行复盘会议。',
-        status: 'draft',
-        vesselId: null,
-        occurredAt: '2026-04-21T02:30:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'goa_admin_2',
-        visibleRoles: ['system_admin', 'general_office'],
-        payload: {
-          meetingType: '季度会议',
-          host: '李主任',
-          attendeeCount: 24,
-          meetingMinutes: '部署二季度安全月活动与隐患排查节奏。',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-ledger-003',
-        moduleCode: 'shipping_training_hours',
-        templateCode: 'shipping_training_hours_v1',
-        title: '苏南012船员培训学时台账',
-        summary: '四月船员培训学时汇总记录。',
-        status: 'submitted',
-        vesselId: 'sunan-012',
-        occurredAt: '2026-04-21T03:00:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'shipping_manager_1',
-        visibleRoles: ['system_admin', 'general_office', 'shipping'],
-        payload: {
-          vesselName: '苏南012',
-          crewNames: '张三、李四、王五',
-          trainingTheme: '消防设备操作',
-          totalHours: 6,
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
         id: 'wb-record-ledger-004',
         moduleCode: 'business_ship_sign',
         templateCode: 'business_ship_sign_v1',
@@ -1177,28 +1251,61 @@ export class WorkbenchService {
         actionLogs: [],
       },
       {
-        id: 'wb-record-ledger-005',
-        moduleCode: 'business_vessel_dynamic',
-        templateCode: 'business_vessel_dynamic_v1',
-        title: '船舶动态-苏南022航次记录',
-        summary: '记录抵港、靠泊和离港时间。',
-        status: 'draft',
-        vesselId: 'sunan-022',
-        occurredAt: '2026-04-21T03:40:00.000Z',
+        id: 'wb-record-flow-001',
+        moduleCode: 'business_operation_flow',
+        templateCode: 'business_operation_flow_v1',
+        title: '围油栏作业流程（泊位B3）',
+        summary: '业务部作业闭环四步执行。',
+        status: 'in_progress',
+        vesselId: 'sunan-012',
+        occurredAt: '2026-04-21T05:10:00.000Z',
         approvalChannel: 'internal',
         externalProcessInstanceId: null,
         externalStatus: null,
-        ownerUserId: 'business_user_2',
+        ownerUserId: 'business_op_001',
         visibleRoles: ['system_admin', 'general_office', 'business'],
         payload: {
-          vesselName: '苏南022',
-          voyageNo: '2026-QZ-21',
-          route: '北海-钦州',
-          arrivalTime: '2026-04-21T06:00:00.000Z',
-          berthTime: '2026-04-21T07:00:00.000Z',
-          departureTime: '2026-04-22T02:00:00.000Z',
+          operationName: '围油栏布设',
+          vesselName: '苏南012',
+          berth: 'B3',
+          teamLead: '赵班长',
         },
-        steps: [],
+        steps: [
+          { stepCode: 'pre_shift_meeting', stepName: '班前会议', status: 'completed', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'pre_operation_check', stepName: '作业前检查工作', status: 'in_progress', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'patrol_record', stepName: '巡查记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'completion_confirmation', stepName: '完工确认记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+        ],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-flow-002',
+        moduleCode: 'zhongchuan_operation_flow',
+        templateCode: 'zhongchuan_operation_flow_v1',
+        title: '中船工作组日常作业（4月21日）',
+        summary: '中船工作组五步闭环。',
+        status: 'assigned',
+        vesselId: 'sunan-022',
+        occurredAt: '2026-04-21T06:00:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'group_lead_001',
+        visibleRoles: ['system_admin', 'general_office', 'business', 'shipping'],
+        payload: {
+          operationName: '污油水接收协同作业',
+          vesselName: '苏南022',
+          workArea: '钦州港东区',
+          shiftLeader: '王班长',
+        },
+        steps: [
+          { stepCode: 'pre_shift_meeting', stepName: '班前会议', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'work_attendance', stepName: '工作考勤', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'pre_operation_check', stepName: '作业前检查工作', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'patrol_record', stepName: '巡航记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+          { stepCode: 'completion_confirmation', stepName: '完工确认记录', status: 'pending', rectificationRequired: false, rectificationStatus: null },
+        ],
         attachments: [],
         actionLogs: [],
       },

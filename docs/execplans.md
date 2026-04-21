@@ -18,9 +18,9 @@
 - [x] WS-3C 业务部签船记录表/船舶动态记录表实现
 
 ### Wave 4
-- [ ] WS-4A 业务部作业签到台与接收工作组闭环实现
-- [ ] WS-4B 围油栏、垃圾、污油水、生活污水作业闭环实现
-- [ ] WS-4C 中船/平陆运河工作组五步作业闭环实现
+- [x] WS-4A 业务部作业签到台与接收工作组闭环实现
+- [x] WS-4B 围油栏、垃圾、污油水、生活污水作业闭环实现
+- [x] WS-4C 中船/平陆运河工作组五步作业闭环实现
 
 ### Wave 5
 - [ ] WS-5A 总经办安全隐患排查实现
@@ -135,6 +135,21 @@
 - 步骤流转覆盖班前会议、检查、巡查、完工确认。
 - 现场拍照、执行人签认、完工确认与时长统计可追溯。
 - 统一复用 `operation_flow` 模板，不新增私有链路。
+
+### Wave 4 完成说明（2026-04-21）
+- 已完成 `operation_flow` 模块全量注册：
+  - 业务部：作业签到台、接收工作组流程、围油栏、船舶垃圾、船舶污油水、生活污水接收
+  - 工作组：中船工作组五步作业闭环、平陆运河工作组五步作业闭环
+- 已完成后端作业闭环 schema 与步骤模板下发：
+  - `GET /api/v1/workbench/modules/:moduleCode/schema`
+  - 作业闭环模块返回 `stepTemplates` 与业务字段 section
+- 已完成作业闭环记录创建与动作流转：
+  - `POST /api/v1/workbench/records`
+  - `POST /api/v1/workbench/records/:recordId/actions`
+  - 支持 `start`、`complete_step(stepCode)`、`submit_review`、`close_record`
+- 已完成前端工作平台作业闭环交互：
+  - 作业闭环模块支持录单、步骤预览、详情推进步骤动作
+- 已完成 Wave 4 验收归档：`docs/specs/workbench/acceptance-wave4.md`。
 
 ## Wave 5：检查整改类模块
 

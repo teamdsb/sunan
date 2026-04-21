@@ -17,12 +17,14 @@ import {
 import { useMemo, useState } from 'react';
 import {
   WorkbenchModuleSchemaField,
+  WorkbenchRecordDetail,
   WorkbenchRecordSummary,
   useCreateWorkbenchRecordMutation,
   useGetWorkbenchDashboardQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchRecordQuery,
   useGetWorkbenchRecordsQuery,
+  usePerformWorkbenchRecordActionMutation,
 } from './workbenchApi';
 
 const departmentLabelMap: Record<string, string> = {
@@ -51,6 +53,10 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
   return <Input type={field.inputType === 'number' ? 'number' : 'text'} placeholder={field.placeholder} />;
 }
 
+function getCurrentStep(record: WorkbenchRecordDetail) {
+  return record.steps.find((step) => step.status === 'in_progress') ?? record.steps.find((step) => step.status === 'pending') ?? null;
+}
+
 export function WorkbenchHomePage() {
   const [activeModuleCode, setActiveModuleCode] = useState<string | null>(null);
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
@@ -71,12 +77,13 @@ export function WorkbenchHomePage() {
   });
 
   const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
+  const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
 
   const dashboard = dashboardResponse?.data;
   const records = recordsResponse?.data ?? [];
   const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
   const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
-  const canCreateLedger = activeModule?.templateType === 'ledger_form';
+  const canCreateRecord = activeModule?.templateType === 'ledger_form' || activeModule?.templateType === 'operation_flow';
 
   const openCreateDrawer = () => {
     form.resetFields();
@@ -101,7 +108,27 @@ export function WorkbenchHomePage() {
 
     setCreateOpen(false);
     form.resetFields();
+    if (activeModule?.templateType === 'operation_flow') {
+      messageApi.success('作业闭环记录已创建，可在详情中推进步骤');
+      return;
+    }
     messageApi.success('台账记录已创建');
+  };
+
+  const triggerRecordAction = async (
+    recordId: string,
+    actionType: 'start' | 'complete_step' | 'submit_review' | 'close_record',
+    payload?: Record<string, unknown>,
+  ) => {
+    const result = await performWorkbenchRecordAction({
+      recordId,
+      data: {
+        actionType,
+        payload,
+      },
+    }).unwrap();
+
+    messageApi.success(`动作已执行：${result.data.acceptedAction} -> ${result.data.status}`);
   };
 
   return (
@@ -110,7 +137,7 @@ export function WorkbenchHomePage() {
       <section className="page-hero">
         <Typography.Title level={2}>工作平台</Typography.Title>
         <Typography.Paragraph type="secondary">
-          Wave 3 已接入台账录单能力：可在总经办、船务部和业务部台账模块中直接创建记录并回看详情。
+          Wave 4 已接入作业闭环能力：业务部与工作组 `operation_flow` 模块可创建作业单并逐步推进执行状态。
         </Typography.Paragraph>
       </section>
 
@@ -162,9 +189,9 @@ export function WorkbenchHomePage() {
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
               <Typography.Title level={4}>{activeModuleCode ? `模块记录：${activeModuleCode}` : '全部模块记录'}</Typography.Title>
-              {canCreateLedger ? (
+              {canCreateRecord ? (
                 <Button type="primary" onClick={openCreateDrawer}>
-                  新建台账记录
+                  {activeModule?.templateType === 'operation_flow' ? '新建作业闭环记录' : '新建台账记录'}
                 </Button>
               ) : null}
             </Space>
@@ -246,6 +273,52 @@ export function WorkbenchHomePage() {
                   </List.Item>
                 )}
               />
+              {detailResponse.data.steps.length > 0 ? (
+                <Space wrap style={{ marginTop: 12 }}>
+                  {detailResponse.data.status === 'assigned' ? (
+                    <Button
+                      type="primary"
+                      loading={actionSubmitting}
+                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'start')}
+                    >
+                      开始作业
+                    </Button>
+                  ) : null}
+                  {detailResponse.data.status === 'in_progress' ? (
+                    <Button
+                      loading={actionSubmitting}
+                      onClick={() => {
+                        const currentStep = getCurrentStep(detailResponse.data);
+                        if (!currentStep) {
+                          messageApi.warning('当前没有可推进步骤');
+                          return;
+                        }
+                        void triggerRecordAction(detailResponse.data.id, 'complete_step', { stepCode: currentStep.stepCode });
+                      }}
+                    >
+                      完成当前步骤
+                    </Button>
+                  ) : null}
+                  {detailResponse.data.status === 'pending_review' ? (
+                    <Button
+                      type="primary"
+                      loading={actionSubmitting}
+                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'submit_review')}
+                    >
+                      提交审核
+                    </Button>
+                  ) : null}
+                  {detailResponse.data.status !== 'closed' && detailResponse.data.status !== 'archived' ? (
+                    <Button
+                      danger
+                      loading={actionSubmitting}
+                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'close_record')}
+                    >
+                      关闭记录
+                    </Button>
+                  ) : null}
+                </Space>
+              ) : null}
             </div>
 
             <div>
@@ -307,7 +380,11 @@ export function WorkbenchHomePage() {
       </Drawer>
 
       <Drawer
-        title={activeModule ? `新建台账记录 - ${activeModule.moduleName}` : '新建台账记录'}
+        title={
+          activeModule
+            ? `${activeModule.templateType === 'operation_flow' ? '新建作业闭环记录' : '新建台账记录'} - ${activeModule.moduleName}`
+            : '新建记录'
+        }
         placement="right"
         width={560}
         open={createOpen}
@@ -334,6 +411,25 @@ export function WorkbenchHomePage() {
             <Form.Item label="船舶ID（可选）" name="vesselId">
               <Input placeholder="例如：sunan-012" />
             </Form.Item>
+
+            {moduleSchemaResponse?.data.templateType === 'operation_flow' && moduleSchemaResponse.data.stepTemplates?.length ? (
+              <Card size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
+                <Typography.Title level={5}>流程步骤（自动初始化）</Typography.Title>
+                <List
+                  size="small"
+                  bordered
+                  dataSource={moduleSchemaResponse.data.stepTemplates}
+                  renderItem={(step) => (
+                    <List.Item>
+                      <Space>
+                        <Tag>{step.stepCode}</Tag>
+                        <Typography.Text>{step.stepName}</Typography.Text>
+                      </Space>
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            ) : null}
 
             {moduleSchemaResponse?.data.sections.map((section) => (
               <Card key={section.key} size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>

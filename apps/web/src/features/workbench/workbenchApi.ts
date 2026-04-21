@@ -102,6 +102,11 @@ export interface WorkbenchModuleSchemaField {
   placeholder?: string;
 }
 
+export interface WorkbenchModuleSchemaStepTemplate {
+  stepCode: string;
+  stepName: string;
+}
+
 export interface WorkbenchModuleSchema {
   moduleCode: string;
   templateType: WorkbenchTemplateType;
@@ -110,6 +115,7 @@ export interface WorkbenchModuleSchema {
     title: string;
     fields: WorkbenchModuleSchemaField[];
   }>;
+  stepTemplates?: WorkbenchModuleSchemaStepTemplate[];
 }
 
 export interface WorkbenchRecordCreatePayload {
@@ -118,6 +124,12 @@ export interface WorkbenchRecordCreatePayload {
   summary: string;
   vesselId?: string;
   occurredAt?: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface WorkbenchRecordActionPayload {
+  actionType: 'submit' | 'assign' | 'start' | 'complete_step' | 'submit_review' | 'request_rework' | 'close_record' | 'archive';
+  comment?: string;
   payload?: Record<string, unknown>;
 }
 
@@ -147,6 +159,17 @@ export const workbenchApi = baseApi.injectEndpoints({
       query: (data) => ({ url: '/workbench/records', method: 'POST', data }),
       invalidatesTags: ['Workbench', 'WorkbenchRecord'],
     }),
+    performWorkbenchRecordAction: builder.mutation<
+      { data: { recordId: string; status: string; acceptedAction: string } },
+      { recordId: string; data: WorkbenchRecordActionPayload }
+    >({
+      query: ({ recordId, data }) => ({
+        url: `/workbench/records/${recordId}/actions`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: (_result, _error, arg) => ['Workbench', 'WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+    }),
   }),
 });
 
@@ -157,4 +180,5 @@ export const {
   useGetWorkbenchRecordsQuery,
   useGetWorkbenchRecordQuery,
   useCreateWorkbenchRecordMutation,
+  usePerformWorkbenchRecordActionMutation,
 } = workbenchApi;
