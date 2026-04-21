@@ -3,6 +3,7 @@ import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorat
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
+import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
 import { WorkbenchService } from './workbench.service';
@@ -17,6 +18,11 @@ export class WorkbenchController {
     return { data: this.service.listModules(user) };
   }
 
+  @Get('modules/:moduleCode/schema')
+  async getModuleSchema(@Param('moduleCode') moduleCode: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: this.service.getModuleSchema(moduleCode, user) };
+  }
+
   @Get('dashboard')
   async getDashboard(@CurrentUserDecorator() user: CurrentUser) {
     return { data: this.service.getDashboard(user) };
@@ -25,6 +31,11 @@ export class WorkbenchController {
   @Get('records')
   async listRecords(@Query() query: WorkbenchRecordListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
     return this.service.listRecords(query, user);
+  }
+
+  @Post('records')
+  async createRecord(@Body() dto: WorkbenchRecordCreateDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: this.service.createRecord(dto, user) };
   }
 
   @Get('records/:recordId')

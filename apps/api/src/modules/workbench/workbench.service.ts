@@ -5,6 +5,7 @@ import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
 import { WorkbenchApprovalReconcileDto } from './dto/workbench-approval-reconcile.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
+import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
 
@@ -99,6 +100,24 @@ interface ApprovalInstance {
   callbackVersion: number;
 }
 
+interface ModuleSchemaField {
+  key: string;
+  label: string;
+  required: boolean;
+  inputType: 'text' | 'number' | 'date' | 'textarea';
+  placeholder?: string;
+}
+
+interface ModuleSchemaDefinition {
+  moduleCode: string;
+  templateType: TemplateType;
+  sections: Array<{
+    key: string;
+    title: string;
+    fields: ModuleSchemaField[];
+  }>;
+}
+
 const PENDING_STATUSES = new Set(['submitted', 'assigned', 'in_progress', 'pending_review', 'approval_pending', 'rework_required']);
 
 const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
@@ -127,6 +146,126 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     visibleRoles: ['system_admin', 'general_office'],
   },
   {
+    moduleCode: 'goa_safety_month',
+    moduleName: '总经办安全月活动',
+    departmentCode: 'general_office',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: false,
+    mobileFirst: true,
+    sortOrder: 30,
+    visibleRoles: ['system_admin', 'general_office'],
+  },
+  {
+    moduleCode: 'goa_year_plan',
+    moduleName: '总经办年度工作计划',
+    departmentCode: 'general_office',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: false,
+    sortOrder: 40,
+    visibleRoles: ['system_admin', 'general_office'],
+  },
+  {
+    moduleCode: 'shipping_training_hours',
+    moduleName: '船务部培训学时统计',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 50,
+    visibleRoles: ['system_admin', 'general_office', 'shipping'],
+  },
+  {
+    moduleCode: 'shipping_drill',
+    moduleName: '船务部演练记录',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 60,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_watch',
+    moduleName: '船务部值守记录',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: true,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 70,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_shore_call',
+    moduleName: '船务部岸基叫应',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 80,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_meeting',
+    moduleName: '船务部会议记录',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: false,
+    mobileFirst: true,
+    sortOrder: 90,
+    visibleRoles: ['system_admin', 'general_office', 'shipping'],
+  },
+  {
+    moduleCode: 'shipping_case_study',
+    moduleName: '船务部案例警示学习',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: false,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 100,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'business_ship_sign',
+    moduleName: '业务部签船记录表',
+    departmentCode: 'business',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 110,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_vessel_dynamic',
+    moduleName: '业务部船舶动态记录表',
+    departmentCode: 'business',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 120,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
     moduleCode: 'finance_attendance',
     moduleName: '财务部统计中心',
     departmentCode: 'finance',
@@ -135,7 +274,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 30,
+    sortOrder: 130,
     visibleRoles: ['system_admin', 'general_office', 'finance'],
   },
   {
@@ -147,7 +286,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 40,
+    sortOrder: 140,
     visibleRoles: ['system_admin', 'general_office', 'business'],
   },
   {
@@ -159,7 +298,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 50,
+    sortOrder: 150,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
@@ -171,7 +310,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 60,
+    sortOrder: 160,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
@@ -183,7 +322,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: false,
     mobileFirst: true,
-    sortOrder: 70,
+    sortOrder: 170,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
@@ -195,7 +334,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 80,
+    sortOrder: 180,
     visibleRoles: ['system_admin', 'general_office', 'logistics'],
   },
   {
@@ -207,7 +346,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 90,
+    sortOrder: 190,
     visibleRoles: ['system_admin', 'general_office', 'business', 'shipping'],
   },
   {
@@ -219,10 +358,209 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
-    sortOrder: 100,
+    sortOrder: 200,
     visibleRoles: ['system_admin', 'general_office', 'business', 'shipping'],
   },
 ];
+
+const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  goa_training: {
+    moduleCode: 'goa_training',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'basic',
+        title: '培训基本信息',
+        fields: [
+          { key: 'trainingType', label: '培训类型', required: true, inputType: 'text', placeholder: '岗前/日常/季度/年度' },
+          { key: 'trainer', label: '主讲人', required: true, inputType: 'text' },
+          { key: 'hours', label: '培训学时', required: true, inputType: 'number' },
+          { key: 'participants', label: '参训人员', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  goa_meeting: {
+    moduleCode: 'goa_meeting',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'meeting',
+        title: '会议记录信息',
+        fields: [
+          { key: 'meetingType', label: '会议类型', required: true, inputType: 'text', placeholder: '视频/日常/季度/年度' },
+          { key: 'host', label: '主持人', required: true, inputType: 'text' },
+          { key: 'attendeeCount', label: '参会人数', required: true, inputType: 'number' },
+          { key: 'meetingMinutes', label: '会议纪要', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  goa_safety_month: {
+    moduleCode: 'goa_safety_month',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'campaign',
+        title: '安全月活动台账',
+        fields: [
+          { key: 'campaignTopic', label: '活动主题', required: true, inputType: 'text' },
+          { key: 'phase', label: '活动阶段', required: true, inputType: 'text', placeholder: '启动/培训/排查/演练/总结' },
+          { key: 'owner', label: '责任人', required: true, inputType: 'text' },
+          { key: 'resultSummary', label: '结果总结', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  goa_year_plan: {
+    moduleCode: 'goa_year_plan',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'plan',
+        title: '年度计划',
+        fields: [
+          { key: 'planYear', label: '计划年度', required: true, inputType: 'number' },
+          { key: 'planOwner', label: '责任部门/人', required: true, inputType: 'text' },
+          { key: 'milestone', label: '关键节点', required: true, inputType: 'textarea' },
+          { key: 'progressStatus', label: '当前进度', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+  },
+  shipping_training_hours: {
+    moduleCode: 'shipping_training_hours',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'shippingTraining',
+        title: '船务培训学时',
+        fields: [
+          { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
+          { key: 'crewNames', label: '船员名单', required: true, inputType: 'textarea' },
+          { key: 'trainingTheme', label: '培训主题', required: true, inputType: 'text' },
+          { key: 'totalHours', label: '总学时', required: true, inputType: 'number' },
+        ],
+      },
+    ],
+  },
+  shipping_drill: {
+    moduleCode: 'shipping_drill',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'drill',
+        title: '演练记录',
+        fields: [
+          { key: 'drillType', label: '演练类型', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
+          { key: 'drillLeader', label: '演练负责人', required: true, inputType: 'text' },
+          { key: 'drillResult', label: '演练结果', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_watch: {
+    moduleCode: 'shipping_watch',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'watch',
+        title: '值守记录',
+        fields: [
+          { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
+          { key: 'watchShift', label: '值守班次', required: true, inputType: 'text' },
+          { key: 'watcher', label: '值守人员', required: true, inputType: 'text' },
+          { key: 'watchNotes', label: '值守备注', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_shore_call: {
+    moduleCode: 'shipping_shore_call',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'shoreCall',
+        title: '岸基叫应记录',
+        fields: [
+          { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
+          { key: 'publisher', label: '发布人', required: true, inputType: 'text' },
+          { key: 'receiver', label: '记录人', required: true, inputType: 'text' },
+          { key: 'messageDigest', label: '叫应内容', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_meeting: {
+    moduleCode: 'shipping_meeting',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'shipMeeting',
+        title: '船员会议记录',
+        fields: [
+          { key: 'meetingTopic', label: '会议主题', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
+          { key: 'host', label: '主持人', required: true, inputType: 'text' },
+          { key: 'minutes', label: '会议纪要', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_case_study: {
+    moduleCode: 'shipping_case_study',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'caseStudy',
+        title: '案例学习记录',
+        fields: [
+          { key: 'caseTitle', label: '案例标题', required: true, inputType: 'text' },
+          { key: 'learningAudience', label: '学习对象', required: true, inputType: 'text' },
+          { key: 'studyType', label: '资料类型', required: true, inputType: 'text', placeholder: '视频/文档' },
+          { key: 'learningSummary', label: '学习情况', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  business_ship_sign: {
+    moduleCode: 'business_ship_sign',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'shipSign',
+        title: '签船记录字段',
+        fields: [
+          { key: 'customerName', label: '客户姓名', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'imoOrCallSign', label: 'IMO/呼号', required: true, inputType: 'text' },
+          { key: 'agreementNo', label: '协议编号', required: true, inputType: 'text' },
+          { key: 'fee', label: '费用', required: true, inputType: 'number' },
+          { key: 'serviceOwner', label: '业务经手人', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+  },
+  business_vessel_dynamic: {
+    moduleCode: 'business_vessel_dynamic',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'vesselDynamic',
+        title: '船舶动态字段',
+        fields: [
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
+          { key: 'route', label: '航线', required: true, inputType: 'text' },
+          { key: 'arrivalTime', label: '抵港时间', required: true, inputType: 'date' },
+          { key: 'berthTime', label: '靠泊时间', required: true, inputType: 'date' },
+          { key: 'departureTime', label: '离港时间', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+  },
+};
 
 @Injectable()
 export class WorkbenchService {
@@ -248,6 +586,20 @@ export class WorkbenchService {
       supportsStatistics: moduleItem.supportsStatistics,
       mobileFirst: moduleItem.mobileFirst,
     }));
+  }
+
+  getModuleSchema(moduleCode: string, user: CurrentUser) {
+    const moduleItem = this.mustGetModule(moduleCode);
+    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
+      throw new ForbiddenException('forbidden');
+    }
+
+    const schema = LEDGER_MODULE_SCHEMAS[moduleCode];
+    if (!schema) {
+      throw new NotFoundException('module schema not found');
+    }
+
+    return schema;
   }
 
   getDashboard(user: CurrentUser) {
@@ -313,6 +665,63 @@ export class WorkbenchService {
         pageSize,
         total,
       },
+    };
+  }
+
+  createRecord(dto: WorkbenchRecordCreateDto, user: CurrentUser) {
+    const moduleItem = this.mustGetModule(dto.moduleCode);
+    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
+      throw new ForbiddenException('forbidden');
+    }
+
+    if (moduleItem.templateType !== 'ledger_form') {
+      throw new BadRequestException('Wave 3 only supports ledger_form creation');
+    }
+
+    if (!LEDGER_MODULE_SCHEMAS[dto.moduleCode]) {
+      throw new BadRequestException('ledger module schema not found');
+    }
+
+    const nowIso = new Date().toISOString();
+    const record: WorkbenchRecord = {
+      id: randomUUID(),
+      moduleCode: dto.moduleCode,
+      templateCode: `${dto.moduleCode}_v1`,
+      title: dto.title.trim(),
+      summary: dto.summary.trim(),
+      status: 'draft',
+      vesselId: dto.vesselId?.trim() || null,
+      occurredAt: dto.occurredAt ?? nowIso,
+      approvalChannel: 'internal',
+      externalProcessInstanceId: null,
+      externalStatus: null,
+      ownerUserId: user.userId,
+      visibleRoles: [...moduleItem.visibleRoles],
+      payload: dto.payload ?? {},
+      steps: [],
+      attachments: [],
+      actionLogs: [],
+    };
+
+    this.appendActionLog(record, {
+      actionType: 'create_record',
+      operatorUserId: user.userId,
+      fromStatus: 'draft',
+      toStatus: 'draft',
+      comment: 'Wave 3 台账录单',
+    });
+
+    this.records.set(record.id, record);
+
+    return {
+      ...this.toRecordSummary(record),
+      summary: record.summary,
+      externalProcessInstanceId: record.externalProcessInstanceId,
+      externalStatus: record.externalStatus,
+      steps: record.steps,
+      attachments: record.attachments,
+      actionLogs: record.actionLogs,
+      payload: record.payload,
     };
   }
 
@@ -394,6 +803,7 @@ export class WorkbenchService {
         status: record.status,
         moduleCode: record.moduleCode,
         summary: record.summary,
+        payload: record.payload,
       },
     };
   }
@@ -669,7 +1079,131 @@ export class WorkbenchService {
   private seedRecords() {
     const seedRows: WorkbenchRecord[] = [
       {
-        id: 'wb-record-001',
+        id: 'wb-record-ledger-001',
+        moduleCode: 'goa_training',
+        templateCode: 'goa_training_v1',
+        title: '岗前培训记录（新入职船员）',
+        summary: '完成岗前安全培训并记录学习进度。',
+        status: 'submitted',
+        vesselId: null,
+        occurredAt: '2026-04-21T02:00:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'goa_admin_1',
+        visibleRoles: ['system_admin', 'general_office'],
+        payload: {
+          trainingType: '岗前培训',
+          trainer: '王教官',
+          hours: 4,
+          participants: '苏南012、苏南022新入职船员',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-ledger-002',
+        moduleCode: 'goa_meeting',
+        templateCode: 'goa_meeting_v1',
+        title: '季度安全会议记录（2026Q2）',
+        summary: '季度安全与制度执行复盘会议。',
+        status: 'draft',
+        vesselId: null,
+        occurredAt: '2026-04-21T02:30:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'goa_admin_2',
+        visibleRoles: ['system_admin', 'general_office'],
+        payload: {
+          meetingType: '季度会议',
+          host: '李主任',
+          attendeeCount: 24,
+          meetingMinutes: '部署二季度安全月活动与隐患排查节奏。',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-ledger-003',
+        moduleCode: 'shipping_training_hours',
+        templateCode: 'shipping_training_hours_v1',
+        title: '苏南012船员培训学时台账',
+        summary: '四月船员培训学时汇总记录。',
+        status: 'submitted',
+        vesselId: 'sunan-012',
+        occurredAt: '2026-04-21T03:00:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'shipping_manager_1',
+        visibleRoles: ['system_admin', 'general_office', 'shipping'],
+        payload: {
+          vesselName: '苏南012',
+          crewNames: '张三、李四、王五',
+          trainingTheme: '消防设备操作',
+          totalHours: 6,
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-ledger-004',
+        moduleCode: 'business_ship_sign',
+        templateCode: 'business_ship_sign_v1',
+        title: '签船记录-远洋货轮A',
+        summary: '客户现场签船与费用确认记录。',
+        status: 'submitted',
+        vesselId: null,
+        occurredAt: '2026-04-21T03:20:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'business_user_1',
+        visibleRoles: ['system_admin', 'general_office', 'business'],
+        payload: {
+          customerName: '陈先生',
+          vesselName: '远洋货轮A',
+          imoOrCallSign: 'IMO9988776',
+          agreementNo: 'XY-2026-0401',
+          fee: 12000,
+          serviceOwner: '赵主管',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-ledger-005',
+        moduleCode: 'business_vessel_dynamic',
+        templateCode: 'business_vessel_dynamic_v1',
+        title: '船舶动态-苏南022航次记录',
+        summary: '记录抵港、靠泊和离港时间。',
+        status: 'draft',
+        vesselId: 'sunan-022',
+        occurredAt: '2026-04-21T03:40:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'business_user_2',
+        visibleRoles: ['system_admin', 'general_office', 'business'],
+        payload: {
+          vesselName: '苏南022',
+          voyageNo: '2026-QZ-21',
+          route: '北海-钦州',
+          arrivalTime: '2026-04-21T06:00:00.000Z',
+          berthTime: '2026-04-21T07:00:00.000Z',
+          departureTime: '2026-04-22T02:00:00.000Z',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-legacy-001',
         moduleCode: 'shipping_self_inspection',
         templateCode: 'inspection_self_v1',
         title: '苏南012船舶月度自查（4月）',
@@ -724,7 +1258,7 @@ export class WorkbenchService {
         ],
       },
       {
-        id: 'wb-record-002',
+        id: 'wb-record-legacy-002',
         moduleCode: 'shipping_voyage_approval',
         templateCode: 'voyage_plan_v1',
         title: '苏南022航次计划审批（北海-钦州）',
@@ -763,71 +1297,6 @@ export class WorkbenchService {
           },
         ],
       },
-      {
-        id: 'wb-record-003',
-        moduleCode: 'business_operation_flow',
-        templateCode: 'operation_flow_v1',
-        title: '围油栏作业闭环记录（泊位B3）',
-        summary: '班前会议、检查、巡查与完工确认闭环。',
-        status: 'in_progress',
-        vesselId: null,
-        occurredAt: '2026-04-21T03:10:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'business_op_001',
-        visibleRoles: ['system_admin', 'general_office', 'business'],
-        payload: {
-          berth: 'B3',
-          operationType: 'oil_boom',
-        },
-        steps: [
-          {
-            stepCode: 'pre_shift',
-            stepName: '班前会议',
-            status: 'completed',
-            rectificationRequired: false,
-            rectificationStatus: null,
-          },
-          {
-            stepCode: 'inspection',
-            stepName: '作业前检查',
-            status: 'completed',
-            rectificationRequired: false,
-            rectificationStatus: null,
-          },
-          {
-            stepCode: 'patrol',
-            stepName: '巡查记录',
-            status: 'in_progress',
-            rectificationRequired: false,
-            rectificationStatus: null,
-          },
-        ],
-        attachments: [],
-        actionLogs: [],
-      },
-      {
-        id: 'wb-record-004',
-        moduleCode: 'finance_attendance',
-        templateCode: 'attendance_monthly_v1',
-        title: '2026-04 财务部考勤统计',
-        summary: '钦州市区定位打卡汇总，含出差/外派统计。',
-        status: 'submitted',
-        vesselId: null,
-        occurredAt: '2026-04-21T05:00:00.000Z',
-        approvalChannel: 'internal',
-        externalProcessInstanceId: null,
-        externalStatus: null,
-        ownerUserId: 'finance_001',
-        visibleRoles: ['system_admin', 'general_office', 'finance'],
-        payload: {
-          month: '2026-04',
-        },
-        steps: [],
-        attachments: [],
-        actionLogs: [],
-      },
     ];
 
     for (const row of seedRows) {
@@ -836,7 +1305,7 @@ export class WorkbenchService {
 
     this.approvalInstances.set('wbpi_seed_001', {
       processInstanceId: 'wbpi_seed_001',
-      businessRecordId: 'wb-record-002',
+      businessRecordId: 'wb-record-legacy-002',
       moduleCode: 'shipping_voyage_approval',
       externalStatus: 'pending',
       mirrorStatus: 'approval_pending',

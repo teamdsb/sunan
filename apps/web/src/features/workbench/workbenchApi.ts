@@ -94,10 +94,41 @@ export interface WorkbenchRecordListResponse {
   };
 }
 
+export interface WorkbenchModuleSchemaField {
+  key: string;
+  label: string;
+  required: boolean;
+  inputType: 'text' | 'number' | 'date' | 'textarea';
+  placeholder?: string;
+}
+
+export interface WorkbenchModuleSchema {
+  moduleCode: string;
+  templateType: WorkbenchTemplateType;
+  sections: Array<{
+    key: string;
+    title: string;
+    fields: WorkbenchModuleSchemaField[];
+  }>;
+}
+
+export interface WorkbenchRecordCreatePayload {
+  moduleCode: string;
+  title: string;
+  summary: string;
+  vesselId?: string;
+  occurredAt?: string;
+  payload?: Record<string, unknown>;
+}
+
 export const workbenchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getWorkbenchModules: builder.query<{ data: WorkbenchModuleItem[] }, void>({
       query: () => ({ url: '/workbench/modules' }),
+      providesTags: ['Workbench'],
+    }),
+    getWorkbenchModuleSchema: builder.query<{ data: WorkbenchModuleSchema }, string>({
+      query: (moduleCode) => ({ url: `/workbench/modules/${moduleCode}/schema` }),
       providesTags: ['Workbench'],
     }),
     getWorkbenchDashboard: builder.query<{ data: WorkbenchDashboard }, void>({
@@ -112,12 +143,18 @@ export const workbenchApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/workbench/records/${id}` }),
       providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
     }),
+    createWorkbenchRecord: builder.mutation<{ data: WorkbenchRecordDetail }, WorkbenchRecordCreatePayload>({
+      query: (data) => ({ url: '/workbench/records', method: 'POST', data }),
+      invalidatesTags: ['Workbench', 'WorkbenchRecord'],
+    }),
   }),
 });
 
 export const {
   useGetWorkbenchModulesQuery,
+  useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchDashboardQuery,
   useGetWorkbenchRecordsQuery,
   useGetWorkbenchRecordQuery,
+  useCreateWorkbenchRecordMutation,
 } = workbenchApi;

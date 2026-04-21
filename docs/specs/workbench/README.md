@@ -24,6 +24,7 @@
 | UI | `ui/workbench-department-modules.md` | Wave 1 已收口 |
 | Acceptance | `acceptance-wave1.md` | Wave 1 已归档 |
 | Acceptance | `acceptance-wave2.md` | Wave 2 已归档 |
+| Acceptance | `acceptance-wave3.md` | Wave 3 已归档 |
 
 ## 核心设计原则
 
@@ -140,3 +141,4 @@
 - 工作平台企业微信专项：`docs/specs/wecom/workbench-go-live-checklist.md`
 - Wave 1 验收归档：`docs/specs/workbench/acceptance-wave1.md`
 - Wave 2 验收归档：`docs/specs/workbench/acceptance-wave2.md`
+- Wave 3 验收归档：`docs/specs/workbench/acceptance-wave3.md`
