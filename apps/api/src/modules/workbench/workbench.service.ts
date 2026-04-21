@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
@@ -16,6 +16,8 @@ import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
 import { WorkbenchApprovalReconcileDto } from './dto/workbench-approval-reconcile.dto';
 import { WorkbenchApprovalRetryDto } from './dto/workbench-approval-retry.dto';
+import { WorkbenchAttendanceExportQueryDto } from './dto/workbench-attendance-export-query.dto';
+import { WorkbenchAttendanceReconcileDto } from './dto/workbench-attendance-reconcile.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
@@ -73,6 +75,7 @@ interface WorkbenchAttachment {
 interface WorkbenchActionLog {
   id: string;
   actionType: string;
+  source: string;
   operatorUserId: string;
   fromStatus: string;
   toStatus: string;
@@ -90,6 +93,7 @@ interface WorkbenchRecord {
   vesselId: string | null;
   occurredAt: string;
   approvalChannel: ApprovalChannel;
+  recordSource: 'manual' | 'callback' | 'reconcile';
   externalProcessInstanceId: string | null;
   externalStatus: string | null;
   ownerUserId: string;
@@ -1129,6 +1133,8 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
 
 @Injectable()
 export class WorkbenchService {
+  private readonly logger = new Logger(WorkbenchService.name);
+
   constructor(
     @InjectRepository(WorkbenchRecordEntity)
     private readonly recordRepository: Repository<WorkbenchRecordEntity>,
@@ -1268,6 +1274,47 @@ export class WorkbenchService {
         normalDutyCount,
       },
       moduleTotals: [...moduleTotals, ...operationTotals],
+    };
+  }
+
+  async exportAttendanceStatistics(query: WorkbenchAttendanceExportQueryDto, user: CurrentUser) {
+    this.assertAttendanceAdmin(user);
+
+    const month = this.normalizeMonth(query.month);
+    const exportFormat = query.exportFormat ?? 'xlsx';
+    const exportJobId = `att-export-${Date.now()}-${randomUUID().slice(0, 8)}`;
+    const downloadFileId = `${exportFormat}-attendance-${month}-${randomUUID().slice(0, 8)}`;
+
+    this.logger.log(
+      `attendance export queued: month=${month}, format=${exportFormat}, department=${query.departmentCode ?? 'all'}, job=${exportJobId}`,
+    );
+
+    return {
+      exportJobId,
+      status: 'queued' as const,
+      month,
+      downloadFileId,
+    };
+  }
+
+  async reconcileAttendanceStatistics(dto: WorkbenchAttendanceReconcileDto, user: CurrentUser) {
+    this.assertAttendanceAdmin(user);
+
+    const month = this.normalizeMonth(dto.month);
+    const compareSource = dto.compareSource ?? 'finance_template';
+    const reconcileJobId = `att-reconcile-${Date.now()}-${randomUUID().slice(0, 8)}`;
+    const stats = await this.getAttendanceStatistics(user, month);
+    const differenceCount = stats.summary.outRangeCount;
+
+    this.logger.log(
+      `attendance reconcile queued: month=${month}, source=${compareSource}, department=${dto.departmentCode ?? 'all'}, job=${reconcileJobId}`,
+    );
+
+    return {
+      reconcileJobId,
+      status: 'queued' as const,
+      month,
+      differenceCount,
     };
   }
 
@@ -1607,10 +1654,14 @@ export class WorkbenchService {
       }),
     );
 
+    this.logger.log(`print snapshot generated: record=${hydrated.id}, snapshot=${snapshot.id}`);
+
     return {
+      recordId: hydrated.id,
       businessRecordId: hydrated.id,
       templateVersion: snapshot.templateVersion,
       renderedFileId: snapshot.renderedFileId,
+      renderedFormat: snapshot.renderedFormat,
       renderedAt: snapshot.renderedAt.toISOString(),
       snapshotData,
     };
@@ -1631,6 +1682,7 @@ export class WorkbenchService {
 
     const processInstanceId = `wbpi_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const now = new Date();
+    this.logger.log(`approval launch started: record=${record.id}, module=${record.moduleCode}, process=${processInstanceId}`);
 
     await this.approvalSyncRepository.save(
       this.approvalSyncRepository.create({
@@ -1688,6 +1740,7 @@ export class WorkbenchService {
     const payloadDigest = dto.payload ? JSON.stringify(dto.payload) : null;
     const eventAccepted = await this.registerCallbackEvent(dto, meta, payloadDigest);
     if (!eventAccepted) {
+      this.logger.warn(`approval callback ignored (duplicate): process=${dto.processInstanceId}, version=${dto.callbackVersion}`);
       return {
         accepted: true,
         ignored: true,
@@ -1704,6 +1757,9 @@ export class WorkbenchService {
     }
 
     if (dto.callbackVersion <= instance.callbackVersion) {
+      this.logger.warn(
+        `approval callback ignored (old version): process=${dto.processInstanceId}, incoming=${dto.callbackVersion}, current=${instance.callbackVersion}`,
+      );
       return {
         accepted: true,
         ignored: true,
@@ -1740,6 +1796,7 @@ export class WorkbenchService {
       comment: `eventId=${dto.eventId}`,
       payloadDigest,
     });
+    this.logger.log(`approval callback accepted: process=${dto.processInstanceId}, status=${dto.status}, mirror=${mirrorStatus}`);
 
     return {
       accepted: true,
@@ -1883,6 +1940,7 @@ export class WorkbenchService {
       comment: dto.reason ?? null,
       payloadDigest: JSON.stringify({ processInstanceId: dto.processInstanceId, strategy }),
     });
+    this.logger.log(`approval retry queued: process=${dto.processInstanceId}, strategy=${strategy}, by=${user.userId}`);
 
     return {
       processInstanceId: dto.processInstanceId,
@@ -1987,6 +2045,13 @@ export class WorkbenchService {
     if (!user.roles.includes('system_admin')) {
       throw new ForbiddenException('forbidden');
     }
+  }
+
+  private assertAttendanceAdmin(user: CurrentUser) {
+    if (user.roles.includes('system_admin') || user.roles.includes('general_office') || user.roles.includes('finance')) {
+      return;
+    }
+    throw new ForbiddenException('forbidden');
   }
 
   private listVisibleModules(user: CurrentUser) {
@@ -2138,6 +2203,7 @@ export class WorkbenchService {
       vesselId: record.vesselId,
       occurredAt: record.occurredAt,
       approvalChannel: record.approvalChannel,
+      recordSource: record.recordSource,
     };
   }
 
@@ -2153,6 +2219,7 @@ export class WorkbenchService {
       vesselId: record.vesselId,
       occurredAt: record.occurredAt.toISOString(),
       approvalChannel: record.approvalChannel as ApprovalChannel,
+      recordSource: (record.recordSource as 'manual' | 'callback' | 'reconcile') ?? 'manual',
       externalProcessInstanceId: record.externalProcessInstanceId,
       externalStatus: record.externalStatus,
       ownerUserId: record.ownerUserId,
@@ -2190,6 +2257,7 @@ export class WorkbenchService {
       actionLogs.map((item) => ({
         id: item.id,
         actionType: item.actionType,
+        source: item.source,
         operatorUserId: item.operatorUserId ?? 'system',
         fromStatus: item.fromStatus ?? '',
         toStatus: item.toStatus ?? '',

@@ -29,6 +29,7 @@
 | Acceptance | `acceptance-m5-wave1.md` | M5 Wave 1 已归档 |
 | Acceptance | `acceptance-m5-wave2.md` | M5 Wave 2 已归档 |
 | Acceptance | `acceptance-m5-wave3.md` | M5 Wave 3 已归档 |
+| Acceptance | `acceptance-m5-wave4.md` | M5 Wave 4 已归档 |
 | Acceptance | `acceptance-wave1.md` ~ `acceptance-wave8.md` | M4 历史归档 |
 
 ## 核心设计原则
@@ -148,4 +149,5 @@ M5 新增或更新以下规格入口：
 - M5 Wave 1 验收归档：`docs/specs/workbench/acceptance-m5-wave1.md`
 - M5 Wave 2 验收归档：`docs/specs/workbench/acceptance-m5-wave2.md`
 - M5 Wave 3 验收归档：`docs/specs/workbench/acceptance-m5-wave3.md`
+- M5 Wave 4 验收归档：`docs/specs/workbench/acceptance-m5-wave4.md`
 - M5 优化输入与实施清单：`docs/specs/workbench/m5-optimization-backlog.md`

@@ -166,7 +166,10 @@ describe('WorkbenchController integration', () => {
       .set('Authorization', 'Bearer token');
 
     expect(printResponse.status).toBe(200);
-    expect((printResponse.body as { data: { businessRecordId: string } }).data.businessRecordId).toBe(flowRecordId);
+    expect((printResponse.body as { data: { recordId: string; renderedFormat: string } }).data).toMatchObject({
+      recordId: flowRecordId,
+      renderedFormat: 'pdf',
+    });
 
     const createApprovalRecordResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/workbench/records')
@@ -355,5 +358,33 @@ describe('WorkbenchController integration', () => {
       });
 
     expect(forbiddenCreate.status).toBe(403);
+
+    const attendanceExport = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/statistics/attendance/export')
+      .set('Authorization', 'Bearer token')
+      .query({ month: '2026-04', exportFormat: 'xlsx' });
+    expect(attendanceExport.status).toBe(202);
+    expect((attendanceExport.body as { data: { status: string } }).data.status).toBe('queued');
+
+    const attendanceReconcile = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/statistics/attendance/reconcile')
+      .set('Authorization', 'Bearer token')
+      .send({ month: '2026-04', compareSource: 'finance_template' });
+    expect(attendanceReconcile.status).toBe(202);
+    expect((attendanceReconcile.body as { data: { status: string } }).data.status).toBe('queued');
+
+    currentUser = {
+      ...currentUser,
+      userId: 'business-user-no-finance',
+      roles: ['all_authenticated', 'business'],
+      departments: ['业务部'],
+      isAdmin: false,
+    };
+
+    const forbiddenExport = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/statistics/attendance/export')
+      .set('Authorization', 'Bearer token')
+      .query({ month: '2026-04', exportFormat: 'pdf' });
+    expect(forbiddenExport.status).toBe(403);
   });
 });

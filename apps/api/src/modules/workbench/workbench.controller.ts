@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { WorkbenchAttendanceExportQueryDto } from './dto/workbench-attendance-export-query.dto';
+import { WorkbenchAttendanceReconcileDto } from './dto/workbench-attendance-reconcile.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
@@ -31,6 +33,18 @@ export class WorkbenchController {
   @Get('statistics/attendance')
   async getAttendanceStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.getAttendanceStatistics(user, month) };
+  }
+
+  @Get('statistics/attendance/export')
+  @HttpCode(202)
+  async exportAttendanceStatistics(@Query() query: WorkbenchAttendanceExportQueryDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.exportAttendanceStatistics(query, user) };
+  }
+
+  @Post('statistics/attendance/reconcile')
+  @HttpCode(202)
+  async reconcileAttendance(@Body() dto: WorkbenchAttendanceReconcileDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.reconcileAttendanceStatistics(dto, user) };
   }
 
   @Get('records')

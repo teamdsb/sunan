@@ -18,9 +18,9 @@
 - [x] WS-3C 权限矩阵自动化校验与异常诊断能力实现
 
 ### Wave 4
-- [ ] WS-4A 统计导出与财务对账口径固化
-- [ ] WS-4B 打印模板标准化与关键链路可观测性收口
-- [ ] WS-4C 遗留模块边界收口（财务板块、海图更新）
+- [x] WS-4A 统计导出与财务对账口径固化
+- [x] WS-4B 打印模板标准化与关键链路可观测性收口
+- [x] WS-4C 遗留模块边界收口（财务板块、海图更新）
 
 ## Wave 1：M5 文档冻结
 
@@ -142,3 +142,21 @@
 - 导出、对账和打印口径一致，可追溯到统一规格。
 - 关键接口、审批回调、导出任务、消息发送均纳入可观测范围。
 - `财务板块` 与 `海图更新` 均有清晰的边界与待确认清单，不再散落在原始需求文本中。
+
+### Wave 4 完成说明（2026-04-22）
+- 已完成统计导出与财务对账接口落地：
+  - `GET /api/v1/workbench/statistics/attendance/export`
+  - `POST /api/v1/workbench/statistics/attendance/reconcile`
+  - 对应实现：`apps/api/src/modules/workbench/workbench.controller.ts`、`apps/api/src/modules/workbench/workbench.service.ts`
+- 已完成打印返回结构标准化与关键链路日志留痕：
+  - 打印快照返回补齐 `recordId`、`renderedFormat`
+  - 审批发起/回调/重试/对账、考勤导出/对账、打印快照统一日志留痕
+- 已完成 Wave4 验收归档：
+  - `docs/specs/workbench/acceptance-m5-wave4.md`
+- 全量测试与冒烟测试结果：
+  - `make test-api` 通过（API unit + integration 全量通过）。
+  - `make test-web` 通过（前端 41 个测试文件、155 个测试全部通过）。
+  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过，覆盖 Wave2~Wave4 关键链路，作为本次冒烟验证通过依据。
+  - OpenAPI 校验通过：
+    - `npx swagger-cli validate docs/specs/workbench/api/workbench-platform-api.yaml`
+    - `npx swagger-cli validate docs/specs/workbench/api/workbench-approval-api.yaml`

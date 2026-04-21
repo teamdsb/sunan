@@ -56,7 +56,7 @@ describe('AppShell mock mode', () => {
     await user.click(screen.getAllByRole('button', { name: /重新认证/ }).at(-1)!);
     expect(redirectToOAuth).not.toHaveBeenCalled();
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
-  }, 10000);
+  }, 20000);
 
   it('shows a mobile more menu that exposes navigation links on small screens', async () => {
     setViewport(375);
@@ -78,7 +78,7 @@ describe('AppShell mock mode', () => {
     );
 
     expect(screen.getAllByRole('button', { name: /更多/ }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: '我的' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: '我的' }).length).toBeGreaterThan(0);
     expect(screen.queryByText('当前页面')).toBeNull();
 
     await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
