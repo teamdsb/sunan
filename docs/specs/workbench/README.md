@@ -28,6 +28,7 @@
 | Acceptance | `acceptance-wave4.md` | Wave 4 已归档 |
 | Acceptance | `acceptance-wave5.md` | Wave 5 已归档 |
 | Acceptance | `acceptance-wave6.md` | Wave 6 已归档 |
+| Acceptance | `acceptance-wave7.md` | Wave 7 已归档 |
 
 ## 核心设计原则
 
@@ -148,3 +149,4 @@
 - Wave 4 验收归档：`docs/specs/workbench/acceptance-wave4.md`
 - Wave 5 验收归档：`docs/specs/workbench/acceptance-wave5.md`
 - Wave 6 验收归档：`docs/specs/workbench/acceptance-wave6.md`
+- Wave 7 验收归档：`docs/specs/workbench/acceptance-wave7.md`

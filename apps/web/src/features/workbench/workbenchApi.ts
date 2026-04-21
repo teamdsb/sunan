@@ -133,6 +133,16 @@ export interface WorkbenchRecordActionPayload {
   payload?: Record<string, unknown>;
 }
 
+export interface WorkbenchApprovalLaunchPayload {
+  moduleCode: string;
+  businessRecordId: string;
+  templateCode: string;
+  title: string;
+  applicantUserId: string;
+  summary?: string;
+  payload?: Record<string, unknown>;
+}
+
 export interface WorkbenchAttendanceStatistics {
   month: string;
   summary: {
@@ -195,6 +205,13 @@ export const workbenchApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, arg) => ['Workbench', 'WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
     }),
+    launchWorkbenchApproval: builder.mutation<
+      { data: { processInstanceId: string; approvalChannel: 'wecom_native'; launchStatus: string; mirrorStatus: string } },
+      WorkbenchApprovalLaunchPayload
+    >({
+      query: (data) => ({ url: '/wecom/approval/launch', method: 'POST', data }),
+      invalidatesTags: ['Workbench', 'WorkbenchRecord'],
+    }),
   }),
 });
 
@@ -207,4 +224,5 @@ export const {
   useGetWorkbenchRecordQuery,
   useCreateWorkbenchRecordMutation,
   usePerformWorkbenchRecordActionMutation,
+  useLaunchWorkbenchApprovalMutation,
 } = workbenchApi;

@@ -25,6 +25,7 @@ import {
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchRecordQuery,
   useGetWorkbenchRecordsQuery,
+  useLaunchWorkbenchApprovalMutation,
   usePerformWorkbenchRecordActionMutation,
 } from './workbenchApi';
 
@@ -86,6 +87,7 @@ export function WorkbenchHomePage() {
 
   const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
   const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
+  const [launchWorkbenchApproval, { isLoading: launchingApproval }] = useLaunchWorkbenchApprovalMutation();
 
   const dashboard = dashboardResponse?.data;
   const records = recordsResponse?.data ?? [];
@@ -96,7 +98,9 @@ export function WorkbenchHomePage() {
     activeModule?.templateType === 'ledger_form' ||
     activeModule?.templateType === 'operation_flow' ||
     activeModule?.templateType === 'inspection_rectification' ||
-    activeModule?.templateType === 'attendance_statistics';
+    activeModule?.templateType === 'attendance_statistics' ||
+    activeModule?.templateType === 'service_asset' ||
+    activeModule?.templateType === 'wecom_approval';
 
   const openCreateDrawer = () => {
     form.resetFields();
@@ -133,6 +137,14 @@ export function WorkbenchHomePage() {
       messageApi.success('考勤统计记录已创建，可在统计看板查看汇总');
       return;
     }
+    if (activeModule?.templateType === 'service_asset') {
+      messageApi.success('资产服务记录已创建，可持续跟踪处理状态');
+      return;
+    }
+    if (activeModule?.templateType === 'wecom_approval') {
+      messageApi.success('审批记录已创建，可在详情中发起企业微信审批');
+      return;
+    }
     messageApi.success('台账记录已创建');
   };
 
@@ -152,13 +164,29 @@ export function WorkbenchHomePage() {
     messageApi.success(`动作已执行：${result.data.acceptedAction} -> ${result.data.status}`);
   };
 
+  const triggerLaunchApproval = async () => {
+    if (!detailResponse?.data) return;
+    const record = detailResponse.data;
+    const result = await launchWorkbenchApproval({
+      moduleCode: record.moduleCode,
+      businessRecordId: record.id,
+      templateCode: `${record.moduleCode}_v1`,
+      title: record.title,
+      applicantUserId: 'current_user',
+      summary: record.summary,
+      payload: record.payload,
+    }).unwrap();
+
+    messageApi.success(`审批已发起：${result.data.processInstanceId}`);
+  };
+
   return (
     <>
       {contextHolder}
       <section className="page-hero">
         <Typography.Title level={2}>工作平台</Typography.Title>
         <Typography.Paragraph type="secondary">
-          Wave 6 已接入考勤统计能力：财务统计中心与船员考勤可录单并查看月度汇总口径。
+          Wave 7 已接入资产服务与审批模块：后勤与船务资产业务可录单，航次/燃油审批可直接发起企业微信流程。
         </Typography.Paragraph>
       </section>
 
@@ -218,6 +246,10 @@ export function WorkbenchHomePage() {
                       ? '新建检查整改记录'
                       : activeModule?.templateType === 'attendance_statistics'
                         ? '新建考勤统计记录'
+                        : activeModule?.templateType === 'service_asset'
+                          ? '新建资产服务记录'
+                          : activeModule?.templateType === 'wecom_approval'
+                            ? '新建审批记录'
                       : '新建台账记录'}
                 </Button>
               ) : null}
@@ -333,6 +365,16 @@ export function WorkbenchHomePage() {
                 <Tag>{detailResponse.data.approvalChannel}</Tag>
                 {detailResponse.data.externalStatus ? <Tag color="cyan">{detailResponse.data.externalStatus}</Tag> : null}
               </Space>
+              {detailModule?.templateType === 'wecom_approval' && !detailResponse.data.externalProcessInstanceId ? (
+                <Button type="primary" style={{ marginTop: 12 }} loading={launchingApproval} onClick={() => void triggerLaunchApproval()}>
+                  发起企业微信审批
+                </Button>
+              ) : null}
+              {detailResponse.data.externalProcessInstanceId ? (
+                <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
+                  审批实例：{detailResponse.data.externalProcessInstanceId}
+                </Typography.Paragraph>
+              ) : null}
             </div>
 
             <div>
@@ -517,6 +559,10 @@ export function WorkbenchHomePage() {
                   ? '新建检查整改记录'
                   : activeModule.templateType === 'attendance_statistics'
                     ? '新建考勤统计记录'
+                    : activeModule.templateType === 'service_asset'
+                      ? '新建资产服务记录'
+                      : activeModule.templateType === 'wecom_approval'
+                        ? '新建审批记录'
                   : '新建台账记录'} - ${activeModule.moduleName}`
             : '新建记录'
         }

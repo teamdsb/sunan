@@ -380,6 +380,30 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
+    moduleCode: 'shipping_equipment_maintenance',
+    moduleName: '船务部设备维修保养',
+    departmentCode: 'shipping',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 165,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_equipment_inspection',
+    moduleName: '船务部设备检验',
+    departmentCode: 'shipping',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 166,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
     moduleCode: 'shipping_voyage_approval',
     moduleName: '航次计划审批',
     departmentCode: 'shipping',
@@ -392,6 +416,18 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
+    moduleCode: 'shipping_fuel_bunkering_approval',
+    moduleName: '燃油加注审批',
+    departmentCode: 'shipping',
+    templateType: 'wecom_approval',
+    requiresApproval: true,
+    supportsPrint: true,
+    supportsStatistics: false,
+    mobileFirst: true,
+    sortOrder: 171,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
     moduleCode: 'logistics_asset_service',
     moduleName: '后勤资产服务',
     departmentCode: 'logistics',
@@ -401,6 +437,66 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsStatistics: true,
     mobileFirst: true,
     sortOrder: 180,
+    visibleRoles: ['system_admin', 'general_office', 'logistics'],
+  },
+  {
+    moduleCode: 'logistics_warehouse',
+    moduleName: '后勤部仓库管理',
+    departmentCode: 'logistics',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 181,
+    visibleRoles: ['system_admin', 'general_office', 'logistics'],
+  },
+  {
+    moduleCode: 'logistics_office',
+    moduleName: '后勤部办公室管理',
+    departmentCode: 'logistics',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 182,
+    visibleRoles: ['system_admin', 'general_office', 'logistics'],
+  },
+  {
+    moduleCode: 'logistics_canteen',
+    moduleName: '后勤部食堂管理',
+    departmentCode: 'logistics',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 183,
+    visibleRoles: ['system_admin', 'general_office', 'logistics'],
+  },
+  {
+    moduleCode: 'logistics_dormitory',
+    moduleName: '后勤部宿舍管理',
+    departmentCode: 'logistics',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 184,
+    visibleRoles: ['system_admin', 'general_office', 'logistics'],
+  },
+  {
+    moduleCode: 'logistics_vehicle_maintenance',
+    moduleName: '后勤部车辆维修保养',
+    departmentCode: 'logistics',
+    templateType: 'service_asset',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 185,
     visibleRoles: ['system_admin', 'general_office', 'logistics'],
   },
   {
@@ -863,6 +959,156 @@ const ATTENDANCE_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
   },
 };
 
+const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  shipping_equipment_maintenance: {
+    moduleCode: 'shipping_equipment_maintenance',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'maintenance',
+        title: '设备维修保养',
+        fields: [
+          { key: 'assetName', label: '设备名称', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '所属船舶', required: true, inputType: 'text' },
+          { key: 'maintenanceType', label: '保养类型', required: true, inputType: 'text' },
+          { key: 'maintenanceSummary', label: '处理说明', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_equipment_inspection: {
+    moduleCode: 'shipping_equipment_inspection',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'inspection',
+        title: '设备检验记录',
+        fields: [
+          { key: 'assetName', label: '设备名称', required: true, inputType: 'text' },
+          { key: 'inspectionStandard', label: '检验标准', required: true, inputType: 'text' },
+          { key: 'inspectionResult', label: '检验结论', required: true, inputType: 'textarea' },
+          { key: 'nextInspectionAt', label: '下次检验时间', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+  },
+  logistics_warehouse: {
+    moduleCode: 'logistics_warehouse',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'warehouse',
+        title: '仓库管理记录',
+        fields: [
+          { key: 'materialName', label: '物资名称', required: true, inputType: 'text' },
+          { key: 'quantity', label: '数量', required: true, inputType: 'number' },
+          { key: 'operationType', label: '操作类型', required: true, inputType: 'text', placeholder: '入库/出库/盘点' },
+          { key: 'remark', label: '备注', required: false, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  logistics_office: {
+    moduleCode: 'logistics_office',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'office',
+        title: '办公室管理记录',
+        fields: [
+          { key: 'requestType', label: '事项类型', required: true, inputType: 'text' },
+          { key: 'requestor', label: '申请人', required: true, inputType: 'text' },
+          { key: 'requestSummary', label: '事项说明', required: true, inputType: 'textarea' },
+          { key: 'completedAt', label: '完成时间', required: false, inputType: 'date' },
+        ],
+      },
+    ],
+  },
+  logistics_canteen: {
+    moduleCode: 'logistics_canteen',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'canteen',
+        title: '食堂管理记录',
+        fields: [
+          { key: 'mealPeriod', label: '餐次', required: true, inputType: 'text', placeholder: '早餐/午餐/晚餐' },
+          { key: 'headcount', label: '就餐人数', required: true, inputType: 'number' },
+          { key: 'safetyCheck', label: '食品安全检查', required: true, inputType: 'textarea' },
+          { key: 'issueSummary', label: '异常说明', required: false, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  logistics_dormitory: {
+    moduleCode: 'logistics_dormitory',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'dormitory',
+        title: '宿舍管理记录',
+        fields: [
+          { key: 'roomNo', label: '房间号', required: true, inputType: 'text' },
+          { key: 'occupancy', label: '入住人数', required: true, inputType: 'number' },
+          { key: 'inspectionSummary', label: '检查情况', required: true, inputType: 'textarea' },
+          { key: 'maintenanceNeeded', label: '维修需求', required: false, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  logistics_vehicle_maintenance: {
+    moduleCode: 'logistics_vehicle_maintenance',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'vehicle',
+        title: '车辆维修保养',
+        fields: [
+          { key: 'vehicleNo', label: '车牌号', required: true, inputType: 'text' },
+          { key: 'maintenanceType', label: '保养类型', required: true, inputType: 'text' },
+          { key: 'mileage', label: '里程', required: true, inputType: 'number' },
+          { key: 'repairSummary', label: '维修说明', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+};
+
+const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  shipping_voyage_approval: {
+    moduleCode: 'shipping_voyage_approval',
+    templateType: 'wecom_approval',
+    sections: [
+      {
+        key: 'voyage',
+        title: '航次计划审批单',
+        fields: [
+          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
+          { key: 'voyageRoute', label: '航线', required: true, inputType: 'text' },
+          { key: 'departureAt', label: '预计离港时间', required: true, inputType: 'date' },
+          { key: 'safetySummary', label: '航前检查说明', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+  shipping_fuel_bunkering_approval: {
+    moduleCode: 'shipping_fuel_bunkering_approval',
+    templateType: 'wecom_approval',
+    sections: [
+      {
+        key: 'fuel',
+        title: '燃油加注审批单',
+        fields: [
+          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
+          { key: 'fuelType', label: '燃油类型', required: true, inputType: 'text' },
+          { key: 'requestedAmount', label: '申请加注量', required: true, inputType: 'number' },
+          { key: 'reason', label: '申请说明', required: true, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
+};
+
 @Injectable()
 export class WorkbenchService {
   private readonly records = new Map<string, WorkbenchRecord>();
@@ -899,7 +1145,9 @@ export class WorkbenchService {
       LEDGER_MODULE_SCHEMAS[moduleCode] ??
       OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ??
       INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode] ??
-      ATTENDANCE_MODULE_SCHEMAS[moduleCode];
+      ATTENDANCE_MODULE_SCHEMAS[moduleCode] ??
+      SERVICE_ASSET_MODULE_SCHEMAS[moduleCode] ??
+      WECOM_APPROVAL_MODULE_SCHEMAS[moduleCode];
     if (!schema) {
       throw new NotFoundException('module schema not found');
     }
@@ -1049,7 +1297,9 @@ export class WorkbenchService {
     const operationFlowSchema = OPERATION_FLOW_MODULE_SCHEMAS[dto.moduleCode];
     const inspectionSchema = INSPECTION_RECTIFICATION_MODULE_SCHEMAS[dto.moduleCode];
     const attendanceSchema = ATTENDANCE_MODULE_SCHEMAS[dto.moduleCode];
-    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema && !attendanceSchema) {
+    const serviceAssetSchema = SERVICE_ASSET_MODULE_SCHEMAS[dto.moduleCode];
+    const wecomApprovalSchema = WECOM_APPROVAL_MODULE_SCHEMAS[dto.moduleCode];
+    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema && !attendanceSchema && !serviceAssetSchema && !wecomApprovalSchema) {
       throw new BadRequestException('module schema not found');
     }
 
@@ -1057,14 +1307,21 @@ export class WorkbenchService {
       moduleItem.templateType !== 'ledger_form' &&
       moduleItem.templateType !== 'operation_flow' &&
       moduleItem.templateType !== 'inspection_rectification' &&
-      moduleItem.templateType !== 'attendance_statistics'
+      moduleItem.templateType !== 'attendance_statistics' &&
+      moduleItem.templateType !== 'service_asset' &&
+      moduleItem.templateType !== 'wecom_approval'
     ) {
-      throw new BadRequestException('Wave 6 only supports ledger_form/operation_flow/inspection_rectification/attendance_statistics creation');
+      throw new BadRequestException('Wave 7 unsupported template type');
     }
 
     const nowIso = new Date().toISOString();
     const steps = this.buildInitialSteps(moduleItem.moduleCode);
-    const initialStatus = moduleItem.templateType === 'ledger_form' ? 'draft' : moduleItem.templateType === 'attendance_statistics' ? 'submitted' : 'assigned';
+    const initialStatus =
+      moduleItem.templateType === 'ledger_form'
+        ? 'draft'
+        : moduleItem.templateType === 'attendance_statistics' || moduleItem.templateType === 'service_asset' || moduleItem.templateType === 'wecom_approval'
+          ? 'submitted'
+          : 'assigned';
 
     const record: WorkbenchRecord = {
       id: randomUUID(),
@@ -1098,6 +1355,10 @@ export class WorkbenchService {
             ? 'Wave 5 检查整改录单'
             : moduleItem.templateType === 'attendance_statistics'
               ? 'Wave 6 考勤统计录单'
+              : moduleItem.templateType === 'service_asset'
+                ? 'Wave 7 资产服务录单'
+                : moduleItem.templateType === 'wecom_approval'
+                  ? 'Wave 7 审批类录单'
             : 'Wave 3 台账录单',
     });
 
@@ -1656,6 +1917,54 @@ export class WorkbenchService {
           period: 'pm',
           locationInRange: 'true',
           dutyType: 'dispatch',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-asset-001',
+        moduleCode: 'logistics_warehouse',
+        templateCode: 'logistics_warehouse_v1',
+        title: '仓库盘点记录（4月）',
+        summary: '后勤仓库月度盘点并补齐缺口。',
+        status: 'submitted',
+        vesselId: null,
+        occurredAt: '2026-04-21T02:40:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'logistics_user_1',
+        visibleRoles: ['system_admin', 'general_office', 'logistics'],
+        payload: {
+          materialName: '吸油毡',
+          quantity: 320,
+          operationType: '盘点',
+          remark: '缺口12件，已申请补货',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-approval-002',
+        moduleCode: 'shipping_fuel_bunkering_approval',
+        templateCode: 'shipping_fuel_bunkering_approval_v1',
+        title: '燃油加注审批（苏南012）',
+        summary: '申请加注低硫燃油用于下个航次。',
+        status: 'submitted',
+        vesselId: 'sunan-012',
+        occurredAt: '2026-04-21T03:50:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'crew_012',
+        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+        payload: {
+          vesselName: '苏南012',
+          fuelType: '低硫燃油',
+          requestedAmount: 25,
+          reason: '执行北海至钦州航次保障需求',
         },
         steps: [],
         attachments: [],
