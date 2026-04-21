@@ -3,9 +3,9 @@
 ## Wave 状态
 
 ### Wave 1
-- [ ] WS-1A M4 需求文档重构与范围冻结
-- [ ] WS-1B 工作平台 SDD 索引与模板规格冻结
-- [ ] WS-1C 工作平台模块矩阵与企业微信约束冻结
+- [x] WS-1A M4 需求文档重构与范围冻结
+- [x] WS-1B 工作平台 SDD 索引与模板规格冻结
+- [x] WS-1C 工作平台模块矩阵与企业微信约束冻结
 
 ### Wave 2
 - [ ] WS-2A 工作平台模块注册与首页壳层
@@ -63,6 +63,14 @@
 - 所有工作平台模块均映射到 6 类模板之一。
 - 公共 API、核心实体、前端状态分层和页面信息架构完成冻结。
 - 企业微信审批类与非审批类模块的真源规则清晰无冲突。
+
+### Wave 1 完成说明（2026-04-21）
+- 已完成 M4 需求文档重构：`docs/requirements/M4-工作平台.md`。
+- 已完成工作平台 SDD 目录冻结：`docs/specs/workbench/api|db|state|ui/*`。
+- 已完成企业微信审批桥与上线约束冻结：
+  - `docs/specs/wecom/approval-native-bridge-spec.md`
+  - `docs/specs/wecom/workbench-go-live-checklist.md`
+- 已完成 Wave 1 验收归档：`docs/specs/workbench/acceptance-wave1.md`。
 
 ## Wave 2：平台底座与企业微信底座
 
