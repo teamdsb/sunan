@@ -23,9 +23,9 @@
 - [x] WS-4C 中船/平陆运河工作组五步作业闭环实现
 
 ### Wave 5
-- [ ] WS-5A 总经办安全隐患排查实现
-- [ ] WS-5B 船务部船舶自查排查与船舶检验实现
-- [ ] WS-5C 船务部密闭空间、污油水接收作业、海事安检闭环实现
+- [x] WS-5A 总经办安全隐患排查实现
+- [x] WS-5B 船务部船舶自查排查与船舶检验实现
+- [x] WS-5C 船务部密闭空间、污油水接收作业、海事安检闭环实现
 
 ### Wave 6
 - [ ] WS-6A 财务部统计中心与口径定义实现
@@ -161,6 +161,21 @@
 - 检查项、整改要求、整改前后照片和关闭结论形成闭环。
 - 船舶维度资料可按船只归档检索。
 - A4 打印内容与整改闭环数据一致。
+
+### Wave 5 完成说明（2026-04-21）
+- 已完成 `inspection_rectification` 模块全量注册：
+  - 总经办：安全隐患排查管理
+  - 船务部：船舶自查排查、船舶检验、密闭空间作业、污油水接收作业、海事安全检查记录
+- 已完成后端检查整改 schema 与步骤模板下发：
+  - `GET /api/v1/workbench/modules/:moduleCode/schema`
+  - 检查整改模块统一返回 `stepTemplates`（现场检查/整改执行/审核关闭）
+- 已完成检查整改记录创建与动作流转：
+  - `POST /api/v1/workbench/records`
+  - `POST /api/v1/workbench/records/:recordId/actions`
+  - 支持 `start`、`complete_step`、`submit_review`、`request_rework`、`close_record`
+- 已完成前端检查整改交互：
+  - 检查整改模块支持录单、步骤预览、整改推进与退回整改动作
+- 已完成 Wave 5 验收归档：`docs/specs/workbench/acceptance-wave5.md`。
 
 ## Wave 6：考勤统计类模块
 

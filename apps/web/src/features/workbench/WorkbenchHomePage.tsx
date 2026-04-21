@@ -83,7 +83,11 @@ export function WorkbenchHomePage() {
   const records = recordsResponse?.data ?? [];
   const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
   const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
-  const canCreateRecord = activeModule?.templateType === 'ledger_form' || activeModule?.templateType === 'operation_flow';
+  const detailModule = detailResponse?.data ? moduleCards.find((item) => item.moduleCode === detailResponse.data.moduleCode) ?? null : null;
+  const canCreateRecord =
+    activeModule?.templateType === 'ledger_form' ||
+    activeModule?.templateType === 'operation_flow' ||
+    activeModule?.templateType === 'inspection_rectification';
 
   const openCreateDrawer = () => {
     form.resetFields();
@@ -112,12 +116,16 @@ export function WorkbenchHomePage() {
       messageApi.success('作业闭环记录已创建，可在详情中推进步骤');
       return;
     }
+    if (activeModule?.templateType === 'inspection_rectification') {
+      messageApi.success('检查整改记录已创建，可在详情中推进整改闭环');
+      return;
+    }
     messageApi.success('台账记录已创建');
   };
 
   const triggerRecordAction = async (
     recordId: string,
-    actionType: 'start' | 'complete_step' | 'submit_review' | 'close_record',
+    actionType: 'start' | 'complete_step' | 'submit_review' | 'request_rework' | 'close_record',
     payload?: Record<string, unknown>,
   ) => {
     const result = await performWorkbenchRecordAction({
@@ -137,7 +145,7 @@ export function WorkbenchHomePage() {
       <section className="page-hero">
         <Typography.Title level={2}>工作平台</Typography.Title>
         <Typography.Paragraph type="secondary">
-          Wave 4 已接入作业闭环能力：业务部与工作组 `operation_flow` 模块可创建作业单并逐步推进执行状态。
+          Wave 5 已接入检查整改能力：总经办与船务部 `inspection_rectification` 模块可创建检查单并推进整改闭环。
         </Typography.Paragraph>
       </section>
 
@@ -191,7 +199,11 @@ export function WorkbenchHomePage() {
               <Typography.Title level={4}>{activeModuleCode ? `模块记录：${activeModuleCode}` : '全部模块记录'}</Typography.Title>
               {canCreateRecord ? (
                 <Button type="primary" onClick={openCreateDrawer}>
-                  {activeModule?.templateType === 'operation_flow' ? '新建作业闭环记录' : '新建台账记录'}
+                  {activeModule?.templateType === 'operation_flow'
+                    ? '新建作业闭环记录'
+                    : activeModule?.templateType === 'inspection_rectification'
+                      ? '新建检查整改记录'
+                      : '新建台账记录'}
                 </Button>
               ) : null}
             </Space>
@@ -285,6 +297,45 @@ export function WorkbenchHomePage() {
                     </Button>
                   ) : null}
                   {detailResponse.data.status === 'in_progress' ? (
+                    <>
+                      <Button
+                        loading={actionSubmitting}
+                        onClick={() => {
+                          const currentStep = getCurrentStep(detailResponse.data);
+                          if (!currentStep) {
+                            messageApi.warning('当前没有可推进步骤');
+                            return;
+                          }
+                          void triggerRecordAction(detailResponse.data.id, 'complete_step', {
+                            stepCode: currentStep.stepCode,
+                            rectificationRequired: false,
+                          });
+                        }}
+                      >
+                        完成当前步骤
+                      </Button>
+                      {detailModule?.templateType === 'inspection_rectification' ? (
+                        <Button
+                          loading={actionSubmitting}
+                          onClick={() => {
+                            const currentStep = getCurrentStep(detailResponse.data);
+                            if (!currentStep) {
+                              messageApi.warning('当前没有可推进步骤');
+                              return;
+                            }
+                            void triggerRecordAction(detailResponse.data.id, 'complete_step', {
+                              stepCode: currentStep.stepCode,
+                              rectificationRequired: true,
+                              rectificationStatus: 'submitted',
+                            });
+                          }}
+                        >
+                          标记整改并推进
+                        </Button>
+                      ) : null}
+                    </>
+                  ) : null}
+                  {detailResponse.data.status === 'rework_required' ? (
                     <Button
                       loading={actionSubmitting}
                       onClick={() => {
@@ -293,20 +344,31 @@ export function WorkbenchHomePage() {
                           messageApi.warning('当前没有可推进步骤');
                           return;
                         }
-                        void triggerRecordAction(detailResponse.data.id, 'complete_step', { stepCode: currentStep.stepCode });
+                        void triggerRecordAction(detailResponse.data.id, 'complete_step', {
+                          stepCode: currentStep.stepCode,
+                          rectificationRequired: true,
+                          rectificationStatus: 'completed',
+                        });
                       }}
                     >
-                      完成当前步骤
+                      整改完成并继续
                     </Button>
                   ) : null}
                   {detailResponse.data.status === 'pending_review' ? (
-                    <Button
-                      type="primary"
-                      loading={actionSubmitting}
-                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'submit_review')}
-                    >
-                      提交审核
-                    </Button>
+                    <>
+                      <Button
+                        type="primary"
+                        loading={actionSubmitting}
+                        onClick={() => void triggerRecordAction(detailResponse.data.id, 'submit_review')}
+                      >
+                        提交审核
+                      </Button>
+                      {detailModule?.templateType === 'inspection_rectification' ? (
+                        <Button loading={actionSubmitting} onClick={() => void triggerRecordAction(detailResponse.data.id, 'request_rework')}>
+                          退回整改
+                        </Button>
+                      ) : null}
+                    </>
                   ) : null}
                   {detailResponse.data.status !== 'closed' && detailResponse.data.status !== 'archived' ? (
                     <Button
@@ -382,7 +444,11 @@ export function WorkbenchHomePage() {
       <Drawer
         title={
           activeModule
-            ? `${activeModule.templateType === 'operation_flow' ? '新建作业闭环记录' : '新建台账记录'} - ${activeModule.moduleName}`
+            ? `${activeModule.templateType === 'operation_flow'
+                ? '新建作业闭环记录'
+                : activeModule.templateType === 'inspection_rectification'
+                  ? '新建检查整改记录'
+                  : '新建台账记录'} - ${activeModule.moduleName}`
             : '新建记录'
         }
         placement="right"
@@ -415,6 +481,25 @@ export function WorkbenchHomePage() {
             {moduleSchemaResponse?.data.templateType === 'operation_flow' && moduleSchemaResponse.data.stepTemplates?.length ? (
               <Card size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
                 <Typography.Title level={5}>流程步骤（自动初始化）</Typography.Title>
+                <List
+                  size="small"
+                  bordered
+                  dataSource={moduleSchemaResponse.data.stepTemplates}
+                  renderItem={(step) => (
+                    <List.Item>
+                      <Space>
+                        <Tag>{step.stepCode}</Tag>
+                        <Typography.Text>{step.stepName}</Typography.Text>
+                      </Space>
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            ) : null}
+
+            {moduleSchemaResponse?.data.templateType === 'inspection_rectification' && moduleSchemaResponse.data.stepTemplates?.length ? (
+              <Card size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
+                <Typography.Title level={5}>整改步骤（自动初始化）</Typography.Title>
                 <List
                   size="small"
                   bordered

@@ -296,6 +296,18 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     visibleRoles: ['system_admin', 'general_office', 'business'],
   },
   {
+    moduleCode: 'goa_safety_hazard',
+    moduleName: '总经办安全隐患排查管理',
+    departmentCode: 'general_office',
+    templateType: 'inspection_rectification',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 145,
+    visibleRoles: ['system_admin', 'general_office'],
+  },
+  {
     moduleCode: 'shipping_self_inspection',
     moduleName: '船舶自查排查',
     departmentCode: 'shipping',
@@ -305,6 +317,54 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsStatistics: true,
     mobileFirst: true,
     sortOrder: 150,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_vessel_inspection',
+    moduleName: '船舶检验',
+    departmentCode: 'shipping',
+    templateType: 'inspection_rectification',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 151,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_confined_space_operation',
+    moduleName: '密闭空间作业记录',
+    departmentCode: 'shipping',
+    templateType: 'inspection_rectification',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 152,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_oily_water_operation',
+    moduleName: '污油水接收作业',
+    departmentCode: 'shipping',
+    templateType: 'inspection_rectification',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 153,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_maritime_safety_check',
+    moduleName: '海事安全检查记录',
+    departmentCode: 'shipping',
+    templateType: 'inspection_rectification',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 154,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
@@ -639,6 +699,135 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
   },
 };
 
+const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  goa_safety_hazard: {
+    moduleCode: 'goa_safety_hazard',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'hazard',
+        title: '隐患排查信息',
+        fields: [
+          { key: 'inspectionArea', label: '排查区域', required: true, inputType: 'text' },
+          { key: 'riskLevel', label: '风险等级', required: true, inputType: 'text', placeholder: '低/中/高' },
+          { key: 'hazardDescription', label: '隐患描述', required: true, inputType: 'textarea' },
+          { key: 'rectificationDeadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+  shipping_self_inspection: {
+    moduleCode: 'shipping_self_inspection',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'selfInspection',
+        title: '船舶自查信息',
+        fields: [
+          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
+          { key: 'inspectionScope', label: '检查范围', required: true, inputType: 'text' },
+          { key: 'hazardDescription', label: '问题描述', required: true, inputType: 'textarea' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+  shipping_vessel_inspection: {
+    moduleCode: 'shipping_vessel_inspection',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'vesselInspection',
+        title: '船舶检验信息',
+        fields: [
+          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
+          { key: 'inspectionType', label: '检验类型', required: true, inputType: 'text' },
+          { key: 'findingSummary', label: '检验结论', required: true, inputType: 'textarea' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+  shipping_confined_space_operation: {
+    moduleCode: 'shipping_confined_space_operation',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'confinedSpace',
+        title: '密闭空间作业检查',
+        fields: [
+          { key: 'spaceName', label: '作业舱室', required: true, inputType: 'text' },
+          { key: 'gasTestResult', label: '气体检测结果', required: true, inputType: 'textarea' },
+          { key: 'safetyMeasures', label: '安全措施', required: true, inputType: 'textarea' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+  shipping_oily_water_operation: {
+    moduleCode: 'shipping_oily_water_operation',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'oilyWater',
+        title: '污油水作业检查',
+        fields: [
+          { key: 'operationVessel', label: '作业船舶', required: true, inputType: 'text' },
+          { key: 'operationArea', label: '作业区域', required: true, inputType: 'text' },
+          { key: 'issueDescription', label: '问题描述', required: true, inputType: 'textarea' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+  shipping_maritime_safety_check: {
+    moduleCode: 'shipping_maritime_safety_check',
+    templateType: 'inspection_rectification',
+    sections: [
+      {
+        key: 'maritimeSafety',
+        title: '海事安全检查',
+        fields: [
+          { key: 'inspectionAgency', label: '检查单位', required: true, inputType: 'text' },
+          { key: 'inspectionItem', label: '检查事项', required: true, inputType: 'text' },
+          { key: 'findingSummary', label: '检查问题', required: true, inputType: 'textarea' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'on_site_inspection', stepName: '现场检查' },
+      { stepCode: 'rectification', stepName: '整改执行' },
+      { stepCode: 'review_close', stepName: '审核关闭' },
+    ],
+  },
+};
+
 @Injectable()
 export class WorkbenchService {
   private readonly records = new Map<string, WorkbenchRecord>();
@@ -671,7 +860,10 @@ export class WorkbenchService {
       throw new ForbiddenException('forbidden');
     }
 
-    const schema = LEDGER_MODULE_SCHEMAS[moduleCode] ?? OPERATION_FLOW_MODULE_SCHEMAS[moduleCode];
+    const schema =
+      LEDGER_MODULE_SCHEMAS[moduleCode] ??
+      OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ??
+      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode];
     if (!schema) {
       throw new NotFoundException('module schema not found');
     }
@@ -753,17 +945,22 @@ export class WorkbenchService {
 
     const ledgerSchema = LEDGER_MODULE_SCHEMAS[dto.moduleCode];
     const operationFlowSchema = OPERATION_FLOW_MODULE_SCHEMAS[dto.moduleCode];
-    if (!ledgerSchema && !operationFlowSchema) {
+    const inspectionSchema = INSPECTION_RECTIFICATION_MODULE_SCHEMAS[dto.moduleCode];
+    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema) {
       throw new BadRequestException('module schema not found');
     }
 
-    if (moduleItem.templateType !== 'ledger_form' && moduleItem.templateType !== 'operation_flow') {
-      throw new BadRequestException('Wave 4 only supports ledger_form and operation_flow creation');
+    if (
+      moduleItem.templateType !== 'ledger_form' &&
+      moduleItem.templateType !== 'operation_flow' &&
+      moduleItem.templateType !== 'inspection_rectification'
+    ) {
+      throw new BadRequestException('Wave 5 only supports ledger_form/operation_flow/inspection_rectification creation');
     }
 
     const nowIso = new Date().toISOString();
     const steps = this.buildInitialSteps(moduleItem.moduleCode);
-    const initialStatus = moduleItem.templateType === 'operation_flow' ? 'assigned' : 'draft';
+    const initialStatus = moduleItem.templateType === 'ledger_form' ? 'draft' : 'assigned';
 
     const record: WorkbenchRecord = {
       id: randomUUID(),
@@ -790,7 +987,12 @@ export class WorkbenchService {
       operatorUserId: user.userId,
       fromStatus: initialStatus,
       toStatus: initialStatus,
-      comment: moduleItem.templateType === 'operation_flow' ? 'Wave 4 作业闭环录单' : 'Wave 3 台账录单',
+      comment:
+        moduleItem.templateType === 'operation_flow'
+          ? 'Wave 4 作业闭环录单'
+          : moduleItem.templateType === 'inspection_rectification'
+            ? 'Wave 5 检查整改录单'
+            : 'Wave 3 台账录单',
     });
 
     this.records.set(record.id, record);
@@ -810,6 +1012,9 @@ export class WorkbenchService {
 
     const fromStatus = record.status;
 
+    const moduleItem = this.mustGetModule(record.moduleCode);
+    const isInspectionRectification = moduleItem.templateType === 'inspection_rectification';
+
     if (dto.actionType === 'start' && record.steps.length > 0) {
       const firstPending = record.steps.find((step) => step.status === 'pending');
       if (firstPending) {
@@ -827,6 +1032,20 @@ export class WorkbenchService {
         throw new NotFoundException('step not found');
       }
 
+      if (isInspectionRectification) {
+        const rectificationRequired = dto.payload?.rectificationRequired;
+        if (typeof rectificationRequired === 'boolean') {
+          step.rectificationRequired = rectificationRequired;
+        }
+
+        const rectificationStatus = dto.payload?.rectificationStatus;
+        if (typeof rectificationStatus === 'string' && rectificationStatus.trim()) {
+          step.rectificationStatus = rectificationStatus.trim();
+        } else if (step.rectificationRequired && !step.rectificationStatus) {
+          step.rectificationStatus = 'submitted';
+        }
+      }
+
       if (step.status !== 'completed') {
         step.status = 'completed';
       }
@@ -838,6 +1057,13 @@ export class WorkbenchService {
       } else {
         record.status = 'pending_review';
       }
+    } else if (dto.actionType === 'request_rework' && isInspectionRectification) {
+      const inProgressStep = record.steps.find((step) => step.status === 'in_progress');
+      if (inProgressStep) {
+        inProgressStep.rectificationRequired = true;
+        inProgressStep.rectificationStatus = 'rework_required';
+      }
+      record.status = 'rework_required';
     } else {
       record.status = this.resolveNextStatus(fromStatus, dto.actionType);
     }
@@ -1074,7 +1300,7 @@ export class WorkbenchService {
   }
 
   private buildInitialSteps(moduleCode: string): WorkbenchStep[] {
-    const schema = OPERATION_FLOW_MODULE_SCHEMAS[moduleCode];
+    const schema = OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ?? INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode];
     if (!schema?.stepTemplates?.length) {
       return [];
     }
