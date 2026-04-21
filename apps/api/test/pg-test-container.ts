@@ -26,6 +26,7 @@ import { UserSettingsEntity } from 'src/database/entities/user-settings.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
 import { WorkbenchModuleEntity } from 'src/database/entities/workbench-module.entity';
@@ -47,6 +48,7 @@ import { Wave31710000008000 } from 'src/database/migrations/1710000008000-wave3-
 import { Wave31710000009000 } from 'src/database/migrations/1710000009000-wave3-procurement-reports';
 import { Wave41710000010000 } from 'src/database/migrations/1710000010000-wave4-procurement-dimension-items';
 import { Wave51710000011000 } from 'src/database/migrations/1710000011000-wave5-workbench-runtime';
+import { Wave51710000012000 } from 'src/database/migrations/1710000012000-wave5-workbench-approval-ops';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -82,6 +84,7 @@ const ALL_TEST_ENTITIES = [
   WorkbenchPrintSnapshotEntity,
   WecomApprovalTemplateBindingEntity,
   WecomApprovalInstanceSyncEntity,
+  WecomApprovalCallbackEventEntity,
 ];
 
 const ALL_TEST_MIGRATIONS = [
@@ -97,6 +100,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave31710000009000,
   Wave41710000010000,
   Wave51710000011000,
+  Wave51710000012000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

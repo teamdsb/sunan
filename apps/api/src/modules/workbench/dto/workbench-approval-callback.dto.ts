@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsObject, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, Min } from 'class-validator';
 
 const CALLBACK_STATUSES = ['pending', 'approved', 'rejected', 'canceled', 'terminated'] as const;
 
@@ -17,6 +17,11 @@ export class WorkbenchApprovalCallbackDto {
   @IsInt()
   @Min(1)
   callbackVersion!: number;
+
+  @IsOptional()
+  @Transform(({ value }) => (value === 'true' || value === true ? true : value === 'false' || value === false ? false : value))
+  @IsBoolean()
+  encrypted?: boolean;
 
   @IsOptional()
   @IsObject()

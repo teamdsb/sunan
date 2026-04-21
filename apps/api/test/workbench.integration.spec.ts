@@ -1,4 +1,5 @@
 import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -44,6 +45,32 @@ const authGuard: CanActivate = {
   ],
 })
 class TestModule {}
+
+const sha1 = (raw: string) => createHash('sha1').update(raw).digest('hex');
+
+const buildCallbackSignature = (payload: {
+  eventId: string;
+  processInstanceId: string;
+  callbackVersion: number;
+  status: 'pending' | 'approved' | 'rejected' | 'canceled' | 'terminated';
+  encrypted?: boolean;
+  body?: Record<string, unknown>;
+}) => {
+  const timestamp = `${Math.floor(Date.now() / 1000)}`;
+  const nonce = 'nonce-test';
+  const payloadDigest = sha1(
+    JSON.stringify({
+      eventId: payload.eventId,
+      processInstanceId: payload.processInstanceId,
+      callbackVersion: payload.callbackVersion,
+      status: payload.status,
+      encrypted: payload.encrypted ?? false,
+      payload: payload.body ?? {},
+    }),
+  );
+  const signature = sha1(['test-callback-token', timestamp, nonce, payloadDigest].sort().join(''));
+  return { signature, timestamp, nonce };
+};
 
 describe('WorkbenchController integration', () => {
   let app: INestApplication;
@@ -171,11 +198,21 @@ describe('WorkbenchController integration', () => {
         applicantUserId: currentUser.userId,
       });
 
-    expect(launchApprovalResponse.status).toBe(201);
+    expect(launchApprovalResponse.status).toBe(200);
     const processInstanceId = (launchApprovalResponse.body as { data: { processInstanceId: string } }).data.processInstanceId;
+
+    const callbackSignature = buildCallbackSignature({
+      eventId: 'evt-1',
+      processInstanceId,
+      callbackVersion: 1,
+      status: 'approved',
+    });
 
     const callbackResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/wecom/approval/callback')
+      .set('x-wecom-signature', callbackSignature.signature)
+      .set('x-wecom-timestamp', callbackSignature.timestamp)
+      .set('x-wecom-nonce', callbackSignature.nonce)
       .send({
         eventId: 'evt-1',
         processInstanceId,
@@ -183,12 +220,22 @@ describe('WorkbenchController integration', () => {
         callbackVersion: 1,
       });
 
-    expect(callbackResponse.status).toBe(201);
+    expect(callbackResponse.status).toBe(200);
     expect((callbackResponse.body as { data: { ignored: boolean; mirrorStatus: string } }).data.ignored).toBe(false);
     expect((callbackResponse.body as { data: { mirrorStatus: string } }).data.mirrorStatus).toBe('approval_passed');
 
+    const duplicateCallbackSignature = buildCallbackSignature({
+      eventId: 'evt-1-dup',
+      processInstanceId,
+      callbackVersion: 1,
+      status: 'approved',
+    });
+
     const duplicateCallbackResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/wecom/approval/callback')
+      .set('x-wecom-signature', duplicateCallbackSignature.signature)
+      .set('x-wecom-timestamp', duplicateCallbackSignature.timestamp)
+      .set('x-wecom-nonce', duplicateCallbackSignature.nonce)
       .send({
         eventId: 'evt-1-dup',
         processInstanceId,
@@ -196,25 +243,75 @@ describe('WorkbenchController integration', () => {
         callbackVersion: 1,
       });
 
-    expect(duplicateCallbackResponse.status).toBe(201);
+    expect(duplicateCallbackResponse.status).toBe(200);
     expect((duplicateCallbackResponse.body as { data: { ignored: boolean } }).data.ignored).toBe(true);
+
+    const invalidSignatureCallback = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/wecom/approval/callback')
+      .set('x-wecom-signature', 'invalid-signature')
+      .set('x-wecom-timestamp', callbackSignature.timestamp)
+      .set('x-wecom-nonce', callbackSignature.nonce)
+      .send({
+        eventId: 'evt-invalid-sign',
+        processInstanceId,
+        status: 'approved',
+        callbackVersion: 2,
+      });
+
+    expect(invalidSignatureCallback.status).toBe(400);
+
+    const instanceListForbiddenResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/wecom/approval/instances')
+      .set('Authorization', 'Bearer token');
+
+    expect(instanceListForbiddenResponse.status).toBe(403);
+
+    currentUser = {
+      ...currentUser,
+      userId: 'sys-admin-1',
+      roles: ['all_authenticated', 'system_admin', 'general_office'],
+      isAdmin: true,
+    };
+
+    const instanceListResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/wecom/approval/instances')
+      .set('Authorization', 'Bearer token')
+      .query({ processInstanceId });
+
+    expect(instanceListResponse.status).toBe(200);
+    expect((instanceListResponse.body as { data: Array<{ processInstanceId: string }> }).data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ processInstanceId })]),
+    );
+
+    const retryResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/wecom/approval/retry')
+      .set('Authorization', 'Bearer token')
+      .send({
+        processInstanceId,
+        strategy: 'full_reconcile',
+        reason: 'manual retry from test',
+      });
+
+    expect(retryResponse.status).toBe(202);
+    expect((retryResponse.body as { data: { accepted: boolean } }).data.accepted).toBe(true);
 
     const reconcileResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/wecom/approval/reconcile')
       .set('Authorization', 'Bearer token')
-      .send({ processInstanceIds: [processInstanceId] });
+      .send({ processInstanceIds: [processInstanceId], reason: 'monthly reconcile' });
 
-    expect(reconcileResponse.status).toBe(201);
-    expect((reconcileResponse.body as { data: { accepted: number } }).data.accepted).toBe(1);
+    expect(reconcileResponse.status).toBe(202);
+    expect((reconcileResponse.body as { data: { acceptedCount: number } }).data.acceptedCount).toBe(1);
 
     const instanceResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get(`/api/v1/wecom/approval/instances/${processInstanceId}`)
       .set('Authorization', 'Bearer token');
 
     expect(instanceResponse.status).toBe(200);
-    expect((instanceResponse.body as { data: { externalStatus: string; mirrorStatus: string } }).data).toMatchObject({
+    expect((instanceResponse.body as { data: { externalStatus: string; mirrorStatus: string; approvalSyncStatus: string } }).data).toMatchObject({
       externalStatus: 'approved',
       mirrorStatus: 'approval_passed',
+      approvalSyncStatus: 'reconciled',
     });
 
     const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
@@ -226,5 +323,37 @@ describe('WorkbenchController integration', () => {
     expect(approvalSync.approvalSyncStatus).toBe('reconciled');
     expect(approvalSync.callbackVersion).toBe(1);
     expect(approvalSync.lastReconciledAt).not.toBeNull();
+    expect(approvalSync.retryCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it('enforces module visibility by role (permission matrix baseline)', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'finance-user-1',
+      roles: ['all_authenticated', 'finance'],
+      departments: ['财务部'],
+      isAdmin: false,
+    };
+
+    const financeModules = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules')
+      .set('Authorization', 'Bearer token');
+
+    expect(financeModules.status).toBe(200);
+    const moduleCodes = (financeModules.body as { data: Array<{ moduleCode: string }> }).data.map((item) => item.moduleCode);
+    expect(moduleCodes).toContain('finance_attendance');
+    expect(moduleCodes).not.toContain('business_operation_flow');
+    expect(moduleCodes).not.toContain('shipping_voyage_approval');
+
+    const forbiddenCreate = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'shipping_voyage_approval',
+        title: 'unauthorized',
+        summary: 'unauthorized',
+      });
+
+    expect(forbiddenCreate.status).toBe(403);
   });
 });

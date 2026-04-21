@@ -22,6 +22,12 @@ const envSchema = z.object({
   WECOM_REDIRECT_URI: z.string().url().default('https://example.com/auth'),
   APP_DOMAIN: z.string().default('example.com'),
   WECOM_SYSTEM_ADMIN_USER_IDS: z.string().optional(),
+  WECOM_CALLBACK_TOKEN: z.string().default('test-callback-token'),
+  WECOM_CALLBACK_SIGNATURE_REQUIRED: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
+  WECOM_CALLBACK_MAX_SKEW_SECONDS: z.coerce.number().default(300),
   OSS_REGION: z.string().default('oss-cn-hangzhou'),
   OSS_BUCKET: z.string().default('sunan-files'),
   OSS_ACCESS_KEY_ID: z.string().default('test-access-key-id'),

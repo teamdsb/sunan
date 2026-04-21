@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
@@ -19,6 +20,7 @@ import { WorkbenchService } from './workbench.service';
       WorkbenchRecordActionLogEntity,
       WorkbenchPrintSnapshotEntity,
       WecomApprovalInstanceSyncEntity,
+      WecomApprovalCallbackEventEntity,
     ]),
   ],
   controllers: [WorkbenchController, WorkbenchApprovalController],

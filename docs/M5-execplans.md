@@ -13,9 +13,9 @@
 - [x] WS-2C 记录/附件/打印/步骤运行时迁移与索引治理
 
 ### Wave 3
-- [ ] WS-3A 审批桥验签、幂等、重试、对账能力实现
-- [ ] WS-3B 企业微信真机回归留痕与上线材料收口
-- [ ] WS-3C 权限矩阵自动化校验与异常诊断能力实现
+- [x] WS-3A 审批桥验签、幂等、重试、对账能力实现
+- [x] WS-3B 企业微信真机回归留痕与上线材料收口
+- [x] WS-3C 权限矩阵自动化校验与异常诊断能力实现
 
 ### Wave 4
 - [ ] WS-4A 统计导出与财务对账口径固化
@@ -99,7 +99,7 @@
   - `apps/api/src/database/typeorm.config.ts`
 - 本地验证结果：
   - `pnpm --filter api build` 通过。
-  - `pnpm --filter api test -- workbench.integration.spec.ts` 在当前环境因 testcontainers 无可用容器运行时失败（`Could not find a working container runtime strategy`），需要在具备 Docker/兼容 runtime 的环境执行集成测试。
+  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过（Docker 环境）。
 
 ## Wave 3：企业微信审批桥强化与上线留痕
 
@@ -113,6 +113,23 @@
 - 审批实例支持按状态检索异常、待回调、待对账记录。
 - 回调失败、重试失败和消息异常均有告警面板或告警事件定义。
 - 真机回归报告与缺陷闭环模板可直接作为上线材料提交。
+
+### Wave 3 完成说明（2026-04-22）
+- 已完成审批桥强化实现：
+  - 审批回调验签、时间戳校验与签名参数校验
+  - 回调事件去重表与 `eventId + processInstanceId/callbackVersion` 重放保护
+  - 审批实例管理员分页诊断接口 `GET /api/v1/wecom/approval/instances`
+  - 管理员重试接口 `POST /api/v1/wecom/approval/retry`
+  - 管理员对账接口 `POST /api/v1/wecom/approval/reconcile`（系统管理员权限收敛）
+- 已完成权限矩阵自动化校验基线：
+  - `apps/api/test/workbench.integration.spec.ts` 增加模块可见性与越权校验用例
+- 已完成 Wave 3 验收归档：
+  - `docs/specs/workbench/acceptance-m5-wave3.md`
+- 本地验证结果：
+  - `pnpm --filter api build` 通过。
+  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过（单元+集成）。
+- 说明：
+  - WS-3B 的“真机回归留痕”执行模板已在 Wave 1 冻结（`docs/specs/wecom/workbench-real-device-regression.md`），本轮完成了后端能力和验收链路，真机执行记录需按模板由业务测试设备补录。
 
 ## Wave 4：数据正确性与交付一致性
 

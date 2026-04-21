@@ -1,6 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
+import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
@@ -10,8 +12,10 @@ import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-recor
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
+import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
 import { WorkbenchApprovalReconcileDto } from './dto/workbench-approval-reconcile.dto';
+import { WorkbenchApprovalRetryDto } from './dto/workbench-approval-retry.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
@@ -106,6 +110,12 @@ interface ApprovalInstance {
   lastCallbackAt: string | null;
   lastReconciledAt: string | null;
   callbackVersion: number;
+}
+
+interface ApprovalCallbackRequestMeta {
+  signature: string | null;
+  timestamp: string | null;
+  nonce: string | null;
 }
 
 interface ModuleSchemaField {
@@ -1132,6 +1142,8 @@ export class WorkbenchService {
     private readonly printSnapshotRepository: Repository<WorkbenchPrintSnapshotEntity>,
     @InjectRepository(WecomApprovalInstanceSyncEntity)
     private readonly approvalSyncRepository: Repository<WecomApprovalInstanceSyncEntity>,
+    @InjectRepository(WecomApprovalCallbackEventEntity)
+    private readonly callbackEventRepository: Repository<WecomApprovalCallbackEventEntity>,
   ) {}
 
   async listModules(user: CurrentUser) {
@@ -1666,10 +1678,24 @@ export class WorkbenchService {
       approvalChannel: 'wecom_native' as const,
       launchStatus,
       mirrorStatus: 'approval_pending',
+      approvalSyncStatus: 'pending',
     };
   }
 
-  async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto) {
+  async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta) {
+    this.verifyCallbackSignature(dto, meta);
+
+    const payloadDigest = dto.payload ? JSON.stringify(dto.payload) : null;
+    const eventAccepted = await this.registerCallbackEvent(dto, meta, payloadDigest);
+    if (!eventAccepted) {
+      return {
+        accepted: true,
+        ignored: true,
+        processInstanceId: dto.processInstanceId,
+        callbackVersion: dto.callbackVersion,
+      };
+    }
+
     const instance = await this.approvalSyncRepository.findOne({
       where: { processInstanceId: dto.processInstanceId },
     });
@@ -1682,6 +1708,7 @@ export class WorkbenchService {
         accepted: true,
         ignored: true,
         processInstanceId: dto.processInstanceId,
+        callbackVersion: dto.callbackVersion,
       };
     }
 
@@ -1693,7 +1720,9 @@ export class WorkbenchService {
     instance.approvalSyncStatus = 'callback_received';
     instance.lastCallbackAt = now;
     instance.callbackVersion = dto.callbackVersion;
-    instance.rawPayloadDigest = dto.payload ? JSON.stringify(dto.payload) : null;
+    instance.rawPayloadDigest = payloadDigest;
+    instance.syncErrorCode = null;
+    instance.syncErrorMessage = null;
 
     const record = await this.mustGetRecord(instance.businessRecordId);
     const fromStatus = record.status;
@@ -1709,7 +1738,7 @@ export class WorkbenchService {
       fromStatus,
       toStatus: mirrorStatus,
       comment: `eventId=${dto.eventId}`,
-      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
+      payloadDigest,
     });
 
     return {
@@ -1717,6 +1746,47 @@ export class WorkbenchService {
       ignored: false,
       processInstanceId: dto.processInstanceId,
       mirrorStatus,
+      callbackVersion: dto.callbackVersion,
+    };
+  }
+
+  async listApprovalInstances(query: WorkbenchApprovalInstanceListQueryDto, user: CurrentUser) {
+    this.assertSystemAdmin(user);
+
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const qb = this.approvalSyncRepository.createQueryBuilder('instance');
+
+    if (query.processInstanceId?.trim()) {
+      qb.andWhere('instance.process_instance_id = :processInstanceId', { processInstanceId: query.processInstanceId.trim() });
+    }
+    if (query.businessRecordId?.trim()) {
+      qb.andWhere('instance.business_record_id = :businessRecordId', { businessRecordId: query.businessRecordId.trim() });
+    }
+    if (query.moduleCode?.trim()) {
+      qb.andWhere('instance.module_code = :moduleCode', { moduleCode: query.moduleCode.trim() });
+    }
+    if (query.approvalSyncStatus) {
+      qb.andWhere('instance.approval_sync_status = :approvalSyncStatus', { approvalSyncStatus: query.approvalSyncStatus });
+    }
+    if (query.externalStatus) {
+      qb.andWhere('instance.external_status = :externalStatus', { externalStatus: query.externalStatus });
+    }
+
+    const [rows, total] = await qb
+      .orderBy('instance.started_at', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      data: rows.map((instance) => this.toApprovalInstanceResponse(instance)),
+      pagination: {
+        page,
+        pageSize,
+        total,
+      },
     };
   }
 
@@ -1729,19 +1799,12 @@ export class WorkbenchService {
     const record = await this.mustGetRecord(instance.businessRecordId);
     this.assertRecordVisible(record, user);
 
-    return {
-      processInstanceId: instance.processInstanceId,
-      businessRecordId: instance.businessRecordId,
-      moduleCode: instance.moduleCode,
-      externalStatus: instance.externalStatus,
-      mirrorStatus: instance.internalMirrorStatus,
-      startedAt: instance.startedAt.toISOString(),
-      lastCallbackAt: instance.lastCallbackAt ? instance.lastCallbackAt.toISOString() : null,
-      lastReconciledAt: instance.lastReconciledAt ? instance.lastReconciledAt.toISOString() : null,
-    };
+    return this.toApprovalInstanceResponse(instance);
   }
 
   async reconcileApprovals(dto: WorkbenchApprovalReconcileDto, user: CurrentUser) {
+    this.assertSystemAdmin(user);
+
     const instances = await this.approvalSyncRepository.find({
       where: { processInstanceId: In(dto.processInstanceIds) },
     });
@@ -1759,7 +1822,19 @@ export class WorkbenchService {
 
       instance.lastReconciledAt = new Date();
       instance.approvalSyncStatus = 'reconciled';
+      instance.syncErrorCode = null;
+      instance.syncErrorMessage = null;
       reconciled.push(processInstanceId);
+
+      await this.appendActionLog(record.id, {
+        actionType: 'approval_reconcile',
+        source: 'reconcile',
+        operatorUserId: user.userId,
+        fromStatus: record.status,
+        toStatus: record.status,
+        comment: dto.reason ?? null,
+        payloadDigest: JSON.stringify({ processInstanceId }),
+      });
     }
 
     if (instances.length > 0) {
@@ -1767,9 +1842,151 @@ export class WorkbenchService {
     }
 
     return {
-      accepted: reconciled.length,
+      acceptedCount: reconciled.length,
       processInstanceIds: reconciled,
+      queuedAt: new Date().toISOString(),
     };
+  }
+
+  async retryApproval(dto: WorkbenchApprovalRetryDto, user: CurrentUser) {
+    this.assertSystemAdmin(user);
+
+    const strategy = dto.strategy ?? 'full_reconcile';
+    const instance = await this.approvalSyncRepository.findOne({
+      where: { processInstanceId: dto.processInstanceId },
+    });
+    if (!instance) {
+      throw new NotFoundException('approval instance not found');
+    }
+
+    const record = await this.mustGetRecord(instance.businessRecordId);
+    this.assertRecordVisible(record, user);
+
+    instance.retryCount += 1;
+    instance.lastRetryAt = new Date();
+    instance.approvalSyncStatus = 'retrying';
+    instance.syncErrorCode = null;
+    instance.syncErrorMessage = null;
+
+    if (strategy === 'full_reconcile') {
+      instance.lastReconciledAt = new Date();
+    }
+
+    await this.approvalSyncRepository.save(instance);
+
+    await this.appendActionLog(record.id, {
+      actionType: 'approval_retry',
+      source: 'system',
+      operatorUserId: user.userId,
+      fromStatus: record.status,
+      toStatus: record.status,
+      comment: dto.reason ?? null,
+      payloadDigest: JSON.stringify({ processInstanceId: dto.processInstanceId, strategy }),
+    });
+
+    return {
+      processInstanceId: dto.processInstanceId,
+      accepted: true,
+      strategy,
+      queuedAt: new Date().toISOString(),
+    };
+  }
+
+  private toApprovalInstanceResponse(instance: WecomApprovalInstanceSyncEntity) {
+    return {
+      processInstanceId: instance.processInstanceId,
+      businessRecordId: instance.businessRecordId,
+      moduleCode: instance.moduleCode,
+      externalStatus: instance.externalStatus,
+      mirrorStatus: instance.internalMirrorStatus,
+      approvalSyncStatus: instance.approvalSyncStatus,
+      startedAt: instance.startedAt.toISOString(),
+      lastCallbackAt: instance.lastCallbackAt ? instance.lastCallbackAt.toISOString() : null,
+      lastReconciledAt: instance.lastReconciledAt ? instance.lastReconciledAt.toISOString() : null,
+      callbackVersion: instance.callbackVersion,
+      retryCount: instance.retryCount,
+      syncErrorCode: instance.syncErrorCode,
+      syncErrorMessage: instance.syncErrorMessage,
+    };
+  }
+
+  private verifyCallbackSignature(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta) {
+    const signatureRequired = appEnv.WECOM_CALLBACK_SIGNATURE_REQUIRED;
+    if (!meta.signature) {
+      if (signatureRequired) {
+        throw new BadRequestException('callback signature missing');
+      }
+      return;
+    }
+    if (!meta.timestamp || !meta.nonce) {
+      throw new BadRequestException('callback signature params missing');
+    }
+
+    const requestTs = Number(meta.timestamp);
+    if (!Number.isFinite(requestTs)) {
+      throw new BadRequestException('callback timestamp invalid');
+    }
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (Math.abs(nowSec - requestTs) > appEnv.WECOM_CALLBACK_MAX_SKEW_SECONDS) {
+      throw new BadRequestException('callback request expired');
+    }
+
+    const payloadDigest = this.sha1(
+      JSON.stringify({
+        eventId: dto.eventId,
+        processInstanceId: dto.processInstanceId,
+        callbackVersion: dto.callbackVersion,
+        status: dto.status,
+        encrypted: dto.encrypted ?? false,
+        payload: dto.payload ?? {},
+      }),
+    );
+    const raw = [appEnv.WECOM_CALLBACK_TOKEN, meta.timestamp, meta.nonce, payloadDigest].sort().join('');
+    const expected = this.sha1(raw);
+    const actual = meta.signature.trim();
+    if (expected.length !== actual.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(actual))) {
+      throw new BadRequestException('callback signature invalid');
+    }
+  }
+
+  private async registerCallbackEvent(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta, payloadDigest: string | null) {
+    try {
+      await this.callbackEventRepository.save(
+        this.callbackEventRepository.create({
+          eventId: dto.eventId,
+          processInstanceId: dto.processInstanceId,
+          callbackVersion: dto.callbackVersion,
+          signature: meta.signature,
+          requestTimestamp: meta.timestamp,
+          requestNonce: meta.nonce,
+          payloadDigest,
+        }),
+      );
+      return true;
+    } catch (error) {
+      if (this.isUniqueViolation(error)) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  private isUniqueViolation(error: unknown) {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+    const maybe = error as { code?: string; driverError?: { code?: string } };
+    return maybe.code === '23505' || maybe.driverError?.code === '23505';
+  }
+
+  private sha1(value: string) {
+    return createHash('sha1').update(value).digest('hex');
+  }
+
+  private assertSystemAdmin(user: CurrentUser) {
+    if (!user.roles.includes('system_admin')) {
+      throw new ForbiddenException('forbidden');
+    }
   }
 
   private listVisibleModules(user: CurrentUser) {
