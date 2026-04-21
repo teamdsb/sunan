@@ -1,8 +1,9 @@
 openapi: 3.0.3
 info:
   title: Workbench Approval API
-  version: 1.0.0
-  description: 工作平台审批桥接口，定义企业微信审批发起、回调、查询与对账。
+  version: 2.0.0
+  description: >-
+    工作平台审批桥接口，定义企业微信审批发起、回调、查询、对账、重试与管理员诊断能力。
 servers:
   - url: /api/v1
 paths:
@@ -22,10 +23,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ApprovalLaunchResult'
+                $ref: '#/components/schemas/ApprovalLaunchResponse'
   /wecom/approval/callback:
     post:
       summary: 接收企业微信审批回调
@@ -39,6 +37,57 @@ paths:
       responses:
         '200':
           description: Callback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalCallbackAcceptedResponse'
+  /wecom/approval/instances:
+    get:
+      summary: 分页检索审批实例
+      tags: [Workbench Approval]
+      parameters:
+        - in: query
+          name: processInstanceId
+          schema:
+            type: string
+        - in: query
+          name: businessRecordId
+          schema:
+            type: string
+        - in: query
+          name: moduleCode
+          schema:
+            type: string
+        - in: query
+          name: approvalSyncStatus
+          schema:
+            type: string
+            enum: [pending, callback_received, reconciled, retrying, failed]
+        - in: query
+          name: externalStatus
+          schema:
+            type: string
+            enum: [pending, approved, rejected, canceled, terminated]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalInstanceListResponse'
   /wecom/approval/instances/{processInstanceId}:
     get:
       summary: 获取审批实例镜像状态
@@ -55,10 +104,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ApprovalInstance'
+                $ref: '#/components/schemas/ApprovalInstanceResponse'
+        '404':
+          description: Instance not found
   /wecom/approval/reconcile:
     post:
       summary: 对账审批实例
@@ -68,18 +116,74 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [processInstanceIds]
-              properties:
-                processInstanceIds:
-                  type: array
-                  items:
-                    type: string
+              $ref: '#/components/schemas/ReconcileApprovalsRequest'
       responses:
         '202':
           description: Reconcile queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileQueuedResponse'
+  /wecom/approval/retry:
+    post:
+      summary: 对指定审批实例触发重试或补偿
+      tags: [Workbench Approval]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryApprovalRequest'
+      responses:
+        '202':
+          description: Retry queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetryQueuedResponse'
 components:
   schemas:
+    ApprovalLaunchResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ApprovalLaunchResult'
+    ApprovalCallbackAcceptedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accepted:
+              type: boolean
+            processInstanceId:
+              type: string
+            callbackVersion:
+              type: integer
+    ApprovalInstanceResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ApprovalInstance'
+    ApprovalInstanceListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalInstance'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            total:
+              type: integer
     LaunchApprovalRequest:
       type: object
       required: [moduleCode, businessRecordId, templateCode, title, applicantUserId]
@@ -113,8 +217,12 @@ components:
         mirrorStatus:
           type: string
           enum: [approval_pending]
+        approvalSyncStatus:
+          type: string
+          enum: [pending]
     ApprovalCallbackPayload:
       type: object
+      required: [eventId, processInstanceId, status, callbackVersion]
       properties:
         eventId:
           type: string
@@ -125,6 +233,8 @@ components:
           enum: [pending, approved, rejected, canceled, terminated]
         callbackVersion:
           type: integer
+        encrypted:
+          type: boolean
         payload:
           type: object
           additionalProperties: true
@@ -139,8 +249,13 @@ components:
           type: string
         externalStatus:
           type: string
+          enum: [pending, approved, rejected, canceled, terminated]
         mirrorStatus:
           type: string
+          enum: [approval_pending, approval_passed, approval_rejected, approval_canceled, approval_terminated, approval_sync_failed]
+        approvalSyncStatus:
+          type: string
+          enum: [pending, callback_received, reconciled, retrying, failed]
         startedAt:
           type: string
           format: date-time
@@ -152,3 +267,58 @@ components:
           type: string
           format: date-time
           nullable: true
+        callbackVersion:
+          type: integer
+        retryCount:
+          type: integer
+        syncErrorCode:
+          type: string
+          nullable: true
+        syncErrorMessage:
+          type: string
+          nullable: true
+    ReconcileApprovalsRequest:
+      type: object
+      required: [processInstanceIds]
+      properties:
+        processInstanceIds:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+    ReconcileQueuedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            acceptedCount:
+              type: integer
+            queuedAt:
+              type: string
+              format: date-time
+    RetryApprovalRequest:
+      type: object
+      required: [processInstanceId]
+      properties:
+        processInstanceId:
+          type: string
+        reason:
+          type: string
+        strategy:
+          type: string
+          enum: [retry_callback_processing, fetch_instance_detail, full_reconcile]
+          default: full_reconcile
+    RetryQueuedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            processInstanceId:
+              type: string
+            accepted:
+              type: boolean
+            strategy:
+              type: string
