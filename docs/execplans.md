@@ -8,9 +8,9 @@
 - [x] WS-1C 工作平台模块矩阵与企业微信约束冻结
 
 ### Wave 2
-- [ ] WS-2A 工作平台模块注册与首页壳层
-- [ ] WS-2B 待办中心/消息中心/操作日志/附件/打印通用规格
-- [ ] WS-2C 企业微信审批桥与上线清单补齐
+- [x] WS-2A 工作平台模块注册与首页壳层
+- [x] WS-2B 待办中心/提醒聚合/操作日志/附件/打印通用规格
+- [x] WS-2C 企业微信审批桥与上线清单补齐
 
 ### Wave 3
 - [ ] WS-3A 总经办培训/会议/安全月/年度计划台账实现
@@ -84,6 +84,23 @@
 - 任一模块均可复用统一壳层挂接。
 - 审批桥规格支持航次计划、燃油加注、船员考勤等审批类业务。
 - 附件、消息、打印与日志能力不依赖单一业务模块。
+
+### Wave 2 完成说明（2026-04-21）
+- 已完成后端工作平台公共接口：
+  - `GET /api/v1/workbench/modules`
+  - `GET /api/v1/workbench/dashboard`
+  - `GET /api/v1/workbench/records`
+  - `GET /api/v1/workbench/records/:recordId`
+  - `POST /api/v1/workbench/records/:recordId/actions`
+  - `POST /api/v1/workbench/records/:recordId/attachments`
+  - `GET /api/v1/workbench/records/:recordId/print`
+- 已完成企业微信审批桥基础路由：
+  - `POST /api/v1/wecom/approval/launch`
+  - `POST /api/v1/wecom/approval/callback`
+  - `GET /api/v1/wecom/approval/instances/:processInstanceId`
+  - `POST /api/v1/wecom/approval/reconcile`
+- 已完成前端 `/workbench` 模块壳层接入与页面替换。
+- 已完成 Wave 2 验收归档：`docs/specs/workbench/acceptance-wave2.md`。
 
 ## Wave 3：台账/记录类模块
 

@@ -21,12 +21,13 @@ import { ProcurementOrderListPage } from '../features/procurement/ProcurementOrd
 import { ProcurementReportApprovalPage } from '../features/procurement/ProcurementReportApprovalPage';
 import { ProcurementReportPage } from '../features/procurement/ProcurementReportPage';
 import { ProcurementReportRequestDetailPage } from '../features/procurement/ProcurementReportRequestDetailPage';
+import { WorkbenchHomePage } from '../features/workbench/WorkbenchHomePage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
 import { myRouteConfig } from './myRouteConfig';
 import { officeRouteConfig } from './officeRouteConfig';
 import { procurementRouteConfig } from './procurementRouteConfig';
-import { PlaceholderPage } from './PlaceholderPage';
+import { workbenchRouteConfig } from './workbenchRouteConfig';
 
 export function AppRoutes() {
   return (
@@ -57,10 +58,7 @@ export function AppRoutes() {
           <Route path={procurementRouteConfig.reportRequestDetail.path} element={<ProcurementReportRequestDetailPage />} />
           <Route path={procurementRouteConfig.reportApprovals.path} element={<ProcurementReportApprovalPage />} />
           <Route path={procurementRouteConfig.dictionaries.path} element={<ProcurementDictionaryAdminPage />} />
-          <Route
-            path="/workbench"
-            element={<PlaceholderPage title="工作平台" description="工作平台将在后续里程碑接入部门业务模块和工作组能力。" />}
-          />
+          <Route path={workbenchRouteConfig.home.path} element={<WorkbenchHomePage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />

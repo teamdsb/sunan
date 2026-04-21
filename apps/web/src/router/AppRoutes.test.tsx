@@ -11,6 +11,7 @@ import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
 import { officeRouteConfig } from './officeRouteConfig';
 import { procurementRouteConfig } from './procurementRouteConfig';
+import { workbenchRouteConfig } from './workbenchRouteConfig';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
@@ -95,6 +96,10 @@ vi.mock('../features/procurement/ProcurementReportApprovalPage', () => ({
 
 vi.mock('../features/procurement/ProcurementDictionaryAdminPage', () => ({
   ProcurementDictionaryAdminPage: () => <div>PROCUREMENT_DICTIONARY_ADMIN</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchHomePage', () => ({
+  WorkbenchHomePage: () => <div>WORKBENCH_HOME</div>,
 }));
 
 function BackHrefConsumer() {
@@ -196,6 +201,7 @@ describe('AppRoutes', () => {
     ['/procurement/report-requests/request-1', 'PROCUREMENT_REPORT_REQUEST_DETAIL'],
     [procurementRouteConfig.reportApprovals.path, 'PROCUREMENT_REPORT_APPROVAL'],
     [procurementRouteConfig.dictionaries.path, 'PROCUREMENT_DICTIONARY_ADMIN'],
+    [workbenchRouteConfig.home.path, 'WORKBENCH_HOME'],
   ] as const)('renders %s', (path, expectedText) => {
     renderRoute(path);
     expect(screen.getByText(expectedText)).toBeInTheDocument();

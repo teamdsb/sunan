@@ -16,6 +16,7 @@ import { ReminderModule } from 'src/modules/reminder/reminder.module';
 import { ShipMonitorModule } from 'src/modules/ship-monitor/ship-monitor.module';
 import { OfficeModule } from 'src/modules/office/office.module';
 import { ProcurementModule } from 'src/modules/procurement/procurement.module';
+import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { buildTypeOrmOptions } from 'src/database/typeorm.config';
@@ -45,6 +46,7 @@ import { buildTypeOrmOptions } from 'src/database/typeorm.config';
     CertificateModule,
     OfficeModule,
     ProcurementModule,
+    WorkbenchModule,
   ],
   controllers: [HealthController],
   providers: [

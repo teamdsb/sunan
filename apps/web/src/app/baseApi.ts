@@ -267,6 +267,8 @@ export const baseApi = createApi({
     'ProcurementApproval',
     'ProcurementReport',
     'ProcurementReportApproval',
+    'Workbench',
+    'WorkbenchRecord',
     'Reminder',
     'ReminderDashboard',
     'ShipMonitor',
