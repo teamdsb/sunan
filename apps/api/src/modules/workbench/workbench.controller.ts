@@ -28,6 +28,11 @@ export class WorkbenchController {
     return { data: this.service.getDashboard(user) };
   }
 
+  @Get('statistics/attendance')
+  async getAttendanceStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: this.service.getAttendanceStatistics(user, month) };
+  }
+
   @Get('records')
   async listRecords(@Query() query: WorkbenchRecordListQueryDto, @CurrentUserDecorator() user: CurrentUser) {
     return this.service.listRecords(query, user);

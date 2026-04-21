@@ -21,6 +21,7 @@ import {
   WorkbenchRecordSummary,
   useCreateWorkbenchRecordMutation,
   useGetWorkbenchDashboardQuery,
+  useGetWorkbenchAttendanceStatisticsQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchRecordQuery,
   useGetWorkbenchRecordsQuery,
@@ -61,6 +62,7 @@ export function WorkbenchHomePage() {
   const [activeModuleCode, setActiveModuleCode] = useState<string | null>(null);
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [statisticsMonth, setStatisticsMonth] = useState('2026-04');
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
 
@@ -75,6 +77,12 @@ export function WorkbenchHomePage() {
   const { data: moduleSchemaResponse, isLoading: schemaLoading } = useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
     skip: !activeModuleCode,
   });
+  const { data: attendanceStatisticsResponse, isLoading: attendanceStatisticsLoading } = useGetWorkbenchAttendanceStatisticsQuery(
+    statisticsMonth ? { month: statisticsMonth } : undefined,
+    {
+      skip: !activeModuleCode,
+    },
+  );
 
   const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
   const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
@@ -87,7 +95,8 @@ export function WorkbenchHomePage() {
   const canCreateRecord =
     activeModule?.templateType === 'ledger_form' ||
     activeModule?.templateType === 'operation_flow' ||
-    activeModule?.templateType === 'inspection_rectification';
+    activeModule?.templateType === 'inspection_rectification' ||
+    activeModule?.templateType === 'attendance_statistics';
 
   const openCreateDrawer = () => {
     form.resetFields();
@@ -120,6 +129,10 @@ export function WorkbenchHomePage() {
       messageApi.success('检查整改记录已创建，可在详情中推进整改闭环');
       return;
     }
+    if (activeModule?.templateType === 'attendance_statistics') {
+      messageApi.success('考勤统计记录已创建，可在统计看板查看汇总');
+      return;
+    }
     messageApi.success('台账记录已创建');
   };
 
@@ -145,7 +158,7 @@ export function WorkbenchHomePage() {
       <section className="page-hero">
         <Typography.Title level={2}>工作平台</Typography.Title>
         <Typography.Paragraph type="secondary">
-          Wave 5 已接入检查整改能力：总经办与船务部 `inspection_rectification` 模块可创建检查单并推进整改闭环。
+          Wave 6 已接入考勤统计能力：财务统计中心与船员考勤可录单并查看月度汇总口径。
         </Typography.Paragraph>
       </section>
 
@@ -203,6 +216,8 @@ export function WorkbenchHomePage() {
                     ? '新建作业闭环记录'
                     : activeModule?.templateType === 'inspection_rectification'
                       ? '新建检查整改记录'
+                      : activeModule?.templateType === 'attendance_statistics'
+                        ? '新建考勤统计记录'
                       : '新建台账记录'}
                 </Button>
               ) : null}
@@ -248,6 +263,58 @@ export function WorkbenchHomePage() {
           </Space>
         </Card>
       </section>
+
+      {activeModule?.templateType === 'attendance_statistics' ? (
+        <section className="page-card-grid">
+          <Card className="placeholder-card" bordered={false}>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Space wrap>
+                <Typography.Title level={4}>月度考勤统计</Typography.Title>
+                <Input
+                  value={statisticsMonth}
+                  onChange={(event) => setStatisticsMonth(event.target.value)}
+                  placeholder="YYYY-MM"
+                  style={{ width: 160 }}
+                />
+              </Space>
+              <Space wrap>
+                <Statistic title="总签到数" value={attendanceStatisticsResponse?.data.summary.totalCheckIns ?? 0} loading={attendanceStatisticsLoading} />
+                <Statistic
+                  title="财务/船务签到"
+                  value={attendanceStatisticsResponse?.data.summary.financeAndShippingCheckIns ?? 0}
+                  loading={attendanceStatisticsLoading}
+                />
+                <Statistic
+                  title="业务/工作组签到"
+                  value={attendanceStatisticsResponse?.data.summary.operationFlowCheckIns ?? 0}
+                  loading={attendanceStatisticsLoading}
+                />
+                <Statistic title="上午签到" value={attendanceStatisticsResponse?.data.summary.morningCount ?? 0} loading={attendanceStatisticsLoading} />
+                <Statistic title="下午签到" value={attendanceStatisticsResponse?.data.summary.afternoonCount ?? 0} loading={attendanceStatisticsLoading} />
+                <Statistic title="钦州范围内" value={attendanceStatisticsResponse?.data.summary.inRangeCount ?? 0} loading={attendanceStatisticsLoading} />
+                <Statistic title="钦州范围外" value={attendanceStatisticsResponse?.data.summary.outRangeCount ?? 0} loading={attendanceStatisticsLoading} />
+                <Statistic
+                  title="出差/外派"
+                  value={attendanceStatisticsResponse?.data.summary.businessTripCount ?? 0}
+                  loading={attendanceStatisticsLoading}
+                />
+              </Space>
+              <Table
+                rowKey="moduleCode"
+                size="small"
+                loading={attendanceStatisticsLoading}
+                dataSource={attendanceStatisticsResponse?.data.moduleTotals ?? []}
+                pagination={false}
+                columns={[
+                  { title: '模块', dataIndex: 'moduleName', key: 'moduleName' },
+                  { title: '部门', dataIndex: 'departmentCode', key: 'departmentCode', width: 140 },
+                  { title: '记录数', dataIndex: 'recordCount', key: 'recordCount', width: 120 },
+                ]}
+              />
+            </Space>
+          </Card>
+        </section>
+      ) : null}
 
       <Drawer
         title="记录详情"
@@ -448,6 +515,8 @@ export function WorkbenchHomePage() {
                 ? '新建作业闭环记录'
                 : activeModule.templateType === 'inspection_rectification'
                   ? '新建检查整改记录'
+                  : activeModule.templateType === 'attendance_statistics'
+                    ? '新建考勤统计记录'
                   : '新建台账记录'} - ${activeModule.moduleName}`
             : '新建记录'
         }

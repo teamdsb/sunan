@@ -28,9 +28,9 @@
 - [x] WS-5C 船务部密闭空间、污油水接收作业、海事安检闭环实现
 
 ### Wave 6
-- [ ] WS-6A 财务部统计中心与口径定义实现
-- [ ] WS-6B 船务部船员考勤与作业时长统计实现
-- [ ] WS-6C 月度汇总、导出与对账机制实现
+- [x] WS-6A 财务部统计中心与口径定义实现
+- [x] WS-6B 船务部船员考勤与作业时长统计实现
+- [x] WS-6C 月度汇总、导出与对账机制实现
 
 ### Wave 7
 - [ ] WS-7A 后勤部仓库/办公室/食堂/宿舍/车辆服务资产模块实现
@@ -188,6 +188,21 @@
 - 打卡位置、上午/下午时段、出差/外派、作业时长口径统一。
 - 月度统计表、劳务费统计和导出能力齐备。
 - 统计视图和原始记录可回溯。
+
+### Wave 6 完成说明（2026-04-21）
+- 已完成 `attendance_statistics` 模块规格与字段 schema：
+  - 财务部统计中心（`finance_attendance`）
+  - 船员考勤（`shipping_attendance`）
+- 已完成考勤统计记录创建能力：
+  - `POST /api/v1/workbench/records`
+  - 支持 `attendance_statistics` 模板录单并进入 `submitted` 状态
+- 已完成月度统计接口：
+  - `GET /api/v1/workbench/statistics/attendance?month=YYYY-MM`
+  - 汇总财务/船务打卡、业务与工作组作业签到、上午/下午、范围内/范围外、出差/外派口径
+- 已完成前端统计看板：
+  - 工作平台在考勤统计模块内展示月度统计指标与模块分布表
+  - 支持按月查询（`YYYY-MM`）
+- 已完成 Wave 6 验收归档：`docs/specs/workbench/acceptance-wave6.md`。
 
 ## Wave 7：资产服务类与审批类模块
 

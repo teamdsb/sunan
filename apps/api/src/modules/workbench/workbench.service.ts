@@ -828,6 +828,41 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
   },
 };
 
+const ATTENDANCE_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  finance_attendance: {
+    moduleCode: 'finance_attendance',
+    templateType: 'attendance_statistics',
+    sections: [
+      {
+        key: 'financeAttendance',
+        title: '财务统计中心打卡记录',
+        fields: [
+          { key: 'employeeName', label: '员工姓名', required: true, inputType: 'text' },
+          { key: 'period', label: '时段', required: true, inputType: 'text', placeholder: 'am/pm' },
+          { key: 'locationInRange', label: '是否在钦州范围', required: true, inputType: 'text', placeholder: 'true/false' },
+          { key: 'dutyType', label: '出勤类型', required: true, inputType: 'text', placeholder: 'normal/business_trip/dispatch' },
+        ],
+      },
+    ],
+  },
+  shipping_attendance: {
+    moduleCode: 'shipping_attendance',
+    templateType: 'attendance_statistics',
+    sections: [
+      {
+        key: 'shippingAttendance',
+        title: '船员考勤记录',
+        fields: [
+          { key: 'crewName', label: '船员姓名', required: true, inputType: 'text' },
+          { key: 'period', label: '时段', required: true, inputType: 'text', placeholder: 'am/pm' },
+          { key: 'locationInRange', label: '是否在钦州范围', required: true, inputType: 'text', placeholder: 'true/false' },
+          { key: 'dutyType', label: '出勤类型', required: true, inputType: 'text', placeholder: 'normal/business_trip/dispatch' },
+        ],
+      },
+    ],
+  },
+};
+
 @Injectable()
 export class WorkbenchService {
   private readonly records = new Map<string, WorkbenchRecord>();
@@ -863,7 +898,8 @@ export class WorkbenchService {
     const schema =
       LEDGER_MODULE_SCHEMAS[moduleCode] ??
       OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ??
-      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode];
+      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode] ??
+      ATTENDANCE_MODULE_SCHEMAS[moduleCode];
     if (!schema) {
       throw new NotFoundException('module schema not found');
     }
@@ -890,6 +926,72 @@ export class WorkbenchService {
       pendingTotal,
       approvalPendingTotal,
       alerts,
+    };
+  }
+
+  getAttendanceStatistics(user: CurrentUser, month?: string) {
+    const monthPrefix = this.normalizeMonth(month);
+    const visibleRecords = this.listVisibleRecords(user);
+    const recordsInMonth = visibleRecords.filter((record) => record.occurredAt.startsWith(monthPrefix));
+
+    const attendanceModules = WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics');
+    const attendanceModuleCodes = new Set(attendanceModules.map((moduleItem) => moduleItem.moduleCode));
+    const operationSourceCodes = new Set(['business_operation_flow', 'zhongchuan_operation_flow', 'pinglu_operation_flow']);
+
+    const attendanceRecords = recordsInMonth.filter((record) => attendanceModuleCodes.has(record.moduleCode));
+    const operationSourceRecords = recordsInMonth.filter((record) => operationSourceCodes.has(record.moduleCode));
+    const mergedCount = attendanceRecords.length + operationSourceRecords.length;
+
+    const morningCount =
+      attendanceRecords.filter((record) => this.toLowerString(record.payload.period) === 'am').length +
+      operationSourceRecords.filter((record) => this.getHour(record.occurredAt) < 12).length;
+    const afternoonCount = mergedCount - morningCount;
+
+    const inRangeCount =
+      attendanceRecords.filter((record) => this.toBoolean(record.payload.locationInRange)).length +
+      operationSourceRecords.filter((record) => this.isQinzhouRange(record)).length;
+    const outRangeCount = Math.max(mergedCount - inRangeCount, 0);
+
+    const businessTripCount = attendanceRecords.filter((record) => {
+      const dutyType = this.toLowerString(record.payload.dutyType);
+      return dutyType === 'business_trip' || dutyType === 'dispatch';
+    }).length;
+    const normalDutyCount = Math.max(attendanceRecords.length - businessTripCount, 0);
+
+    const moduleTotals = attendanceModules.map((moduleItem) => {
+      const recordCount = attendanceRecords.filter((record) => record.moduleCode === moduleItem.moduleCode).length;
+      return {
+        moduleCode: moduleItem.moduleCode,
+        moduleName: moduleItem.moduleName,
+        departmentCode: moduleItem.departmentCode,
+        recordCount,
+      };
+    });
+
+    const operationTotals = [...operationSourceCodes].map((moduleCode) => {
+      const moduleItem = WORKBENCH_MODULES.find((item) => item.moduleCode === moduleCode);
+      return {
+        moduleCode,
+        moduleName: moduleItem?.moduleName ?? moduleCode,
+        departmentCode: moduleItem?.departmentCode ?? 'workgroup',
+        recordCount: operationSourceRecords.filter((record) => record.moduleCode === moduleCode).length,
+      };
+    });
+
+    return {
+      month: monthPrefix,
+      summary: {
+        totalCheckIns: mergedCount,
+        financeAndShippingCheckIns: attendanceRecords.length,
+        operationFlowCheckIns: operationSourceRecords.length,
+        morningCount,
+        afternoonCount,
+        inRangeCount,
+        outRangeCount,
+        businessTripCount,
+        normalDutyCount,
+      },
+      moduleTotals: [...moduleTotals, ...operationTotals],
     };
   }
 
@@ -946,21 +1048,23 @@ export class WorkbenchService {
     const ledgerSchema = LEDGER_MODULE_SCHEMAS[dto.moduleCode];
     const operationFlowSchema = OPERATION_FLOW_MODULE_SCHEMAS[dto.moduleCode];
     const inspectionSchema = INSPECTION_RECTIFICATION_MODULE_SCHEMAS[dto.moduleCode];
-    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema) {
+    const attendanceSchema = ATTENDANCE_MODULE_SCHEMAS[dto.moduleCode];
+    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema && !attendanceSchema) {
       throw new BadRequestException('module schema not found');
     }
 
     if (
       moduleItem.templateType !== 'ledger_form' &&
       moduleItem.templateType !== 'operation_flow' &&
-      moduleItem.templateType !== 'inspection_rectification'
+      moduleItem.templateType !== 'inspection_rectification' &&
+      moduleItem.templateType !== 'attendance_statistics'
     ) {
-      throw new BadRequestException('Wave 5 only supports ledger_form/operation_flow/inspection_rectification creation');
+      throw new BadRequestException('Wave 6 only supports ledger_form/operation_flow/inspection_rectification/attendance_statistics creation');
     }
 
     const nowIso = new Date().toISOString();
     const steps = this.buildInitialSteps(moduleItem.moduleCode);
-    const initialStatus = moduleItem.templateType === 'ledger_form' ? 'draft' : 'assigned';
+    const initialStatus = moduleItem.templateType === 'ledger_form' ? 'draft' : moduleItem.templateType === 'attendance_statistics' ? 'submitted' : 'assigned';
 
     const record: WorkbenchRecord = {
       id: randomUUID(),
@@ -992,6 +1096,8 @@ export class WorkbenchService {
           ? 'Wave 4 作业闭环录单'
           : moduleItem.templateType === 'inspection_rectification'
             ? 'Wave 5 检查整改录单'
+            : moduleItem.templateType === 'attendance_statistics'
+              ? 'Wave 6 考勤统计录单'
             : 'Wave 3 台账录单',
     });
 
@@ -1314,6 +1420,37 @@ export class WorkbenchService {
     }));
   }
 
+  private normalizeMonth(month?: string) {
+    if (!month) {
+      return new Date().toISOString().slice(0, 7);
+    }
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      throw new BadRequestException('month format must be YYYY-MM');
+    }
+    return month;
+  }
+
+  private toLowerString(value: unknown) {
+    return String(value ?? '').trim().toLowerCase();
+  }
+
+  private toBoolean(value: unknown) {
+    const normalized = this.toLowerString(value);
+    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+  }
+
+  private getHour(iso: string) {
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? 0 : date.getUTCHours();
+  }
+
+  private isQinzhouRange(record: WorkbenchRecord) {
+    const berth = this.toLowerString(record.payload.berth);
+    const workArea = this.toLowerString(record.payload.workArea);
+    const vesselName = this.toLowerString(record.payload.vesselName);
+    return berth.includes('qz') || berth.includes('qinzhou') || workArea.includes('钦州') || workArea.includes('qinzhou') || vesselName.includes('钦州');
+  }
+
   private toRecordDetail(record: WorkbenchRecord) {
     return {
       ...this.toRecordSummary(record),
@@ -1471,6 +1608,54 @@ export class WorkbenchService {
           agreementNo: 'XY-2026-0401',
           fee: 12000,
           serviceOwner: '赵主管',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-attendance-001',
+        moduleCode: 'finance_attendance',
+        templateCode: 'finance_attendance_v1',
+        title: '财务统计-4月上旬打卡汇总',
+        summary: '财务部员工打卡与外派统计。',
+        status: 'submitted',
+        vesselId: null,
+        occurredAt: '2026-04-21T01:10:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'finance_user_1',
+        visibleRoles: ['system_admin', 'general_office', 'finance'],
+        payload: {
+          employeeName: '李会计',
+          period: 'am',
+          locationInRange: 'true',
+          dutyType: 'normal',
+        },
+        steps: [],
+        attachments: [],
+        actionLogs: [],
+      },
+      {
+        id: 'wb-record-attendance-002',
+        moduleCode: 'shipping_attendance',
+        templateCode: 'shipping_attendance_v1',
+        title: '船员考勤-苏南012（4月21日）',
+        summary: '船员早班签到与出勤类型记录。',
+        status: 'submitted',
+        vesselId: 'sunan-012',
+        occurredAt: '2026-04-21T08:10:00.000Z',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        ownerUserId: 'crew_012',
+        visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+        payload: {
+          crewName: '周水手',
+          period: 'pm',
+          locationInRange: 'true',
+          dutyType: 'dispatch',
         },
         steps: [],
         attachments: [],

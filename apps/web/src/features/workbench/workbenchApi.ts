@@ -133,6 +133,27 @@ export interface WorkbenchRecordActionPayload {
   payload?: Record<string, unknown>;
 }
 
+export interface WorkbenchAttendanceStatistics {
+  month: string;
+  summary: {
+    totalCheckIns: number;
+    financeAndShippingCheckIns: number;
+    operationFlowCheckIns: number;
+    morningCount: number;
+    afternoonCount: number;
+    inRangeCount: number;
+    outRangeCount: number;
+    businessTripCount: number;
+    normalDutyCount: number;
+  };
+  moduleTotals: Array<{
+    moduleCode: string;
+    moduleName: string;
+    departmentCode: string;
+    recordCount: number;
+  }>;
+}
+
 export const workbenchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getWorkbenchModules: builder.query<{ data: WorkbenchModuleItem[] }, void>({
@@ -145,6 +166,10 @@ export const workbenchApi = baseApi.injectEndpoints({
     }),
     getWorkbenchDashboard: builder.query<{ data: WorkbenchDashboard }, void>({
       query: () => ({ url: '/workbench/dashboard' }),
+      providesTags: ['Workbench'],
+    }),
+    getWorkbenchAttendanceStatistics: builder.query<{ data: WorkbenchAttendanceStatistics }, { month?: string } | void>({
+      query: (params) => ({ url: '/workbench/statistics/attendance', params }),
       providesTags: ['Workbench'],
     }),
     getWorkbenchRecords: builder.query<WorkbenchRecordListResponse, WorkbenchRecordQuery | void>({
@@ -177,6 +202,7 @@ export const {
   useGetWorkbenchModulesQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchDashboardQuery,
+  useGetWorkbenchAttendanceStatisticsQuery,
   useGetWorkbenchRecordsQuery,
   useGetWorkbenchRecordQuery,
   useCreateWorkbenchRecordMutation,
