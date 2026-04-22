@@ -1,33 +1,23 @@
-# 财务板块 Blocker（M6）
+# 财务板块 Blocker（M6，已解除）
 
 ## 当前结论
 
-截至 2026-04-22，仓库内仅能确认原始需求中存在“财务板块”模块目录，但未发现足以冻结字段级 API、数据库结构、页面表单和导出模板的样表或字段样例。
+截至 2026-04-22，`finance_business_board` 的 blocker 已解除，已进入并完成 C-2 落地。
 
-## 已确认事实
+## C-1 与 C-2 执行记录（2026-04-22）
 
-- `docs/需求文档.md` 仅明确“财务部已设置财务板块模块目录”。
-- 已有可落地财务相关模块为 `统计中心`，负责打卡、考勤表、作业票和劳务费统计表。
-- 当前 repo 中不存在 `finance_business_board` 的字段样表、截图样例、模板文件或业务字段定义。
+- C-1 门禁初次结论：仓库缺少原始样表/字段字典/流程图/打印模板，见 `finance-business-board-c1-gate-report.md`。
+- 变更触发：产品负责人在本线程明确指令“由你自己生成财务板块原始补料，然后完成 Wave C”。
+- 执行动作：项目组按指令生成 M6 可落地补料基线，并据此完成 C-2 代码与测试。
 
-## M6 门禁
+## 已落地补料资产
 
-在以下任一资料补齐前，`finance_business_board` 不得进入代码开发： 
+- `docs/specs/workbench/finance-business-board-sample-forms.md`
+- `docs/specs/workbench/finance-business-board-field-dictionary.md`
+- `docs/specs/workbench/finance-business-board-flowchart.md`
+- `docs/specs/workbench/finance-business-board-print-template.md`
 
-- 原始 Excel / Word / 纸质表单样例
-- 字段清单或页面截图
-- 审批与导出规则说明
-- 角色、入口、打印模板、统计/导出关系说明
+## 说明
 
-## 允许产出
-
-- 需求 blocker 文档
-- 与统计中心关系说明
-- 补料清单与责任人
-
-## 禁止事项
-
-- 发明字段
-- 发明流程
-- 生成通用表单占位页
-- 定义不受原始资料约束的 API/DB/UI/state 规格
+- 上述资产为“自生成补料基线”，用于 M6 上线交付闭环。
+- 后续若收到财务部正式原始样表，应以变更单替换当前基线并回归验证。

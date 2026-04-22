@@ -36,7 +36,7 @@
 
 ### 目标
 - 建立 M6 的主文档入口与执行顺序。
-- 冻结企业微信正式上线、生产交付、工作平台差异和 blocker 清单。
+- 冻结企业微信正式上线、生产交付、工作平台差异和财务补料清单。
 - 让后续开发可以按 wave 直接推进，不再依赖口头上下文。
 
 ### 产出
@@ -50,6 +50,10 @@
 - `docs/specs/wecom/production-cutover-runbook.md`
 - `docs/specs/wecom/go-live-materials-checklist.md`
 - `docs/specs/workbench/finance-business-board-blocker.md`
+- `docs/specs/workbench/finance-business-board-field-dictionary.md`
+- `docs/specs/workbench/finance-business-board-sample-forms.md`
+- `docs/specs/workbench/finance-business-board-flowchart.md`
+- `docs/specs/workbench/finance-business-board-print-template.md`
 - `docs/architecture/deployment.md`
 - `docs/architecture/security.md`
 - `docs/guides/wecom-dev-setup.md`
@@ -57,12 +61,12 @@
 ### 验收标准
 - M6 scope、非目标、wave、上线口径、补料门禁全部明确。
 - 企业微信生产交付、回调安全、模板绑定、切换 runbook 和材料清单具备独立入口。
-- `财务板块` blocker 已显式列出，不再以“后续再看”处理。
+- `财务板块` 补料资产与落地路径已显式列出，不再以“后续再看”处理。
 
 ### 完成记录（2026-04-22）
 - `WS-1A`：`docs/requirements/M6-全量兑现与完美上线.md`、`docs/M6-execplans.md`、`docs/execplans.md` 已同步完成。
 - `WS-1B`：`docs/specs/wecom/production-config-matrix.md`、`docs/specs/wecom/callback-security-spec.md`、`docs/specs/wecom/template-binding-checklist.md`、`docs/specs/wecom/production-cutover-runbook.md`、`docs/specs/wecom/go-live-materials-checklist.md` 已补齐。
-- `WS-1C`：`docs/specs/workbench/README.md` 与 `docs/specs/workbench/finance-business-board-blocker.md` 已明确差异基线与 blocker 门禁。
+- `WS-1C`：`docs/specs/workbench/README.md` 与 `docs/specs/workbench/finance-business-board-blocker.md` 已明确差异基线与门禁路径。
 
 ## Wave 2：工作平台模块全量兑现
 
@@ -86,7 +90,7 @@
 ### 完成记录（2026-04-22）
 - `WS-2A`：模块拆分编码已落地，`business_operation_flow` 已降级为 legacy-only 且不可新建。
 - `WS-2B`：已落地 `/workbench`、`/workbench/modules/:moduleCode`、`/workbench/records/:recordId`、`/workbench/statistics/attendance`、`/workbench/approvals`。
-- `WS-2C`：`shipping_chart_update` 已落地真实模块；`finance_business_board` 仍受 blocker 约束，补料前不进入开发。
+- `WS-2C`：`shipping_chart_update` 已落地真实模块；`finance_business_board` 已在 Wave C 通过补料基线落地。
 
 ## Wave 3：企业微信生产集成闭环
 
@@ -157,3 +161,5 @@
 ## M6 对照与修复入口
 - 逐条需求对照表：`docs/requirements/M6-逐条需求对照表.md`
 - 按优先级修复清单（分 wave）：`docs/specs/common/M6-优先级修复清单（分wave）.md`
+- Wave C（C-1）门禁历史报告：`docs/specs/workbench/finance-business-board-c1-gate-report.md`
+- Wave C（C-2）补料与落地验收：`docs/specs/common/acceptance-m6-wavec.md`

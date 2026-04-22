@@ -530,9 +530,31 @@ describe('WorkbenchController integration', () => {
     expect(financeModules.status).toBe(200);
     const moduleCodes = (financeModules.body as { data: Array<{ moduleCode: string }> }).data.map((item) => item.moduleCode);
     expect(moduleCodes).toContain('finance_attendance');
+    expect(moduleCodes).toContain('finance_business_board');
     expect(moduleCodes).not.toContain('business_operation_flow');
     expect(moduleCodes).not.toContain('business_oil_boom_operation');
     expect(moduleCodes).not.toContain('shipping_voyage_approval');
+
+    const financeBoardCreate = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'finance_business_board',
+        title: '财务台账样例',
+        summary: '用于校验财务板块录单',
+        payload: {
+          voucherNo: 'FBB-2026-0001',
+          businessDate: '2026-04-22',
+          counterpartyName: '广西某航运服务公司',
+          businessCategory: '劳务结算',
+          amount: 12800,
+          settlementMethod: 'bank_transfer',
+          costCenter: 'finance_center',
+          invoiceStatus: 'pending',
+        },
+      });
+    expect(financeBoardCreate.status).toBe(201);
+    expect((financeBoardCreate.body as { data: { moduleCode: string } }).data.moduleCode).toBe('finance_business_board');
 
     const forbiddenCreate = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/workbench/records')

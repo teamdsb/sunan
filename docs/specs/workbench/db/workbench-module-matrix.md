@@ -10,7 +10,7 @@
 | 安全隐患排查管理 | 总经办 | `inspection_rectification` | 系统内 | A4 | 是 | M4 已冻结 | 管理四部门及作业组排查 |
 | 年度工作计划 | 总经办 | `ledger_form` | 系统内 | A4 | 是 | M4 已冻结 | 年度计划台账 |
 | 统计中心 | 财务部 | `attendance_statistics` | 系统内 | A4 | 是 | M4 已冻结 | 手机打卡、范围定位、月统计 |
-| 财务板块 | 财务部 | 待定 | 待定 | 待定 | 待定 | M5 规格纳入，开发后置 | 仅冻结边界与待确认清单，不冻结字段级 API |
+| 财务板块 | 财务部 | `ledger_form` | 企业微信审批/系统内审批 | A4 | 是 | M6 已冻结并落地 | 采用 M6 自生成补料基线，后续可按正式样表替换 |
 | 作业人员签到台 | 业务部 | `operation_flow` | 系统内 | A4 | 是 | M4 已冻结 | 作业船名、泊位、签到时间 |
 | 接收工作组操作流程 | 业务部 | `operation_flow` | 系统内 | A4 | 是 | M4 已冻结 | 班前会/检查/巡查/完工确认 |
 | 围油栏 | 业务部 | `operation_flow` | 系统内 | A4 | 是 | M4 已冻结 | 作业记录、单证、费用 |
@@ -73,9 +73,13 @@
 ## 3. 遗留模块补充说明
 
 ### 财务板块
-- 当前仅能确认其属于财务部门目录下的独立业务承载模块。
-- M5 只冻结以下边界：角色范围、业务入口、待确认清单、与统计中心的关系。
-- 在原始资料补齐前，不冻结字段级 API、表结构和导出模板。
+- M6 Wave C 已按补料基线完成冻结与落地，模块编码：`finance_business_board`。
+- 字段、流程、打印模板见：
+  - `../finance-business-board-field-dictionary.md`
+  - `../finance-business-board-sample-forms.md`
+  - `../finance-business-board-flowchart.md`
+  - `../finance-business-board-print-template.md`
+- 后续若财务部提供正式样表，需以变更单替换并执行回归验证。
 
 ### 海图更新
 - M5 将其明确纳入 `ledger_form` 模板。

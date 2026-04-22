@@ -50,16 +50,20 @@
 - `docs/specs/wecom/production-cutover-runbook.md`
 - `docs/specs/wecom/go-live-materials-checklist.md`
 - `docs/specs/workbench/finance-business-board-blocker.md`
+- `docs/specs/workbench/finance-business-board-field-dictionary.md`
+- `docs/specs/workbench/finance-business-board-sample-forms.md`
+- `docs/specs/workbench/finance-business-board-flowchart.md`
+- `docs/specs/workbench/finance-business-board-print-template.md`
 
 ### 验收标准
-- M6 的目标、范围、wave、门禁、上线口径和 blocker 清单明确。
+- M6 的目标、范围、wave、门禁、上线口径和补料清单明确。
 - 工作平台 README 不再默认“规格已收口即代码已兑现”。
 - 企业微信生产交付、回调安全、切换 runbook 和材料清单均有独立入口。
 
 ### 完成记录（2026-04-22）
 - `WS-1A`：`docs/requirements/M6-全量兑现与完美上线.md`、`docs/M6-execplans.md`、`docs/execplans.md` 已同步完成。
 - `WS-1B`：`docs/specs/wecom/production-config-matrix.md`、`docs/specs/wecom/callback-security-spec.md`、`docs/specs/wecom/template-binding-checklist.md`、`docs/specs/wecom/production-cutover-runbook.md`、`docs/specs/wecom/go-live-materials-checklist.md` 已补齐。
-- `WS-1C`：`docs/specs/workbench/README.md` 与 `docs/specs/workbench/finance-business-board-blocker.md` 已明确差异基线与 blocker 门禁。
+- `WS-1C`：`docs/specs/workbench/README.md` 与财务补料入口文档已明确差异基线与门禁路径。
 
 ## Wave 2：工作平台模块全量兑现
 
@@ -68,7 +72,7 @@
 - 新增 `/workbench/modules/:moduleCode`、`/workbench/records/:recordId`、`/workbench/statistics/attendance`、`/workbench/approvals`。
 - 将 `business_operation_flow` 变为 legacy-only。
 - 落地 `shipping_chart_update`。
-- 形成 `finance_business_board` blocker 判定结果。
+- 形成 `finance_business_board` 的 C-1 门禁与 C-2 落地执行路径。
 
 ### 验收标准
 - 新模块编码、路由、统计口径与规格一致。
@@ -78,7 +82,7 @@
 ### 完成记录（2026-04-22）
 - `WS-2A`：模块拆分编码已落地，`business_operation_flow` 已降级为 legacy-only 且不可新建。
 - `WS-2B`：已落地 `/workbench`、`/workbench/modules/:moduleCode`、`/workbench/records/:recordId`、`/workbench/statistics/attendance`、`/workbench/approvals`。
-- `WS-2C`：`shipping_chart_update` 已落地真实模块；`finance_business_board` 仍受 blocker 约束，补料前不进入开发。
+- `WS-2C`：`shipping_chart_update` 已落地真实模块；`finance_business_board` 已在 Wave C 按补料基线落地。
 
 ## Wave 3：企业微信生产集成闭环
 

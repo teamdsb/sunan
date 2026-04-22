@@ -27,7 +27,11 @@
 | UI | `ui/workbench-department-modules.md` | M5 已更新 |
 | Planning | `m5-optimization-backlog.md` | M5 历史输入 |
 | Planning | `../wecom/production-config-matrix.md` | M6 已新增 |
-| Planning | `finance-business-board-blocker.md` | M6 已新增 |
+| Planning | `finance-business-board-blocker.md` | M6 已更新（已解除） |
+| Planning | `finance-business-board-field-dictionary.md` | M6 Wave C 已新增 |
+| Planning | `finance-business-board-sample-forms.md` | M6 Wave C 已新增 |
+| Planning | `finance-business-board-flowchart.md` | M6 Wave C 已新增 |
+| Planning | `finance-business-board-print-template.md` | M6 Wave C 已新增 |
 
 ## M6 差异基线
 
@@ -37,7 +41,7 @@
 2. 工作平台已从单页壳层升级为模块页、详情页、统计页、审批页路由（Wave 2 已完成）。
 3. 聚合模块 `business_operation_flow` 已降级为 legacy-only，新建入口使用拆分模块（Wave 2 已完成）。
 4. `海图更新` 已作为真实模块落地，字段范围覆盖更新批次、适用船舶、版本号、更新日期、更新说明、附件、确认记录、下次提醒日期（Wave 2 已完成）。
-5. `财务板块` 仍无字段样表，M6 只允许 blocker，不允许发明接口或表单（持续生效）。
+5. `财务板块` 已完成补料基线并落地 `finance_business_board`；后续以正式样表替换时走变更单。
 6. 企业微信生产配置矩阵、回调安全、模板绑定、切换 runbook 和上线材料已沉淀为独立文档（Wave 1 已完成）。
 
 ## M6 固定模块编码
@@ -83,7 +87,7 @@
 - `business_ship_oily_water_operation`
 - `business_domestic_sewage_operation`
 - `shipping_chart_update`
-- `finance_business_board`（补料完成前不得落地代码）
+- `finance_business_board`
 
 ### Legacy-only 模块
 - `business_operation_flow`
@@ -128,15 +132,18 @@
 
 1. `docs/requirements/M6-全量兑现与完美上线.md`
 2. `db/workbench-module-matrix.md`
-3. `finance-business-board-blocker.md`
-4. `api/workbench-platform-api.yaml`
-5. `api/workbench-approval-api.yaml`
-6. `state/workbench-records.md`
-7. `state/workbench-approval-sync.md`
-8. `docs/specs/wecom/production-config-matrix.md`
-9. `docs/specs/wecom/callback-security-spec.md`
-10. `docs/specs/wecom/production-cutover-runbook.md`
-11. `docs/specs/wecom/go-live-materials-checklist.md`
+3. `finance-business-board-field-dictionary.md`
+4. `finance-business-board-sample-forms.md`
+5. `finance-business-board-flowchart.md`
+6. `finance-business-board-print-template.md`
+7. `api/workbench-platform-api.yaml`
+8. `api/workbench-approval-api.yaml`
+9. `state/workbench-records.md`
+10. `state/workbench-approval-sync.md`
+11. `docs/specs/wecom/production-config-matrix.md`
+12. `docs/specs/wecom/callback-security-spec.md`
+13. `docs/specs/wecom/production-cutover-runbook.md`
+14. `docs/specs/wecom/go-live-materials-checklist.md`
 
 ## 与其他文档的关系
 

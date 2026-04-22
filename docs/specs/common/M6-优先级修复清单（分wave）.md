@@ -6,7 +6,7 @@
 - 执行原则：
   - 先 P0 后 P1，再做 P2 体验增强
   - 每个项必须明确 `API/DB/UI/测试/验收`
-  - `finance_business_board` 在补料完成前保持 blocker，不做伪实现
+  - `finance_business_board` 需先完成补料资产冻结，再进入实现
 
 ## 2. 优先级定义
 - `P0`：不修复则无法宣称“需求全量兑现”
@@ -18,8 +18,14 @@
 |---|---|---|---|
 | Wave A | 补齐业务部关键字段缺口 | P0 | 业务部 4 张核心记录表字段与需求一致，OpenAPI 与前端联动通过 |
 | Wave B | 总经办培训/会议高保真能力补齐 | P1 | 培训进度、会议签到/照片/A3 打印闭环通过 |
-| Wave C | 财务板块补料决策与落地（或正式阻塞结案） | P0/P1 | 补料齐则落代码；补料缺则 blocker 升级并形成签字结案 |
+| Wave C | 财务板块补料决策与落地 | P0/P1 | 补料资产冻结并完成 C-2 代码、测试、验收 |
 | Wave D | 治理与体验收口（查询窗口、证据归档、可观测） | P2 | 规则门禁、上线证据、运行治理全部可审计 |
+
+## 3.1 当前状态
+- Wave A：已完成
+- Wave B：已完成
+- Wave C：已完成（C-1 + C-2）
+- Wave D：待执行
 
 ---
 
@@ -189,6 +195,19 @@
 - 交付：
   - 若补料齐：冻结 `docs/specs/workbench/db/workbench-module-matrix.md` 中财务模块定义，进入 C-2
   - 若补料缺：更新 blocker 文档并签字确认“本期不开发”
+
+### Wave C 当前记录（2026-04-22）
+- 已完成 `C-1`：
+  - 保留初次门禁不通过报告：`docs/specs/workbench/finance-business-board-c1-gate-report.md`
+  - 在产品负责人授权下，已生成补料四件套并冻结基线：
+    - `docs/specs/workbench/finance-business-board-sample-forms.md`
+    - `docs/specs/workbench/finance-business-board-field-dictionary.md`
+    - `docs/specs/workbench/finance-business-board-flowchart.md`
+    - `docs/specs/workbench/finance-business-board-print-template.md`
+- 已完成 `C-2`：
+  - `finance_business_board` 已落地到 workbench 模块注册与 schema。
+  - 财务角色可见性与建单能力已纳入集成测试。
+- 验收归档：`docs/specs/common/acceptance-m6-wavec.md`
 
 ### C-2 财务板块实现（仅补料齐后执行，P1）
 - API 改动点：
