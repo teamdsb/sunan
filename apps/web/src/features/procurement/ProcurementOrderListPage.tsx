@@ -45,13 +45,22 @@ export function ProcurementOrderListPage() {
   const [keyword, setKeyword] = useState<string>('');
   const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode | undefined>(undefined);
   const [status, setStatus] = useState<ProcurementOrderStatus | undefined>(undefined);
+  const [submittedFrom, setSubmittedFrom] = useState<string | undefined>(undefined);
+  const [submittedTo, setSubmittedTo] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const now = new Date();
+  const minDate = new Date(now);
+  minDate.setFullYear(minDate.getFullYear() - 3);
+  const currentDayText = now.toISOString().slice(0, 10);
+  const minDayText = minDate.toISOString().slice(0, 10);
 
   const { data: response, isLoading } = useGetProcurementOrdersQuery({
     keyword: keyword || undefined,
     departmentCode,
     status,
+    submittedFrom,
+    submittedTo,
     page,
     pageSize,
   });
@@ -143,6 +152,30 @@ export function ProcurementOrderListPage() {
               setStatus(value);
             }}
           />
+          <Input
+            type="date"
+            style={{ width: 180 }}
+            placeholder="提交起始日期"
+            min={minDayText}
+            max={currentDayText}
+            value={submittedFrom ?? ''}
+            onChange={(event) => {
+              setPage(1);
+              setSubmittedFrom(event.target.value || undefined);
+            }}
+          />
+          <Input
+            type="date"
+            style={{ width: 180 }}
+            placeholder="提交截止日期"
+            min={minDayText}
+            max={currentDayText}
+            value={submittedTo ?? ''}
+            onChange={(event) => {
+              setPage(1);
+              setSubmittedTo(event.target.value || undefined);
+            }}
+          />
           <Button type="primary" onClick={() => navigate(procurementRouteConfig.orderCreate.path)}>
             新建采购单
           </Button>
@@ -170,6 +203,10 @@ export function ProcurementOrderListPage() {
             />
           </div>
         </Card>
+      </section>
+
+      <section className="page-card-grid">
+        <Alert type="info" showIcon message="查询窗口说明" description="采购查询仅支持近 3 年内数据；超窗将被后端拒绝并返回明确错误。" />
       </section>
 
       <section className="page-card-grid">

@@ -76,6 +76,11 @@ interface NormalizedDateRange {
   endAt: Date;
 }
 
+interface NormalizedSubmittedDateRange {
+  submittedFrom?: Date;
+  submittedTo?: Date;
+}
+
 interface ReportDetailRow {
   id: string;
   order_no: string;
@@ -272,12 +277,13 @@ export class ProcurementService {
       qb.andWhere('order.approvalChannel = :approvalChannel', { approvalChannel: query.approvalChannel });
     }
 
-    if (query.submittedFrom) {
-      qb.andWhere('order.submittedAt >= :submittedFrom', { submittedFrom: `${query.submittedFrom}T00:00:00.000+08:00` });
+    const submittedRange = this.normalizeSubmittedDateRange(query.submittedFrom, query.submittedTo);
+    if (submittedRange.submittedFrom) {
+      qb.andWhere('order.submittedAt >= :submittedFrom', { submittedFrom: submittedRange.submittedFrom.toISOString() });
     }
 
-    if (query.submittedTo) {
-      qb.andWhere('order.submittedAt <= :submittedTo', { submittedTo: `${query.submittedTo}T23:59:59.999+08:00` });
+    if (submittedRange.submittedTo) {
+      qb.andWhere('order.submittedAt <= :submittedTo', { submittedTo: submittedRange.submittedTo.toISOString() });
     }
 
     const [rows, total] = await qb
@@ -1284,14 +1290,52 @@ export class ProcurementService {
       throw new BadRequestException('startDate must be less than or equal to endDate');
     }
 
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 3);
-
-    if (startAt < minDate || endAt < minDate) {
+    const { minDate, now } = this.buildThreeYearWindow();
+    if (startAt < minDate || endAt < minDate || startAt > now || endAt > now) {
       throw new BadRequestException('date range must be in last three years');
     }
 
     return { startAt, endAt };
+  }
+
+  private normalizeSubmittedDateRange(submittedFrom?: string, submittedTo?: string): NormalizedSubmittedDateRange {
+    const result: NormalizedSubmittedDateRange = {};
+    const { minDate, now } = this.buildThreeYearWindow();
+
+    if (submittedFrom) {
+      const startAt = new Date(`${submittedFrom}T00:00:00.000+08:00`);
+      if (Number.isNaN(startAt.getTime())) {
+        throw new BadRequestException('invalid submittedFrom');
+      }
+      if (startAt < minDate || startAt > now) {
+        throw new BadRequestException('submitted date range must be in last three years');
+      }
+      result.submittedFrom = startAt;
+    }
+
+    if (submittedTo) {
+      const endAt = new Date(`${submittedTo}T23:59:59.999+08:00`);
+      if (Number.isNaN(endAt.getTime())) {
+        throw new BadRequestException('invalid submittedTo');
+      }
+      if (endAt < minDate || endAt > now) {
+        throw new BadRequestException('submitted date range must be in last three years');
+      }
+      result.submittedTo = endAt;
+    }
+
+    if (result.submittedFrom && result.submittedTo && result.submittedFrom > result.submittedTo) {
+      throw new BadRequestException('submittedFrom must be less than or equal to submittedTo');
+    }
+
+    return result;
+  }
+
+  private buildThreeYearWindow() {
+    const now = new Date();
+    const minDate = new Date(now);
+    minDate.setFullYear(minDate.getFullYear() - 3);
+    return { minDate, now };
   }
 
   private assertDimensionDetailsScope(departmentCode: string, dimensionType: string) {

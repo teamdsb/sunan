@@ -37,6 +37,14 @@
 | 导出任务 | `jobId`/`module`/`status`/`durationMs` | 30 分钟内完成率 >= 95% | 超时任务 >= 3 条 |
 | 打印快照 | `recordId`/`renderedFormat` | 成功率 >= 99% | 30 分钟失败 >= 3 次 |
 
+## 4.1 日志字段标准化补充（Wave D）
+
+- OAuth2：`requestId`、`corpId`、`agentId`、`codeHash`、`elapsedMs`、`result`
+- JS-SDK：`requestId`、`urlHash`、`nonce`、`timestamp`、`elapsedMs`、`result`
+- 审批回调：`requestId`、`eventId`、`processInstanceId`、`callbackVersion`、`requestIp`、`verifyMode`、`result`
+- 导出任务：`requestId`、`jobId`、`jobType`、`ownerUserId`、`durationMs`、`result`
+- 打印快照：`requestId`、`recordId`、`paperSize`、`renderedFormat`、`durationMs`、`result`
+
 ## 5. 告警分级
 
 - P0：登录不可用、审批主链路中断、数据库不可用。
@@ -62,3 +70,14 @@
 4. 执行修复动作（重试、回滚、恢复）。
 5. 回归抽检四大板块核心链路。
 6. 记录事件时间线与复盘结论。
+
+## 8. 失败注入演练（Wave D）
+
+- 演练频率：预发布每次全量演练 + 生产每周抽检 1 次。
+- 最低演练项：
+  1. OAuth2 回调失败注入
+  2. 审批回调验签失败注入
+  3. 导出任务超时注入
+  4. 打印快照失败注入
+- 演练记录最小字段：
+  - `drillId`、`drillTime`、`executor`、`scenario`、`triggerCondition`、`alertTriggered`、`recoveryAction`、`recoveryDurationMs`、`result`

@@ -163,3 +163,5 @@
 - 按优先级修复清单（分 wave）：`docs/specs/common/M6-优先级修复清单（分wave）.md`
 - Wave C（C-1）门禁历史报告：`docs/specs/workbench/finance-business-board-c1-gate-report.md`
 - Wave C（C-2）补料与落地验收：`docs/specs/common/acceptance-m6-wavec.md`
+- Wave D 治理收口报告：`docs/specs/common/m6-waved-governance-closure.md`
+- Wave D 验收归档：`docs/specs/common/acceptance-m6-waved.md`

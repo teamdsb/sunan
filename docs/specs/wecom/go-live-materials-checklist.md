@@ -18,6 +18,9 @@
 - 材料按 `wave / date / owner` 归档。
 - 截图或录屏文件名统一包含日期、平台、场景、执行人。
 - 版本号、企业微信版本、设备型号必须可追溯。
+- 每次上线必须登记归档批次号：`M6-WD-YYYYMMDD-<env>-<seq>`。
+- 归档目录最小结构：`go-live/<batchId>/{screenshots,videos,checklists,rollback,drill}/`。
+- 证据文件命名建议：`<date>_<platform>_<module>_<scene>_<owner>.<ext>`。
 
 ## 材料责任分工
 

@@ -42,6 +42,13 @@ const authGuard: CanActivate = {
 })
 class TestModule {}
 
+function toDateText(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 describe('ProcurementController integration', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -224,5 +231,41 @@ describe('ProcurementController integration', () => {
     expect((pendingResponse.body as { data: Array<{ entityId: string; approvalLevel: string }> }).data).toEqual(
       expect.arrayContaining([expect.objectContaining({ entityId: orderId, approvalLevel: 'dept' })]),
     );
+  });
+
+  it('enforces last-three-years window for procurement order list submitted range', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'viewer-general',
+      departments: ['总经办'],
+      roles: ['all_authenticated', 'general_office'],
+    };
+
+    const now = new Date();
+    const validFrom = new Date(now);
+    validFrom.setFullYear(validFrom.getFullYear() - 2);
+    const validTo = new Date(now);
+    validTo.setDate(validTo.getDate() - 1);
+
+    const validResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/procurement/orders')
+      .set('Authorization', 'Bearer token')
+      .query({
+        submittedFrom: toDateText(validFrom),
+        submittedTo: toDateText(validTo),
+      });
+    expect(validResponse.status).toBe(200);
+
+    const invalidFrom = new Date(now);
+    invalidFrom.setFullYear(invalidFrom.getFullYear() - 4);
+    const invalidResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/procurement/orders')
+      .set('Authorization', 'Bearer token')
+      .query({
+        submittedFrom: toDateText(invalidFrom),
+        submittedTo: toDateText(validTo),
+      });
+    expect(invalidResponse.status).toBe(400);
+    expect((invalidResponse.body as { message: string }).message).toContain('submitted date range must be in last three years');
   });
 });

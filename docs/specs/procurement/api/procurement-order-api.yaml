@@ -39,11 +39,13 @@ paths:
             enum: [internal, wecom_native]
         - in: query
           name: submittedFrom
+          description: 提交时间起始（仅支持近 3 年范围）
           schema:
             type: string
             format: date
         - in: query
           name: submittedTo
+          description: 提交时间截止（仅支持近 3 年范围）
           schema:
             type: string
             format: date

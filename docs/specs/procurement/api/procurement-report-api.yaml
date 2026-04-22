@@ -12,6 +12,7 @@ paths:
         - in: query
           name: year
           required: true
+          description: 仅支持近 3 年（含当年）
           schema:
             type: integer
             minimum: 2000
@@ -43,6 +44,7 @@ paths:
         - in: query
           name: year
           required: true
+          description: 仅支持近 3 年（含当年）
           schema:
             type: integer
             minimum: 2000
@@ -73,12 +75,14 @@ paths:
         - in: query
           name: startDate
           required: true
+          description: 明细查询起始日期（仅支持近 3 年范围）
           schema:
             type: string
             format: date
         - in: query
           name: endDate
           required: true
+          description: 明细查询截止日期（仅支持近 3 年范围）
           schema:
             type: string
             format: date
@@ -114,12 +118,14 @@ paths:
         - in: query
           name: startDate
           required: true
+          description: 明细查询起始日期（仅支持近 3 年范围）
           schema:
             type: string
             format: date
         - in: query
           name: endDate
           required: true
+          description: 明细查询截止日期（仅支持近 3 年范围）
           schema:
             type: string
             format: date

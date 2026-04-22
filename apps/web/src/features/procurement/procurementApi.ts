@@ -106,6 +106,8 @@ export interface ProcurementOrderListQuery {
   dimensionType?: ProcurementDimensionType;
   dimensionKey?: string;
   status?: ProcurementOrderStatus;
+  submittedFrom?: string;
+  submittedTo?: string;
   page?: number;
   pageSize?: number;
 }

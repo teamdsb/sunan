@@ -147,3 +147,10 @@
 - `WS-6B`：已完成上线包索引与验收归档，见 `docs/specs/common/m6-wave6-go-live-package.md`、`docs/specs/common/acceptance-m6-wave6.md`。
 - `WS-6C`：已补齐首周 Hypercare 日报模板，见 `docs/specs/common/m6-wave6-hypercare-daily-template.md`。
 - 全量与冒烟测试：`make test-api`、`make test-web`、`pnpm --filter api build`、`pnpm --filter web build`、关键 integration smoke 子集均通过，详见 `docs/specs/common/m6-wave6-test-and-smoke-report.md`。
+
+## M6 对照与修复入口
+- 逐条需求对照表：`docs/requirements/M6-逐条需求对照表.md`
+- 按优先级修复清单（分 wave）：`docs/specs/common/M6-优先级修复清单（分wave）.md`
+- Wave C（C-2）补料与落地验收：`docs/specs/common/acceptance-m6-wavec.md`
+- Wave D 治理收口报告：`docs/specs/common/m6-waved-governance-closure.md`
+- Wave D 验收归档：`docs/specs/common/acceptance-m6-waved.md`

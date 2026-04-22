@@ -59,6 +59,8 @@ describe('ProcurementOrderListPage', () => {
         keyword: undefined,
         departmentCode: undefined,
         status: undefined,
+        submittedFrom: undefined,
+        submittedTo: undefined,
         page: 1,
         pageSize: 20,
       }),

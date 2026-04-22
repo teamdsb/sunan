@@ -42,6 +42,13 @@ const authGuard: CanActivate = {
 })
 class TestModule {}
 
+function toDateText(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 describe('ProcurementReport integration', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -193,5 +200,36 @@ describe('ProcurementReport integration', () => {
       expect.objectContaining({ approvalLevel: 'finance' }),
       expect.objectContaining({ approvalLevel: 'final' }),
     ]);
+  });
+
+  it('enforces last-three-years window for report detail queries', async () => {
+    const now = new Date();
+    const validStart = new Date(now);
+    validStart.setFullYear(validStart.getFullYear() - 2);
+    const validEnd = new Date(now);
+    validEnd.setDate(validEnd.getDate() - 1);
+
+    const validDepartmentDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/procurement/reports/department-details')
+      .set('Authorization', 'Bearer token')
+      .query({
+        departmentCode: 'shipping_dept',
+        startDate: toDateText(validStart),
+        endDate: toDateText(validEnd),
+      });
+    expect(validDepartmentDetail.status).toBe(200);
+
+    const invalidStart = new Date(now);
+    invalidStart.setFullYear(invalidStart.getFullYear() - 4);
+    const invalidDepartmentDetail = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/procurement/reports/department-details')
+      .set('Authorization', 'Bearer token')
+      .query({
+        departmentCode: 'shipping_dept',
+        startDate: toDateText(invalidStart),
+        endDate: toDateText(validEnd),
+      });
+    expect(invalidDepartmentDetail.status).toBe(400);
+    expect((invalidDepartmentDetail.body as { message: string }).message).toContain('date range must be in last three years');
   });
 });
