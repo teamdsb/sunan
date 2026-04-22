@@ -43,3 +43,8 @@
 - 企业微信应用 Secret、JWT Secret 按季度轮换。
 - 上线窗口明确值班人与联系人。
 - 关键告警至少覆盖 OAuth2、JS-SDK、审批回调、消息发送、文件回调、导出任务和打印快照。
+
+## Wave 4 关联文档
+
+- `docs/specs/common/operations-observability-m6.md`
+- `docs/specs/wecom/production-cutover-runbook.md`

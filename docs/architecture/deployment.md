@@ -82,3 +82,9 @@ NestJS 服务
 - 企业微信管理员
 - DBA / 运维负责人
 - 业务确认人
+
+## Wave 4 交付引用
+
+- 运维与告警基线：`docs/specs/common/operations-observability-m6.md`
+- 上线切换步骤：`docs/specs/wecom/production-cutover-runbook.md`
+- 上线材料清单：`docs/specs/wecom/go-live-materials-checklist.md`
