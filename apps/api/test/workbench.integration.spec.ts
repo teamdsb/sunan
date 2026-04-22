@@ -106,10 +106,11 @@ describe('WorkbenchController integration', () => {
         summary: 'B3 泊位作业闭环',
         vesselId: 'sunan-012',
         payload: {
-          operationName: '围油栏布设',
           vesselName: '苏南012',
           berth: 'QZ-B3',
-          teamLead: '赵班长',
+          agencyCompany: '苏南代理',
+          operationFee: 1000,
+          operationDate: '2026-04-21',
         },
       });
 
@@ -327,6 +328,134 @@ describe('WorkbenchController integration', () => {
     expect(approvalSync.callbackVersion).toBe(1);
     expect(approvalSync.lastReconciledAt).not.toBeNull();
     expect(approvalSync.retryCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it('exposes wave-a schema fields and enforces required payload fields', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'business-user-2',
+      roles: ['all_authenticated', 'business'],
+      departments: ['业务部'],
+      isAdmin: false,
+    };
+
+    const shipSignSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/business_ship_sign/schema')
+      .set('Authorization', 'Bearer token');
+
+    expect(shipSignSchemaResponse.status).toBe(200);
+    const shipSignFields = (
+      (shipSignSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(shipSignFields).toEqual(
+      expect.arrayContaining([
+        'customerName',
+        'vesselName',
+        'imoOrCallSign',
+        'vesselType',
+        'grossTonnage',
+        'agreementNo',
+        'fee',
+        'chargeMode',
+        'berth',
+        'cargoType',
+        'serviceOwner',
+        'teamLead',
+        'signDate',
+        'watchVessel',
+      ]),
+    );
+
+    const vesselDynamicSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/business_vessel_dynamic/schema')
+      .set('Authorization', 'Bearer token');
+    expect(vesselDynamicSchemaResponse.status).toBe(200);
+    const vesselDynamicFields = (
+      (vesselDynamicSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(vesselDynamicFields).toContain('berthTerminal');
+
+    const garbageSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/business_ship_garbage_operation/schema')
+      .set('Authorization', 'Bearer token');
+    expect(garbageSchemaResponse.status).toBe(200);
+    const garbageFields = (
+      (garbageSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(garbageFields).toEqual(expect.arrayContaining(['nationality', 'voyageNo', 'fee']));
+
+    const oilyWaterSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/business_ship_oily_water_operation/schema')
+      .set('Authorization', 'Bearer token');
+    expect(oilyWaterSchemaResponse.status).toBe(200);
+    const oilyWaterFields = (
+      (oilyWaterSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(oilyWaterFields).toEqual(expect.arrayContaining(['nationality', 'documentNo', 'fee']));
+
+    const domesticSewageSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/business_domestic_sewage_operation/schema')
+      .set('Authorization', 'Bearer token');
+    expect(domesticSewageSchemaResponse.status).toBe(200);
+    const domesticSewageFields = (
+      (domesticSewageSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(domesticSewageFields).toEqual(expect.arrayContaining(['nationality', 'documentNo', 'voyageNo', 'fee']));
+
+    const missingRequiredFieldResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'business_ship_sign',
+        title: '签船记录-缺字段',
+        summary: '故意缺少 required 字段',
+        payload: {
+          customerName: '张三',
+          vesselName: '苏南012',
+          imoOrCallSign: 'IMO1234567',
+          vesselType: '油船',
+          grossTonnage: 1234,
+          agreementNo: 'AG-2026-001',
+          fee: 2000,
+          chargeMode: '月结',
+          berth: 'QZ-B3',
+          cargoType: '成品油',
+          serviceOwner: '李四',
+          teamLead: '王队长',
+          signDate: '2026-04-22',
+        },
+      });
+
+    expect(missingRequiredFieldResponse.status).toBe(400);
+    expect((missingRequiredFieldResponse.body as { message: string }).message).toContain('payload.watchVessel');
+
+    const validCreateResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'business_ship_sign',
+        title: '签船记录-完整',
+        summary: '字段完整',
+        payload: {
+          customerName: '张三',
+          vesselName: '苏南012',
+          imoOrCallSign: 'IMO1234567',
+          vesselType: '油船',
+          grossTonnage: 1234,
+          agreementNo: 'AG-2026-001',
+          fee: 2000,
+          chargeMode: '月结',
+          berth: 'QZ-B3',
+          cargoType: '成品油',
+          serviceOwner: '李四',
+          teamLead: '王队长',
+          signDate: '2026-04-22',
+          watchVessel: '苏南022',
+        },
+      });
+
+    expect(validCreateResponse.status).toBe(201);
+    expect((validCreateResponse.body as { data: { moduleCode: string } }).data.moduleCode).toBe('business_ship_sign');
   });
 
   it('enforces module visibility by role (permission matrix baseline)', async () => {

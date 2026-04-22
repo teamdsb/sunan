@@ -806,9 +806,17 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'customerName', label: '客户姓名', required: true, inputType: 'text' },
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
           { key: 'imoOrCallSign', label: 'IMO/呼号', required: true, inputType: 'text' },
+          { key: 'vesselType', label: '船舶类型', required: true, inputType: 'text' },
+          { key: 'grossTonnage', label: '总吨', required: true, inputType: 'number' },
           { key: 'agreementNo', label: '协议编号', required: true, inputType: 'text' },
           { key: 'fee', label: '费用', required: true, inputType: 'number' },
+          { key: 'chargeMode', label: '收费方式', required: true, inputType: 'text' },
+          { key: 'berth', label: '靠泊泊位', required: true, inputType: 'text' },
+          { key: 'cargoType', label: '装货类型', required: true, inputType: 'text' },
           { key: 'serviceOwner', label: '业务经手人', required: true, inputType: 'text' },
+          { key: 'teamLead', label: '带班领导', required: true, inputType: 'text' },
+          { key: 'signDate', label: '签订日期', required: true, inputType: 'date' },
+          { key: 'watchVessel', label: '值守船舶', required: true, inputType: 'text' },
         ],
       },
     ],
@@ -826,6 +834,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'route', label: '航线', required: true, inputType: 'text' },
           { key: 'arrivalTime', label: '抵港时间', required: true, inputType: 'date' },
           { key: 'berthTime', label: '靠泊时间', required: true, inputType: 'date' },
+          { key: 'berthTerminal', label: '靠泊码头', required: true, inputType: 'text' },
           { key: 'departureTime', label: '离港时间', required: true, inputType: 'date' },
         ],
       },
@@ -909,9 +918,12 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
           { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
           { key: 'documentNo', label: '单证编号', required: true, inputType: 'text' },
+          { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
+          { key: 'fee', label: '费用', required: true, inputType: 'number' },
         ],
       },
     ],
@@ -932,9 +944,12 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
           { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
+          { key: 'documentNo', label: '单证编号', required: true, inputType: 'text' },
           { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
+          { key: 'fee', label: '费用', required: true, inputType: 'number' },
         ],
       },
     ],
@@ -955,9 +970,12 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
           { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
-          { key: 'fee', label: '费用', required: false, inputType: 'number' },
+          { key: 'documentNo', label: '单证编号', required: true, inputType: 'text' },
+          { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
+          { key: 'fee', label: '费用', required: true, inputType: 'number' },
         ],
       },
     ],
@@ -1641,6 +1659,19 @@ export class WorkbenchService {
     ) {
       throw new BadRequestException('Wave 7 unsupported template type');
     }
+
+    const schemaDefinition =
+      ledgerSchema ??
+      operationFlowSchema ??
+      inspectionSchema ??
+      attendanceSchema ??
+      serviceAssetSchema ??
+      wecomApprovalSchema ??
+      null;
+    if (!schemaDefinition) {
+      throw new BadRequestException('module schema not found');
+    }
+    this.assertPayloadMatchesSchema(dto.payload, schemaDefinition);
 
     const now = new Date();
     const nowIso = now.toISOString();
@@ -2782,5 +2813,43 @@ export class WorkbenchService {
     const d = String(now.getUTCDate()).padStart(2, '0');
     const randomSuffix = randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
     return `WB${y}${m}${d}${randomSuffix}`;
+  }
+
+  private assertPayloadMatchesSchema(payload: Record<string, unknown> | undefined, schema: ModuleSchemaDefinition) {
+    if (!payload || typeof payload !== 'object') {
+      throw new BadRequestException('payload is required');
+    }
+
+    const requiredFields = schema.sections.flatMap((section) => section.fields).filter((field) => field.required);
+    for (const field of requiredFields) {
+      const raw = payload[field.key];
+      if (raw === undefined || raw === null) {
+        throw new BadRequestException(`payload.${field.key} is required`);
+      }
+
+      if (field.inputType === 'number') {
+        const numeric = typeof raw === 'number' ? raw : Number(raw);
+        if (!Number.isFinite(numeric)) {
+          throw new BadRequestException(`payload.${field.key} must be a valid number`);
+        }
+        continue;
+      }
+
+      if (field.inputType === 'date') {
+        const dateString = String(raw).trim();
+        if (!dateString) {
+          throw new BadRequestException(`payload.${field.key} is required`);
+        }
+        if (Number.isNaN(Date.parse(dateString))) {
+          throw new BadRequestException(`payload.${field.key} must be a valid date`);
+        }
+        continue;
+      }
+
+      const text = String(raw).trim();
+      if (!text) {
+        throw new BadRequestException(`payload.${field.key} is required`);
+      }
+    }
   }
 }
