@@ -15,6 +15,7 @@
 | `WECOM_CALLBACK_TOKEN` | 回调验签 Token | 与企业微信后台一致 |
 | `WECOM_ENCODING_AES_KEY` | 回调加密 Key | 启用加密回调时必填 |
 | `WECOM_CALLBACK_ALLOWED_IP_RANGES` | 回调来源 IP 白名单 | 逗号分隔 CIDR |
+| `WECOM_CALLBACK_SIGNATURE_REQUIRED` | 回调验签开关 | 生产建议固定为 `true` |
 | `WEB_PUBLIC_URL` | 前端正式地址 | 用于 H5 访问与消息链接 |
 | `API_PUBLIC_URL` | 后端正式地址 | 用于回调、排障与接口核对 |
 | `WECOM_SYSTEM_ADMIN_USER_IDS` | 企业微信超管用户 ID 列表 | 逗号分隔 |

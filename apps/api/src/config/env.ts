@@ -40,7 +40,7 @@ const envSchema = z.object({
   WECOM_CALLBACK_SIGNATURE_REQUIRED: z
     .string()
     .optional()
-    .transform((value) => value === 'true'),
+    .transform((value) => (value === undefined ? true : value === 'true')),
   WECOM_CALLBACK_MAX_SKEW_SECONDS: z.coerce.number().default(300),
   OSS_REGION: z.string().default('oss-cn-hangzhou'),
   OSS_BUCKET: z.string().default('sunan-files'),

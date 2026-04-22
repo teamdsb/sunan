@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { createHash, randomUUID, timingSafeEqual } from 'crypto';
+import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
@@ -1988,54 +1988,55 @@ export class WorkbenchService {
   }
 
   async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta) {
-    this.verifyCallbackSignature(dto, meta);
+    const normalizedDto = this.normalizeApprovalCallbackDto(dto);
+    this.verifyCallbackSignature(normalizedDto, meta);
 
-    const payloadDigest = dto.payload ? JSON.stringify(dto.payload) : null;
-    const eventAccepted = await this.registerCallbackEvent(dto, meta, payloadDigest);
+    const payloadDigest = normalizedDto.payload ? JSON.stringify(normalizedDto.payload) : null;
+    const eventAccepted = await this.registerCallbackEvent(normalizedDto, meta, payloadDigest);
     if (!eventAccepted) {
-      this.logger.warn(`approval callback ignored (duplicate): process=${dto.processInstanceId}, version=${dto.callbackVersion}`);
+      this.logger.warn(`approval callback ignored (duplicate): process=${normalizedDto.processInstanceId}, version=${normalizedDto.callbackVersion}`);
       return {
         accepted: true,
         ignored: true,
-        processInstanceId: dto.processInstanceId,
-        callbackVersion: dto.callbackVersion,
+        processInstanceId: normalizedDto.processInstanceId,
+        callbackVersion: normalizedDto.callbackVersion,
       };
     }
 
     const instance = await this.approvalSyncRepository.findOne({
-      where: { processInstanceId: dto.processInstanceId },
+      where: { processInstanceId: normalizedDto.processInstanceId },
     });
     if (!instance) {
       throw new NotFoundException('approval instance not found');
     }
 
-    if (dto.callbackVersion <= instance.callbackVersion) {
+    if (normalizedDto.callbackVersion <= instance.callbackVersion) {
       this.logger.warn(
-        `approval callback ignored (old version): process=${dto.processInstanceId}, incoming=${dto.callbackVersion}, current=${instance.callbackVersion}`,
+        `approval callback ignored (old version): process=${normalizedDto.processInstanceId}, incoming=${normalizedDto.callbackVersion}, current=${instance.callbackVersion}`,
       );
       return {
         accepted: true,
         ignored: true,
-        processInstanceId: dto.processInstanceId,
-        callbackVersion: dto.callbackVersion,
+        processInstanceId: normalizedDto.processInstanceId,
+        callbackVersion: normalizedDto.callbackVersion,
       };
     }
 
-    const mirrorStatus = this.toMirrorStatus(dto.status);
+    const mirrorStatus = this.toMirrorStatus(normalizedDto.status);
     const now = new Date();
 
-    instance.externalStatus = dto.status;
+    instance.externalStatus = normalizedDto.status;
     instance.internalMirrorStatus = mirrorStatus;
     instance.approvalSyncStatus = 'callback_received';
     instance.lastCallbackAt = now;
-    instance.callbackVersion = dto.callbackVersion;
+    instance.callbackVersion = normalizedDto.callbackVersion;
     instance.rawPayloadDigest = payloadDigest;
     instance.syncErrorCode = null;
     instance.syncErrorMessage = null;
 
     const record = await this.mustGetRecord(instance.businessRecordId);
     const fromStatus = record.status;
-    record.externalStatus = dto.status;
+    record.externalStatus = normalizedDto.status;
     record.status = mirrorStatus;
 
     await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.save(record)]);
@@ -2046,17 +2047,17 @@ export class WorkbenchService {
       operatorUserId: null,
       fromStatus,
       toStatus: mirrorStatus,
-      comment: `eventId=${dto.eventId}`,
+      comment: `eventId=${normalizedDto.eventId}`,
       payloadDigest,
     });
-    this.logger.log(`approval callback accepted: process=${dto.processInstanceId}, status=${dto.status}, mirror=${mirrorStatus}`);
+    this.logger.log(`approval callback accepted: process=${normalizedDto.processInstanceId}, status=${normalizedDto.status}, mirror=${mirrorStatus}`);
 
     return {
       accepted: true,
       ignored: false,
-      processInstanceId: dto.processInstanceId,
+      processInstanceId: normalizedDto.processInstanceId,
       mirrorStatus,
-      callbackVersion: dto.callbackVersion,
+      callbackVersion: normalizedDto.callbackVersion,
     };
   }
 
@@ -2244,17 +2245,20 @@ export class WorkbenchService {
       throw new BadRequestException('callback request expired');
     }
 
-    const payloadDigest = this.sha1(
-      JSON.stringify({
-        eventId: dto.eventId,
-        processInstanceId: dto.processInstanceId,
-        callbackVersion: dto.callbackVersion,
-        status: dto.status,
-        encrypted: dto.encrypted ?? false,
-        payload: dto.payload ?? {},
-      }),
-    );
-    const raw = [appEnv.WECOM_CALLBACK_TOKEN, meta.timestamp, meta.nonce, payloadDigest].sort().join('');
+    const signaturePayload =
+      dto.encrypted && dto.encrypt
+        ? dto.encrypt
+        : this.sha1(
+            JSON.stringify({
+              eventId: dto.eventId,
+              processInstanceId: dto.processInstanceId,
+              callbackVersion: dto.callbackVersion,
+              status: dto.status,
+              encrypted: dto.encrypted ?? false,
+              payload: dto.payload ?? {},
+            }),
+          );
+    const raw = [appEnv.WECOM_CALLBACK_TOKEN, meta.timestamp, meta.nonce, signaturePayload].sort().join('');
     const expected = this.sha1(raw);
     const actual = meta.signature.trim();
     if (expected.length !== actual.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(actual))) {
@@ -2266,10 +2270,11 @@ export class WorkbenchService {
     if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.length) {
       return;
     }
-    if (!requestIp) {
+    const normalizedRequestIp = requestIp ? this.normalizeIp(requestIp) : null;
+    if (!normalizedRequestIp) {
       throw new BadRequestException('callback request ip missing');
     }
-    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.some((range) => this.isIpInRange(requestIp, range))) {
+    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.some((range) => this.isIpInRange(normalizedRequestIp, range))) {
       throw new BadRequestException('callback request ip not allowed');
     }
   }
@@ -2309,11 +2314,16 @@ export class WorkbenchService {
   }
 
   private isIpInRange(ip: string, cidr: string) {
-    if (!cidr.includes('/')) {
-      return ip === cidr;
+    const normalizedIp = this.normalizeIp(ip);
+    const normalizedCidr = cidr.trim();
+    if (!normalizedIp || !normalizedCidr) {
+      return false;
+    }
+    if (!normalizedCidr.includes('/')) {
+      return normalizedIp === this.normalizeIp(normalizedCidr);
     }
 
-    const [rangeIp, prefixText] = cidr.split('/');
+    const [rangeIp, prefixText] = normalizedCidr.split('/');
     if (!rangeIp) {
       return false;
     }
@@ -2322,8 +2332,8 @@ export class WorkbenchService {
       return false;
     }
 
-    const ipInt = this.toIpv4Int(ip);
-    const rangeInt = this.toIpv4Int(rangeIp);
+    const ipInt = this.toIpv4Int(normalizedIp);
+    const rangeInt = this.toIpv4Int(this.normalizeIp(rangeIp));
     if (ipInt === null || rangeInt === null) {
       return false;
     }
@@ -2339,6 +2349,132 @@ export class WorkbenchService {
     }
     const [part0, part1, part2, part3] = parts as [number, number, number, number];
     return (((part0 << 24) >>> 0) + ((part1 << 16) >>> 0) + ((part2 << 8) >>> 0) + part3) >>> 0;
+  }
+
+  private normalizeApprovalCallbackDto(dto: WorkbenchApprovalCallbackDto): WorkbenchApprovalCallbackDto {
+    if (!dto.encrypted) {
+      return dto;
+    }
+    const encryptedPayload = dto.encrypt;
+    if (!encryptedPayload) {
+      throw new BadRequestException('decrypt_failed');
+    }
+    const decrypted = this.decryptCallbackPayload(encryptedPayload);
+    const parsed = this.parseDecryptedCallbackPayload(decrypted);
+
+    return {
+      ...dto,
+      eventId: parsed.eventId ?? dto.eventId,
+      processInstanceId: parsed.processInstanceId ?? dto.processInstanceId,
+      status: parsed.status ?? dto.status,
+      callbackVersion: parsed.callbackVersion ?? dto.callbackVersion,
+      payload: parsed.payload ?? dto.payload,
+    };
+  }
+
+  private decryptCallbackPayload(encryptedPayload: string) {
+    if (!appEnv.WECOM_ENCODING_AES_KEY) {
+      throw new BadRequestException('decrypt_failed');
+    }
+    try {
+      const aesKey = Buffer.from(`${appEnv.WECOM_ENCODING_AES_KEY}=`, 'base64');
+      const iv = aesKey.subarray(0, 16);
+      const decipher = createDecipheriv('aes-256-cbc', aesKey, iv);
+      decipher.setAutoPadding(false);
+      const encryptedBuffer = Buffer.from(encryptedPayload, 'base64');
+      const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
+      const unpadded = this.pkcs7Unpad(decrypted);
+      const content = unpadded.subarray(16);
+      const msgLength = content.readUInt32BE(0);
+      const message = content.subarray(4, 4 + msgLength).toString('utf8');
+      const corpId = content.subarray(4 + msgLength).toString('utf8');
+
+      if (corpId && corpId !== appEnv.WECOM_CORP_ID) {
+        throw new BadRequestException('decrypt_failed');
+      }
+      return message;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('decrypt_failed');
+    }
+  }
+
+  private pkcs7Unpad(buffer: Buffer) {
+    if (buffer.length === 0) {
+      throw new BadRequestException('decrypt_failed');
+    }
+    const pad = buffer.at(-1);
+    if (pad === undefined) {
+      throw new BadRequestException('decrypt_failed');
+    }
+    if (pad <= 0 || pad > 32 || pad > buffer.length) {
+      throw new BadRequestException('decrypt_failed');
+    }
+    return buffer.subarray(0, buffer.length - pad);
+  }
+
+  private parseDecryptedCallbackPayload(raw: string) {
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const callbackVersionCandidate = parsed.callbackVersion;
+      return {
+        eventId: typeof parsed.eventId === 'string' ? parsed.eventId : undefined,
+        processInstanceId: typeof parsed.processInstanceId === 'string' ? parsed.processInstanceId : undefined,
+        status: this.normalizeCallbackStatus(typeof parsed.status === 'string' ? parsed.status : undefined),
+        callbackVersion:
+          typeof callbackVersionCandidate === 'number'
+            ? callbackVersionCandidate
+            : typeof callbackVersionCandidate === 'string'
+              ? Number(callbackVersionCandidate)
+              : undefined,
+        payload: typeof parsed.payload === 'object' && parsed.payload !== null ? (parsed.payload as Record<string, unknown>) : undefined,
+      };
+    } catch {
+      const read = (tag: string) => {
+        const matched = raw.match(new RegExp(`<${tag}><!\\[CDATA\\[(.*?)\\]\\]><\\/${tag}>|<${tag}>(.*?)<\\/${tag}>`, 'i'));
+        return matched?.[1] ?? matched?.[2] ?? undefined;
+      };
+
+      const callbackVersionText = read('CallbackVersion');
+      const callbackVersion = callbackVersionText ? Number(callbackVersionText) : undefined;
+      return {
+        eventId: read('EventID'),
+        processInstanceId: read('ProcessInstanceId'),
+        status: this.normalizeCallbackStatus(read('Status')),
+        callbackVersion: Number.isFinite(callbackVersion) ? callbackVersion : undefined,
+        payload: undefined,
+      };
+    }
+  }
+
+  private normalizeCallbackStatus(status: string | undefined): WorkbenchApprovalCallbackDto['status'] | undefined {
+    if (!status) {
+      return undefined;
+    }
+    const normalized = status.toLowerCase();
+    if (normalized === 'pending' || normalized === 'approved' || normalized === 'rejected' || normalized === 'canceled' || normalized === 'terminated') {
+      return normalized;
+    }
+    return undefined;
+  }
+
+  private normalizeIp(ip: string) {
+    const trimmed = ip.trim();
+    if (!trimmed) {
+      return '';
+    }
+    const first = trimmed.split(',')[0]?.trim() ?? trimmed;
+    const mapped = first.startsWith('::ffff:') ? first.slice(7) : first;
+    if (mapped.startsWith('[') && mapped.includes(']')) {
+      const idx = mapped.indexOf(']');
+      return mapped.slice(1, idx).trim();
+    }
+    if (mapped.includes('.') && mapped.includes(':')) {
+      return mapped.split(':')[0]?.trim() ?? mapped;
+    }
+    return mapped;
   }
 
   private assertSystemAdmin(user: CurrentUser) {

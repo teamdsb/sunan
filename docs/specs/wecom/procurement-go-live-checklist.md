@@ -21,7 +21,7 @@
 - [ ] `WECOM_AGENT_ID`
 - [ ] `WECOM_AGENT_SECRET`
 - [ ] `WECOM_REDIRECT_URI`
-- [ ] `WECOM_TOKEN`（启用消息回调时）
+- [ ] `WECOM_CALLBACK_TOKEN`（启用消息回调时）
 - [ ] `WECOM_ENCODING_AES_KEY`（启用消息回调时）
 
 ### Web
@@ -73,3 +73,7 @@
 - `docs/specs/wecom/message-push-spec.md`
 - `docs/specs/wecom/approval-native-bridge-spec.md`
 - `docs/specs/procurement/acceptance-wave5.md`
+
+## 历史别名说明
+
+- `WECOM_TOKEN` 仅作为 legacy alias 保留，不再作为主配置名。

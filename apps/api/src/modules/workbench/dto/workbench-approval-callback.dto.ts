@@ -24,6 +24,19 @@ export class WorkbenchApprovalCallbackDto {
   encrypted?: boolean;
 
   @IsOptional()
+  @Transform(({ value, obj }) => {
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+    if (typeof obj?.Encrypt === 'string' && obj.Encrypt.trim()) {
+      return obj.Encrypt.trim();
+    }
+    return undefined;
+  })
+  @IsString()
+  encrypt?: string;
+
+  @IsOptional()
   @IsObject()
   payload?: Record<string, unknown>;
 }

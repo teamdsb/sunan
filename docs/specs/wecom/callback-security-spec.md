@@ -12,6 +12,13 @@
 - 生产环境必须配置 `WECOM_CALLBACK_ALLOWED_IP_RANGES`。
 - 若启用加密回调，必须配置 `WECOM_ENCODING_AES_KEY` 并完成解密。
 
+## M6 实现说明
+
+- 明文回调：签名基于 `eventId/processInstanceId/callbackVersion/status/payload` 摘要计算。
+- 加密回调：签名基于企业微信标准 `token + timestamp + nonce + encrypt` 计算。
+- 加密报文：使用 `EncodingAESKey` 解密，校验企业 `CorpID` 后再回填业务字段。
+- 生产默认开启 `WECOM_CALLBACK_SIGNATURE_REQUIRED=true`，仅在联调阶段可临时关闭。
+
 ## 校验顺序
 
 1. 解析请求来源 IP。

@@ -150,6 +150,6 @@ M5 新增以下管理员能力：
 
 - `docs/specs/wecom/approval-native-bridge-spec.md`
 - `docs/specs/wecom/workbench-go-live-checklist.md`
-- `docs/specs/wecom/workbench-real-device-regression.md`
+- `docs/specs/wecom/real-device-regression-matrix.md`
 - `docs/specs/workbench/api/workbench-approval-api.yaml`
 - `docs/specs/workbench/db/workbench-runtime-schema.md`
