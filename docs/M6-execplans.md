@@ -3,9 +3,9 @@
 ## Wave 状态
 
 ### Wave 1
-- [ ] WS-1A M6 需求文档与执行计划冻结
-- [ ] WS-1B 企业微信生产交付规格冻结
-- [ ] WS-1C 工作平台差异基线与 blocker 清单冻结
+- [x] WS-1A M6 需求文档与执行计划冻结（完成于 2026-04-22）
+- [x] WS-1B 企业微信生产交付规格冻结（完成于 2026-04-22）
+- [x] WS-1C 工作平台差异基线与 blocker 清单冻结（完成于 2026-04-22）
 
 ### Wave 2
 - [ ] WS-2A 工作平台模块拆分与 legacy 兼容
@@ -55,6 +55,11 @@
 - M6 的目标、范围、wave、门禁、上线口径和 blocker 清单明确。
 - 工作平台 README 不再默认“规格已收口即代码已兑现”。
 - 企业微信生产交付、回调安全、切换 runbook 和材料清单均有独立入口。
+
+### 完成记录（2026-04-22）
+- `WS-1A`：`docs/requirements/M6-全量兑现与完美上线.md`、`docs/M6-execplans.md`、`docs/execplans.md` 已同步完成。
+- `WS-1B`：`docs/specs/wecom/production-config-matrix.md`、`docs/specs/wecom/callback-security-spec.md`、`docs/specs/wecom/template-binding-checklist.md`、`docs/specs/wecom/production-cutover-runbook.md`、`docs/specs/wecom/go-live-materials-checklist.md` 已补齐。
+- `WS-1C`：`docs/specs/workbench/README.md` 与 `docs/specs/workbench/finance-business-board-blocker.md` 已明确差异基线与 blocker 门禁。
 
 ## Wave 2：工作平台模块全量兑现
 
