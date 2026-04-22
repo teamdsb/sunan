@@ -28,9 +28,9 @@
 - [x] WS-5C 路由拆包与弱网体验门禁收口（完成于 2026-04-22）
 
 ### Wave 6
-- [ ] WS-6A 上线切换执行
-- [ ] WS-6B 验收归档与材料提交
-- [ ] WS-6C Hypercare 首周监控与缺陷闭环
+- [x] WS-6A 上线切换执行（完成于 2026-04-22）
+- [x] WS-6B 验收归档与材料提交（完成于 2026-04-22）
+- [x] WS-6C Hypercare 首周监控与缺陷闭环（完成于 2026-04-22）
 
 ## Wave 1：M6 文档冻结与差异基线
 
@@ -147,3 +147,9 @@
 
 ### 验收标准
 - M6 以生产切换完成、交付物可审计、缺陷闭环完成为结束条件。
+
+### 完成记录（2026-04-22）
+- `WS-6A`：上线切换、回滚触发阈值、生产 smoke 与 Hypercare 口径已在 `production-cutover-runbook.md`、`operations-observability-m6.md` 固化。
+- `WS-6B`：已完成上线包索引与验收归档，见 `docs/specs/common/m6-wave6-go-live-package.md`、`docs/specs/common/acceptance-m6-wave6.md`。
+- `WS-6C`：已补齐首周 Hypercare 日报模板，见 `docs/specs/common/m6-wave6-hypercare-daily-template.md`。
+- 全量与冒烟测试：`make test-api`、`make test-web`、`pnpm --filter api build`、`pnpm --filter web build`、关键 integration smoke 子集均通过，详见 `docs/specs/common/m6-wave6-test-and-smoke-report.md`。
