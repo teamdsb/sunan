@@ -23,9 +23,9 @@
 - [x] WS-4C 上线材料目录与责任分工冻结（完成于 2026-04-22）
 
 ### Wave 5
-- [ ] WS-5A Workbench 前端测试补齐
-- [ ] WS-5B OpenAPI 校验、integration 前置条件与 smoke 门禁收口
-- [ ] WS-5C 路由拆包与弱网体验门禁收口
+- [x] WS-5A Workbench 前端测试补齐（完成于 2026-04-22）
+- [x] WS-5B OpenAPI 校验、integration 前置条件与 smoke 门禁收口（完成于 2026-04-22）
+- [x] WS-5C 路由拆包与弱网体验门禁收口（完成于 2026-04-22）
 
 ### Wave 6
 - [ ] WS-6A 上线切换执行
@@ -122,6 +122,11 @@
 ### 验收标准
 - `make test-web`、OpenAPI 校验、Smoke、真机回归、回滚演练纳入上线门禁。
 - 当前主包体积问题有明确整改结果或降级解释。
+
+### 完成记录（2026-04-22）
+- `WS-5A`：新增 `apps/web/src/features/workbench/WorkbenchHomePage.test.tsx`，覆盖工作平台入口跳转、审批看板过滤、统计页查询参数。
+- `WS-5B`：`pnpm --filter api build`、`make test-web`、全量 `swagger-cli validate` 均通过，且明确 integration 依赖 Docker/testcontainers 前置。
+- `WS-5C`：`vite build` 产物已形成路由级拆包与 Workbench 懒加载证据，质量门禁详见 `docs/specs/common/m6-wave5-quality-gates.md`。
 
 ## Wave 6：上线切换、验收归档与 Hypercare
 
