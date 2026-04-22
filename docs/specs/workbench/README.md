@@ -46,6 +46,9 @@
 | DB | `db/workbench-permission-matrix.md` | M4 归档 |
 | DB | `db/finance-module-provisional.md` | M6 新增 |
 | DB | `db/chart-update-module.md` | M6 新增 |
+| Testing | `testing/workbench-openapi-validation-m6.md` | M6 Wave 7 新增 |
+| Testing | `testing/workbench-module-test-matrix-m6.md` | M6 Wave 7 新增 |
+| Testing | `testing/workbench-route-test-matrix-m6.md` | M6 Wave 7 新增 |
 | State | `state/workbench-shell.md` | M4 归档 |
 | State | `state/workbench-records.md` | M5 已更新 |
 | State | `state/workbench-approval-sync.md` | M5 已更新 |
@@ -60,6 +63,8 @@
 | UI | `ui/workbench-admin-console.md` | M6 新增 |
 | UI | `ui/finance-module-provisional.md` | M6 新增 |
 | UI | `ui/chart-update-module.md` | M6 新增 |
+| UAT | `uat/workbench-uat-template-m6.md` | M6 Wave 7 新增 |
+| UAT | `uat/workbench-defect-closure-template-m6.md` | M6 Wave 7 新增 |
 | Planning | `m5-optimization-backlog.md` | M5 历史输入 |
 | Acceptance | `acceptance-m6-wave1.md` | M6 Wave 1 已归档 |
 | Acceptance | `acceptance-m6-wave2.md` | M6 Wave 2 已归档 |
@@ -67,6 +72,7 @@
 | Acceptance | `acceptance-m6-wave4.md` | M6 Wave 4 已归档 |
 | Acceptance | `acceptance-m6-wave5.md` | M6 Wave 5 已归档 |
 | Acceptance | `acceptance-m6-wave6.md` | M6 Wave 6 已归档 |
+| Acceptance | `acceptance-m6-wave7.md` | M6 Wave 7 已归档 |
 | Acceptance | `acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md` | M5 历史归档 |
 | Acceptance | `acceptance-wave1.md` ~ `acceptance-wave8.md` | M4 历史归档 |
 
@@ -140,9 +146,14 @@
 8. `api/workbench-admin-api.yaml`
 9. `db/finance-module-provisional.md`
 10. `db/chart-update-module.md`
-11. `ui/workbench-wave6-legacy-closure-notes.md`
-12. `docs/specs/wecom/jssdk-spec.md`
-13. `docs/specs/wecom/workbench-go-live-checklist.md`
+11. `testing/workbench-openapi-validation-m6.md`
+12. `testing/workbench-module-test-matrix-m6.md`
+13. `testing/workbench-route-test-matrix-m6.md`
+14. `uat/workbench-uat-template-m6.md`
+15. `uat/workbench-defect-closure-template-m6.md`
+16. `ui/workbench-wave6-legacy-closure-notes.md`
+17. `docs/specs/wecom/jssdk-spec.md`
+18. `docs/specs/wecom/workbench-go-live-checklist.md`
 
 ## 状态说明
 

@@ -99,3 +99,12 @@
 - [ ] 抽检 1 条审批完成回写链路
 - [ ] 抽检 1 条消息提醒链路
 - [ ] 抽检 1 条管理员诊断检索链路
+
+## 12. Wave7 关联模板
+
+- OpenAPI 校验：`docs/specs/workbench/testing/workbench-openapi-validation-m6.md`
+- 模块级测试矩阵：`docs/specs/workbench/testing/workbench-module-test-matrix-m6.md`
+- 路由级测试矩阵：`docs/specs/workbench/testing/workbench-route-test-matrix-m6.md`
+- UAT 模板：`docs/specs/workbench/uat/workbench-uat-template-m6.md`
+- 缺陷闭环模板：`docs/specs/workbench/uat/workbench-defect-closure-template-m6.md`
+- 上线 Runbook：`docs/specs/wecom/workbench-go-live-runbook-m6.md`

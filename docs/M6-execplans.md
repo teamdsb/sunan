@@ -33,9 +33,9 @@
 - [x] WS-6C 海图更新与 `chart_update` 提醒联动规则冻结
 
 ### Wave 7
-- [ ] WS-7A OpenAPI 校验、模块级测试矩阵与路由级测试矩阵冻结
-- [ ] WS-7B 真机回归、业务 UAT、缺陷闭环模板完成
-- [ ] WS-7C 上线材料包、回滚预案和值班机制完成
+- [x] WS-7A OpenAPI 校验、模块级测试矩阵与路由级测试矩阵冻结
+- [x] WS-7B 真机回归、业务 UAT、缺陷闭环模板完成
+- [x] WS-7C 上线材料包、回滚预案和值班机制完成
 
 ## 总体策略
 
@@ -179,6 +179,16 @@
 
 - OpenAPI 校验、模块级测试矩阵、路由级测试矩阵。
 - 真机回归、UAT、缺陷闭环、发布材料、回滚预案、值班机制。
+
+### 产出
+
+- `docs/specs/workbench/testing/workbench-openapi-validation-m6.md`
+- `docs/specs/workbench/testing/workbench-module-test-matrix-m6.md`
+- `docs/specs/workbench/testing/workbench-route-test-matrix-m6.md`
+- `docs/specs/workbench/uat/workbench-uat-template-m6.md`
+- `docs/specs/workbench/uat/workbench-defect-closure-template-m6.md`
+- `docs/specs/wecom/workbench-go-live-runbook-m6.md`
+- `docs/specs/workbench/acceptance-m6-wave7.md`
 
 ### 验收标准
 
