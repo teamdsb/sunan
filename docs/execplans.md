@@ -8,9 +8,9 @@
 - [x] WS-1C `财务板块`、`海图更新` 独立 SDD 入口建立
 
 ### Wave 2
-- [ ] WS-2A 企业微信 JS-SDK 迁移规格冻结
-- [ ] WS-2B OAuth2、可信域名、回调、审批、消息生产配置口径冻结
-- [ ] WS-2C 真机验证、UAT、上线材料和回滚门槛冻结
+- [x] WS-2A 企业微信 JS-SDK 迁移规格冻结
+- [x] WS-2B OAuth2、可信域名、回调、审批、消息生产配置口径冻结
+- [x] WS-2C 真机验证、UAT、上线材料和回滚门槛冻结
 
 ### Wave 3
 - [ ] WS-3A 工作平台独立路由与页面 IA 冻结
@@ -79,6 +79,8 @@
 - `docs/specs/wecom/jssdk-spec.md`
 - `docs/guides/wecom-dev-setup.md`
 - `docs/specs/wecom/workbench-go-live-checklist.md`
+- `docs/specs/wecom/workbench-real-device-regression.md`
+- `docs/specs/workbench/acceptance-m6-wave2.md`
 
 ### 验收标准
 

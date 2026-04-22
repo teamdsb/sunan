@@ -59,6 +59,7 @@
 | UI | `ui/chart-update-module.md` | M6 新增 |
 | Planning | `m5-optimization-backlog.md` | M5 历史输入 |
 | Acceptance | `acceptance-m6-wave1.md` | M6 Wave 1 已归档 |
+| Acceptance | `acceptance-m6-wave2.md` | M6 Wave 2 已归档 |
 | Acceptance | `acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md` | M5 历史归档 |
 | Acceptance | `acceptance-wave1.md` ~ `acceptance-wave8.md` | M4 历史归档 |
 
