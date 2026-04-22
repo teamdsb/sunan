@@ -148,6 +148,9 @@ paths:
     post:
       summary: 提交工作平台记录动作
       tags: [Workbench]
+      description: >-
+        通用动作入口。`goa_training` 在 `actionType=update_payload` 且学习状态满足完成条件时，
+        系统会自动发起审批并将记录状态切换为 `approval_pending`。
       parameters:
         - in: path
           name: recordId
@@ -581,7 +584,7 @@ components:
         actionType:
           type: string
           enum:
-            [submit, assign, start, complete_step, submit_review, request_rework, close_record, archive, retry_export, reconcile_record, refresh_print_snapshot]
+            [submit, assign, start, complete_step, submit_review, request_rework, close_record, archive, retry_export, reconcile_record, refresh_print_snapshot, update_payload]
         comment:
           type: string
         payload:

@@ -1808,7 +1808,7 @@ export class WorkbenchService {
   }
 
   async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
-    const record = await this.mustGetRecord(recordId);
+    let record = await this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
 
     const steps = await this.stepRepository.find({
@@ -1918,6 +1918,14 @@ export class WorkbenchService {
       comment: dto.comment ?? null,
       payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
     });
+
+    // 总经办培训模块在学习完成后自动发起审批，避免人工遗漏。
+    if (dto.actionType === 'update_payload') {
+      const autoApprovalTriggered = await this.tryAutoLaunchTrainingApproval(record, user);
+      if (autoApprovalTriggered) {
+        record = await this.mustGetRecord(record.id);
+      }
+    }
 
     return {
       recordId: record.id,
@@ -2940,5 +2948,75 @@ export class WorkbenchService {
       }
     }
     return normalized;
+  }
+
+  private async tryAutoLaunchTrainingApproval(record: WorkbenchRecordEntity, user: CurrentUser): Promise<boolean> {
+    if (record.moduleCode !== 'goa_training') {
+      return false;
+    }
+    if (record.externalProcessInstanceId) {
+      return false;
+    }
+
+    const moduleItem = this.mustGetModule(record.moduleCode);
+    if (!moduleItem.requiresApproval) {
+      return false;
+    }
+
+    const payload = record.payload ?? {};
+    const learningStatus = this.toLowerString(payload.learningStatus);
+    const completedAt = String(payload.completedAt ?? '').trim();
+    const progressRaw = payload.learningProgressPercent;
+    const progress = typeof progressRaw === 'number' ? progressRaw : Number(progressRaw);
+
+    const isCompleted = learningStatus === 'completed' || Boolean(completedAt) || (Number.isFinite(progress) && progress >= 100);
+    if (!isCompleted) {
+      return false;
+    }
+
+    const processInstanceId = `wbpi_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const now = new Date();
+    await this.approvalSyncRepository.save(
+      this.approvalSyncRepository.create({
+        businessRecordId: record.id,
+        moduleCode: record.moduleCode,
+        approvalChannel: 'wecom_native',
+        processInstanceId,
+        wecomTemplateId: null,
+        externalStatus: 'pending',
+        internalMirrorStatus: 'approval_pending',
+        approvalSyncStatus: 'pending',
+        startedBy: user.userId,
+        startedAt: now,
+        lastCallbackAt: null,
+        lastReconciledAt: null,
+        callbackVersion: 0,
+        retryCount: 0,
+        lastRetryAt: null,
+        syncErrorCode: null,
+        syncErrorMessage: null,
+        rawPayloadDigest: record.payload ? JSON.stringify(record.payload) : null,
+      }),
+    );
+
+    const fromStatus = record.status;
+    record.approvalChannel = 'wecom_native';
+    record.externalProcessInstanceId = processInstanceId;
+    record.externalStatus = 'pending';
+    record.status = 'approval_pending';
+    await this.recordRepository.save(record);
+
+    await this.appendActionLog(record.id, {
+      actionType: 'launch_approval',
+      source: 'manual',
+      operatorUserId: user.userId,
+      fromStatus,
+      toStatus: 'approval_pending',
+      comment: '培训完成自动发起审批',
+      payloadDigest: record.payload ? JSON.stringify(record.payload) : null,
+    });
+
+    this.logger.log(`training auto approval launched: record=${record.id}, process=${processInstanceId}`);
+    return true;
   }
 }

@@ -411,6 +411,45 @@ describe('WorkbenchController integration', () => {
     ).map((field) => field.key);
     expect(trainingFields).toEqual(expect.arrayContaining(['learningStatus', 'learningProgressPercent', 'completedAt']));
 
+    const createTrainingResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'goa_training',
+        title: '岗前培训-自动审批验证',
+        summary: '先创建后更新为完成态',
+        payload: {
+          trainingType: '岗前培训',
+          trainer: '培训讲师A',
+          hours: 4,
+          participants: '张三,李四',
+          learningStatus: 'in_progress',
+          learningProgressPercent: 50,
+        },
+      });
+    expect(createTrainingResponse.status).toBe(201);
+    const trainingRecordId = (createTrainingResponse.body as { data: { id: string } }).data.id;
+
+    const updateTrainingPayloadResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/workbench/records/${trainingRecordId}/actions`)
+      .set('Authorization', 'Bearer token')
+      .send({
+        actionType: 'update_payload',
+        payload: {
+          learningStatus: 'completed',
+          learningProgressPercent: 100,
+        },
+      });
+    expect(updateTrainingPayloadResponse.status).toBe(201);
+    expect((updateTrainingPayloadResponse.body as { data: { status: string } }).data.status).toBe('approval_pending');
+
+    const trainingDetailResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/workbench/records/${trainingRecordId}`)
+      .set('Authorization', 'Bearer token');
+    expect(trainingDetailResponse.status).toBe(200);
+    expect((trainingDetailResponse.body as { data: { externalProcessInstanceId: string | null } }).data.externalProcessInstanceId).toMatch(/^wbpi_/);
+    expect((trainingDetailResponse.body as { data: { approvalChannel: string } }).data.approvalChannel).toBe('wecom_native');
+
     const meetingSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get('/api/v1/workbench/modules/goa_meeting/schema')
       .set('Authorization', 'Bearer token');

@@ -79,12 +79,19 @@ M5 新增 `record_source` 概念，前端至少要能识别：
 - `request_rework`
 - `close_record`
 - `archive`
+- `update_payload`（用于台账类字段更新）
 
 异常动作：
 
 - `retry_export`
 - `reconcile_record`
 - `refresh_print_snapshot`
+
+总经办培训自动审批规则：
+
+- 模块 `goa_training` 执行 `update_payload` 后，若学习状态达到完成条件（例如 `learningStatus=completed` 或进度 >= 100），
+  系统自动发起审批并把记录状态切换到 `approval_pending`。
+- 前端动作成功后应立即刷新详情，展示 `externalProcessInstanceId`、`approvalChannel=wecom_native` 和最新状态。
 
 ## 5. 附件上传
 

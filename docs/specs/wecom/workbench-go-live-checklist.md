@@ -4,6 +4,9 @@
 
 本清单用于 M6 正式上线前的专项检查，覆盖四大板块、企业微信 H5、审批桥、消息推送、回调、JS-SDK、真机联调、异常运维和上线材料。
 
+最近一次执行记录：
+- [go-live-preflight-2026-04-22.md](/Users/yuan/项目/sunan/sunan/docs/specs/wecom/go-live-preflight-2026-04-22.md)
+
 ## 2. 应用与基础配置
 
 - [ ] 企业微信自建应用已创建并确认 `AgentId`
