@@ -30,12 +30,15 @@ export class WorkbenchApprovalController {
     @Query('timestamp') queryTimestamp: string | undefined,
     @Headers('x-wecom-nonce') xWecomNonce: string | undefined,
     @Query('nonce') queryNonce: string | undefined,
+    @Headers('x-forwarded-for') xForwardedFor: string | undefined,
+    @Headers('x-real-ip') xRealIp: string | undefined,
   ) {
     return {
       data: await this.service.handleApprovalCallback(dto, {
         signature: xWecomSignature ?? msgSignature ?? null,
         timestamp: xWecomTimestamp ?? queryTimestamp ?? null,
         nonce: xWecomNonce ?? queryNonce ?? null,
+        requestIp: xForwardedFor?.split(',')[0]?.trim() ?? xRealIp?.trim() ?? null,
       }),
     };
   }

@@ -14,7 +14,8 @@ import {
   Typography,
   message,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   WorkbenchModuleSchemaField,
   WorkbenchRecordDetail,
@@ -59,18 +60,45 @@ function getCurrentStep(record: WorkbenchRecordDetail) {
   return record.steps.find((step) => step.status === 'in_progress') ?? record.steps.find((step) => step.status === 'pending') ?? null;
 }
 
-export function WorkbenchHomePage() {
-  const [activeModuleCode, setActiveModuleCode] = useState<string | null>(null);
-  const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
+export interface WorkbenchHomePageProps {
+  initialModuleCode?: string | null;
+  initialRecordId?: string | null;
+  statisticsOnly?: boolean;
+  routeAware?: boolean;
+  heroTitle?: string;
+  heroDescription?: string;
+  moduleFilter?: 'all' | 'requiresApproval';
+  recordListTitle?: string;
+}
+
+export function WorkbenchHomePage({
+  initialModuleCode = null,
+  initialRecordId = null,
+  statisticsOnly = false,
+  routeAware = false,
+  heroTitle = '工作平台',
+  heroDescription = 'M6 正在收口工作平台全量模块、企业微信正式上线与生产交付闭环。',
+  moduleFilter = 'all',
+  recordListTitle,
+}: WorkbenchHomePageProps = {}) {
+  const [activeModuleCode, setActiveModuleCode] = useState<string | null>(initialModuleCode);
+  const [activeRecordId, setActiveRecordId] = useState<string | null>(initialRecordId);
   const [createOpen, setCreateOpen] = useState(false);
   const [statisticsMonth, setStatisticsMonth] = useState('2026-04');
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const { data: dashboardResponse, isLoading: dashboardLoading } = useGetWorkbenchDashboardQuery();
-  const { data: recordsResponse, isLoading: recordsLoading } = useGetWorkbenchRecordsQuery(
-    activeModuleCode ? { moduleCode: activeModuleCode, page: 1, pageSize: 20 } : { page: 1, pageSize: 20 },
-  );
+  const dashboard = dashboardResponse?.data;
+  const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
+  const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
+  const recordsQuery = activeModuleCode
+    ? { moduleCode: activeModuleCode, page: 1, pageSize: 20 }
+    : moduleFilter === 'requiresApproval'
+      ? { templateType: 'wecom_approval' as const, page: 1, pageSize: 20 }
+      : { page: 1, pageSize: 20 };
+  const { data: recordsResponse, isLoading: recordsLoading } = useGetWorkbenchRecordsQuery(recordsQuery);
   const { data: detailResponse, isFetching: detailLoading } = useGetWorkbenchRecordQuery(activeRecordId ?? '', {
     skip: !activeRecordId,
   });
@@ -78,22 +106,24 @@ export function WorkbenchHomePage() {
   const { data: moduleSchemaResponse, isLoading: schemaLoading } = useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
     skip: !activeModuleCode,
   });
-  const { data: attendanceStatisticsResponse, isLoading: attendanceStatisticsLoading } = useGetWorkbenchAttendanceStatisticsQuery(
-    statisticsMonth ? { month: statisticsMonth } : undefined,
-    {
-      skip: !activeModuleCode,
-    },
-  );
+  const { data: attendanceStatisticsResponse, isLoading: attendanceStatisticsLoading } = useGetWorkbenchAttendanceStatisticsQuery(statisticsMonth ? { month: statisticsMonth } : undefined, {
+    skip: !statisticsOnly && activeModule?.templateType !== 'attendance_statistics',
+  });
 
   const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
   const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
   const [launchWorkbenchApproval, { isLoading: launchingApproval }] = useLaunchWorkbenchApprovalMutation();
 
-  const dashboard = dashboardResponse?.data;
   const records = recordsResponse?.data ?? [];
-  const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
-  const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
+  const visibleModuleCards = useMemo(
+    () => moduleCards.filter((item) => (moduleFilter === 'requiresApproval' ? item.requiresApproval : true)),
+    [moduleCards, moduleFilter],
+  );
   const detailModule = detailResponse?.data ? moduleCards.find((item) => item.moduleCode === detailResponse.data.moduleCode) ?? null : null;
+  const isAttendanceView = statisticsOnly || activeModule?.templateType === 'attendance_statistics';
+  const resolvedRecordListTitle =
+    recordListTitle ??
+    (activeModule ? `模块记录：${activeModule.moduleName}` : moduleFilter === 'requiresApproval' ? '审批相关记录' : '全部模块记录');
   const canCreateRecord =
     activeModule?.templateType === 'ledger_form' ||
     activeModule?.templateType === 'operation_flow' ||
@@ -101,6 +131,63 @@ export function WorkbenchHomePage() {
     activeModule?.templateType === 'attendance_statistics' ||
     activeModule?.templateType === 'service_asset' ||
     activeModule?.templateType === 'wecom_approval';
+
+  useEffect(() => {
+    setActiveModuleCode(initialModuleCode);
+  }, [initialModuleCode]);
+
+  useEffect(() => {
+    setActiveRecordId(initialRecordId);
+  }, [initialRecordId]);
+
+  useEffect(() => {
+    if (!detailResponse?.data?.moduleCode) {
+      return;
+    }
+    if (!activeModuleCode) {
+      setActiveModuleCode(detailResponse.data.moduleCode);
+    }
+  }, [activeModuleCode, detailResponse?.data?.moduleCode]);
+
+  useEffect(() => {
+    if (moduleFilter !== 'requiresApproval' || activeModuleCode || visibleModuleCards.length === 0) {
+      return;
+    }
+    setActiveModuleCode(visibleModuleCards[0].moduleCode);
+  }, [activeModuleCode, moduleFilter, visibleModuleCards]);
+
+  const goHome = () => navigate('/workbench');
+  const openModule = (moduleCode: string) => {
+    if (routeAware) {
+      navigate(`/workbench/modules/${moduleCode}`);
+      return;
+    }
+    setActiveModuleCode(moduleCode);
+  };
+
+  const openRecord = (recordId: string) => {
+    if (routeAware) {
+      navigate(`/workbench/records/${recordId}`);
+      return;
+    }
+    setActiveRecordId(recordId);
+  };
+
+  const closeRecord = () => {
+    if (routeAware) {
+      if (activeModuleCode && !statisticsOnly) {
+        navigate(`/workbench/modules/${activeModuleCode}`);
+        return;
+      }
+      if (statisticsOnly) {
+        navigate('/workbench/statistics/attendance');
+        return;
+      }
+      goHome();
+      return;
+    }
+    setActiveRecordId(null);
+  };
 
   const openCreateDrawer = () => {
     form.resetFields();
@@ -184,10 +271,17 @@ export function WorkbenchHomePage() {
     <>
       {contextHolder}
       <section className="page-hero">
-        <Typography.Title level={2}>工作平台</Typography.Title>
-        <Typography.Paragraph type="secondary">
-          Wave 7 已接入资产服务与审批模块：后勤与船务资产业务可录单，航次/燃油审批可直接发起企业微信流程。
-        </Typography.Paragraph>
+        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+          <Typography.Title level={2}>{heroTitle}</Typography.Title>
+          <Typography.Paragraph type="secondary">{heroDescription}</Typography.Paragraph>
+          {routeAware ? (
+            <Space wrap>
+              <Button onClick={goHome}>返回工作台首页</Button>
+              <Button onClick={() => navigate('/workbench/statistics/attendance')}>考勤统计</Button>
+              <Button onClick={() => navigate('/workbench/approvals')}>审批看板</Button>
+            </Space>
+          ) : null}
+        </Space>
       </section>
 
       <section className="page-card-grid workbench-stats-grid">
@@ -205,39 +299,41 @@ export function WorkbenchHomePage() {
         ))}
       </section>
 
-      <section className="page-card-grid workbench-module-grid" data-testid="workbench-module-grid">
-        {moduleCards.length === 0 ? (
-          <Card className="placeholder-card" bordered={false}>
-            <Empty description={dashboardLoading ? '工作平台模块加载中…' : '暂无可访问模块'} />
-          </Card>
-        ) : (
-          moduleCards.map((item) => {
-            const selected = activeModuleCode === item.moduleCode;
-            return (
-              <Card key={item.moduleCode} className="placeholder-card" bordered={false}>
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <Space wrap>
-                    <Typography.Title level={4}>{item.moduleName}</Typography.Title>
-                    <Tag>{departmentLabelMap[item.departmentCode] ?? item.departmentCode}</Tag>
-                    <Tag color={templateColorMap[item.templateType] ?? 'default'}>{item.templateType}</Tag>
-                    {item.requiresApproval ? <Tag color="cyan">企业微信审批</Tag> : null}
+      {!statisticsOnly ? (
+        <section className="page-card-grid workbench-module-grid" data-testid="workbench-module-grid">
+          {visibleModuleCards.length === 0 ? (
+            <Card className="placeholder-card" bordered={false}>
+              <Empty description={dashboardLoading ? '工作平台模块加载中…' : '暂无可访问模块'} />
+            </Card>
+          ) : (
+            visibleModuleCards.map((item) => {
+              const selected = activeModuleCode === item.moduleCode;
+              return (
+                <Card key={item.moduleCode} className="placeholder-card" bordered={false}>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Space wrap>
+                      <Typography.Title level={4}>{item.moduleName}</Typography.Title>
+                      <Tag>{departmentLabelMap[item.departmentCode] ?? item.departmentCode}</Tag>
+                      <Tag color={templateColorMap[item.templateType] ?? 'default'}>{item.templateType}</Tag>
+                      {item.requiresApproval ? <Tag color="cyan">企业微信审批</Tag> : null}
+                    </Space>
+                    <Typography.Text type="secondary">待办：{item.pendingCount}</Typography.Text>
+                    <Button type={selected ? 'primary' : 'default'} onClick={() => openModule(item.moduleCode)}>
+                      {selected ? '已选中' : '查看记录'}
+                    </Button>
                   </Space>
-                  <Typography.Text type="secondary">待办：{item.pendingCount}</Typography.Text>
-                  <Button type={selected ? 'primary' : 'default'} onClick={() => setActiveModuleCode(item.moduleCode)}>
-                    {selected ? '已选中' : '查看记录'}
-                  </Button>
-                </Space>
-              </Card>
-            );
-          })
-        )}
-      </section>
+                </Card>
+              );
+            })
+          )}
+        </section>
+      ) : null}
 
       <section className="page-card-grid">
         <Card className="placeholder-card" bordered={false}>
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
-              <Typography.Title level={4}>{activeModuleCode ? `模块记录：${activeModuleCode}` : '全部模块记录'}</Typography.Title>
+              <Typography.Title level={4}>{resolvedRecordListTitle}</Typography.Title>
               {canCreateRecord ? (
                 <Button type="primary" onClick={openCreateDrawer}>
                   {activeModule?.templateType === 'operation_flow'
@@ -250,7 +346,7 @@ export function WorkbenchHomePage() {
                           ? '新建资产服务记录'
                           : activeModule?.templateType === 'wecom_approval'
                             ? '新建审批记录'
-                      : '新建台账记录'}
+                            : '新建台账记录'}
                 </Button>
               ) : null}
             </Space>
@@ -267,7 +363,7 @@ export function WorkbenchHomePage() {
                   dataIndex: 'title',
                   key: 'title',
                   render: (_value: string, record) => (
-                    <Button type="link" onClick={() => setActiveRecordId(record.id)}>
+                    <Button type="link" onClick={() => openRecord(record.id)}>
                       {record.title}
                     </Button>
                   ),
@@ -296,7 +392,7 @@ export function WorkbenchHomePage() {
         </Card>
       </section>
 
-      {activeModule?.templateType === 'attendance_statistics' ? (
+      {isAttendanceView ? (
         <section className="page-card-grid">
           <Card className="placeholder-card" bordered={false}>
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -353,7 +449,7 @@ export function WorkbenchHomePage() {
         placement="right"
         width={560}
         open={Boolean(activeRecordId)}
-        onClose={() => setActiveRecordId(null)}
+        onClose={closeRecord}
       >
         {detailResponse?.data ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>

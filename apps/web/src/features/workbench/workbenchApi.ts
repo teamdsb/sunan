@@ -81,6 +81,7 @@ export interface WorkbenchRecordDetail extends WorkbenchRecordSummary {
 export interface WorkbenchRecordQuery {
   moduleCode?: string;
   status?: string;
+  templateType?: WorkbenchTemplateType;
   page?: number;
   pageSize?: number;
 }

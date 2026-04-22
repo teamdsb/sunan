@@ -54,6 +54,7 @@ interface WorkbenchModuleSummary {
   mobileFirst: boolean;
   sortOrder: number;
   visibleRoles: string[];
+  legacyOnly?: boolean;
 }
 
 interface WorkbenchStep {
@@ -120,6 +121,7 @@ interface ApprovalCallbackRequestMeta {
   signature: string | null;
   timestamp: string | null;
   nonce: string | null;
+  requestIp: string | null;
 }
 
 interface ModuleSchemaField {
@@ -306,16 +308,89 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     visibleRoles: ['system_admin', 'general_office', 'finance'],
   },
   {
-    moduleCode: 'business_operation_flow',
-    moduleName: '业务部作业闭环',
+    moduleCode: 'business_signin_desk',
+    moduleName: '作业人员签到台',
     departmentCode: 'business',
-    templateType: 'operation_flow',
+    templateType: 'attendance_statistics',
     requiresApproval: false,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
     sortOrder: 140,
     visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_receiving_workgroup_flow',
+    moduleName: '接收工作组操作流程',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 141,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_oil_boom_operation',
+    moduleName: '围油栏作业',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 142,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_ship_garbage_operation',
+    moduleName: '船舶垃圾接收作业',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 143,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_ship_oily_water_operation',
+    moduleName: '船舶污油水接收作业',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 144,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_domestic_sewage_operation',
+    moduleName: '生活污水接收记录',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 145,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+  },
+  {
+    moduleCode: 'business_operation_flow',
+    moduleName: '业务部作业闭环（历史兼容）',
+    departmentCode: 'business',
+    templateType: 'operation_flow',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: true,
+    mobileFirst: true,
+    sortOrder: 146,
+    visibleRoles: ['system_admin', 'general_office', 'business'],
+    legacyOnly: true,
   },
   {
     moduleCode: 'goa_safety_hazard',
@@ -423,6 +498,18 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     supportsStatistics: true,
     mobileFirst: true,
     sortOrder: 166,
+    visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
+  },
+  {
+    moduleCode: 'shipping_chart_update',
+    moduleName: '海图更新',
+    departmentCode: 'shipping',
+    templateType: 'ledger_form',
+    requiresApproval: false,
+    supportsPrint: true,
+    supportsStatistics: false,
+    mobileFirst: true,
+    sortOrder: 167,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
   },
   {
@@ -744,16 +831,149 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
       },
     ],
   },
+  shipping_chart_update: {
+    moduleCode: 'shipping_chart_update',
+    templateType: 'ledger_form',
+    sections: [
+      {
+        key: 'chartUpdate',
+        title: '海图更新信息',
+        fields: [
+          { key: 'updateBatch', label: '更新批次', required: true, inputType: 'text' },
+          { key: 'applicableVessels', label: '适用船舶', required: true, inputType: 'textarea' },
+          { key: 'chartVersion', label: '版本号', required: true, inputType: 'text' },
+          { key: 'updatedAt', label: '更新日期', required: true, inputType: 'date' },
+          { key: 'updateSummary', label: '更新说明', required: true, inputType: 'textarea' },
+          { key: 'confirmationRecord', label: '确认记录', required: true, inputType: 'textarea' },
+          { key: 'nextReminderDate', label: '下次提醒日期', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+  },
 };
 
 const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
+  business_receiving_workgroup_flow: {
+    moduleCode: 'business_receiving_workgroup_flow',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'operation',
+        title: '接收工作组作业信息',
+        fields: [
+          { key: 'operationName', label: '作业名称', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '作业船名', required: true, inputType: 'text' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'teamLead', label: '带班负责人', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  business_oil_boom_operation: {
+    moduleCode: 'business_oil_boom_operation',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'oilBoom',
+        title: '围油栏作业信息',
+        fields: [
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'agencyCompany', label: '代理公司', required: true, inputType: 'text' },
+          { key: 'operationFee', label: '费用', required: true, inputType: 'number' },
+          { key: 'operationDate', label: '作业日期', required: true, inputType: 'date' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  business_ship_garbage_operation: {
+    moduleCode: 'business_ship_garbage_operation',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'shipGarbage',
+        title: '船舶垃圾接收信息',
+        fields: [
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
+          { key: 'documentNo', label: '单证编号', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  business_ship_oily_water_operation: {
+    moduleCode: 'business_ship_oily_water_operation',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'shipOilyWater',
+        title: '船舶污油水接收信息',
+        fields: [
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
+          { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
+  business_domestic_sewage_operation: {
+    moduleCode: 'business_domestic_sewage_operation',
+    templateType: 'operation_flow',
+    sections: [
+      {
+        key: 'domesticSewage',
+        title: '生活污水接收信息',
+        fields: [
+          { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
+          { key: 'fee', label: '费用', required: false, inputType: 'number' },
+        ],
+      },
+    ],
+    stepTemplates: [
+      { stepCode: 'pre_shift_meeting', stepName: '班前会议' },
+      { stepCode: 'pre_operation_check', stepName: '作业前检查工作' },
+      { stepCode: 'patrol_record', stepName: '巡查记录' },
+      { stepCode: 'completion_confirmation', stepName: '完工确认记录' },
+    ],
+  },
   business_operation_flow: {
     moduleCode: 'business_operation_flow',
     templateType: 'operation_flow',
     sections: [
       {
         key: 'operation',
-        title: '作业基本信息',
+        title: '历史作业闭环信息',
         fields: [
           { key: 'operationName', label: '作业名称', required: true, inputType: 'text' },
           { key: 'vesselName', label: '作业船名', required: true, inputType: 'text' },
@@ -959,6 +1179,23 @@ const ATTENDANCE_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'period', label: '时段', required: true, inputType: 'text', placeholder: 'am/pm' },
           { key: 'locationInRange', label: '是否在钦州范围', required: true, inputType: 'text', placeholder: 'true/false' },
           { key: 'dutyType', label: '出勤类型', required: true, inputType: 'text', placeholder: 'normal/business_trip/dispatch' },
+        ],
+      },
+    ],
+  },
+  business_signin_desk: {
+    moduleCode: 'business_signin_desk',
+    templateType: 'attendance_statistics',
+    sections: [
+      {
+        key: 'signinDesk',
+        title: '作业人员签到台',
+        fields: [
+          { key: 'employeeName', label: '作业人员姓名', required: true, inputType: 'text' },
+          { key: 'vesselName', label: '作业船名', required: true, inputType: 'text' },
+          { key: 'berth', label: '泊位', required: true, inputType: 'text' },
+          { key: 'period', label: '时段', required: true, inputType: 'text', placeholder: 'am/pm' },
+          { key: 'locationInRange', label: '是否在钦州范围', required: true, inputType: 'text', placeholder: 'true/false' },
         ],
       },
     ],
@@ -1171,6 +1408,9 @@ export class WorkbenchService {
 
   async getModuleSchema(moduleCode: string, user: CurrentUser) {
     const moduleItem = this.mustGetModule(moduleCode);
+    if (moduleItem.legacyOnly) {
+      throw new NotFoundException('module schema not found');
+    }
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
     }
@@ -1216,9 +1456,18 @@ export class WorkbenchService {
     const visibleRecords = await this.listVisibleRecords(user);
     const recordsInMonth = visibleRecords.filter((record) => record.occurredAt.startsWith(monthPrefix));
 
-    const attendanceModules = WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics');
+    const attendanceModules = WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics' && !moduleItem.legacyOnly);
     const attendanceModuleCodes = new Set(attendanceModules.map((moduleItem) => moduleItem.moduleCode));
-    const operationSourceCodes = new Set(['business_operation_flow', 'zhongchuan_operation_flow', 'pinglu_operation_flow']);
+    const operationSourceCodes = new Set([
+      'business_receiving_workgroup_flow',
+      'business_oil_boom_operation',
+      'business_ship_garbage_operation',
+      'business_ship_oily_water_operation',
+      'business_domestic_sewage_operation',
+      'business_operation_flow',
+      'zhongchuan_operation_flow',
+      'pinglu_operation_flow',
+    ]);
 
     const attendanceRecords = recordsInMonth.filter((record) => attendanceModuleCodes.has(record.moduleCode));
     const operationSourceRecords = recordsInMonth.filter((record) => operationSourceCodes.has(record.moduleCode));
@@ -1364,6 +1613,9 @@ export class WorkbenchService {
 
   async createRecord(dto: WorkbenchRecordCreateDto, user: CurrentUser) {
     const moduleItem = this.mustGetModule(dto.moduleCode);
+    if (moduleItem.legacyOnly) {
+      throw new BadRequestException('legacy module is read-only');
+    }
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
     }
@@ -1969,6 +2221,8 @@ export class WorkbenchService {
   }
 
   private verifyCallbackSignature(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta) {
+    this.verifyCallbackSourceIp(meta.requestIp);
+
     const signatureRequired = appEnv.WECOM_CALLBACK_SIGNATURE_REQUIRED;
     if (!meta.signature) {
       if (signatureRequired) {
@@ -2007,6 +2261,18 @@ export class WorkbenchService {
     }
   }
 
+  private verifyCallbackSourceIp(requestIp: string | null) {
+    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.length) {
+      return;
+    }
+    if (!requestIp) {
+      throw new BadRequestException('callback request ip missing');
+    }
+    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.some((range) => this.isIpInRange(requestIp, range))) {
+      throw new BadRequestException('callback request ip not allowed');
+    }
+  }
+
   private async registerCallbackEvent(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta, payloadDigest: string | null) {
     try {
       await this.callbackEventRepository.save(
@@ -2041,6 +2307,39 @@ export class WorkbenchService {
     return createHash('sha1').update(value).digest('hex');
   }
 
+  private isIpInRange(ip: string, cidr: string) {
+    if (!cidr.includes('/')) {
+      return ip === cidr;
+    }
+
+    const [rangeIp, prefixText] = cidr.split('/');
+    if (!rangeIp) {
+      return false;
+    }
+    const prefix = Number(prefixText);
+    if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+      return false;
+    }
+
+    const ipInt = this.toIpv4Int(ip);
+    const rangeInt = this.toIpv4Int(rangeIp);
+    if (ipInt === null || rangeInt === null) {
+      return false;
+    }
+
+    const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
+    return (ipInt & mask) === (rangeInt & mask);
+  }
+
+  private toIpv4Int(ip: string) {
+    const parts = ip.split('.').map((part) => Number(part));
+    if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+      return null;
+    }
+    const [part0, part1, part2, part3] = parts as [number, number, number, number];
+    return (((part0 << 24) >>> 0) + ((part1 << 16) >>> 0) + ((part2 << 8) >>> 0) + part3) >>> 0;
+  }
+
   private assertSystemAdmin(user: CurrentUser) {
     if (!user.roles.includes('system_admin')) {
       throw new ForbiddenException('forbidden');
@@ -2055,11 +2354,17 @@ export class WorkbenchService {
   }
 
   private listVisibleModules(user: CurrentUser) {
+    return WORKBENCH_MODULES.filter((moduleItem) => !moduleItem.legacyOnly && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+  }
+
+  private listReadableModules(user: CurrentUser) {
     return WORKBENCH_MODULES.filter((moduleItem) => this.hasRoleAccess(user, moduleItem.visibleRoles)).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   private async listVisibleRecords(user: CurrentUser) {
-    const visibleModules = this.listVisibleModules(user);
+    const visibleModules = this.listReadableModules(user);
     const moduleCodes = visibleModules.map((moduleItem) => moduleItem.moduleCode);
     if (moduleCodes.length === 0) {
       return [];

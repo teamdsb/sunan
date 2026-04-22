@@ -101,7 +101,7 @@ describe('WorkbenchController integration', () => {
       .post('/api/v1/workbench/records')
       .set('Authorization', 'Bearer token')
       .send({
-        moduleCode: 'business_operation_flow',
+        moduleCode: 'business_oil_boom_operation',
         title: '围油栏布设流程',
         summary: 'B3 泊位作业闭环',
         vesselId: 'sunan-012',
@@ -119,7 +119,7 @@ describe('WorkbenchController integration', () => {
     const listFlowResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get('/api/v1/workbench/records')
       .set('Authorization', 'Bearer token')
-      .query({ moduleCode: 'business_operation_flow' });
+      .query({ moduleCode: 'business_oil_boom_operation' });
 
     expect(listFlowResponse.status).toBe(200);
     expect((listFlowResponse.body as { data: Array<{ id: string }> }).data).toEqual(
@@ -346,6 +346,7 @@ describe('WorkbenchController integration', () => {
     const moduleCodes = (financeModules.body as { data: Array<{ moduleCode: string }> }).data.map((item) => item.moduleCode);
     expect(moduleCodes).toContain('finance_attendance');
     expect(moduleCodes).not.toContain('business_operation_flow');
+    expect(moduleCodes).not.toContain('business_oil_boom_operation');
     expect(moduleCodes).not.toContain('shipping_voyage_approval');
 
     const forbiddenCreate = await request(app.getHttpServer() as Parameters<typeof request>[0])

@@ -1,162 +1,124 @@
-# M5 执行计划：上线强化、工作平台正式化、遗留规格收口
+# M6 执行计划：全量兑现、企业微信正式上线、生产交付闭环
 
 ## Wave 状态
 
 ### Wave 1
-- [x] WS-1A M5 需求文档与执行计划冻结
-- [x] WS-1B 工作平台运行时存储与接口规格冻结
-- [x] WS-1C 企业微信审批运维与真机回归规格冻结
+- [ ] WS-1A M6 需求文档与执行计划冻结
+- [ ] WS-1B 企业微信生产交付规格冻结
+- [ ] WS-1C 工作平台差异基线与 blocker 清单冻结
 
 ### Wave 2
-- [x] WS-2A 工作平台运行时持久化与审批实例落库
-- [x] WS-2B 工作平台集成测试基线建立
-- [x] WS-2C 记录/附件/打印/步骤运行时迁移与索引治理
+- [ ] WS-2A 工作平台模块拆分与 legacy 兼容
+- [ ] WS-2B 工作平台模块化路由与页面拆分
+- [ ] WS-2C 海图更新落地与财务板块 blocker 判定
 
 ### Wave 3
-- [x] WS-3A 审批桥验签、幂等、重试、对账能力实现
-- [x] WS-3B 企业微信真机回归留痕与上线材料收口
-- [x] WS-3C 权限矩阵自动化校验与异常诊断能力实现
+- [ ] WS-3A 企业微信配置标准化与配置矩阵落地
+- [ ] WS-3B 回调安全闭环与模板绑定清单收口
+- [ ] WS-3C 四大板块真机回归矩阵冻结
 
 ### Wave 4
-- [x] WS-4A 统计导出与财务对账口径固化
-- [x] WS-4B 打印模板标准化与关键链路可观测性收口
-- [x] WS-4C 遗留模块边界收口（财务板块、海图更新）
+- [ ] WS-4A 生产发布/回滚/备份恢复 runbook 收口
+- [ ] WS-4B 可观测、告警、值班与恢复 SOP 收口
+- [ ] WS-4C 上线材料目录与责任分工冻结
 
-## Wave 1：M5 文档冻结
+### Wave 5
+- [ ] WS-5A Workbench 前端测试补齐
+- [ ] WS-5B OpenAPI 校验、integration 前置条件与 smoke 门禁收口
+- [ ] WS-5C 路由拆包与弱网体验门禁收口
+
+### Wave 6
+- [ ] WS-6A 上线切换执行
+- [ ] WS-6B 验收归档与材料提交
+- [ ] WS-6C Hypercare 首周监控与缺陷闭环
+
+## Wave 1：M6 文档冻结与差异基线
 
 ### 目标
-- 将 M5 从“优化项清单”升级为可执行里程碑。
-- 冻结工作平台运行时存储、审批运维、真机回归和上线留痕的规格入口。
-- 将 `财务板块`、`海图更新` 以遗留规格方式纳入 SDD 目录。
+- 建立 M6 的主文档入口与执行顺序。
+- 冻结企业微信正式上线、生产交付、工作平台差异和 blocker 清单。
+- 让后续开发可以按 wave 直接推进，不再依赖口头上下文。
 
 ### 产出
-- `docs/requirements/M5-上线强化与遗留收口.md`
-- `docs/M5-execplans.md`
-- `docs/specs/workbench/db/workbench-runtime-schema.md`
-- `docs/specs/wecom/approval-ops-spec.md`
-- `docs/specs/wecom/workbench-real-device-regression.md`
-- `docs/specs/workbench/m5-optimization-backlog.md`
-- `docs/specs/workbench/api/workbench-platform-api.yaml`
-- `docs/specs/workbench/api/workbench-approval-api.yaml`
+- `docs/requirements/M6-全量兑现与完美上线.md`
+- `docs/M6-execplans.md`
+- `docs/execplans.md`
+- `docs/specs/workbench/README.md`
+- `docs/specs/wecom/production-config-matrix.md`
+- `docs/specs/wecom/callback-security-spec.md`
+- `docs/specs/wecom/template-binding-checklist.md`
+- `docs/specs/wecom/production-cutover-runbook.md`
+- `docs/specs/wecom/go-live-materials-checklist.md`
+- `docs/specs/workbench/finance-business-board-blocker.md`
+- `docs/architecture/deployment.md`
+- `docs/architecture/security.md`
+- `docs/guides/wecom-dev-setup.md`
 
 ### 验收标准
-- M5 目标、范围、非目标和上线口径明确。
-- 工作平台运行时存储对象和审批运维对象完成冻结。
-- 遗留模块已进入工作平台模块矩阵与 UI 边界文档。
-- 企业微信真机回归与上线留痕模板可直接执行。
+- M6 scope、非目标、wave、上线口径、补料门禁全部明确。
+- 企业微信生产交付、回调安全、模板绑定、切换 runbook 和材料清单具备独立入口。
+- `财务板块` blocker 已显式列出，不再以“后续再看”处理。
 
-### Wave 1 完成说明（2026-04-22）
-- 已完成 M5 需求与执行计划冻结：
-  - `docs/requirements/M5-上线强化与遗留收口.md`
-  - `docs/execplans.md`
-  - `docs/M5-execplans.md`
-- 已完成工作平台运行时存储与接口规格冻结：
-  - `docs/specs/workbench/db/workbench-runtime-schema.md`
-  - `docs/specs/workbench/api/workbench-platform-api.yaml`
-  - `docs/specs/workbench/api/workbench-approval-api.yaml`
-  - `docs/specs/workbench/state/workbench-records.md`
-  - `docs/specs/workbench/state/workbench-approval-sync.md`
-- 已完成企业微信审批运维与真机回归规格冻结：
-  - `docs/specs/wecom/approval-ops-spec.md`
-  - `docs/specs/wecom/workbench-go-live-checklist.md`
-  - `docs/specs/wecom/workbench-real-device-regression.md`
-- 已完成遗留模块边界纳入：
-  - `docs/specs/workbench/db/workbench-module-matrix.md`
-  - `docs/specs/workbench/ui/workbench-department-modules.md`
-  - `docs/specs/workbench/m5-optimization-backlog.md`
-- 已完成 Wave 1 验收归档：
-  - `docs/specs/workbench/acceptance-m5-wave1.md`
-
-## Wave 2：工作平台底座正式化
+## Wave 2：工作平台模块全量兑现
 
 ### 实现范围
-- 引入工作平台运行时实体与数据库迁移。
-- 将记录、步骤、附件、动作日志、打印快照和审批实例镜像从内存态迁移到 PostgreSQL。
-- 为工作平台建立 `apps/api/test` 下的集成测试基线。
-
-### 推荐优先级
-- 若 M5 只先开发一个部分，优先选择 `WS-2A 工作平台运行时持久化与审批实例落库`。
-- 该项完成后，后续审批告警、导出、对账、真机回归与管理员诊断才有稳定落点。
+- 将 `business_operation_flow` 拆为新模块编码：
+  - `business_signin_desk`
+  - `business_receiving_workgroup_flow`
+  - `business_oil_boom_operation`
+  - `business_ship_garbage_operation`
+  - `business_ship_oily_water_operation`
+  - `business_domestic_sewage_operation`
+- 落地 `shipping_chart_update`。
+- 保留 `business_operation_flow` 为 legacy-only，不再作为默认新建入口。
+- 新增工作平台模块页、详情页、统计页、审批页路由。
 
 ### 验收标准
-- `workbench` 记录与审批实例不再依赖内存 `Map`。
-- 运行时实体可支持列表、详情、动作、附件、打印和审批查询。
-- 集成测试使用 PostgreSQL testcontainers，覆盖核心工作平台链路。
+- 模块矩阵、代码注册、页面入口、统计口径和权限一致。
+- 旧聚合模块仅保留兼容展示能力。
+- `海图更新` 成为真实可录单模块。
 
-### Wave 2 完成说明（2026-04-22）
-- 已完成工作平台运行时实体与迁移落地：
-  - `apps/api/src/database/entities/workbench-*.entity.ts`
-  - `apps/api/src/database/entities/wecom-approval-*.entity.ts`
-  - `apps/api/src/database/migrations/1710000011000-wave5-workbench-runtime.ts`
-- 已完成 `workbench` 服务从内存态到 PostgreSQL 持久化改造：
-  - `apps/api/src/modules/workbench/workbench.service.ts`
-  - `apps/api/src/modules/workbench/workbench.module.ts`
-  - `apps/api/src/modules/workbench/workbench.controller.ts`
-  - `apps/api/src/modules/workbench/workbench-approval.controller.ts`
-- 已完成测试基线与数据源接入：
-  - `apps/api/test/workbench.integration.spec.ts`
-  - `apps/api/test/pg-test-container.ts`
-  - `apps/api/src/database/typeorm.config.ts`
-- 本地验证结果：
-  - `pnpm --filter api build` 通过。
-  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过（Docker 环境）。
-
-## Wave 3：企业微信审批桥强化与上线留痕
+## Wave 3：企业微信生产集成闭环
 
 ### 实现范围
-- 审批回调验签、幂等、解密、重放保护、失败重试和对账补偿。
-- 审批异常实例检索、管理员重试与诊断接口。
-- iOS / Android 企业微信真机回归执行、截图/录屏证据留存。
-- 权限矩阵自动化校验与 CI 收口。
+- 统一标准变量：`WECOM_CALLBACK_TOKEN`、`WECOM_ENCODING_AES_KEY`、`WECOM_CALLBACK_ALLOWED_IP_RANGES`、`WEB_PUBLIC_URL`、`API_PUBLIC_URL`。
+- 回调签名、时间窗、nonce、幂等、可选加密解密、来源 IP 校验、异常留痕、人工重试、批量对账。
+- 企业微信后台配置矩阵与模板绑定清单。
+- 真机回归扩展到“我的 / 办事 / 采购管理 / 工作平台”。
 
 ### 验收标准
-- 审批实例支持按状态检索异常、待回调、待对账记录。
-- 回调失败、重试失败和消息异常均有告警面板或告警事件定义。
-- 真机回归报告与缺陷闭环模板可直接作为上线材料提交。
+- 企业微信后台配置与系统 env/config 一一对应。
+- 回调安全不再停留在“如启用”。
+- 四大板块真机回归矩阵完成冻结。
 
-### Wave 3 完成说明（2026-04-22）
-- 已完成审批桥强化实现：
-  - 审批回调验签、时间戳校验与签名参数校验
-  - 回调事件去重表与 `eventId + processInstanceId/callbackVersion` 重放保护
-  - 审批实例管理员分页诊断接口 `GET /api/v1/wecom/approval/instances`
-  - 管理员重试接口 `POST /api/v1/wecom/approval/retry`
-  - 管理员对账接口 `POST /api/v1/wecom/approval/reconcile`（系统管理员权限收敛）
-- 已完成权限矩阵自动化校验基线：
-  - `apps/api/test/workbench.integration.spec.ts` 增加模块可见性与越权校验用例
-- 已完成 Wave 3 验收归档：
-  - `docs/specs/workbench/acceptance-m5-wave3.md`
-- 本地验证结果：
-  - `pnpm --filter api build` 通过。
-  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过（单元+集成）。
-- 说明：
-  - WS-3B 的“真机回归留痕”执行模板已在 Wave 1 冻结（`docs/specs/wecom/workbench-real-device-regression.md`），本轮完成了后端能力和验收链路，真机执行记录需按模板由业务测试设备补录。
-
-## Wave 4：数据正确性与交付一致性
+## Wave 4：部署、运维与可观测性交付
 
 ### 实现范围
-- 固化考勤导出、财务对账、打印模板标准化与快照归档。
-- 收口关键链路 SLI/SLO、指标、日志和应急处理要求。
-- 将 `财务板块`、`海图更新` 形成最小可执行 SDD 边界。
+- 发布顺序、迁移顺序、seed 策略、回滚步骤、备份恢复、值班与联系人。
+- OAuth2、JS-SDK、审批桥、消息、文件、导出、打印的日志、告警与恢复 SOP。
 
 ### 验收标准
-- 导出、对账和打印口径一致，可追溯到统一规格。
-- 关键接口、审批回调、导出任务、消息发送均纳入可观测范围。
-- `财务板块` 与 `海图更新` 均有清晰的边界与待确认清单，不再散落在原始需求文本中。
+- M6 文档目录中存在可执行的 runbook 与 checklist。
+- 生产发布、回滚、恢复不依赖口头说明。
 
-### Wave 4 完成说明（2026-04-22）
-- 已完成统计导出与财务对账接口落地：
-  - `GET /api/v1/workbench/statistics/attendance/export`
-  - `POST /api/v1/workbench/statistics/attendance/reconcile`
-  - 对应实现：`apps/api/src/modules/workbench/workbench.controller.ts`、`apps/api/src/modules/workbench/workbench.service.ts`
-- 已完成打印返回结构标准化与关键链路日志留痕：
-  - 打印快照返回补齐 `recordId`、`renderedFormat`
-  - 审批发起/回调/重试/对账、考勤导出/对账、打印快照统一日志留痕
-- 已完成 Wave4 验收归档：
-  - `docs/specs/workbench/acceptance-m5-wave4.md`
-- 全量测试与冒烟测试结果：
-  - `make test-api` 通过（API unit + integration 全量通过）。
-  - `make test-web` 通过（前端 41 个测试文件、155 个测试全部通过）。
-  - `pnpm --filter api test -- workbench.integration.spec.ts` 通过，覆盖 Wave2~Wave4 关键链路，作为本次冒烟验证通过依据。
-  - OpenAPI 校验通过：
-    - `npx swagger-cli validate docs/specs/workbench/api/workbench-platform-api.yaml`
-    - `npx swagger-cli validate docs/specs/workbench/api/workbench-approval-api.yaml`
+## Wave 5：测试、性能与上线门禁
+
+### 实现范围
+- Workbench 前端页面测试补齐。
+- 所有新增/变更 OpenAPI 执行 `swagger-cli validate`。
+- 后端 integration 的 Docker/testcontainers 前置条件与 smoke 门禁文档化。
+- 路由级拆包与弱网体验门禁纳入 M6。
+
+### 验收标准
+- `make test-web`、OpenAPI 校验、真机回归、预发布 smoke、回滚演练进入 M6 gate。
+- 主包体积与懒加载策略有明确结果。
+
+## Wave 6：上线切换、验收归档与 Hypercare
+
+### 实现范围
+- 形成最终上线包：后台截图、模板绑定清单、发布单、回滚方案、告警清单、联系人清单、缺陷闭环表。
+- 每个 wave 输出 `acceptance-m6-waveN.md`。
+- 首个工作周记录登录、审批、消息、导出、文件、打印 6 条关键链路。
+
+### 验收标准
+- M6 以生产切换完成、交付物可审计、缺陷闭环完成为结束条件。

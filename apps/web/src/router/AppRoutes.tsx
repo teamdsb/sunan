@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthCallbackPage } from '../features/auth/AuthCallbackPage';
 import { CertificateDetailPage } from '../features/certificate/CertificateDetailPage';
@@ -21,13 +22,32 @@ import { ProcurementOrderListPage } from '../features/procurement/ProcurementOrd
 import { ProcurementReportApprovalPage } from '../features/procurement/ProcurementReportApprovalPage';
 import { ProcurementReportPage } from '../features/procurement/ProcurementReportPage';
 import { ProcurementReportRequestDetailPage } from '../features/procurement/ProcurementReportRequestDetailPage';
-import { WorkbenchHomePage } from '../features/workbench/WorkbenchHomePage';
 import { AppShell } from '../layouts/AppShell';
 import { RequireAuth } from './RequireAuth';
 import { myRouteConfig } from './myRouteConfig';
 import { officeRouteConfig } from './officeRouteConfig';
 import { procurementRouteConfig } from './procurementRouteConfig';
 import { workbenchRouteConfig } from './workbenchRouteConfig';
+
+const WorkbenchHomeRoutePage = lazy(async () => ({
+  default: (await import('../features/workbench/WorkbenchHomeRoutePage')).WorkbenchHomeRoutePage,
+}));
+const WorkbenchModulePage = lazy(async () => ({
+  default: (await import('../features/workbench/WorkbenchModulePage')).WorkbenchModulePage,
+}));
+const WorkbenchRecordDetailPage = lazy(async () => ({
+  default: (await import('../features/workbench/WorkbenchRecordDetailPage')).WorkbenchRecordDetailPage,
+}));
+const WorkbenchAttendancePage = lazy(async () => ({
+  default: (await import('../features/workbench/WorkbenchAttendancePage')).WorkbenchAttendancePage,
+}));
+const WorkbenchApprovalPage = lazy(async () => ({
+  default: (await import('../features/workbench/WorkbenchApprovalPage')).WorkbenchApprovalPage,
+}));
+
+function renderLazyPage(page: JSX.Element) {
+  return <Suspense fallback={<div>页面加载中...</div>}>{page}</Suspense>;
+}
 
 export function AppRoutes() {
   return (
@@ -58,7 +78,11 @@ export function AppRoutes() {
           <Route path={procurementRouteConfig.reportRequestDetail.path} element={<ProcurementReportRequestDetailPage />} />
           <Route path={procurementRouteConfig.reportApprovals.path} element={<ProcurementReportApprovalPage />} />
           <Route path={procurementRouteConfig.dictionaries.path} element={<ProcurementDictionaryAdminPage />} />
-          <Route path={workbenchRouteConfig.home.path} element={<WorkbenchHomePage />} />
+          <Route path={workbenchRouteConfig.home.path} element={renderLazyPage(<WorkbenchHomeRoutePage />)} />
+          <Route path={workbenchRouteConfig.module.path} element={renderLazyPage(<WorkbenchModulePage />)} />
+          <Route path={workbenchRouteConfig.recordDetail.path} element={renderLazyPage(<WorkbenchRecordDetailPage />)} />
+          <Route path={workbenchRouteConfig.attendanceStatistics.path} element={renderLazyPage(<WorkbenchAttendancePage />)} />
+          <Route path={workbenchRouteConfig.approvals.path} element={renderLazyPage(<WorkbenchApprovalPage />)} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/my" replace />} />
