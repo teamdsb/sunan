@@ -55,6 +55,7 @@
 | UI | `ui/workbench-department-modules.md` | M6 重写 |
 | UI | `ui/workbench-batch-a-integration-notes.md` | M6 Wave 4 新增 |
 | UI | `ui/workbench-batch-b-integration-notes.md` | M6 Wave 5 新增 |
+| UI | `ui/workbench-wave6-legacy-closure-notes.md` | M6 Wave 6 新增 |
 | UI | `ui/workbench-module-route-map.md` | M6 新增 |
 | UI | `ui/workbench-admin-console.md` | M6 新增 |
 | UI | `ui/finance-module-provisional.md` | M6 新增 |
@@ -65,6 +66,7 @@
 | Acceptance | `acceptance-m6-wave3.md` | M6 Wave 3 已归档 |
 | Acceptance | `acceptance-m6-wave4.md` | M6 Wave 4 已归档 |
 | Acceptance | `acceptance-m6-wave5.md` | M6 Wave 5 已归档 |
+| Acceptance | `acceptance-m6-wave6.md` | M6 Wave 6 已归档 |
 | Acceptance | `acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md` | M5 历史归档 |
 | Acceptance | `acceptance-wave1.md` ~ `acceptance-wave8.md` | M4 历史归档 |
 
@@ -138,8 +140,9 @@
 8. `api/workbench-admin-api.yaml`
 9. `db/finance-module-provisional.md`
 10. `db/chart-update-module.md`
-11. `docs/specs/wecom/jssdk-spec.md`
-12. `docs/specs/wecom/workbench-go-live-checklist.md`
+11. `ui/workbench-wave6-legacy-closure-notes.md`
+12. `docs/specs/wecom/jssdk-spec.md`
+13. `docs/specs/wecom/workbench-go-live-checklist.md`
 
 ## 状态说明
 

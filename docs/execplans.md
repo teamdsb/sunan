@@ -28,9 +28,9 @@
 - [x] WS-5C 导出任务、对账任务、诊断事件规格冻结
 
 ### Wave 6
-- [ ] WS-6A `财务板块` provisional SDD 完成
-- [ ] WS-6B `海图更新` 正式 SDD 完成
-- [ ] WS-6C 海图更新与 `chart_update` 提醒联动规则冻结
+- [x] WS-6A `财务板块` provisional SDD 完成
+- [x] WS-6B `海图更新` 正式 SDD 完成
+- [x] WS-6C 海图更新与 `chart_update` 提醒联动规则冻结
 
 ### Wave 7
 - [ ] WS-7A OpenAPI 校验、模块级测试矩阵与路由级测试矩阵冻结
@@ -122,9 +122,6 @@
 ### 产出
 
 - `docs/specs/workbench/ui/workbench-department-modules.md`
-- `docs/specs/workbench/ui/workbench-batch-b-integration-notes.md`
-- `docs/specs/workbench/db/workbench-module-matrix.md`
-- `docs/specs/workbench/acceptance-m6-wave5.md`
 - `docs/specs/workbench/ui/workbench-batch-a-integration-notes.md`
 - `docs/specs/workbench/acceptance-m6-wave4.md`
 
@@ -141,6 +138,13 @@
 - 统计 / 审批 / 资产服务类：统计中心、船员考勤、航次计划审批、燃油加注、仓库、办公室、食堂、宿舍、车辆维修保养。
 - 管理员台依赖的导出任务、对账任务、诊断事件一并冻结。
 
+### 产出
+
+- `docs/specs/workbench/ui/workbench-department-modules.md`
+- `docs/specs/workbench/ui/workbench-batch-b-integration-notes.md`
+- `docs/specs/workbench/db/workbench-module-matrix.md`
+- `docs/specs/workbench/acceptance-m6-wave5.md`
+
 ### 验收标准
 
 - 高风险模块的审批真源、状态镜像、对账、打印和归档规格无歧义。
@@ -153,6 +157,15 @@
 - `财务板块` provisional SDD：页面范围、角色、入口、与统计中心关系、导出包、审批边界、待确认项。
 - `海图更新` 正式 SDD：批次、适用船舶、版本/日期、更新资源、附件、确认记录、打印归档。
 - `海图更新` 与现有 `chart_update` 证照提醒类型的联动规则。
+
+### 产出
+
+- `docs/specs/workbench/db/finance-module-provisional.md`
+- `docs/specs/workbench/ui/finance-module-provisional.md`
+- `docs/specs/workbench/db/chart-update-module.md`
+- `docs/specs/workbench/ui/chart-update-module.md`
+- `docs/specs/workbench/ui/workbench-wave6-legacy-closure-notes.md`
+- `docs/specs/workbench/acceptance-m6-wave6.md`
 
 ### 验收标准
 

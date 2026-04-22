@@ -76,6 +76,18 @@ draft -> submitted -> confirmed -> archived
 3. 将证照 `expiryDate` 写为 `nextPlannedUpdateDate`
 4. 继续复用现有提醒引擎生成后续提醒
 
+日期计算补充：
+
+- 统一按业务时区 `Asia/Shanghai` 计算半年周期。
+- 若确认时间为月末（例如 8 月 31 日），目标月无同日时取该月最后一天。
+- `nextPlannedUpdateDate` 仅保留日期部分，不携带时分秒。
+
+幂等补充：
+
+- 联动幂等键建议：`{recordId}:{vesselId}:chart_update:confirmed`。
+- 同一 `recordId` 重复触发确认时，必须命中幂等键并执行“更新不新增”。
+- 仅当 `confirmedAt` 被显式改写（纠错流程）时允许重算下一次计划日期，并记动作审计。
+
 ### 5.3 约束
 
 - 提醒联动只在 `confirmed` 后触发，不在 `draft` / `submitted` 状态触发
@@ -97,3 +109,4 @@ draft -> submitted -> confirmed -> archived
 - 海图更新具备独立模块入口、字段、状态机和打印归档
 - 确认动作可推导下一次半年提醒
 - `chart_update` 提醒记录与工作平台海图更新记录可建立可追溯关联
+- 重复确认不会重复创建提醒记录，联动具备幂等性

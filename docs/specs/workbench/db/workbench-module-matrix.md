@@ -45,6 +45,11 @@ Wave5 已冻结的 Batch B 模块包括：
 
 上述模块在 M6 中除六维规格外，还必须满足“可被管理员任务体系检索与排障”的联动要求，具体见 `ui/workbench-batch-b-integration-notes.md`。
 
+### 2.3 Wave6 遗留收口标注
+
+- `finance_board`：保持 `provisional`，已冻结入口/角色/导出包边界与升级 gate，详见 `db/finance-module-provisional.md`、`ui/finance-module-provisional.md`
+- `shipping_chart_update`：升级为正式 SDD，并冻结半年提醒联动规则，详见 `db/chart-update-module.md`、`ui/chart-update-module.md`
+
 | 模块 | moduleCode | 部门/工作组 | 模板 | 当前状态 | 代码现状 | M6 页面形态 | 样表来源 | 打印模板 | 审批模板映射 | 阻塞项 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 岗前/日常/季度/年度培训 | `goa_training` | 总经办 | `ledger_form` | `M6 待高保真` | 已有 schema、记录运行时、统一页 | 独立培训页 + 进度视图 + 详情页 | `需求 4.3.1`、现有培训资料 | `A4-培训记录` | 岗前培训：`goa_training_onboarding_v1`；其他不适用 | 岗前审批口径、学习进度样张 |
@@ -53,7 +58,7 @@ Wave5 已冻结的 Batch B 模块包括：
 | 安全隐患排查管理 | `goa_safety_hazard` | 总经办 | `inspection_rectification` | `M6 待高保真` | 已有检查整改模板和运行时 | 独立隐患列表 + 整改闭环详情 | `需求 4.3`、排查记录本 | `A4-隐患闭环单` | 不适用 | 子维度检查项清单待业务确认 |
 | 年度工作计划 | `goa_year_plan` | 总经办 | `ledger_form` | `M6 待高保真` | 已有 schema | 独立年度计划页 | `需求 4.3.5`、年度计划表 | `A4-年度工作计划` | 不适用 | 节点、责任部门样表待补齐 |
 | 统计中心 | `finance_attendance` | 财务部 | `attendance_statistics` | `M6 待高保真` | 已有统计接口、导出/对账接口、统一页 | 独立统计中心页 + 对账入口 | `需求 4.4.1`、考勤表/作业票/劳务费表 | `A4-月度统计包` | 不适用 | 打卡范围、劳务费口径需业务确认 |
-| 财务板块 | `finance_board` | 财务部 | provisional | `M6 遗留` | 当前无 `moduleCode`、无 API、无页面 | 独立 provisional 模块页 | `需求 4.4.2` | `M6 待定` | `M6 待确认是否审批` | 原始样表不足，仅能先出 provisional SDD |
+| 财务板块 | `finance_board` | 财务部 | provisional | `M6 遗留` | 当前无 `moduleCode`、无 API、无页面 | 独立 provisional 模块页 | `需求 4.4.2` | `M6 待定` | `M6 待确认是否审批` | 已完成 provisional SDD；待样表与审批边界确认后升级正式规格 |
 | 作业人员签到台 | `business_operation_flow` | 业务部 | `operation_flow` | `M6 待高保真` | 与作业闭环共用模板 | 独立签到入口 + 记录列表 | `需求 4.5.1` | `A4-签到记录` | 不适用 | 需从通用作业闭环中拆出独立入口 |
 | 接收工作组操作流程 | `business_operation_flow` | 业务部 | `operation_flow` | `M6 待高保真` | 已有步骤模板 | 独立四步闭环页 | `需求 4.5.2` | `A4-接收作业闭环单` | 不适用 | 作业前检查表样张待补 |
 | 围油栏 | `business_operation_flow` | 业务部 | `operation_flow` | `M6 待高保真` | 与作业闭环共用 | 独立围油栏记录页 | `需求 4.5`、围油栏资料 | `A4-围油栏作业单` | 不适用 | 单证、费用样张待补 |
@@ -77,7 +82,7 @@ Wave5 已冻结的 Batch B 模块包括：
 | 船舶设施设备保养 | `shipping_equipment_maintenance` | 船务部 | `service_asset` | `M6 待高保真` | 已有 service_asset schema | 独立保养页 | `需求 4.6`、检修养护记录表 | `A4-设备保养记录` | `shipping_equipment_maintenance_v1` | 轮机/驾驶室/甲板三类样表待补 |
 | 燃油加注 | `shipping_fuel_bunkering_approval` | 船务部 | `wecom_approval` | `M6 待高保真` | 已有审批桥、统一壳层 | 独立燃油页 + 月报视图 | `需求 4.6`、油耗记录表 | `A4-燃油加注单` | `shipping_fuel_bunkering_v1` | 月报口径与剩余油量规则待补 |
 | 航次计划审批 | `shipping_voyage_approval` | 船务部 | `wecom_approval` | `M6 待高保真` | 已有审批桥 | 独立航次审批页 | `需求 4.6`、航次计划表 | `A4-航次计划审批单` | `shipping_voyage_approval_v1` | 关键水域和任务字段样张待补 |
-| 海图更新 | `shipping_chart_update` | 船务部 | `ledger_form` | `M6 遗留` | 当前无独立 `moduleCode`、无页面，仅有提醒类型 `chart_update` | 独立海图更新台账页 | `需求 4.6.11`、海图更新说明、更新资源信息 | `A4-海图更新确认单` | 不适用 | 需补确认动作与提醒联动规则 |
+| 海图更新 | `shipping_chart_update` | 船务部 | `ledger_form` | `M6 遗留` | 当前无独立 `moduleCode`、无页面，仅有提醒类型 `chart_update` | 独立海图更新台账页 | `需求 4.6.11`、海图更新说明、更新资源信息 | `A4-海图更新确认单` | 不适用 | 已完成正式 SDD 与半年提醒规则冻结；待实现模块落地与联调 |
 | 仓库 | `logistics_warehouse` | 后勤部 | `service_asset` | `M6 待高保真` | 已有 schema | 独立仓库页 | `需求 4.7`、仓库台账 | `A4-仓库台账` | 不适用 | 财产统计样张待补 |
 | 办公室 | `logistics_office` | 后勤部 | `service_asset` | `M6 待高保真` | 已有 schema | 独立办公室页 | `需求 4.7`、办公室台账 | `A4-办公室资产单` | 不适用 | 维修保养记录样张待补 |
 | 食堂 | `logistics_canteen` | 后勤部 | `service_asset` | `M6 待高保真` | 已有 schema | 独立食堂页 | `需求 4.7`、食堂设施资料 | `A4-食堂设施台账` | 不适用 | 水电与保养字段待补 |
@@ -89,7 +94,7 @@ Wave5 已冻结的 Batch B 模块包括：
 ## 3. M6 设计结论
 
 - 绝大多数工作平台模块当前处于 `已有底座`，M6 主要工作不是补 runtime，而是补独立页面、字段组、打印模板和验收点。
-- `财务板块`、`海图更新` 当前均不具备独立实现基础，统一归为 `M6 遗留`，但处理策略不同：
+- `财务板块`、`海图更新` 在代码层仍属于 `M6 遗留`，但规格层已完成收口，处理策略不同：
   - `财务板块`：provisional SDD
   - `海图更新`：正式 SDD
 - 管理员运维台不单列进业务模块矩阵，而由 `ui/workbench-admin-console.md`、`state/workbench-admin-console.md` 和 `api/workbench-admin-api.yaml` 单独承载。
