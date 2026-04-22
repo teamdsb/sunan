@@ -27,6 +27,15 @@
 
 ## 2. 模块矩阵
 
+### 2.1 Wave4 Batch A 标注
+
+Wave4 已冻结的 Batch A 模块包括：
+
+- 台账类：`goa_training`、`goa_meeting`、`goa_safety_month`、`goa_year_plan`、`business_ship_sign`、`business_vessel_dynamic`、`shipping_training_hours`、`shipping_drill`、`shipping_watch`、`shipping_shore_call`、`shipping_meeting`、`shipping_case_study`
+- 作业闭环类：`business_operation_flow`、`zhongchuan_operation_flow`、`pinglu_operation_flow`
+
+上述模块在 M6 中按“六维规格”执行，具体 UI 规格见 `ui/workbench-department-modules.md`。
+
 | 模块 | moduleCode | 部门/工作组 | 模板 | 当前状态 | 代码现状 | M6 页面形态 | 样表来源 | 打印模板 | 审批模板映射 | 阻塞项 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 岗前/日常/季度/年度培训 | `goa_training` | 总经办 | `ledger_form` | `M6 待高保真` | 已有 schema、记录运行时、统一页 | 独立培训页 + 进度视图 + 详情页 | `需求 4.3.1`、现有培训资料 | `A4-培训记录` | 岗前培训：`goa_training_onboarding_v1`；其他不适用 | 岗前审批口径、学习进度样张 |

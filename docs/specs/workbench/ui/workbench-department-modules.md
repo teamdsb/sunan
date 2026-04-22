@@ -16,6 +16,39 @@
 - 同类模块优先复用统一运行时与共享组件。
 - 只有页面、字段、动作和打印存在明显差异时，才单独拆出专属页面。
 
+## 1.1 Wave4 Batch A 冻结范围
+
+### 台账类 Batch A
+
+- `goa_training`（岗前/日常/季度/年度培训）
+- `goa_meeting`（会议管理）
+- `goa_safety_month`（安全月活动）
+- `goa_year_plan`（年度工作计划）
+- `business_ship_sign`（签船记录表）
+- `business_vessel_dynamic`（船舶动态记录表）
+- `shipping_training_hours`（船员培训学时统计）
+- `shipping_drill`（船舶演练系统）
+- `shipping_watch`（值守记录系统）
+- `shipping_shore_call`（岸基叫应）
+- `shipping_meeting`（船员会议记录）
+- `shipping_case_study`（案例警示学习）
+
+### 作业闭环类 Batch A
+
+- `business_operation_flow`（作业人员签到台、接收工作组操作流程、围油栏、船舶垃圾、船舶污油水、生活污水接收记录）
+- `zhongchuan_operation_flow`（中船工作组五步作业闭环）
+- `pinglu_operation_flow`（平陆运河工作组五步作业闭环）
+
+### Batch A 标准化（WS-4C）
+
+- 打印：每个 Batch A 模块至少冻结 1 个 `A4` 模板；会议模块允许 `A3` 扩展模板。
+- 归档：统一通过 `archive` 动作进入归档状态，归档后必须可读取打印快照与关键附件。
+- 权限：默认角色为“模块所属部门 + 总经办 + 系统管理员”，不得在页面层绕过统一权限。
+- 审批：仅以下 Batch A 模块启用审批模板映射：
+  - `goa_training`（仅岗前培训场景）
+  - `shipping_watch`
+- 验收：每个 Batch A 模块均需满足“字段组 + 页面组 + 关键动作 + 打印/归档 + 权限/审批 + 验收点”六维完整性。
+
 ## 2. 总经办
 
 ### `goa_training` 培训管理

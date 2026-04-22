@@ -18,9 +18,9 @@
 - [x] WS-3C 核心契约更新：审批 API 查询维度与管理员 API 契约
 
 ### Wave 4
-- [ ] WS-4A 高频台账类模块 Batch A 规格冻结
-- [ ] WS-4B 高频作业闭环类模块 Batch A 规格冻结
-- [ ] WS-4C Batch A 打印、归档、权限、审批映射标准化
+- [x] WS-4A 高频台账类模块 Batch A 规格冻结
+- [x] WS-4B 高频作业闭环类模块 Batch A 规格冻结
+- [x] WS-4C Batch A 打印、归档、权限、审批映射标准化
 
 ### Wave 5
 - [ ] WS-5A 检查整改类模块 Batch B 规格冻结
@@ -122,7 +122,8 @@
 ### 产出
 
 - `docs/specs/workbench/ui/workbench-department-modules.md`
-- 配套 route / state / API 更新说明
+- `docs/specs/workbench/ui/workbench-batch-a-integration-notes.md`
+- `docs/specs/workbench/acceptance-m6-wave4.md`
 
 ### 验收标准
 
