@@ -1,184 +1,211 @@
-# 企业微信 JS-SDK 规格
+# 企业微信 JS-SDK 规格（M6）
 
-## 概述
+## 1. 文档定位
 
-JS-SDK 使 H5 页面能调用企业微信原生能力（拍照、文件预览等）。里程碑1主要用于：
-- 拍照上传证书图片（`wx.chooseImage` / `wx.uploadImage`）
-- 预览文件（`wx.previewFile`）
+本规格定义 M6 的企业微信 JS-SDK 目标态、兼容态和迁移策略。M1-M5 已按旧版 `window.wx + wx.config + wx.agentConfig` 方式接入；M6 的目标是：
 
-## 初始化流程
+- 按企业微信当前官方推荐接入方式规划：`@wecom/jssdk` + `ww.register`
+- 保留 legacy adapter，允许逐模块灰度兼容旧 `window.wx` 方案
+- 将 JS-SDK 从“能用”升级为“可灰度、可回退、可真机验证、可排障”的正式发布能力
 
-JS-SDK 须按顺序完成两级配置：
+官方依据：
 
-```
-① 注入企业级配置（wx.config）
-        ↓
-② 注入应用级配置（wx.agentConfig）
-        ↓
-③ 调用具体 API
-```
+- 开始使用：<https://developer.work.weixin.qq.com/document/path/90514>
+- JS-SDK 签名算法：<https://developer.work.weixin.qq.com/document/path/90539>
 
-## 后端签名接口
+## 2. 当前现状
 
-### GET /api/v1/auth/jssdk/signature
+### 2.1 当前代码现状
 
-为指定 URL 生成 JS-SDK 签名。
+前端当前代码仍以旧接入方式为主：
 
-**请求参数（Query）：**
+- `apps/web/src/hooks/useWecomJsSdk.ts`
+- 通过后端 `GET /api/v1/auth/jssdk/signature`
+- 依次执行 `wx.config -> wx.ready -> wx.agentConfig`
 
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `url` | string | 是 | 需要签名的页面 URL（须 URL 编码） |
-| `type` | `corp` \| `agent` | 是 | 签名类型：`corp` 用于 wx.config，`agent` 用于 wx.agentConfig |
+该方案在 M1-M5 已可支撑拍照上传、文件预览等能力，但不应继续作为 M6 的目标态规格。
 
-**响应体：**
+### 2.2 M6 目标判断
 
-```json
-{
-  "data": {
-    "appId": "ww...",
-    "timestamp": 1705300000,
-    "nonceStr": "abc123",
-    "signature": "sha1_hash_string"
-  }
-}
-```
+- 目标态：`@wecom/jssdk` + `ww.register`
+- 兼容态：legacy adapter 包装旧 `window.wx`
+- 禁止把旧方案继续写成最终目标架构
 
-**后端签名算法：**
+## 3. 目标架构
 
-1. 获取对应类型的 jsapi_ticket（从 Redis 缓存读取，见 `token-cache-spec.md`）
-2. 按照以下规则拼接字符串：
-   ```
-   jsapi_ticket={ticket}&noncestr={nonceStr}&timestamp={timestamp}&url={url}
-   ```
-3. 对拼接字符串进行 SHA1 哈希，得到 signature
+### 3.1 接入分层
 
-**注意**：URL 须与前端调用时的 `window.location.href` 完全一致（包含查询参数，不包含 `#` 之后的内容）。
+M6 前端 JS-SDK 分三层：
 
-## 前端初始化代码规格
+1. `signature client`
+   - 负责向后端请求企业级签名与应用级签名
+2. `wecom sdk adapter`
+   - 统一封装 `ww.register`、`ww.invoke`、`ww.on`
+   - 提供 legacy adapter 兼容旧 `window.wx`
+3. `feature hooks`
+   - 供上传、预览、拍照、审批辅助等业务页面调用
 
-### wx.config（企业级）
+### 3.2 推荐 SDK
 
-```typescript
-interface WxConfigParams {
-  appId: string;      // CorpID
-  timestamp: number;
-  nonceStr: string;
-  signature: string;  // corp jsapi_ticket 签名
-  jsApiList: string[];
-}
+优先使用：
 
-// 里程碑1需要的 API 列表
-const CORP_JSAPI_LIST = [
-  'chooseImage',
-  'uploadImage',
-  'previewFile',
-  'getLocalImgData',
-];
+```ts
+import * as ww from '@wecom/jssdk';
 ```
 
-### wx.agentConfig（应用级）
+推荐注册方式：
 
-```typescript
-interface WxAgentConfigParams {
-  corpid: string;
-  agentid: string;
-  timestamp: number;
-  nonceStr: string;
-  signature: string;  // agent jsapi_ticket 签名
-  jsApiList: string[];
-}
-
-// 里程碑1应用级 API
-const AGENT_JSAPI_LIST = [
-  'selectExternalContact',
-  'openEnterpriseChat',
-];
-```
-
-## iOS / Android 差异处理
-
-| 平台 | 签名 URL 规则 |
-|---|---|
-| iOS 企业微信 | 使用**应用首次加载时的 URL**（记录在 SPA 初始化时） |
-| Android 企业微信 | 使用**当前页面 URL** |
-
-**实现方案：**
-
-```typescript
-// 在 App.tsx 初始化时记录首次 URL（iOS 需要）
-const initialUrl = window.location.href.split('#')[0];
-sessionStorage.setItem('sunan_initial_url', initialUrl);
-
-// 签名时的 URL 选择
-function getSignatureUrl(): string {
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  if (isIOS) {
-    return sessionStorage.getItem('sunan_initial_url') || window.location.href.split('#')[0];
-  }
-  return window.location.href.split('#')[0];
-}
-```
-
-## 使用场景规格
-
-### 拍照上传证书
-
-```typescript
-// 触发拍照/选图
-wx.chooseImage({
-  count: 1,
-  sizeType: ['compressed'],
-  sourceType: ['camera', 'album'],
-  success: (res) => {
-    const localId = res.localIds[0];
-    // 上传到微信服务器
-    wx.uploadImage({
-      localId,
-      isShowProgressTips: 1,
-      success: (uploadRes) => {
-        const mediaId = uploadRes.serverId;
-        // 调用后端接口，后端从微信下载并转存 OSS
-        // POST /api/v1/files/from-wecom { mediaId }
-      }
-    });
-  }
+```ts
+await ww.register({
+  corpId,
+  agentId,
+  jsApiList,
+  getConfigSignature,
+  getAgentConfigSignature,
 });
 ```
 
-### 文件预览
+说明：
 
-```typescript
-wx.previewFile({
-  url: ossPresignedDownloadUrl,  // OSS 预签名下载 URL
-  name: '证书文件名.pdf',
-});
-```
+- 具体参数结构以官方 SDK 当前版本为准。
+- M6 规格只冻结“使用 `ww.register` 作为目标态”的原则，不把旧 `wx.ready` 链继续作为默认模型。
 
-## 错误处理
+## 4. 签名接口
 
-| 错误码 | 含义 | 处理方式 |
+### 4.1 后端接口保持不变
+
+继续复用：
+
+- `GET /api/v1/auth/jssdk/signature`
+
+请求参数：
+
+| 参数 | 类型 | 说明 |
 |---|---|---|
-| `config:fail` | wx.config 失败 | 重新获取签名后重试一次，失败则提示用户刷新 |
-| `agentConfig:fail` | wx.agentConfig 失败 | 同上 |
-| `-1` (通用错误) | 当前客户端版本不支持 | 提示用户升级企业微信 |
+| `url` | string | 需签名的页面 URL |
+| `type` | `corp` \| `agent` | 企业级或应用级签名 |
 
-## 初始化 React Hook 规格
+### 4.2 签名算法
 
-```typescript
-// hooks/useWecomJsSdk.ts
-interface UseWecomJsSdkOptions {
-  jsApiList: string[];
-  agentJsApiList?: string[];
-}
+后端仍按官方签名算法执行：
 
-interface UseWecomJsSdkReturn {
-  isReady: boolean;
-  error: string | null;
-}
+1. 获取 `jsapi_ticket`
+2. 准备 `noncestr`、`timestamp`、`url`
+3. 按以下格式拼接：
+   `jsapi_ticket={ticket}&noncestr={nonceStr}&timestamp={timestamp}&url={url}`
+4. 计算 SHA1 签名
 
-// 该 Hook 负责：
-// 1. 调用后端获取 corp 和 agent 签名
-// 2. 顺序执行 wx.config → wx.ready → wx.agentConfig
-// 3. 暴露 isReady 状态给需要调用 JS-SDK 的组件
-```
+说明：
+
+- `url` 不包含 `#` 及其后部分。
+- iOS/Android 对签名 URL 的取值规则必须显式区分。
+
+## 5. URL 与平台差异
+
+### 5.1 iOS
+
+- 使用应用首次加载时的 URL 作为签名 URL。
+- SPA 路由切换后，不重新改写 iOS 侧签名基准 URL。
+
+### 5.2 Android
+
+- 使用当前页面 URL 作为签名 URL。
+
+### 5.3 统一约束
+
+- 必须在适配器层统一实现 URL 选择逻辑。
+- 页面业务代码不得自行拼装签名 URL。
+
+## 6. 灰度与回退策略
+
+### 6.1 目标态
+
+- 默认优先尝试 `ww.register`
+- 成功后对外暴露统一 `invoke` / `on` / `previewFile` / `chooseImage` / `uploadImage` 能力
+
+### 6.2 兼容态
+
+- 若当前模块尚未完成新版 SDK 验证，可通过 legacy adapter 使用旧 `window.wx`
+- legacy adapter 只作为兼容层，不再写进业务页面的最终实现
+
+### 6.3 回退策略
+
+出现以下情况允许回退到 legacy adapter：
+
+- 新 SDK 与当前企业微信版本兼容性异常
+- 真机验证发现新版注册失败但旧方案可用
+- 发布窗口前未完成指定模块的灰度验证
+
+回退要求：
+
+- 必须记录模块范围、回退原因、回退时间和恢复计划
+- 不允许在文档中长期把 legacy 方案写成目标态
+
+## 7. 业务能力暴露
+
+M6 统一从适配器层向页面暴露能力：
+
+- `chooseImage`
+- `uploadImage`
+- `previewFile`
+- `getLocalImgData`
+- 后续审批、分享或上下文能力
+
+页面层只依赖：
+
+- `useWecomSdkReady`
+- `useWecomUpload`
+- `useWecomPreview`
+
+不得在业务页面中直接耦合 `window.wx`。
+
+## 8. 可观测与排障
+
+JS-SDK 初始化至少记录以下诊断信息：
+
+- `pageRoute`
+- `signatureUrl`
+- `sdkMode`：`ww_register` / `legacy_wx`
+- `clientPlatform`：iOS / Android / desktop
+- `corpSignatureStatus`
+- `agentSignatureStatus`
+- `errorCode`
+- `errorMessage`
+
+失败事件需进入管理员诊断视图：
+
+- 签名接口失败
+- `ww.register` 失败
+- legacy `wx.config` / `wx.agentConfig` 失败
+- 真机环境下 API 不可用
+
+## 9. 真机验证要求
+
+JS-SDK 真机验证必须覆盖：
+
+- iOS 企业微信
+- Android 企业微信
+
+每个平台至少验证：
+
+- 登录进入业务页
+- JS-SDK 注册成功
+- 拍照上传
+- 图片/文件预览
+- 路由切换后重新进入页面
+- 会话过期后恢复
+- 弱网下上传与重试
+
+## 10. M6 实施边界
+
+本规格冻结的是：
+
+- 目标接入方式
+- 兼容策略
+- 诊断口径
+- 真机验证门槛
+
+本规格不要求在文档阶段立即重写全部代码；实现阶段可按模块分批迁移，但必须遵循：
+
+- 新页面优先使用 `@wecom/jssdk`
+- 旧页面如暂时保留 legacy adapter，需有灰度与回退说明

@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Workbench Platform API
-  version: 2.0.0
+  version: 2.1.0
   description: >-
-    工作平台平台级接口，覆盖模块入口、模块 schema、首页聚合、统一记录列表/详情/动作、
-    附件、打印快照，以及 M5 新增的考勤导出与财务对账接口。
+    工作平台平台级接口，覆盖模块入口、模块元数据 schema、首页聚合、统一记录列表/详情/动作、
+    附件、打印快照，以及 M5/M6 沿用的考勤导出与财务对账接口。
 servers:
   - url: /api/v1
 paths:
@@ -21,7 +21,7 @@ paths:
                 $ref: '#/components/schemas/WorkbenchModulesResponse'
   /workbench/modules/{moduleCode}/schema:
     get:
-      summary: 获取工作平台模块 schema
+      summary: 获取工作平台模块元数据 schema
       tags: [Workbench]
       parameters:
         - in: path

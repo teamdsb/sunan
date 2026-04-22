@@ -1,0 +1,371 @@
+openapi: 3.0.3
+info:
+  title: Workbench Admin API
+  version: 1.0.0
+  description: >-
+    工作平台管理员运维台接口，覆盖导出任务、对账任务、诊断事件与汇总统计。
+servers:
+  - url: /api/v1
+paths:
+  /workbench/admin/export-jobs:
+    get:
+      summary: 分页查询导出任务
+      tags: [Workbench Admin]
+      parameters:
+        - in: query
+          name: jobId
+          schema:
+            type: string
+        - in: query
+          name: moduleCode
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [queued, processing, succeeded, failed]
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobListResponse'
+  /workbench/admin/export-jobs/{jobId}:
+    get:
+      summary: 查询导出任务详情
+      tags: [Workbench Admin]
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobResponse'
+        '404':
+          description: Export job not found
+  /workbench/admin/reconcile-jobs:
+    get:
+      summary: 分页查询对账任务
+      tags: [Workbench Admin]
+      parameters:
+        - in: query
+          name: jobId
+          schema:
+            type: string
+        - in: query
+          name: compareSource
+          schema:
+            type: string
+            enum: [finance_template, attendance_template, manual_upload]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [queued, processing, succeeded, failed]
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileJobListResponse'
+  /workbench/admin/reconcile-jobs/{jobId}:
+    get:
+      summary: 查询对账任务详情
+      tags: [Workbench Admin]
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileJobResponse'
+        '404':
+          description: Reconcile job not found
+  /workbench/admin/diagnostics/events:
+    get:
+      summary: 分页查询诊断事件
+      tags: [Workbench Admin]
+      parameters:
+        - in: query
+          name: eventType
+          schema:
+            type: string
+            enum: [approval_failed, message_failed, jssdk_failed, export_failed]
+        - in: query
+          name: moduleCode
+          schema:
+            type: string
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [info, warning, critical]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [open, acknowledged, resolved]
+        - in: query
+          name: errorCode
+          schema:
+            type: string
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosticEventListResponse'
+  /workbench/admin/diagnostics/summary:
+    get:
+      summary: 查询诊断汇总
+      tags: [Workbench Admin]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosticSummaryResponse'
+components:
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    ExportJob:
+      type: object
+      properties:
+        jobId:
+          type: string
+        moduleCode:
+          type: string
+        triggerUserId:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, succeeded, failed]
+        downloadFileId:
+          type: string
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ExportJobResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ExportJob'
+    ExportJobListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportJob'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    ReconcileJob:
+      type: object
+      properties:
+        jobId:
+          type: string
+        compareSource:
+          type: string
+          enum: [finance_template, attendance_template, manual_upload]
+        month:
+          type: string
+        departmentCode:
+          type: string
+          nullable: true
+        differenceCount:
+          type: integer
+        status:
+          type: string
+          enum: [queued, processing, succeeded, failed]
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ReconcileJobResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ReconcileJob'
+    ReconcileJobListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReconcileJob'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    DiagnosticEvent:
+      type: object
+      properties:
+        eventId:
+          type: string
+        eventType:
+          type: string
+          enum: [approval_failed, message_failed, jssdk_failed, export_failed]
+        moduleCode:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        status:
+          type: string
+          enum: [open, acknowledged, resolved]
+        errorCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        relatedRecordId:
+          type: string
+          nullable: true
+        relatedProcessInstanceId:
+          type: string
+          nullable: true
+        firstOccurredAt:
+          type: string
+          format: date-time
+        lastOccurredAt:
+          type: string
+          format: date-time
+    DiagnosticEventListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagnosticEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    DiagnosticSummary:
+      type: object
+      properties:
+        approvalFailedCount:
+          type: integer
+        exportFailedCount:
+          type: integer
+        reconcileOpenCount:
+          type: integer
+        jssdkFailedCount:
+          type: integer
+        messageFailedCount:
+          type: integer
+    DiagnosticSummaryResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/DiagnosticSummary'

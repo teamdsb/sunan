@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Workbench Approval API
-  version: 2.0.0
+  version: 2.1.0
   description: >-
     工作平台审批桥接口，定义企业微信审批发起、回调、查询、对账、重试与管理员诊断能力。
 servers:
@@ -68,6 +68,25 @@ paths:
           schema:
             type: string
             enum: [pending, approved, rejected, canceled, terminated]
+        - in: query
+          name: syncErrorCode
+          schema:
+            type: string
+        - in: query
+          name: source
+          schema:
+            type: string
+            enum: [launch, callback, reconcile, retry, admin]
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date
         - in: query
           name: page
           schema:
@@ -256,6 +275,9 @@ components:
         approvalSyncStatus:
           type: string
           enum: [pending, callback_received, reconciled, retrying, failed]
+        source:
+          type: string
+          enum: [launch, callback, reconcile, retry, admin]
         startedAt:
           type: string
           format: date-time
