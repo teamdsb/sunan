@@ -5,6 +5,7 @@ const ACTION_TYPES = [
   'assign',
   'start',
   'complete_step',
+  'update_payload',
   'submit_review',
   'request_rework',
   'close_record',

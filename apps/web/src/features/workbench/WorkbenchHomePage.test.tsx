@@ -8,9 +8,11 @@ const mockGetWorkbenchRecordsQuery = vi.fn();
 const mockGetWorkbenchRecordQuery = vi.fn();
 const mockGetWorkbenchModuleSchemaQuery = vi.fn();
 const mockGetWorkbenchAttendanceStatisticsQuery = vi.fn();
+const mockTriggerPrintSnapshot = vi.fn();
 const mockCreateWorkbenchRecord = vi.fn();
 const mockPerformWorkbenchRecordAction = vi.fn();
 const mockLaunchWorkbenchApproval = vi.fn();
+const mockUploadWorkbenchRecordAttachment = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -28,14 +30,18 @@ vi.mock('./workbenchApi', () => ({
     mockGetWorkbenchModuleSchemaQuery(moduleCode, options),
   useGetWorkbenchAttendanceStatisticsQuery: (params: unknown, options: unknown) =>
     mockGetWorkbenchAttendanceStatisticsQuery(params, options),
+  useLazyGetWorkbenchPrintSnapshotQuery: () => [mockTriggerPrintSnapshot, { isFetching: false }],
   useCreateWorkbenchRecordMutation: () => [mockCreateWorkbenchRecord, { isLoading: false }],
   usePerformWorkbenchRecordActionMutation: () => [mockPerformWorkbenchRecordAction, { isLoading: false }],
   useLaunchWorkbenchApprovalMutation: () => [mockLaunchWorkbenchApproval, { isLoading: false }],
+  useUploadWorkbenchRecordAttachmentMutation: () => [mockUploadWorkbenchRecordAttachment, { isLoading: false }],
 }));
 
 describe('WorkbenchHomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTriggerPrintSnapshot.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { paperSize: 'A4', renderedFormat: 'pdf' } }) });
+    mockUploadWorkbenchRecordAttachment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { id: 'att-1' } }) });
     mockGetWorkbenchDashboardQuery.mockReturnValue({
       data: {
         data: {
@@ -141,6 +147,39 @@ describe('WorkbenchHomePage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/approvals');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/modules/shipping_chart_update');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/records/record-1');
+  });
+
+  it('shows print actions in record detail and triggers print endpoint', async () => {
+    mockGetWorkbenchRecordQuery.mockReturnValue({
+      data: {
+        data: {
+          id: 'record-1',
+          moduleCode: 'shipping_chart_update',
+          title: '海图批次 2026-04',
+          summary: '摘要',
+          status: 'assigned',
+          vesselId: 'ship-1',
+          occurredAt: '2026-04-22T10:00:00.000+08:00',
+          approvalChannel: 'internal',
+          externalProcessInstanceId: null,
+          externalStatus: null,
+          steps: [],
+          attachments: [],
+          actionLogs: [],
+          payload: {},
+        },
+      },
+      isFetching: false,
+    });
+
+    render(<WorkbenchHomePage routeAware initialRecordId="record-1" />);
+    fireEvent.click(screen.getByRole('button', { name: '打印 A4' }));
+    fireEvent.click(screen.getByRole('button', { name: '打印 A3' }));
+
+    await waitFor(() => {
+      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({ recordId: 'record-1', paperSize: 'A4' });
+      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({ recordId: 'record-1', paperSize: 'A3' });
+    });
   });
 
   it('filters modules in approval board and requests records by approval template when no module selected', async () => {

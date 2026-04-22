@@ -129,7 +129,16 @@ export interface WorkbenchRecordCreatePayload {
 }
 
 export interface WorkbenchRecordActionPayload {
-  actionType: 'submit' | 'assign' | 'start' | 'complete_step' | 'submit_review' | 'request_rework' | 'close_record' | 'archive';
+  actionType:
+    | 'submit'
+    | 'assign'
+    | 'start'
+    | 'complete_step'
+    | 'update_payload'
+    | 'submit_review'
+    | 'request_rework'
+    | 'close_record'
+    | 'archive';
   comment?: string;
   payload?: Record<string, unknown>;
 }
@@ -165,6 +174,24 @@ export interface WorkbenchAttendanceStatistics {
   }>;
 }
 
+export interface WorkbenchPrintSnapshot {
+  recordId: string;
+  businessRecordId: string;
+  templateVersion: string;
+  renderedFileId: string | null;
+  renderedFormat: string;
+  paperSize: 'A4' | 'A3';
+  renderedAt: string;
+  snapshotData: Record<string, unknown>;
+}
+
+export interface WorkbenchAttachmentUploadPayload {
+  category: string;
+  fileId: string;
+  stepCode?: string;
+  remark?: string;
+}
+
 export const workbenchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getWorkbenchModules: builder.query<{ data: WorkbenchModuleItem[] }, void>({
@@ -190,6 +217,24 @@ export const workbenchApi = baseApi.injectEndpoints({
     getWorkbenchRecord: builder.query<{ data: WorkbenchRecordDetail }, string>({
       query: (id) => ({ url: `/workbench/records/${id}` }),
       providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
+    }),
+    getWorkbenchPrintSnapshot: builder.query<{ data: WorkbenchPrintSnapshot }, { recordId: string; paperSize?: 'A4' | 'A3' }>({
+      query: ({ recordId, paperSize }) => ({
+        url: `/workbench/records/${recordId}/print`,
+        params: paperSize ? { paperSize } : undefined,
+      }),
+      providesTags: (_result, _error, arg) => [{ type: 'WorkbenchRecord', id: arg.recordId }],
+    }),
+    uploadWorkbenchRecordAttachment: builder.mutation<
+      { data: { id: string; category: string; fileId: string; fileName: string; uploadedAt: string } },
+      { recordId: string; data: WorkbenchAttachmentUploadPayload }
+    >({
+      query: ({ recordId, data }) => ({
+        url: `/workbench/records/${recordId}/attachments`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
     }),
     createWorkbenchRecord: builder.mutation<{ data: WorkbenchRecordDetail }, WorkbenchRecordCreatePayload>({
       query: (data) => ({ url: '/workbench/records', method: 'POST', data }),
@@ -223,6 +268,9 @@ export const {
   useGetWorkbenchAttendanceStatisticsQuery,
   useGetWorkbenchRecordsQuery,
   useGetWorkbenchRecordQuery,
+  useLazyGetWorkbenchPrintSnapshotQuery,
+  useGetWorkbenchPrintSnapshotQuery,
+  useUploadWorkbenchRecordAttachmentMutation,
   useCreateWorkbenchRecordMutation,
   usePerformWorkbenchRecordActionMutation,
   useLaunchWorkbenchApprovalMutation,

@@ -7,6 +7,8 @@ import {
   Form,
   Input,
   List,
+  Progress,
+  Select,
   Space,
   Statistic,
   Table,
@@ -23,11 +25,13 @@ import {
   useCreateWorkbenchRecordMutation,
   useGetWorkbenchDashboardQuery,
   useGetWorkbenchAttendanceStatisticsQuery,
+  useLazyGetWorkbenchPrintSnapshotQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchRecordQuery,
   useGetWorkbenchRecordsQuery,
   useLaunchWorkbenchApprovalMutation,
   usePerformWorkbenchRecordActionMutation,
+  useUploadWorkbenchRecordAttachmentMutation,
 } from './workbenchApi';
 
 const departmentLabelMap: Record<string, string> = {
@@ -49,6 +53,18 @@ const templateColorMap: Record<string, string> = {
 };
 
 function renderDynamicField(field: WorkbenchModuleSchemaField) {
+  if (field.key === 'learningStatus') {
+    return (
+      <Select
+        placeholder={field.placeholder}
+        options={[
+          { value: 'not_started', label: '未开始' },
+          { value: 'in_progress', label: '进行中' },
+          { value: 'completed', label: '已完成' },
+        ]}
+      />
+    );
+  }
   if (field.inputType === 'textarea') {
     return <Input.TextArea rows={3} placeholder={field.placeholder} />;
   }
@@ -85,6 +101,9 @@ export function WorkbenchHomePage({
   const [activeRecordId, setActiveRecordId] = useState<string | null>(initialRecordId);
   const [createOpen, setCreateOpen] = useState(false);
   const [statisticsMonth, setStatisticsMonth] = useState('2026-04');
+  const [trainingProgressPercent, setTrainingProgressPercent] = useState<string>('0');
+  const [trainingProgressStatus, setTrainingProgressStatus] = useState<'not_started' | 'in_progress' | 'completed'>('not_started');
+  const [meetingPhotoFileId, setMeetingPhotoFileId] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -112,7 +131,9 @@ export function WorkbenchHomePage({
 
   const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
   const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
+  const [uploadWorkbenchRecordAttachment, { isLoading: uploadingAttachment }] = useUploadWorkbenchRecordAttachmentMutation();
   const [launchWorkbenchApproval, { isLoading: launchingApproval }] = useLaunchWorkbenchApprovalMutation();
+  const [triggerPrintSnapshot, { isFetching: printingSnapshot }] = useLazyGetWorkbenchPrintSnapshotQuery();
 
   const records = recordsResponse?.data ?? [];
   const visibleModuleCards = useMemo(
@@ -155,6 +176,31 @@ export function WorkbenchHomePage({
     }
     setActiveModuleCode(visibleModuleCards[0].moduleCode);
   }, [activeModuleCode, moduleFilter, visibleModuleCards]);
+
+  useEffect(() => {
+    if (!detailResponse?.data) {
+      setTrainingProgressPercent('0');
+      setTrainingProgressStatus('not_started');
+      setMeetingPhotoFileId('');
+      return;
+    }
+    if (detailResponse.data.moduleCode === 'goa_training') {
+      const progressRaw = detailResponse.data.payload.learningProgressPercent;
+      const progressNumber =
+        typeof progressRaw === 'number' ? progressRaw : Number(String(progressRaw ?? '').trim());
+      setTrainingProgressPercent(Number.isFinite(progressNumber) ? String(progressNumber) : '0');
+      const statusRaw = String(detailResponse.data.payload.learningStatus ?? '').trim();
+      if (statusRaw === 'in_progress' || statusRaw === 'completed' || statusRaw === 'not_started') {
+        setTrainingProgressStatus(statusRaw);
+      } else {
+        setTrainingProgressStatus('not_started');
+      }
+    } else {
+      setTrainingProgressPercent('0');
+      setTrainingProgressStatus('not_started');
+    }
+    setMeetingPhotoFileId('');
+  }, [detailResponse?.data]);
 
   const goHome = () => navigate('/workbench');
   const openModule = (moduleCode: string) => {
@@ -237,7 +283,7 @@ export function WorkbenchHomePage({
 
   const triggerRecordAction = async (
     recordId: string,
-    actionType: 'start' | 'complete_step' | 'submit_review' | 'request_rework' | 'close_record',
+    actionType: 'start' | 'complete_step' | 'update_payload' | 'submit_review' | 'request_rework' | 'close_record',
     payload?: Record<string, unknown>,
   ) => {
     const result = await performWorkbenchRecordAction({
@@ -265,6 +311,58 @@ export function WorkbenchHomePage({
     }).unwrap();
 
     messageApi.success(`审批已发起：${result.data.processInstanceId}`);
+  };
+
+  const triggerPrint = async (paperSize: 'A4' | 'A3') => {
+    if (!detailResponse?.data) return;
+    const result = await triggerPrintSnapshot({ recordId: detailResponse.data.id, paperSize }).unwrap();
+    messageApi.success(`打印快照已生成：${result.data.paperSize} / ${result.data.renderedFormat}`);
+  };
+
+  const triggerTrainingProgressUpdate = async () => {
+    if (!detailResponse?.data || detailResponse.data.moduleCode !== 'goa_training') return;
+    const parsed = Number(trainingProgressPercent);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      messageApi.warning('学习进度需为 0-100 的数字');
+      return;
+    }
+    await triggerRecordAction(detailResponse.data.id, 'update_payload', {
+      learningStatus: trainingProgressStatus,
+      learningProgressPercent: parsed,
+      ...(trainingProgressStatus === 'completed' ? { completedAt: new Date().toISOString().slice(0, 10) } : {}),
+    });
+  };
+
+  const triggerUploadMeetingPhoto = async () => {
+    if (!detailResponse?.data || detailResponse.data.moduleCode !== 'goa_meeting') return;
+    const fileId = meetingPhotoFileId.trim();
+    if (!fileId) {
+      messageApi.warning('请先输入会议照片 fileId');
+      return;
+    }
+
+    await uploadWorkbenchRecordAttachment({
+      recordId: detailResponse.data.id,
+      data: {
+        category: 'meeting_photo',
+        fileId,
+        remark: 'WaveB 会议照片上传',
+      },
+    }).unwrap();
+
+    const existingRaw = String(detailResponse.data.payload.photoAttachmentIds ?? '').trim();
+    const existing = existingRaw
+      ? existingRaw
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+    const nextIds = Array.from(new Set([...existing, fileId]));
+    await triggerRecordAction(detailResponse.data.id, 'update_payload', {
+      photoAttachmentIds: nextIds.join(','),
+    });
+    setMeetingPhotoFileId('');
+    messageApi.success('会议照片已上传并写入会议字段');
   };
 
   return (
@@ -461,6 +559,16 @@ export function WorkbenchHomePage({
                 <Tag>{detailResponse.data.approvalChannel}</Tag>
                 {detailResponse.data.externalStatus ? <Tag color="cyan">{detailResponse.data.externalStatus}</Tag> : null}
               </Space>
+              {detailModule?.supportsPrint ? (
+                <Space wrap style={{ marginTop: 12 }}>
+                  <Button loading={printingSnapshot} onClick={() => void triggerPrint('A4')}>
+                    打印 A4
+                  </Button>
+                  <Button loading={printingSnapshot} onClick={() => void triggerPrint('A3')}>
+                    打印 A3
+                  </Button>
+                </Space>
+              ) : null}
               {detailModule?.templateType === 'wecom_approval' && !detailResponse.data.externalProcessInstanceId ? (
                 <Button type="primary" style={{ marginTop: 12 }} loading={launchingApproval} onClick={() => void triggerLaunchApproval()}>
                   发起企业微信审批
@@ -588,6 +696,34 @@ export function WorkbenchHomePage({
               ) : null}
             </div>
 
+            {detailResponse.data.moduleCode === 'goa_training' ? (
+              <div>
+                <Typography.Title level={5}>学习进度</Typography.Title>
+                <Progress percent={Math.max(0, Math.min(100, Number(trainingProgressPercent) || 0))} />
+                <Space wrap style={{ marginTop: 8 }}>
+                  <Select
+                    style={{ width: 180 }}
+                    value={trainingProgressStatus}
+                    onChange={(value: 'not_started' | 'in_progress' | 'completed') => setTrainingProgressStatus(value)}
+                    options={[
+                      { value: 'not_started', label: '未开始' },
+                      { value: 'in_progress', label: '进行中' },
+                      { value: 'completed', label: '已完成' },
+                    ]}
+                  />
+                  <Input
+                    style={{ width: 140 }}
+                    value={trainingProgressPercent}
+                    onChange={(event) => setTrainingProgressPercent(event.target.value)}
+                    placeholder="0-100"
+                  />
+                  <Button loading={actionSubmitting} onClick={() => void triggerTrainingProgressUpdate()}>
+                    更新学习进度
+                  </Button>
+                </Space>
+              </div>
+            ) : null}
+
             <div>
               <Typography.Title level={5}>台账字段</Typography.Title>
               <List
@@ -607,6 +743,19 @@ export function WorkbenchHomePage({
 
             <div>
               <Typography.Title level={5}>附件</Typography.Title>
+              {detailResponse.data.moduleCode === 'goa_meeting' ? (
+                <Space wrap style={{ marginBottom: 12 }}>
+                  <Input
+                    style={{ width: 260 }}
+                    placeholder="输入会议照片 fileId"
+                    value={meetingPhotoFileId}
+                    onChange={(event) => setMeetingPhotoFileId(event.target.value)}
+                  />
+                  <Button loading={uploadingAttachment || actionSubmitting} onClick={() => void triggerUploadMeetingPhoto()}>
+                    上传会议照片
+                  </Button>
+                </Space>
+              ) : null}
               <List
                 bordered
                 dataSource={detailResponse.data.attachments}

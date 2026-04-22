@@ -330,12 +330,12 @@ describe('WorkbenchController integration', () => {
     expect(approvalSync.retryCount).toBeGreaterThanOrEqual(1);
   });
 
-  it('exposes wave-a schema fields and enforces required payload fields', async () => {
+  it('exposes wave-a and wave-b schema fields and enforces required payload fields', async () => {
     currentUser = {
       ...currentUser,
       userId: 'business-user-2',
-      roles: ['all_authenticated', 'business'],
-      departments: ['业务部'],
+      roles: ['all_authenticated', 'business', 'general_office'],
+      departments: ['业务部', '总经办'],
       isAdmin: false,
     };
 
@@ -402,6 +402,26 @@ describe('WorkbenchController integration', () => {
     ).map((field) => field.key);
     expect(domesticSewageFields).toEqual(expect.arrayContaining(['nationality', 'documentNo', 'voyageNo', 'fee']));
 
+    const trainingSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/goa_training/schema')
+      .set('Authorization', 'Bearer token');
+    expect(trainingSchemaResponse.status).toBe(200);
+    const trainingFields = (
+      (trainingSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(trainingFields).toEqual(expect.arrayContaining(['learningStatus', 'learningProgressPercent', 'completedAt']));
+
+    const meetingSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/goa_meeting/schema')
+      .set('Authorization', 'Bearer token');
+    expect(meetingSchemaResponse.status).toBe(200);
+    const meetingFields = (
+      (meetingSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(meetingFields).toEqual(
+      expect.arrayContaining(['signInCount', 'photoAttachmentIds', 'retentionUntil', 'wecomGroupChatId', 'wecomGroupChatLink']),
+    );
+
     const missingRequiredFieldResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post('/api/v1/workbench/records')
       .set('Authorization', 'Bearer token')
@@ -456,6 +476,42 @@ describe('WorkbenchController integration', () => {
 
     expect(validCreateResponse.status).toBe(201);
     expect((validCreateResponse.body as { data: { moduleCode: string } }).data.moduleCode).toBe('business_ship_sign');
+
+    const createMeetingResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'goa_meeting',
+        title: '季度视频会议',
+        summary: 'WaveB 会议字段验证',
+        payload: {
+          meetingType: '视频会议',
+          host: '总经办',
+          attendeeCount: 10,
+          signInCount: 8,
+          photoAttachmentIds: 'file-1,file-2',
+          meetingMinutes: '会议纪要',
+          wecomGroupChatId: 'group-123',
+          wecomGroupChatLink: 'https://wecom.example.com/group/123',
+        },
+      });
+    expect(createMeetingResponse.status).toBe(201);
+    expect((createMeetingResponse.body as { data: { payload: Record<string, unknown> } }).data.payload.retentionUntil).toEqual(
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    );
+
+    const printDefaultResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/workbench/records/${(validCreateResponse.body as { data: { id: string } }).data.id}/print`)
+      .set('Authorization', 'Bearer token');
+    expect(printDefaultResponse.status).toBe(200);
+    expect((printDefaultResponse.body as { data: { paperSize: string } }).data.paperSize).toBe('A4');
+
+    const printA3Response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/workbench/records/${(validCreateResponse.body as { data: { id: string } }).data.id}/print`)
+      .query({ paperSize: 'A3' })
+      .set('Authorization', 'Bearer token');
+    expect(printA3Response.status).toBe(200);
+    expect((printA3Response.body as { data: { paperSize: string } }).data.paperSize).toBe('A3');
   });
 
   it('enforces module visibility by role (permission matrix baseline)', async () => {

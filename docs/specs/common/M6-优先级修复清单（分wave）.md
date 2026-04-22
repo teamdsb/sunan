@@ -156,6 +156,25 @@
 - 验收标准：
   - 至少完成“群信息可留存可追踪”。
 
+### Wave B 完成记录（2026-04-22）
+- 已完成 `B-1`：
+  - `goa_training` 新增 `learningStatus`、`learningProgressPercent`、`completedAt`
+  - 新增 `update_payload` 动作，支持在详情页更新学习进度
+- 已完成 `B-2`：
+  - `goa_meeting` 新增 `signInCount`、`photoAttachmentIds`、`retentionUntil`
+  - `retentionUntil` 在缺省时自动按 `+3 年` 生成
+  - 前端详情页新增“会议照片上传”入口，并回写 `photoAttachmentIds`
+- 已完成 `B-3`：
+  - `GET /api/v1/workbench/records/:recordId/print` 支持 `paperSize=A4|A3`
+  - 响应体返回 `paperSize`，并写入打印快照数据
+  - 前端详情页新增 `打印 A4` / `打印 A3` 操作按钮
+- 已完成 `B-4`（短期方案）：
+  - 会议 schema 新增 `wecomGroupChatId`、`wecomGroupChatLink`，用于建群信息留存
+
+验证证据：
+- 后端：`pnpm --filter api build`、`pnpm --filter api test:integration -- workbench.integration.spec.ts`
+- 前端：`pnpm --filter web test -- WorkbenchHomePage.test.tsx`、`pnpm --filter web build`
+
 ---
 
 ## 6. Wave C（P0/P1）：财务板块补料决策与实施
@@ -245,4 +264,3 @@
 - Web：`pnpm --filter web build` + `make test-web` 通过
 - OpenAPI：变更后执行 `swagger-cli validate`
 - 文档：同步更新 `docs/execplans.md` 与对应 `acceptance-m6-waveN.md`
-

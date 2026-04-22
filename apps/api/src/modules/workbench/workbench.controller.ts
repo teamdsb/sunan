@@ -7,6 +7,7 @@ import { WorkbenchAttendanceReconcileDto } from './dto/workbench-attendance-reco
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
+import { WorkbenchRecordPrintQueryDto } from './dto/workbench-record-print-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
 import { WorkbenchService } from './workbench.service';
 
@@ -77,7 +78,11 @@ export class WorkbenchController {
   }
 
   @Get('records/:recordId/print')
-  async getPrintSnapshot(@Param('recordId') recordId: string, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: await this.service.getPrintSnapshot(recordId, user) };
+  async getPrintSnapshot(
+    @Param('recordId') recordId: string,
+    @Query() query: WorkbenchRecordPrintQueryDto,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return { data: await this.service.getPrintSnapshot(recordId, user, query.paperSize ?? 'A4') };
   }
 }

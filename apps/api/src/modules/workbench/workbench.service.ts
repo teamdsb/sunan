@@ -148,6 +148,8 @@ interface ModuleSchemaDefinition {
   stepTemplates?: ModuleSchemaStepTemplate[];
 }
 
+type PrintPaperSize = 'A4' | 'A3';
+
 const PENDING_STATUSES = new Set(['submitted', 'assigned', 'in_progress', 'pending_review', 'approval_pending', 'rework_required']);
 
 const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
@@ -647,6 +649,9 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'trainer', label: '主讲人', required: true, inputType: 'text' },
           { key: 'hours', label: '培训学时', required: true, inputType: 'number' },
           { key: 'participants', label: '参训人员', required: true, inputType: 'textarea' },
+          { key: 'learningStatus', label: '学习状态', required: true, inputType: 'text', placeholder: 'not_started/in_progress/completed' },
+          { key: 'learningProgressPercent', label: '学习进度(%)', required: true, inputType: 'number' },
+          { key: 'completedAt', label: '完成时间', required: false, inputType: 'date' },
         ],
       },
     ],
@@ -662,6 +667,11 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'meetingType', label: '会议类型', required: true, inputType: 'text', placeholder: '视频/日常/季度/年度' },
           { key: 'host', label: '主持人', required: true, inputType: 'text' },
           { key: 'attendeeCount', label: '参会人数', required: true, inputType: 'number' },
+          { key: 'signInCount', label: '签到人数', required: true, inputType: 'number' },
+          { key: 'photoAttachmentIds', label: '会议照片附件ID列表', required: false, inputType: 'textarea', placeholder: '逗号分隔的 fileId 列表' },
+          { key: 'retentionUntil', label: '资料留存截止日期', required: false, inputType: 'date' },
+          { key: 'wecomGroupChatId', label: '企业微信群ID', required: false, inputType: 'text' },
+          { key: 'wecomGroupChatLink', label: '企业微信群链接', required: false, inputType: 'text' },
           { key: 'meetingMinutes', label: '会议纪要', required: true, inputType: 'textarea' },
         ],
       },
@@ -1671,7 +1681,8 @@ export class WorkbenchService {
     if (!schemaDefinition) {
       throw new BadRequestException('module schema not found');
     }
-    this.assertPayloadMatchesSchema(dto.payload, schemaDefinition);
+    const normalizedPayload = this.normalizeCreatePayload(dto.moduleCode, dto.payload);
+    this.assertPayloadMatchesSchema(normalizedPayload, schemaDefinition);
 
     const now = new Date();
     const nowIso = now.toISOString();
@@ -1703,7 +1714,7 @@ export class WorkbenchService {
       occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : now,
       submittedAt: initialStatus === 'submitted' ? now : null,
       closedAt: null,
-      payload: dto.payload ?? {},
+      payload: normalizedPayload,
     });
 
     const savedRecord = await this.recordRepository.save(recordEntity);
@@ -1747,7 +1758,7 @@ export class WorkbenchService {
                 : moduleItem.templateType === 'wecom_approval'
                   ? 'Wave 7 审批类录单'
                   : 'Wave 3 台账录单',
-      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
+      payloadDigest: normalizedPayload ? JSON.stringify(normalizedPayload) : null,
     });
 
     return this.getRecordDetail(savedRecord.id, user);
@@ -1773,8 +1784,29 @@ export class WorkbenchService {
 
     const moduleItem = this.mustGetModule(record.moduleCode);
     const isInspectionRectification = moduleItem.templateType === 'inspection_rectification';
+    const schemaDefinition =
+      LEDGER_MODULE_SCHEMAS[record.moduleCode] ??
+      OPERATION_FLOW_MODULE_SCHEMAS[record.moduleCode] ??
+      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[record.moduleCode] ??
+      ATTENDANCE_MODULE_SCHEMAS[record.moduleCode] ??
+      SERVICE_ASSET_MODULE_SCHEMAS[record.moduleCode] ??
+      WECOM_APPROVAL_MODULE_SCHEMAS[record.moduleCode] ??
+      null;
 
-    if (dto.actionType === 'start' && steps.length > 0) {
+    if (dto.actionType === 'update_payload') {
+      if (!dto.payload || typeof dto.payload !== 'object') {
+        throw new BadRequestException('payload is required for update_payload');
+      }
+      const mergedPayload = {
+        ...(record.payload ?? {}),
+        ...dto.payload,
+      };
+      const normalizedPayload = this.normalizeCreatePayload(record.moduleCode, mergedPayload);
+      if (schemaDefinition) {
+        this.assertPayloadMatchesSchema(normalizedPayload, schemaDefinition);
+      }
+      record.payload = normalizedPayload;
+    } else if (dto.actionType === 'start' && steps.length > 0) {
       const firstPending = steps.find((step) => step.status === 'pending');
       if (firstPending) {
         firstPending.status = 'in_progress';
@@ -1911,7 +1943,7 @@ export class WorkbenchService {
     };
   }
 
-  async getPrintSnapshot(recordId: string, user: CurrentUser) {
+  async getPrintSnapshot(recordId: string, user: CurrentUser, paperSize: PrintPaperSize = 'A4') {
     const record = await this.mustGetRecord(recordId);
     this.assertRecordVisible(record, user);
     const hydrated = await this.hydrateRecord(record);
@@ -1924,6 +1956,7 @@ export class WorkbenchService {
       summary: hydrated.summary,
       payload: hydrated.payload,
       steps: hydrated.steps,
+      paperSize,
     };
 
     const snapshot = await this.printSnapshotRepository.save(
@@ -1946,6 +1979,7 @@ export class WorkbenchService {
       templateVersion: snapshot.templateVersion,
       renderedFileId: snapshot.renderedFileId,
       renderedFormat: snapshot.renderedFormat,
+      paperSize,
       renderedAt: snapshot.renderedAt.toISOString(),
       snapshotData,
     };
@@ -2749,6 +2783,7 @@ export class WorkbenchService {
       case 'start':
         return 'in_progress';
       case 'complete_step':
+      case 'update_payload':
         return currentStatus;
       case 'submit_review':
         return 'pending_review';
@@ -2851,5 +2886,23 @@ export class WorkbenchService {
         throw new BadRequestException(`payload.${field.key} is required`);
       }
     }
+  }
+
+  private normalizeCreatePayload(moduleCode: string, payload: Record<string, unknown> | undefined): Record<string, unknown> {
+    const normalized = { ...(payload ?? {}) };
+    if (moduleCode === 'goa_meeting') {
+      if (!normalized.retentionUntil || String(normalized.retentionUntil).trim() === '') {
+        const retention = new Date();
+        retention.setUTCFullYear(retention.getUTCFullYear() + 3);
+        normalized.retentionUntil = retention.toISOString().slice(0, 10);
+      }
+    }
+    if (moduleCode === 'goa_training') {
+      const learningStatus = String(normalized.learningStatus ?? '').trim();
+      if (learningStatus === 'completed' && (!normalized.completedAt || String(normalized.completedAt).trim() === '')) {
+        normalized.completedAt = new Date().toISOString().slice(0, 10);
+      }
+    }
+    return normalized;
   }
 }
