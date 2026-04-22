@@ -36,6 +36,15 @@ Wave4 已冻结的 Batch A 模块包括：
 
 上述模块在 M6 中按“六维规格”执行，具体 UI 规格见 `ui/workbench-department-modules.md`。
 
+### 2.2 Wave5 Batch B 标注
+
+Wave5 已冻结的 Batch B 模块包括：
+
+- 检查整改类：`goa_safety_hazard`、`shipping_self_inspection`、`shipping_vessel_inspection`、`shipping_confined_space_operation`、`shipping_oily_water_operation`、`shipping_maritime_safety_check`
+- 统计 / 审批 / 资产服务类：`finance_attendance`、`shipping_attendance`、`shipping_voyage_approval`、`shipping_fuel_bunkering_approval`、`logistics_warehouse`、`logistics_office`、`logistics_canteen`、`logistics_dormitory`、`logistics_vehicle_maintenance`
+
+上述模块在 M6 中除六维规格外，还必须满足“可被管理员任务体系检索与排障”的联动要求，具体见 `ui/workbench-batch-b-integration-notes.md`。
+
 | 模块 | moduleCode | 部门/工作组 | 模板 | 当前状态 | 代码现状 | M6 页面形态 | 样表来源 | 打印模板 | 审批模板映射 | 阻塞项 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 岗前/日常/季度/年度培训 | `goa_training` | 总经办 | `ledger_form` | `M6 待高保真` | 已有 schema、记录运行时、统一页 | 独立培训页 + 进度视图 + 详情页 | `需求 4.3.1`、现有培训资料 | `A4-培训记录` | 岗前培训：`goa_training_onboarding_v1`；其他不适用 | 岗前审批口径、学习进度样张 |

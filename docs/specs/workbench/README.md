@@ -54,6 +54,7 @@
 | UI | `ui/workbench-template-pages.md` | M4 归档 |
 | UI | `ui/workbench-department-modules.md` | M6 重写 |
 | UI | `ui/workbench-batch-a-integration-notes.md` | M6 Wave 4 新增 |
+| UI | `ui/workbench-batch-b-integration-notes.md` | M6 Wave 5 新增 |
 | UI | `ui/workbench-module-route-map.md` | M6 新增 |
 | UI | `ui/workbench-admin-console.md` | M6 新增 |
 | UI | `ui/finance-module-provisional.md` | M6 新增 |
@@ -63,6 +64,7 @@
 | Acceptance | `acceptance-m6-wave2.md` | M6 Wave 2 已归档 |
 | Acceptance | `acceptance-m6-wave3.md` | M6 Wave 3 已归档 |
 | Acceptance | `acceptance-m6-wave4.md` | M6 Wave 4 已归档 |
+| Acceptance | `acceptance-m6-wave5.md` | M6 Wave 5 已归档 |
 | Acceptance | `acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md` | M5 历史归档 |
 | Acceptance | `acceptance-wave1.md` ~ `acceptance-wave8.md` | M4 历史归档 |
 

@@ -23,9 +23,9 @@
 - [x] WS-4C Batch A 打印、归档、权限、审批映射标准化
 
 ### Wave 5
-- [ ] WS-5A 检查整改类模块 Batch B 规格冻结
-- [ ] WS-5B 统计 / 审批 / 资产服务类模块 Batch B 规格冻结
-- [ ] WS-5C 导出任务、对账任务、诊断事件规格冻结
+- [x] WS-5A 检查整改类模块 Batch B 规格冻结
+- [x] WS-5B 统计 / 审批 / 资产服务类模块 Batch B 规格冻结
+- [x] WS-5C 导出任务、对账任务、诊断事件规格冻结
 
 ### Wave 6
 - [ ] WS-6A `财务板块` provisional SDD 完成
@@ -122,6 +122,9 @@
 ### 产出
 
 - `docs/specs/workbench/ui/workbench-department-modules.md`
+- `docs/specs/workbench/ui/workbench-batch-b-integration-notes.md`
+- `docs/specs/workbench/db/workbench-module-matrix.md`
+- `docs/specs/workbench/acceptance-m6-wave5.md`
 - `docs/specs/workbench/ui/workbench-batch-a-integration-notes.md`
 - `docs/specs/workbench/acceptance-m6-wave4.md`
 

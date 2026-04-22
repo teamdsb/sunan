@@ -49,6 +49,37 @@
   - `shipping_watch`
 - 验收：每个 Batch A 模块均需满足“字段组 + 页面组 + 关键动作 + 打印/归档 + 权限/审批 + 验收点”六维完整性。
 
+## 1.2 Wave5 Batch B 冻结范围
+
+### 检查整改类 Batch B（WS-5A）
+
+- `goa_safety_hazard`（安全隐患排查管理）
+- `shipping_self_inspection`（船舶自查排查）
+- `shipping_vessel_inspection`（船舶检验）
+- `shipping_confined_space_operation`（密闭空间系统）
+- `shipping_oily_water_operation`（污油水接收作业）
+- `shipping_maritime_safety_check`（海事安检系统）
+
+### 统计 / 审批 / 资产服务类 Batch B（WS-5B）
+
+- `finance_attendance`（统计中心）
+- `shipping_attendance`（船员考勤）
+- `shipping_voyage_approval`（航次计划审批）
+- `shipping_fuel_bunkering_approval`（燃油加注）
+- `logistics_warehouse`（仓库）
+- `logistics_office`（办公室）
+- `logistics_canteen`（食堂）
+- `logistics_dormitory`（宿舍）
+- `logistics_vehicle_maintenance`（车辆维修保养）
+
+### Batch B 标准化（WS-5C）
+
+- 导出任务：统计中心、船员考勤必须接入导出任务追踪与失败重试留痕。
+- 对账任务：统计中心与审批/统计模块差异数据必须可挂接到对账任务并形成差异摘要。
+- 诊断事件：审批失败、导出失败、对账失败需统一进入管理员诊断页，并可关联业务单据或任务号。
+- 审批：Batch B 审批模块必须使用审批镜像状态，不允许页面本地终态替代企业微信结果。
+- 验收：Batch B 模块均需满足“字段组 + 页面组 + 关键动作 + 打印/归档 + 权限/审批 + 验收点”六维完整性，且具备管理员检索路径。
+
 ## 2. 总经办
 
 ### `goa_training` 培训管理
