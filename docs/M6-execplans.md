@@ -13,9 +13,9 @@
 - [x] WS-2C 真机验证、UAT、上线材料和回滚门槛冻结
 
 ### Wave 3
-- [ ] WS-3A 工作平台独立路由与页面 IA 冻结
-- [ ] WS-3B 管理员运维台 UI / State / API / 留痕规格冻结
-- [ ] WS-3C 核心契约更新：审批 API 查询维度与管理员 API 契约
+- [x] WS-3A 工作平台独立路由与页面 IA 冻结
+- [x] WS-3B 管理员运维台 UI / State / API / 留痕规格冻结
+- [x] WS-3C 核心契约更新：审批 API 查询维度与管理员 API 契约
 
 ### Wave 4
 - [ ] WS-4A 高频台账类模块 Batch A 规格冻结
@@ -103,6 +103,7 @@
 - `docs/specs/workbench/state/workbench-admin-console.md`
 - `docs/specs/workbench/api/workbench-admin-api.yaml`
 - `docs/specs/workbench/api/workbench-approval-api.yaml`
+- `docs/specs/workbench/acceptance-m6-wave3.md`
 
 ### 验收标准
 
