@@ -8,9 +8,9 @@
 - [x] WS-1C 工作平台差异基线与 blocker 清单冻结（完成于 2026-04-22）
 
 ### Wave 2
-- [ ] WS-2A 工作平台模块拆分与 legacy 兼容
-- [ ] WS-2B 工作平台模块化路由与页面拆分
-- [ ] WS-2C 海图更新落地与财务板块 blocker 判定
+- [x] WS-2A 工作平台模块拆分与 legacy 兼容（完成于 2026-04-22）
+- [x] WS-2B 工作平台模块化路由与页面拆分（完成于 2026-04-22）
+- [x] WS-2C 海图更新落地与财务板块 blocker 判定（完成于 2026-04-22）
 
 ### Wave 3
 - [ ] WS-3A 企业微信配置标准化与配置矩阵落地
@@ -74,6 +74,11 @@
 - 新模块编码、路由、统计口径与规格一致。
 - 旧聚合模块不再作为默认新建入口。
 - `海图更新` 可以真实录单、留存、打印。
+
+### 完成记录（2026-04-22）
+- `WS-2A`：模块拆分编码已落地，`business_operation_flow` 已降级为 legacy-only 且不可新建。
+- `WS-2B`：已落地 `/workbench`、`/workbench/modules/:moduleCode`、`/workbench/records/:recordId`、`/workbench/statistics/attendance`、`/workbench/approvals`。
+- `WS-2C`：`shipping_chart_update` 已落地真实模块；`finance_business_board` 仍受 blocker 约束，补料前不进入开发。
 
 ## Wave 3：企业微信生产集成闭环
 

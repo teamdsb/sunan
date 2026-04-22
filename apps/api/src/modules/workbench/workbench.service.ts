@@ -844,6 +844,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'chartVersion', label: '版本号', required: true, inputType: 'text' },
           { key: 'updatedAt', label: '更新日期', required: true, inputType: 'date' },
           { key: 'updateSummary', label: '更新说明', required: true, inputType: 'textarea' },
+          { key: 'attachmentList', label: '附件', required: false, inputType: 'textarea', placeholder: '记录附件清单或说明' },
           { key: 'confirmationRecord', label: '确认记录', required: true, inputType: 'textarea' },
           { key: 'nextReminderDate', label: '下次提醒日期', required: true, inputType: 'date' },
         ],
