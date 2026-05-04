@@ -113,9 +113,10 @@ export function AppShell() {
           placement="right"
           open={mobileNavOpen}
           onClose={() => setMobileNavOpen(false)}
+          rootClassName="shell-mobile-drawer-root"
           className="shell-mobile-drawer"
         >
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space direction="vertical" size="middle" className="shell-mobile-drawer-stack">
             {user ? (
               <div className="shell-mobile-drawer-user">
                 <Space>
@@ -128,7 +129,7 @@ export function AppShell() {
                 </Space>
               </div>
             ) : null}
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+            <Space direction="vertical" size="small" className="shell-mobile-nav-list">
               {moduleNavItems.map((item) => (
                 <Button
                   key={item.path}
