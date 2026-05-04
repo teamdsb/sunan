@@ -115,7 +115,17 @@ const WorkbenchApprovalPage = lazyNamed(
 );
 
 function renderLazyPage(page: JSX.Element) {
-  return <Suspense fallback={<div>页面加载中...</div>}>{page}</Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <div className="route-loading-panel" role="status" aria-live="polite">
+          <span>页面加载中...</span>
+        </div>
+      }
+    >
+      {page}
+    </Suspense>
+  );
 }
 
 export function AppRoutes() {
