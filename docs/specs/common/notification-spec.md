@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: common
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 通知推送规格
 
 ## 概述

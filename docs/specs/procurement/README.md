@@ -1,3 +1,10 @@
+---
+status: current-index
+owner: procurement
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 采购管理模块规格（里程碑 M3）
 
 ## 模块定位
@@ -71,5 +78,5 @@
 
 ## Wave 5 交付与验收
 
-- 验收归档：`docs/specs/procurement/acceptance-wave5.md`
+- 验收归档：`docs/archive/acceptance/procurement/acceptance-wave5.md`
 - 上线清单：`docs/specs/wecom/procurement-go-live-checklist.md`

@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: procurement
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 打印与导出规格
 
 ## 输出类型

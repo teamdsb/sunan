@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: procurement
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 采购审批页规格
 
 ## 页面目标

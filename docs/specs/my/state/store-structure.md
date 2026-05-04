@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # "我的"模块前端状态总览
 
 ## 设计原则

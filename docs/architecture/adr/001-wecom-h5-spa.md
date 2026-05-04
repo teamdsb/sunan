@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # ADR-001 企业微信 H5 单页应用
 
 ## 状态

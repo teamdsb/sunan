@@ -1,4 +1,11 @@
-﻿# CLAUDE.md
+---
+status: current-index
+owner: repository
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# CLAUDE.md
 
 This file provides guidance to Claude Code when working in this repository.
 
@@ -11,6 +18,13 @@ Sunan is now an active monorepo with runnable source code:
 - `docs/`: architecture, specs, requirements, and guides
 
 The project still follows SDD + TDD discipline: spec first, tests second, implementation last.
+
+## Documentation Index
+
+- Documentation navigation and status policy: `docs/README.md`
+- Full Markdown inventory: `docs/inventory.md`
+- Agent-facing repository guidance: `AGENTS.md`
+- Domain specs: `docs/specs/*/README.md`
 
 ## Development Commands
 

@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: guides
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # SDD 工作流程
 
 苏南项目采用 **SDD（规格驱动开发）+ TDD（测试驱动开发）** 方法论。本文档说明开发流程，确保所有团队成员和 Coding Agent 遵循一致的工作方式。

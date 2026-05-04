@@ -1,3 +1,10 @@
+---
+status: current-index
+owner: office
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 办事模块规格（里程碑 M2）
 
 ## 模块定位

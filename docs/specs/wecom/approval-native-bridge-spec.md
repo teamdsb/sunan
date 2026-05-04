@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信原生审批桥接规格（M4 通用）
 
 ## 文档定位

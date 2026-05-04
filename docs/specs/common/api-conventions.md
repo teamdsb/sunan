@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: common
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # API 规范
 
 本文档定义所有后端 REST API 的通用规范，所有 API 规格文档（OpenAPI YAML）均须遵守。

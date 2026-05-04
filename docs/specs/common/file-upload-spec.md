@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: common
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 文件上传规格
 
 ## 概述

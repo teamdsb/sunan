@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # "我的"模块页面地图
 
 ## 路由结构

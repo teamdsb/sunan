@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台模块矩阵
 
 ## 1. 模块分类总览

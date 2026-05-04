@@ -1,3 +1,10 @@
+---
+status: operations
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信生产配置矩阵（M6）
 
 ## 文档定位

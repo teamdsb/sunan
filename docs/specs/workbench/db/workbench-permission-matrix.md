@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台权限矩阵（M4 Wave 1 冻结）
 
 ## 1. 目的

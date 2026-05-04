@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信回调安全规格（M6）
 
 ## 文档定位

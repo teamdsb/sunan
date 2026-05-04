@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: common
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 数据库规范
 
 本文档定义 PostgreSQL 数据库的所有通用规范，所有表规格文档均须遵守。

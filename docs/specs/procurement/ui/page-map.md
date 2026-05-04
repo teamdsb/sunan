@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: procurement
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 采购模块页面地图
 
 ## 路由结构

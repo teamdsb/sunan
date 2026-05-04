@@ -1,3 +1,10 @@
+---
+status: historical-archive
+owner: guides
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # "我的"模块 QA 测试指南
 
 ## 适用范围

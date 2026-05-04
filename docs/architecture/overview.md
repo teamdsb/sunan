@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 系统架构概览
 
 ## 整体架构

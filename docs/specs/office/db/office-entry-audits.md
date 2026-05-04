@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: office
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # office_entry_audits
 
 ## 用途

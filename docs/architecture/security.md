@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 安全设计
 
 ## 认证
