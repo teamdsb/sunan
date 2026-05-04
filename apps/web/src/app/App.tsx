@@ -1,5 +1,6 @@
-import { App as AntApp, ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import AntApp from 'antd/es/app';
+import ConfigProvider from 'antd/es/config-provider';
+import zhCN from 'antd/es/locale/zh_CN';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from '../router/AppRoutes';
 import './app.css';

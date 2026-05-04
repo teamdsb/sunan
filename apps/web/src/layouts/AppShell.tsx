@@ -1,5 +1,12 @@
-import { Avatar, Button, Drawer, Layout, Space, Tag, Typography } from 'antd';
-import { MenuOutlined, ReloadOutlined } from '@ant-design/icons';
+import MenuOutlined from '@ant-design/icons/MenuOutlined';
+import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
+import Avatar from 'antd/es/avatar';
+import Button from 'antd/es/button';
+import Drawer from 'antd/es/drawer';
+import Layout from 'antd/es/layout';
+import Space from 'antd/es/space';
+import Tag from 'antd/es/tag';
+import Typography from 'antd/es/typography';
 import { useMemo, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -14,6 +21,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isMyHomeRoute = location.pathname === '/my';
 
   const currentModuleLabel = useMemo(
     () => resolveModuleLabel(location.pathname),
@@ -35,7 +43,11 @@ export function AppShell() {
   };
 
   return (
-    <Layout className="shell-layout">
+    <Layout
+      className={['shell-layout', isMyHomeRoute ? 'shell-layout-my-home' : '']
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="shell-panel">
         <header className="shell-header">
           <div className="shell-mobile-topbar">

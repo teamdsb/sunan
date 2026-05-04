@@ -1,4 +1,5 @@
-import { Result, Spin } from 'antd';
+import Result from 'antd/es/result';
+import Spin from 'antd/es/spin';
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';

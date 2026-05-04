@@ -137,32 +137,106 @@ body {
   overflow-x: auto;
 }
 
+.shell-layout-my-home {
+  background:
+    radial-gradient(circle at 8% -8%, rgba(23, 105, 224, 0.22), transparent 34%),
+    radial-gradient(circle at 96% 4%, rgba(25, 167, 206, 0.18), transparent 32%),
+    linear-gradient(180deg, #eef6ff 0%, #f8fbff 54%, #edf5ff 100%);
+  font-family: "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+.shell-layout-my-home .shell-panel {
+  border-color: rgba(23, 105, 224, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.94));
+  box-shadow: 0 28px 70px rgba(16, 42, 67, 0.14);
+}
+
+.shell-layout-my-home .shell-header {
+  border-bottom-color: rgba(23, 105, 224, 0.1);
+  background: transparent;
+}
+
+.shell-layout-my-home .shell-mobile-page-title.ant-typography,
+.shell-layout-my-home .shell-title {
+  color: #102a43;
+  font-weight: 800;
+}
+
+.shell-layout-my-home .shell-mobile-more-button.ant-btn {
+  color: #0b58c7;
+  font-weight: 600;
+}
+
+.shell-layout-my-home .shell-subtitle {
+  color: #5b708a;
+}
+
+.shell-layout-my-home .shell-mobile-more-button.ant-btn:hover,
+.shell-layout-my-home .shell-mobile-more-button.ant-btn:focus-visible {
+  color: #1769e0;
+  background: rgba(23, 105, 224, 0.08);
+}
+
+.my-home-page {
+  position: relative;
+  min-height: calc(100vh - 94px);
+  padding: 0 0 36px;
+  color: #102a43;
+  overflow: hidden;
+}
+
 .my-home-hero {
-  padding-bottom: 10px;
+  isolation: isolate;
+  position: relative;
+  min-height: 236px;
+  margin: 8px 16px 22px;
+  padding: 38px 28px 82px;
+  overflow: hidden;
+  border: 1px solid rgba(23, 105, 224, 0.1);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 18px 42px rgba(23, 105, 224, 0.12);
 }
 
-.my-home-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  padding: 0 16px 16px;
+.my-home-hero::before,
+.my-home-hero::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
 }
 
-.my-home-icon-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px 10px;
+.my-home-hero::before {
+  z-index: -2;
+  background: url("../assets/my-home-hero-bg.webp") 58% center / cover no-repeat;
 }
 
-.my-home-shortcut {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 10px;
-  min-width: 0;
-  padding: 10px 4px;
-  text-align: center;
-  color: inherit;
-  text-decoration: none;
+.my-home-hero::after {
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 40%, rgba(255, 255, 255, 0.36) 66%, rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(180deg, rgba(244, 250, 255, 0.18) 0%, rgba(232, 244, 255, 0.08) 100%);
+}
+
+.my-home-hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 360px;
+}
+
+.my-home-title.ant-typography {
+  margin: 0;
+  color: #082659;
+  font-size: 36px;
+  line-height: 1.16;
+  font-weight: 800;
+}
+
+.my-home-subtitle.ant-typography {
+  margin: 18px 0 0;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.7;
 }
 
 .my-home-shortcut-icon {
@@ -180,20 +254,101 @@ body {
   box-shadow: none;
 }
 
-.my-home-shortcut-label.ant-typography {
+.my-home-page .my-home-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+  padding: 0 40px 28px;
+}
+
+.my-home-page .my-home-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.my-home-page .my-home-shortcut {
+  position: relative;
+  display: grid;
   min-width: 0;
-  font-size: 13px;
+  min-height: 156px;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  padding: 18px 10px 24px;
+  overflow: hidden;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid rgba(23, 105, 224, 0.1);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 253, 255, 0.94)),
+    #ffffff;
+  box-shadow: 0 16px 34px rgba(23, 105, 224, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.my-home-page .my-home-shortcut::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 18%, rgba(23, 105, 224, 0.08), transparent 34%);
+  content: "";
+}
+
+.my-home-page .my-home-shortcut::after {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  width: 30px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #1769e0;
+  content: "";
+}
+
+.my-home-page .my-home-shortcut-icon {
+  position: relative;
+  z-index: 1;
+  width: 68px;
+  height: 68px;
+  font-size: 31px;
+  color: #1769e0;
+}
+
+.my-home-page .my-home-shortcut-icon-blue {
+  border: 1px solid rgba(23, 105, 224, 0.08);
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(232, 241, 255, 0.98), rgba(244, 248, 255, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.my-home-page .my-home-shortcut-label.ant-typography {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  color: #102a43;
+  font-size: 17px;
   line-height: 1.35;
-  color: rgba(20, 40, 29, 0.84);
+  font-weight: 700;
 }
 
-.my-home-shortcut:hover .my-home-shortcut-icon,
-.my-home-shortcut:focus-visible .my-home-shortcut-icon {
-  transform: translateY(-1px);
+.my-home-page .my-home-shortcut:hover,
+.my-home-page .my-home-shortcut:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(23, 105, 224, 0.24);
+  box-shadow: 0 20px 42px rgba(23, 105, 224, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
-.my-home-shortcut:focus-visible {
-  outline: none;
+.my-home-page .my-home-shortcut:focus-visible {
+  outline: 3px solid rgba(23, 105, 224, 0.24);
+  outline-offset: 3px;
+}
+
+.my-home-page .my-home-shortcut:hover .my-home-shortcut-icon,
+.my-home-page .my-home-shortcut:focus-visible .my-home-shortcut-icon {
+  color: #0b58c7;
 }
 
 .reminder-stat-grid {
@@ -435,9 +590,14 @@ body {
     padding: 0 24px 24px;
   }
 
-  .my-home-grid {
-    padding: 0 24px 24px;
-    gap: 14px;
+  .my-home-page .my-home-grid {
+    padding: 0 40px 32px;
+    gap: 18px;
+  }
+
+  .my-home-hero {
+    margin: 10px 24px 24px;
+    padding: 44px 36px 88px;
   }
 
   .page-primary-action {
@@ -450,8 +610,8 @@ body {
 }
 
 @media (min-width: 1024px) {
-  .my-home-icon-grid {
-    grid-template-columns: repeat(4, minmax(0, 120px));
+  .my-home-page .my-home-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 220px));
     justify-content: start;
   }
 }
@@ -470,23 +630,60 @@ body {
     font-size: 22px;
   }
 
-  .my-home-icon-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px 6px;
+  .my-home-page {
+    min-height: calc(100vh - 78px);
+    padding-bottom: 24px;
   }
 
-  .my-home-shortcut {
-    padding-inline: 2px;
+  .my-home-hero {
+    min-height: 214px;
+    margin: 6px 10px 16px;
+    padding: 30px 18px 74px;
+    border-radius: 18px;
   }
 
-  .my-home-shortcut-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+  .my-home-hero::before {
+    background-position: 61% center;
   }
 
-  .my-home-shortcut-label.ant-typography {
-    font-size: 12px;
+  .my-home-hero::after {
+    background:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.985) 0%, rgba(255, 255, 255, 0.95) 48%, rgba(255, 255, 255, 0.34) 72%, rgba(255, 255, 255, 0.04) 100%),
+      linear-gradient(180deg, rgba(244, 250, 255, 0.2) 0%, rgba(232, 244, 255, 0.1) 100%);
+  }
+
+  .my-home-title.ant-typography {
+    font-size: 30px;
+  }
+
+  .my-home-subtitle.ant-typography {
+    margin-top: 14px;
+    font-size: 14px;
+  }
+
+  .my-home-page .my-home-grid {
+    padding: 0 14px 22px;
+  }
+
+  .my-home-page .my-home-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .my-home-page .my-home-shortcut {
+    min-height: 126px;
+    padding: 14px 4px 20px;
+    border-radius: 14px;
+  }
+
+  .my-home-page .my-home-shortcut-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .my-home-page .my-home-shortcut-label.ant-typography {
+    font-size: 13px;
   }
 
   .page-card-grid > .ant-col {
@@ -515,5 +712,36 @@ body {
 
   .reminder-item .ant-list-item-meta {
     margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .my-home-hero {
+    min-height: 198px;
+    padding: 28px 16px 66px;
+  }
+
+  .my-home-hero::before {
+    background-position: 64% center;
+  }
+
+  .my-home-hero::after {
+    background:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.96) 54%, rgba(255, 255, 255, 0.46) 78%, rgba(255, 255, 255, 0.08) 100%),
+      linear-gradient(180deg, rgba(244, 250, 255, 0.24) 0%, rgba(232, 244, 255, 0.12) 100%);
+  }
+
+  .my-home-title.ant-typography {
+    font-size: 28px;
+  }
+
+  .my-home-page .my-home-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-home-page .my-home-shortcut {
+    transition: none;
   }
 }
