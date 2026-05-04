@@ -9,7 +9,7 @@ import {
 
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Entity({ name: 'personnel' })
 export class PersonnelEntity {

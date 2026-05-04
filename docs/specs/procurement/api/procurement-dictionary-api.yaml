@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Procurement Dictionary API
+  version: 1.0.0
+paths:
+  /api/v1/procurement/dimensions:
+    get:
+      summary: 查询采购细分字典项
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+            enum: [shipping_dept, logistics_dept]
+        - in: query
+          name: isEnabled
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+  /api/v1/procurement/admin/dimensions:
+    post:
+      summary: 新增细分字典项（总经办/系统管理员）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [departmentCode, dimensionType, dimensionKey, dimensionName]
+              properties:
+                departmentCode:
+                  type: string
+                  enum: [shipping_dept, logistics_dept]
+                dimensionType:
+                  type: string
+                  enum: [vessel, logistics_category]
+                dimensionKey:
+                  type: string
+                dimensionName:
+                  type: string
+                sortOrder:
+                  type: integer
+                  default: 0
+      responses:
+        '201':
+          description: Created
+  /api/v1/procurement/admin/dimensions/{id}:
+    patch:
+      summary: 更新细分字典项
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: 停用细分字典项
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

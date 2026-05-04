@@ -1,7 +1,7 @@
 ﻿import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { appEnv } from 'src/config/env';
 
-const timestampColumnType = appEnv.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const timestampColumnType = 'timestamptz';
 
 @Entity({ name: 'ship_monitors' })
 export class ShipMonitorEntity {

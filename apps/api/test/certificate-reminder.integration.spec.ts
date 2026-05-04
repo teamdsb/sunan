@@ -33,7 +33,7 @@ let currentUser = {
   name: 'Shipping Employee',
   avatar: null,
   departments: ['Shipping Department'],
-  position: '鍛樺伐',
+  position: '\u5458\u5DE5',
   roles: ['all_authenticated'],
   isAdmin: false,
 };
@@ -116,7 +116,7 @@ describe('ReminderController integration', () => {
     typeId = (
       await certificateTypeRepo.save(
         certificateTypeRepo.create({
-          code: 'nationality_cert',
+          code: 'nationality_cert_reminder',
           name: '鍥界睄璇佷功',
           ownerScope: 'mixed',
           reminderCategory: 'certificate',
@@ -131,8 +131,8 @@ describe('ReminderController integration', () => {
     vesselId = (
       await vesselRepo.save(
         vesselRepo.create({
-          code: 'SN012',
-          name: '鑻忓崡012',
+          code: 'SN012-REM',
+          name: '\u82CF\u5357012-\u63D0\u9192\u6D4B\u8BD5',
           category: 'main_vessel',
           status: 'active',
         }),
@@ -142,7 +142,7 @@ describe('ReminderController integration', () => {
     vehicleId = (
       await vehicleRepo.save(
         vehicleRepo.create({
-          plateNumber: '妗侫0001',
+          plateNumber: '妗侫1002',
           vehicleType: 'car',
           status: 'active',
         }),
@@ -155,7 +155,7 @@ describe('ReminderController integration', () => {
           wecomUserId: 'shipping-employee',
           name: 'Shipping Employee',
           departmentCode: 'shipping_dept',
-          position: '鍛樺伐',
+          position: '\u5458\u5DE5',
           mobile: null,
           employmentStatus: 'active',
           isSyncFromWecom: true,
@@ -193,7 +193,7 @@ describe('ReminderController integration', () => {
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
           departmentNames: ['Shipping Department'],
-          position: '鍛樺伐',
+          position: '\u5458\u5DE5',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -204,7 +204,7 @@ describe('ReminderController integration', () => {
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
           departmentNames: ['Shipping Department'],
-          position: '缁忕悊',
+          position: '\u7ECF\u7406',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -215,7 +215,7 @@ describe('ReminderController integration', () => {
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
           departmentNames: ['Shipping Department'],
-          position: '鍛樺伐',
+          position: '\u5458\u5DE5',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -226,7 +226,7 @@ describe('ReminderController integration', () => {
           avatarUrl: null,
           departmentCodes: ['general_office'],
           departmentNames: ['General Office'],
-          position: '涓讳换',
+          position: '\u4E3B\u4EFB',
           isSystemAdmin: false,
           rawProfile: {},
         },
@@ -318,7 +318,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '鍛樺伐',
+      position: '\u5458\u5DE5',
     };
 
     const dashboard = await request(
@@ -352,7 +352,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-manager',
       roles: ['all_authenticated', 'shipping'],
-      position: '缁忕悊',
+      position: '\u7ECF\u7406',
     };
 
     const dashboard = await request(
@@ -384,7 +384,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'office-user',
       roles: ['all_authenticated', 'general_office'],
-      position: '涓讳换',
+      position: '\u4E3B\u4EFB',
     };
 
     const dashboard = await request(
@@ -417,7 +417,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '鍛樺伐',
+      position: '\u5458\u5DE5',
     };
 
     const selfAck = await request(
@@ -443,7 +443,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-manager',
       roles: ['all_authenticated', 'shipping'],
-      position: '缁忕悊',
+      position: '\u7ECF\u7406',
     };
 
     const managerAck = await request(
@@ -473,7 +473,7 @@ describe('ReminderController integration', () => {
       ...currentUser,
       userId: 'shipping-employee',
       roles: ['all_authenticated'],
-      position: '鍛樺伐',
+      position: '\u5458\u5DE5',
     };
 
     const scan = await request(

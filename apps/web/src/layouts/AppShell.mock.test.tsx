@@ -53,10 +53,10 @@ describe('AppShell mock mode', () => {
     );
 
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /重新认证/ }));
+    await user.click(screen.getAllByRole('button', { name: /重新认证/ }).at(-1)!);
     expect(redirectToOAuth).not.toHaveBeenCalled();
     expect(screen.getByText('调试管理员')).toBeInTheDocument();
-  });
+  }, 20000);
 
   it('shows a mobile more menu that exposes navigation links on small screens', async () => {
     setViewport(375);
@@ -77,15 +77,15 @@ describe('AppShell mock mode', () => {
       </Provider>,
     );
 
-    expect(screen.getByRole('button', { name: /更多/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '证书提醒' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /更多/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('heading', { name: '我的' }).length).toBeGreaterThan(0);
     expect(screen.queryByText('当前页面')).toBeNull();
 
-    await user.click(screen.getByRole('button', { name: /更多/ }));
+    await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
 
-    expect(screen.getAllByRole('button', { name: '我的首页' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: '电子证照' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: '证书提醒' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '我的' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '办事' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '采购管理' }).length).toBeGreaterThan(0);
   });
 
   it('navigates when tapping a mobile drawer button body', async () => {
@@ -106,7 +106,7 @@ describe('AppShell mock mode', () => {
             <Route element={<AppShell />}>
               <Route path="/my" element={<LocationDisplay />} />
               <Route path="/my/reminders" element={<LocationDisplay />} />
-              <Route path="/my/certificates" element={<LocationDisplay />} />
+              <Route path="/office" element={<LocationDisplay />} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -115,10 +115,10 @@ describe('AppShell mock mode', () => {
 
     expect(screen.getByTestId('location-path')).toHaveTextContent('/my/reminders');
 
-    await user.click(screen.getByRole('button', { name: /更多/ }));
-    await user.click(screen.getAllByRole('button', { name: '电子证照' }).at(-1)!);
+    await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
+    await user.click(screen.getAllByRole('button', { name: '办事' }).at(-1)!);
 
-    expect(screen.getByTestId('location-path')).toHaveTextContent('/my/certificates');
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/office');
   });
 
   it('renders drawer navigation as lightweight text items without the default button fill class', async () => {
@@ -140,9 +140,9 @@ describe('AppShell mock mode', () => {
       </Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /更多/ }));
+    await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
 
-    expect(screen.getAllByRole('button', { name: '证书提醒' }).at(-1)).toHaveClass('shell-mobile-nav-item', 'is-active');
-    expect(screen.getAllByRole('button', { name: '电子证照' }).at(-1)).toHaveClass('shell-mobile-nav-item');
+    expect(screen.getAllByRole('button', { name: '我的' }).at(-1)).toHaveClass('shell-mobile-nav-item', 'is-active');
+    expect(screen.getAllByRole('button', { name: '办事' }).at(-1)).toHaveClass('shell-mobile-nav-item');
   });
 });

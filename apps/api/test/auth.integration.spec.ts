@@ -73,7 +73,7 @@ describe('AuthController integration', () => {
       };
     }),
     listDepartments: jest.fn(() => ({
-      department: [{ id: 1, name: 'General Office' }],
+      department: [{ id: 1, name: '总经办' }],
     })),
   };
 
@@ -236,7 +236,7 @@ describe('AuthController integration', () => {
       userId: 'admin-user',
       name: '寮犱笁',
       avatar: 'https://avatar.example.com/u.png',
-      department: ['General Office'],
+      department: ['总经办'],
       isAdmin: true,
     });
   });

@@ -3,6 +3,7 @@ import { certificateHandlers } from './certificates';
 import { filesHandlers } from './files';
 import { enterpriseHandlers } from './enterprise';
 import { monitorHandlers } from './monitor';
+import { officeHandlers } from './office';
 import { reminderHandlers } from './reminders';
 import { settingsHandlers } from './settings';
 import type { MockRouteDefinition } from '../types';
@@ -22,5 +23,6 @@ export const mockHandlers: MockRouteDefinition[] = [
   ...reminderHandlers,
   ...enterpriseHandlers,
   ...monitorHandlers,
+  ...officeHandlers,
   ...settingsHandlers,
 ];

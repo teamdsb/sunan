@@ -9,6 +9,9 @@ import { buildDetailHref, resolveBackHref } from './myRouteState';
 import { authReducer, loginSucceeded } from '../features/auth/authSlice';
 import { myUiReducer } from '../features/ui/myUiSlice';
 import { baseApi } from '../app/baseApi';
+import { officeRouteConfig } from './officeRouteConfig';
+import { procurementRouteConfig } from './procurementRouteConfig';
+import { workbenchRouteConfig } from './workbenchRouteConfig';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
@@ -49,6 +52,70 @@ vi.mock('../features/monitor/MonitorPage', () => ({
 
 vi.mock('../features/settings/SettingsPage', () => ({
   SettingsPage: () => <div>SETTINGS_PAGE</div>,
+}));
+
+vi.mock('../features/office/OfficeHomePage', () => ({
+  OfficeHomePage: () => <div>OFFICE_HOME</div>,
+}));
+
+vi.mock('../features/office/OfficeSearchPage', () => ({
+  OfficeSearchPage: () => <div>OFFICE_SEARCH</div>,
+}));
+
+vi.mock('../features/office/OfficeAdminPage', () => ({
+  OfficeAdminPage: () => <div>OFFICE_ADMIN</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderListPage', () => ({
+  ProcurementOrderListPage: () => <div>PROCUREMENT_ORDER_LIST</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderCreatePage', () => ({
+  ProcurementOrderCreatePage: () => <div>PROCUREMENT_ORDER_CREATE</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementOrderDetailPage', () => ({
+  ProcurementOrderDetailPage: () => <div>PROCUREMENT_ORDER_DETAIL</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementApprovalPage', () => ({
+  ProcurementApprovalPage: () => <div>PROCUREMENT_APPROVAL</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementReportPage', () => ({
+  ProcurementReportPage: () => <div>PROCUREMENT_REPORT</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementReportRequestDetailPage', () => ({
+  ProcurementReportRequestDetailPage: () => <div>PROCUREMENT_REPORT_REQUEST_DETAIL</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementReportApprovalPage', () => ({
+  ProcurementReportApprovalPage: () => <div>PROCUREMENT_REPORT_APPROVAL</div>,
+}));
+
+vi.mock('../features/procurement/ProcurementDictionaryAdminPage', () => ({
+  ProcurementDictionaryAdminPage: () => <div>PROCUREMENT_DICTIONARY_ADMIN</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchHomeRoutePage', () => ({
+  WorkbenchHomeRoutePage: () => <div>WORKBENCH_HOME</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchModulePage', () => ({
+  WorkbenchModulePage: () => <div>WORKBENCH_MODULE</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchRecordDetailPage', () => ({
+  WorkbenchRecordDetailPage: () => <div>WORKBENCH_RECORD_DETAIL</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchAttendancePage', () => ({
+  WorkbenchAttendancePage: () => <div>WORKBENCH_ATTENDANCE</div>,
+}));
+
+vi.mock('../features/workbench/WorkbenchApprovalPage', () => ({
+  WorkbenchApprovalPage: () => <div>WORKBENCH_APPROVAL</div>,
 }));
 
 function BackHrefConsumer() {
@@ -127,9 +194,9 @@ describe('AppRoutes', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the my home page at /my', () => {
+  it('renders the my home page at /my', async () => {
     renderRoute('/my');
-    expect(screen.getByText('MY_HOME')).toBeInTheDocument();
+    expect(await screen.findByText('MY_HOME')).toBeInTheDocument();
   });
 
   it.each([
@@ -139,9 +206,25 @@ describe('AppRoutes', () => {
     ['/my/reminders', 'REMINDER_DASHBOARD'],
     ['/my/monitors', 'MONITOR_PAGE'],
     ['/my/settings', 'SETTINGS_PAGE'],
-  ] as const)('renders %s', (path, expectedText) => {
+    [officeRouteConfig.officeHome.path, 'OFFICE_HOME'],
+    [officeRouteConfig.officeSearch.path, 'OFFICE_SEARCH'],
+    [officeRouteConfig.officeAdmin.path, 'OFFICE_ADMIN'],
+    [procurementRouteConfig.orderList.path, 'PROCUREMENT_ORDER_LIST'],
+    [procurementRouteConfig.orderCreate.path, 'PROCUREMENT_ORDER_CREATE'],
+    ['/procurement/orders/order-1', 'PROCUREMENT_ORDER_DETAIL'],
+    [procurementRouteConfig.approvals.path, 'PROCUREMENT_APPROVAL'],
+    [procurementRouteConfig.reports.path, 'PROCUREMENT_REPORT'],
+    ['/procurement/report-requests/request-1', 'PROCUREMENT_REPORT_REQUEST_DETAIL'],
+    [procurementRouteConfig.reportApprovals.path, 'PROCUREMENT_REPORT_APPROVAL'],
+    [procurementRouteConfig.dictionaries.path, 'PROCUREMENT_DICTIONARY_ADMIN'],
+    [workbenchRouteConfig.home.path, 'WORKBENCH_HOME'],
+    [workbenchRouteConfig.module.buildPath('shipping_chart_update'), 'WORKBENCH_MODULE'],
+    [workbenchRouteConfig.recordDetail.buildPath('record-1'), 'WORKBENCH_RECORD_DETAIL'],
+    [workbenchRouteConfig.attendanceStatistics.path, 'WORKBENCH_ATTENDANCE'],
+    [workbenchRouteConfig.approvals.path, 'WORKBENCH_APPROVAL'],
+  ] as const)('renders %s', async (path, expectedText) => {
     renderRoute(path);
-    expect(screen.getByText(expectedText)).toBeInTheDocument();
+    expect(await screen.findByText(expectedText)).toBeInTheDocument();
   });
 
   it.each([
@@ -150,12 +233,12 @@ describe('AppRoutes', () => {
     [myRouteConfig.enterpriseProfile.path, myRouteConfig.enterpriseProfile.detailPath, '1', '/my/enterprise-profile/1', 'ENTERPRISE_PROFILE_DETAIL'],
     [myRouteConfig.certificates.path, myRouteConfig.certificates.detailPath, '1', '/my/certificates/1', 'CERTIFICATE_DETAIL'],
     [myRouteConfig.monitors.path, myRouteConfig.monitors.detailPath, 'vessel-1', '/my/monitors/vessel-1', 'MONITOR_PAGE'],
-  ] as const)('renders detail route %s', (listPath, detailPath, id, path, expectedText) => {
+  ] as const)('renders detail route %s', async (listPath, detailPath, id, path, expectedText) => {
     expect(detailPath).toMatch(/\/:(id|vesselId)$/);
     const href = buildDetailHref(listPath, id);
     expect(href).toBe(`${path}?backTo=${encodeURIComponent(listPath)}`);
     renderRoute(href);
-    expect(screen.getByText(expectedText)).toBeInTheDocument();
+    expect(await screen.findByText(expectedText)).toBeInTheDocument();
   });
 
   it('exposes the shared my route config for route-aware consumers', () => {

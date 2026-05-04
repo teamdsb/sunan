@@ -23,7 +23,7 @@ describe('bootstrapAuth mock mode', () => {
   });
 
   it('injects mock auth state outside dev builds as well', async () => {
-    vi.stubEnv('DEV', 'false');
+    vi.stubEnv('DEV', false);
 
     const { createStore } = await import('../../app/store');
     const { bootstrapAuth } = await import('./bootstrap');

@@ -12,6 +12,6 @@ import { WecomModule } from 'src/modules/wecom/wecom.module';
   imports: [TypeOrmModule.forFeature([FileEntity]), WecomModule],
   controllers: [FilesController],
   providers: [FilesService, OssService, JwtAuthGuard],
-  exports: [FilesService],
+  exports: [FilesService, OssService],
 })
 export class FilesModule {}

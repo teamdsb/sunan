@@ -67,6 +67,27 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+Object.defineProperty(window, 'getComputedStyle', {
+  configurable: true,
+  value: (_elt: Element, _pseudoElt?: string) =>
+    ({
+      getPropertyValue: (_prop: string) => '',
+      overflow: 'auto',
+      overflowX: 'auto',
+      overflowY: 'auto',
+      width: '0px',
+      height: '0px',
+      paddingLeft: '0px',
+      paddingRight: '0px',
+      paddingTop: '0px',
+      paddingBottom: '0px',
+      marginLeft: '0px',
+      marginRight: '0px',
+      marginTop: '0px',
+      marginBottom: '0px',
+    }) as CSSStyleDeclaration,
+});
+
 afterEach(() => {
   resetMockRuntime();
 });

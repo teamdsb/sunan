@@ -3,6 +3,7 @@ import type { CertificatesMockState } from './fixtures/certificates';
 import type { EnterpriseMockState } from './fixtures/enterprise';
 import type { FilesMockState } from './fixtures/files';
 import type { MonitorMockState } from './fixtures/monitor';
+import type { OfficeMockState } from './fixtures/office';
 import type { ReminderMockState } from './fixtures/reminders';
 import type { SettingsMockState } from './fixtures/settings';
 
@@ -25,6 +26,7 @@ export interface MockRuntimeState {
   certificates: CertificatesMockState;
   reminder: ReminderMockState;
   monitor: MonitorMockState;
+  office: OfficeMockState;
   settings: SettingsMockState;
 }
 

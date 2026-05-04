@@ -62,6 +62,7 @@ describe('CertificateListPage', () => {
       '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D1%26pageSize%3D10%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /展开筛选/ }));
     fireEvent.click(screen.getByText('按类型分组'));
 
     await waitFor(() => {
@@ -79,6 +80,7 @@ describe('CertificateListPage', () => {
       </MemoryRouter>,
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /展开筛选/ }));
     const keywordInput = screen.getByPlaceholderText('关键字');
     fireEvent.change(keywordInput, { target: { value: '海事' } });
     fireEvent.click(screen.getByRole('button', { name: 'search' }));
@@ -144,7 +146,7 @@ describe('CertificateListPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: '展开筛选' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /展开筛选/ })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('状态')).not.toBeInTheDocument();
   });
 });

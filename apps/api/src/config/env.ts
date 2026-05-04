@@ -20,8 +20,28 @@ const envSchema = z.object({
   WECOM_AGENT_ID: z.string().default('1000001'),
   WECOM_AGENT_SECRET: z.string().default('test-agent-secret'),
   WECOM_REDIRECT_URI: z.string().url().default('https://example.com/auth'),
+  WEB_PUBLIC_URL: z.string().url().default('https://example.com'),
+  API_PUBLIC_URL: z.string().url().default('https://api.example.com'),
   APP_DOMAIN: z.string().default('example.com'),
   WECOM_SYSTEM_ADMIN_USER_IDS: z.string().optional(),
+  WECOM_CALLBACK_TOKEN: z.string().default('test-callback-token'),
+  WECOM_ENCODING_AES_KEY: z.string().optional(),
+  WECOM_CALLBACK_ALLOWED_IP_RANGES: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value
+        ? value
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : [],
+    ),
+  WECOM_CALLBACK_SIGNATURE_REQUIRED: z
+    .string()
+    .optional()
+    .transform((value) => (value === undefined ? true : value === 'true')),
+  WECOM_CALLBACK_MAX_SKEW_SECONDS: z.coerce.number().default(300),
   OSS_REGION: z.string().default('oss-cn-hangzhou'),
   OSS_BUCKET: z.string().default('sunan-files'),
   OSS_ACCESS_KEY_ID: z.string().default('test-access-key-id'),
@@ -32,4 +52,9 @@ const envSchema = z.object({
 
 export type AppEnv = z.infer<typeof envSchema>;
 
-export const appEnv = envSchema.parse(process.env);
+const envInput = {
+  ...process.env,
+  WECOM_CALLBACK_TOKEN: process.env.WECOM_CALLBACK_TOKEN ?? process.env.WECOM_TOKEN,
+};
+
+export const appEnv = envSchema.parse(envInput);

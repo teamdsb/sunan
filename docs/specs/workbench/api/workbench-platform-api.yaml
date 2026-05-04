@@ -1,0 +1,726 @@
+openapi: 3.0.3
+info:
+  title: Workbench Platform API
+  version: 2.0.0
+  description: >-
+    工作平台平台级接口，覆盖模块入口、模块 schema、首页聚合、统一记录列表/详情/动作、
+    附件、打印快照，以及 M5 新增的考勤导出与财务对账接口。
+servers:
+  - url: /api/v1
+paths:
+  /workbench/modules:
+    get:
+      summary: 获取工作平台模块列表
+      tags: [Workbench]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchModulesResponse'
+  /workbench/modules/{moduleCode}/schema:
+    get:
+      summary: 获取工作平台模块 schema
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: moduleCode
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchModuleSchemaResponse'
+        '404':
+          description: Module schema not found
+  /workbench/dashboard:
+    get:
+      summary: 获取工作平台首页聚合数据
+      tags: [Workbench]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchDashboardResponse'
+  /workbench/records:
+    get:
+      summary: 获取工作平台记录列表
+      tags: [Workbench]
+      parameters:
+        - in: query
+          name: moduleCode
+          schema:
+            type: string
+        - in: query
+          name: templateType
+          schema:
+            type: string
+            enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: vesselId
+          schema:
+            type: string
+        - in: query
+          name: ownerUserId
+          schema:
+            type: string
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkbenchRecords'
+    post:
+      summary: 创建工作平台记录
+      tags: [Workbench]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkbenchRecordRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchRecordDetailResponse'
+  /workbench/records/{recordId}:
+    get:
+      summary: 获取工作平台记录详情
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchRecordDetailResponse'
+        '404':
+          description: Record not found
+  /workbench/records/{recordId}/actions:
+    post:
+      summary: 提交工作平台记录动作
+      tags: [Workbench]
+      description: >-
+        通用动作入口。`goa_training` 在 `actionType=update_payload` 且学习状态满足完成条件时，
+        系统会自动发起审批并将记录状态切换为 `approval_pending`。
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkbenchRecordActionRequest'
+      responses:
+        '200':
+          description: Action accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchActionResultResponse'
+  /workbench/records/{recordId}/attachments:
+    post:
+      summary: 上传工作平台记录附件
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadWorkbenchAttachmentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchAttachmentResponse'
+  /workbench/records/{recordId}/print:
+    get:
+      summary: 获取工作平台记录的打印快照
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkbenchPrintSnapshotResponse'
+  /workbench/statistics/attendance:
+    get:
+      summary: 获取月度考勤统计
+      tags: [Workbench Statistics]
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            example: 2026-04
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+        - in: query
+          name: vesselId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatisticsResponse'
+  /workbench/statistics/attendance/export:
+    get:
+      summary: 导出月度考勤统计
+      tags: [Workbench Statistics]
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            example: 2026-04
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+        - in: query
+          name: exportFormat
+          schema:
+            type: string
+            enum: [xlsx, pdf]
+            default: xlsx
+      responses:
+        '202':
+          description: Export queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceExportQueuedResponse'
+  /workbench/statistics/attendance/reconcile:
+    post:
+      summary: 发起月度考勤财务对账
+      tags: [Workbench Statistics]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceReconcileRequest'
+      responses:
+        '202':
+          description: Reconcile accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceReconcileResponse'
+components:
+  schemas:
+    WorkbenchModulesResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkbenchModuleSummary'
+    WorkbenchModuleSchemaResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkbenchModuleSchema'
+    WorkbenchRecordDetailResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkbenchRecordDetail'
+    WorkbenchActionResultResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkbenchActionResult'
+    WorkbenchAttachmentResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkbenchAttachment'
+    WorkbenchPrintSnapshotResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkbenchPrintSnapshot'
+    WorkbenchModuleSummary:
+      type: object
+      required:
+        [moduleCode, moduleName, departmentCode, templateType, pendingCount, requiresApproval, supportsPrint, supportsStatistics, mobileFirst]
+      properties:
+        moduleCode:
+          type: string
+        moduleName:
+          type: string
+        departmentCode:
+          type: string
+        templateType:
+          type: string
+          enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+        pendingCount:
+          type: integer
+        requiresApproval:
+          type: boolean
+        supportsPrint:
+          type: boolean
+        supportsStatistics:
+          type: boolean
+        mobileFirst:
+          type: boolean
+    WorkbenchDashboardResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            modules:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkbenchModuleSummary'
+            pendingTotal:
+              type: integer
+            approvalPendingTotal:
+              type: integer
+            alerts:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkbenchAlert'
+    WorkbenchAlert:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    WorkbenchModuleSchema:
+      type: object
+      required: [moduleCode, templateType, sections]
+      properties:
+        moduleCode:
+          type: string
+        templateType:
+          type: string
+          enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkbenchSection'
+        stepTemplates:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkbenchStepTemplate'
+    WorkbenchSection:
+      type: object
+      required: [key, title, fields]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkbenchField'
+    WorkbenchField:
+      type: object
+      required: [key, label, required, inputType]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        required:
+          type: boolean
+        inputType:
+          type: string
+          enum: [text, number, date, textarea, select, image, file]
+        placeholder:
+          type: string
+    WorkbenchStepTemplate:
+      type: object
+      required: [stepCode, stepName]
+      properties:
+        stepCode:
+          type: string
+        stepName:
+          type: string
+    PaginatedWorkbenchRecords:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkbenchRecordSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Pagination:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    WorkbenchRecordSummary:
+      type: object
+      required: [id, moduleCode, title, status, occurredAt, approvalChannel, recordSource]
+      properties:
+        id:
+          type: string
+        moduleCode:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        vesselId:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        approvalChannel:
+          type: string
+          enum: [internal, wecom_native]
+        recordSource:
+          type: string
+          enum: [manual, callback, reconcile]
+    CreateWorkbenchRecordRequest:
+      type: object
+      required: [moduleCode, title, summary]
+      properties:
+        moduleCode:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        vesselId:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: true
+    WorkbenchRecordDetail:
+      allOf:
+        - $ref: '#/components/schemas/WorkbenchRecordSummary'
+        - type: object
+          properties:
+            summary:
+              type: string
+            externalProcessInstanceId:
+              type: string
+              nullable: true
+            externalStatus:
+              type: string
+              nullable: true
+            steps:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkbenchStep'
+            attachments:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkbenchAttachment'
+            actionLogs:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkbenchActionLog'
+            payload:
+              type: object
+              additionalProperties: true
+    WorkbenchStep:
+      type: object
+      properties:
+        id:
+          type: string
+        stepCode:
+          type: string
+        stepName:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, skipped]
+        rectificationRequired:
+          type: boolean
+        rectificationStatus:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    WorkbenchAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        stepCode:
+          type: string
+          nullable: true
+        fileId:
+          type: string
+        fileName:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+    WorkbenchActionLog:
+      type: object
+      properties:
+        id:
+          type: string
+        actionType:
+          type: string
+        source:
+          type: string
+          enum: [manual, callback, reconcile, system]
+        operatorUserId:
+          type: string
+          nullable: true
+        fromStatus:
+          type: string
+          nullable: true
+        toStatus:
+          type: string
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    WorkbenchRecordActionRequest:
+      type: object
+      required: [actionType]
+      properties:
+        actionType:
+          type: string
+          enum:
+            [submit, assign, start, complete_step, submit_review, request_rework, close_record, archive, retry_export, reconcile_record, refresh_print_snapshot, update_payload]
+        comment:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+    WorkbenchActionResult:
+      type: object
+      properties:
+        recordId:
+          type: string
+        status:
+          type: string
+        acceptedAction:
+          type: string
+    UploadWorkbenchAttachmentRequest:
+      type: object
+      required: [category, fileId]
+      properties:
+        category:
+          type: string
+          enum: [before_rectification, after_rectification, meeting_photo, evidence, document, print_export, export_file]
+        stepCode:
+          type: string
+        fileId:
+          type: string
+        remark:
+          type: string
+    WorkbenchPrintSnapshot:
+      type: object
+      properties:
+        recordId:
+          type: string
+        templateVersion:
+          type: string
+        renderedFileId:
+          type: string
+          nullable: true
+        renderedFormat:
+          type: string
+          enum: [pdf, html_snapshot]
+        renderedAt:
+          type: string
+          format: date-time
+        snapshotData:
+          type: object
+          additionalProperties: true
+    AttendanceStatisticsResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            month:
+              type: string
+            summary:
+              type: object
+              properties:
+                totalCheckIns:
+                  type: integer
+                financeAndShippingCheckIns:
+                  type: integer
+                operationFlowCheckIns:
+                  type: integer
+                morningCount:
+                  type: integer
+                afternoonCount:
+                  type: integer
+                inRangeCount:
+                  type: integer
+                outRangeCount:
+                  type: integer
+                businessTripCount:
+                  type: integer
+                normalDutyCount:
+                  type: integer
+            moduleTotals:
+              type: array
+              items:
+                type: object
+                properties:
+                  moduleCode:
+                    type: string
+                  moduleName:
+                    type: string
+                  departmentCode:
+                    type: string
+                  recordCount:
+                    type: integer
+    AttendanceExportQueuedResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            exportJobId:
+              type: string
+            status:
+              type: string
+              enum: [queued, processing, succeeded, failed]
+            month:
+              type: string
+            downloadFileId:
+              type: string
+              nullable: true
+    AttendanceReconcileRequest:
+      type: object
+      required: [month]
+      properties:
+        month:
+          type: string
+          example: 2026-04
+        departmentCode:
+          type: string
+        compareSource:
+          type: string
+          enum: [finance_template, exported_sheet, manual_snapshot]
+          default: finance_template
+        attachmentFileId:
+          type: string
+          nullable: true
+    AttendanceReconcileResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            reconcileJobId:
+              type: string
+            status:
+              type: string
+              enum: [queued, processing, succeeded, failed]
+            month:
+              type: string
+            differenceCount:
+              type: integer
+              nullable: true

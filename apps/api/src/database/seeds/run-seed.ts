@@ -2,8 +2,10 @@
 
 import dataSource from '../data-source';
 import { CertificateTypeEntity } from '../entities/certificate-type.entity';
+import { OfficeCategoryEntity } from '../entities/office-category.entity';
 import { VesselEntity } from '../entities/vessel.entity';
 import { VehicleEntity } from '../entities/vehicle.entity';
+import { OFFICE_CATEGORY_DEFINITIONS } from 'src/modules/office/office.constants';
 
 const vessels = [
   {
@@ -204,6 +206,20 @@ const seed = async (): Promise<void> => {
       .createQueryBuilder()
       .insert()
       .values(certificateTypes)
+      .orIgnore()
+      .execute();
+    await dataSource
+      .getRepository(OfficeCategoryEntity)
+      .createQueryBuilder()
+      .insert()
+      .values(
+        OFFICE_CATEGORY_DEFINITIONS.map((category) => ({
+          code: category.code,
+          name: category.name,
+          sortOrder: category.sortOrder,
+          isEnabled: category.isEnabled,
+        })),
+      )
       .orIgnore()
       .execute();
   } finally {

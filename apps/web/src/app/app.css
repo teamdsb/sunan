@@ -115,6 +115,28 @@ body {
   padding: 0 16px 16px;
 }
 
+.office-filter-panel {
+  padding-top: 0;
+}
+
+.office-card-grid {
+  grid-template-columns: 1fr;
+}
+
+.workbench-stats-grid,
+.workbench-module-grid {
+  grid-template-columns: 1fr;
+}
+
+.office-entry-card .ant-typography h4,
+.office-entry-card .ant-typography.ant-typography-h4 {
+  margin-bottom: 0;
+}
+
+.office-admin-card .ant-table-wrapper {
+  overflow-x: auto;
+}
+
 .my-home-hero {
   padding-bottom: 10px;
 }

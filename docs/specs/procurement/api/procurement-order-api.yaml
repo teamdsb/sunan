@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: Procurement Order API
+  version: 1.0.0
+paths:
+  /api/v1/procurement/orders:
+    get:
+      summary: 查询采购单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: departmentCode
+          schema:
+            type: string
+            enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        - in: query
+          name: dimensionType
+          schema:
+            type: string
+            enum: [none, vessel, logistics_category]
+        - in: query
+          name: dimensionKey
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, submitted, dept_approved, final_approved, rejected]
+        - in: query
+          name: approvalChannel
+          schema:
+            type: string
+            enum: [internal, wecom_native]
+        - in: query
+          name: submittedFrom
+          description: 提交时间起始（仅支持近 3 年范围）
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: submittedTo
+          description: 提交时间截止（仅支持近 3 年范围）
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderListResponse'
+    post:
+      summary: 新建采购单草稿
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}:
+    get:
+      summary: 获取采购单详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+    patch:
+      summary: 更新采购单草稿
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}/submit:
+    post:
+      summary: 提交采购单进入审批
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}/resubmit:
+    post:
+      summary: 退回后重新提交采购单
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}/attachments:
+    post:
+      summary: 绑定采购单附件
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderAttachmentBindRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}/print:
+    post:
+      summary: 生成采购单 A4 PDF
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcurementOrderPrintResponse'
+components:
+  schemas:
+    PaginationMeta:
+      type: object
+      required: [total, page, pageSize, totalPages]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalPages:
+          type: integer
+          minimum: 0
+    ProcurementOrder:
+      type: object
+      required:
+        - id
+        - orderNo
+        - departmentCode
+        - dimensionType
+        - title
+        - summary
+        - amount
+        - status
+        - approvalChannel
+        - createdBy
+        - updatedBy
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNo:
+          type: string
+        departmentCode:
+          type: string
+          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        dimensionType:
+          type: string
+          enum: [none, vessel, logistics_category]
+        dimensionKey:
+          type: string
+          nullable: true
+        title:
+          type: string
+        summary:
+          type: string
+        amount:
+          type: number
+          format: double
+        expenseDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [draft, submitted, dept_approved, final_approved, rejected]
+        approvalChannel:
+          type: string
+          enum: [internal, wecom_native]
+        externalProcessInstanceId:
+          type: string
+          nullable: true
+        externalStatus:
+          type: string
+          nullable: true
+        externalSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finalApprovedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProcurementOrderDetailResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProcurementOrder'
+    ProcurementOrderListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcurementOrder'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    ProcurementOrderAttachmentBindRequest:
+      type: object
+      required: [fileIds]
+      properties:
+        fileIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ProcurementOrderPrintResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [fileId, downloadUrl]
+          properties:
+            fileId:
+              type: string
+              format: uuid
+            downloadUrl:
+              type: string
+    ProcurementOrderCreateRequest:
+      type: object
+      required:
+        - departmentCode
+        - title
+        - summary
+        - amount
+      properties:
+        departmentCode:
+          type: string
+          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+        dimensionType:
+          type: string
+          enum: [none, vessel, logistics_category]
+          default: none
+        dimensionKey:
+          type: string
+          nullable: true
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+        amount:
+          type: number
+          format: double
+        expenseDate:
+          type: string
+          format: date
+          nullable: true
+        approvalChannel:
+          type: string
+          enum: [internal, wecom_native]
+          default: internal
+    ProcurementOrderUpdateRequest:
+      type: object
+      properties:
+        dimensionType:
+          type: string
+          enum: [none, vessel, logistics_category]
+        dimensionKey:
+          type: string
+          nullable: true
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+        amount:
+          type: number
+          format: double
+        expenseDate:
+          type: string
+          format: date
+          nullable: true
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

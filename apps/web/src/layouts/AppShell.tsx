@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { env } from '../app/env';
 import { logout } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
-import { myRouteNavItems } from '../router/myRouteConfig';
+import { moduleNavItems, resolveModuleLabel } from '../router/moduleNav';
 
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
@@ -15,13 +15,10 @@ export function AppShell() {
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const currentNavItem = useMemo(() => {
-    return (
-      myRouteNavItems.find((item) =>
-        item.path === '/my' ? location.pathname === item.path : location.pathname.startsWith(item.path),
-      ) ?? myRouteNavItems[0]
-    );
-  }, [location.pathname]);
+  const currentModuleLabel = useMemo(
+    () => resolveModuleLabel(location.pathname),
+    [location.pathname],
+  );
 
   const reauthorize = () => {
     if (env.mockMode) {
@@ -43,7 +40,7 @@ export function AppShell() {
         <header className="shell-header">
           <div className="shell-mobile-topbar">
             <Typography.Title level={3} className="shell-mobile-page-title">
-              {currentNavItem.label}
+              {currentModuleLabel}
             </Typography.Title>
             <Button
               type="text"
@@ -65,17 +62,17 @@ export function AppShell() {
             </div>
           </div>
           <Space wrap size="middle" className="shell-desktop-actions">
-            {myRouteNavItems.map((item) => (
+            {moduleNavItems.map((item) => (
               <Button
                 key={item.path}
                 type={
-                  item.path === '/my'
-                    ? location.pathname === item.path
-                      ? 'primary'
-                      : 'default'
-                    : location.pathname.startsWith(item.path)
-                      ? 'primary'
-                      : 'default'
+                  item.matchPrefixes.some(
+                    (prefix) =>
+                      location.pathname === prefix ||
+                      location.pathname.startsWith(`${prefix}/`),
+                  )
+                    ? 'primary'
+                    : 'default'
                 }
               >
                 <Link to={item.path}>{item.label}</Link>
@@ -120,31 +117,31 @@ export function AppShell() {
               </div>
             ) : null}
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              {myRouteNavItems.map((item) => (
+              {moduleNavItems.map((item) => (
                 <Button
                   key={item.path}
                   type="text"
                   block
                   className={[
                     'shell-mobile-nav-item',
-                    item.path === '/my'
-                      ? location.pathname === item.path
-                        ? 'is-active'
-                        : ''
-                      : location.pathname.startsWith(item.path)
-                        ? 'is-active'
-                        : '',
+                    item.matchPrefixes.some(
+                      (prefix) =>
+                        location.pathname === prefix ||
+                        location.pathname.startsWith(`${prefix}/`),
+                    )
+                      ? 'is-active'
+                      : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                   aria-current={
-                    item.path === '/my'
-                      ? location.pathname === item.path
-                        ? 'page'
-                        : undefined
-                      : location.pathname.startsWith(item.path)
-                        ? 'page'
-                        : undefined
+                    item.matchPrefixes.some(
+                      (prefix) =>
+                        location.pathname === prefix ||
+                        location.pathname.startsWith(`${prefix}/`),
+                    )
+                      ? 'page'
+                      : undefined
                   }
                   onClick={() => navigateTo(item.path)}
                 >
