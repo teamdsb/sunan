@@ -1,5 +1,7 @@
 # M6 优先级修复清单（分 Wave，含 API/DB/UI 改动点）
 
+> 状态：历史修复清单。Wave A-D 已完成，当前验收与上线证据以 `acceptance-m6-*.md`、`m6-wave6-go-live-package.md` 和 `m6-waved-governance-closure.md` 为准。
+
 ## 1. 目标与范围
 - 目标：将当前“部分达成”与“未达成”项收口到可验收、可上线状态。
 - 基线输入：`docs/requirements/M6-逐条需求对照表.md`

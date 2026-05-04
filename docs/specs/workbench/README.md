@@ -33,6 +33,13 @@
 | Planning | `finance-business-board-flowchart.md` | M6 Wave C 已新增 |
 | Planning | `finance-business-board-print-template.md` | M6 Wave C 已新增 |
 
+## 文档状态说明
+
+- 当前真源：`db/workbench-module-matrix.md` 是模块矩阵真源；M6 及后续模块入口以它为准。
+- 条件基线：`finance-business-board-*.md` 是 M6 自生成补料基线；后续收到财务部正式样表时，应以变更单替换并回归验证。
+- 已取代：`finance-business-board-c1-gate-report.md` 只保留 C-1 初判历史，当前以 `finance-business-board-blocker.md` 和补料基线为准。
+- 历史归档：`acceptance-wave*.md`、`acceptance-m5-wave*.md`、`m5-optimization-backlog.md` 不作为当前待办清单。
+
 ## M6 差异基线
 
 以下差异在 M6 中必须显式收口：

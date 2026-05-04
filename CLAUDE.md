@@ -12,6 +12,12 @@ Sunan is now an active monorepo with runnable source code:
 
 The project still follows SDD + TDD discipline: spec first, tests second, implementation last.
 
+## Documentation Index
+
+- Full Markdown inventory and document status: `docs/README.md`
+- Agent-facing repository guidance: `AGENTS.md`
+- Domain specs: `docs/specs/*/README.md`
+
 ## Development Commands
 
 ```bash
