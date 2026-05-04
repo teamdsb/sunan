@@ -242,24 +242,26 @@ body {
 }
 
 .shell-layout-my {
-  --my-ink: #102a43;
-  --my-ink-muted: #5b708a;
-  --my-blue: #1769e0;
-  --my-blue-deep: #0b58c7;
-  --my-cyan: #19a7ce;
-  --my-line: rgba(23, 105, 224, 0.12);
-  --my-soft: rgba(232, 241, 255, 0.72);
+  --my-ink: #0f2742;
+  --my-ink-muted: #60738c;
+  --my-blue: #1d63d6;
+  --my-blue-deep: #0e4a9f;
+  --my-cyan: #1a9aba;
+  --my-line: rgba(29, 99, 214, 0.14);
+  --my-soft: rgba(234, 243, 255, 0.7);
+  --my-surface: rgba(255, 255, 255, 0.9);
+  --my-card-shadow: 0 10px 26px rgba(15, 39, 66, 0.08);
   background:
-    radial-gradient(circle at 8% -8%, rgba(23, 105, 224, 0.22), transparent 34%),
-    radial-gradient(circle at 96% 4%, rgba(25, 167, 206, 0.18), transparent 32%),
-    linear-gradient(180deg, #eef6ff 0%, #f8fbff 54%, #edf5ff 100%);
+    radial-gradient(circle at 8% -8%, rgba(29, 99, 214, 0.16), transparent 34%),
+    radial-gradient(circle at 96% 4%, rgba(26, 154, 186, 0.12), transparent 32%),
+    linear-gradient(180deg, #f1f7ff 0%, #f8fbff 54%, #eef5fd 100%);
   font-family: "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
 .shell-layout-my .shell-panel {
-  border-color: rgba(23, 105, 224, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.94));
-  box-shadow: 0 28px 70px rgba(16, 42, 67, 0.14);
+  border-color: rgba(29, 99, 214, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 251, 255, 0.96));
+  box-shadow: 0 20px 56px rgba(15, 39, 66, 0.11);
 }
 
 .shell-layout-my .shell-header {
@@ -294,9 +296,9 @@ body {
   min-height: calc(100vh - 92px);
   overflow: hidden;
   background:
-    radial-gradient(circle at 0% 10%, rgba(23, 105, 224, 0.1), transparent 30%),
-    radial-gradient(circle at 100% 0%, rgba(25, 167, 206, 0.08), transparent 26%),
-    linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(239, 247, 255, 0.96) 46%, rgba(248, 252, 255, 0.94));
+    radial-gradient(circle at 0% 10%, rgba(29, 99, 214, 0.08), transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(26, 154, 186, 0.06), transparent 26%),
+    linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(242, 248, 255, 0.96) 46%, rgba(249, 252, 255, 0.96));
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .shell-content::before {
@@ -307,9 +309,9 @@ body {
   pointer-events: none;
   background:
     radial-gradient(circle at 9% 0%, rgba(255, 255, 255, 0.96), transparent 32%),
-    radial-gradient(circle at 92% 4%, rgba(102, 178, 255, 0.22), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(232, 241, 255, 0.7) 58%, rgba(205, 238, 248, 0.42)),
-    linear-gradient(180deg, rgba(227, 241, 255, 0.64), rgba(227, 241, 255, 0));
+    radial-gradient(circle at 92% 4%, rgba(105, 174, 245, 0.17), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(234, 243, 255, 0.62) 58%, rgba(214, 240, 247, 0.34)),
+    linear-gradient(180deg, rgba(232, 243, 255, 0.5), rgba(232, 243, 255, 0));
   content: "";
   -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
   mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
@@ -331,11 +333,11 @@ body {
 
 .shell-layout-my:not(.shell-layout-my-home) .page-hero > h2.ant-typography,
 .shell-layout-my:not(.shell-layout-my-home) .page-hero > div:first-child h2.ant-typography {
-  margin: 4px 0 8px;
+  margin: 2px 0 10px;
   color: #082659;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1.2;
-  font-weight: 800;
+  font-weight: 760;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-typography,
@@ -352,22 +354,22 @@ body {
   overflow: hidden;
   color: var(--my-ink);
   border: 1px solid var(--my-line);
-  border-radius: 18px;
+  border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 253, 255, 0.95)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 253, 255, 0.96)),
     #ffffff;
-  box-shadow: 0 16px 36px rgba(23, 105, 224, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  box-shadow: var(--my-card-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-card .ant-card {
-  border-color: rgba(23, 105, 224, 0.1);
-  background: linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(255, 255, 255, 0.92));
+  border-color: rgba(29, 99, 214, 0.1);
+  background: linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(255, 255, 255, 0.94));
   box-shadow: none;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-card-head {
-  border-bottom-color: rgba(23, 105, 224, 0.08);
-  background: linear-gradient(90deg, rgba(232, 241, 255, 0.72), rgba(255, 255, 255, 0.72));
+  border-bottom-color: rgba(29, 99, 214, 0.08);
+  background: rgba(248, 251, 255, 0.78);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-card-head-title {
@@ -384,10 +386,10 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) .ant-input-affix-wrapper,
 .shell-layout-my:not(.shell-layout-my-home) .ant-select-selector,
 .shell-layout-my:not(.shell-layout-my-home) .ant-input-group-addon .ant-btn {
-  min-height: 42px;
-  border-color: rgba(23, 105, 224, 0.14) !important;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9) !important;
+  min-height: 40px;
+  border-color: rgba(29, 99, 214, 0.14) !important;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92) !important;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-input:hover,
@@ -396,21 +398,26 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) .ant-input:focus,
 .shell-layout-my:not(.shell-layout-my-home) .ant-input-affix-wrapper-focused,
 .shell-layout-my:not(.shell-layout-my-home) .ant-select-focused .ant-select-selector {
-  border-color: rgba(23, 105, 224, 0.42) !important;
-  box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.1) !important;
+  border-color: rgba(29, 99, 214, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(29, 99, 214, 0.08) !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn {
+  border-radius: 10px;
+  font-weight: 650;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-btn-primary {
   border-color: var(--my-blue);
   background: linear-gradient(180deg, var(--my-blue), var(--my-blue-deep));
-  box-shadow: 0 12px 22px rgba(23, 105, 224, 0.2);
+  box-shadow: 0 8px 18px rgba(29, 99, 214, 0.16);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-btn-default:not(.ant-btn-dangerous),
 .shell-layout-my:not(.shell-layout-my-home) .filter-panel-toggle {
   color: var(--my-blue-deep);
-  border-color: rgba(23, 105, 224, 0.16);
-  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(29, 99, 214, 0.16);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-btn-dangerous {
@@ -433,7 +440,7 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) a:hover,
 .shell-layout-my:not(.shell-layout-my-home) a:focus-visible {
   color: var(--my-blue);
-  border-color: rgba(23, 105, 224, 0.32);
+  border-color: rgba(29, 99, 214, 0.28);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-btn-dangerous:hover,
@@ -443,14 +450,14 @@ body {
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-segmented {
-  padding: 5px;
-  border: 1px solid rgba(23, 105, 224, 0.12);
-  border-radius: 14px;
-  background: rgba(232, 241, 255, 0.72);
+  padding: 4px;
+  border: 1px solid rgba(29, 99, 214, 0.11);
+  border-radius: 12px;
+  background: rgba(236, 245, 255, 0.7);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-segmented-item {
-  border-radius: 10px;
+  border-radius: 9px;
   color: #334e68;
   font-weight: 700;
 }
@@ -458,7 +465,7 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) .ant-segmented-item-selected {
   color: var(--my-blue-deep);
   background: #ffffff;
-  box-shadow: 0 8px 18px rgba(23, 105, 224, 0.12);
+  box-shadow: 0 6px 14px rgba(29, 99, 214, 0.1);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-switch {
@@ -466,7 +473,7 @@ body {
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-switch.ant-switch-checked {
-  background: linear-gradient(90deg, var(--my-blue), var(--my-cyan));
+  background: var(--my-blue);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-list {
@@ -481,10 +488,10 @@ body {
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-list-item {
   min-width: 0;
-  padding: 14px;
-  border: 1px solid rgba(23, 105, 224, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.74);
+  padding: 12px 14px;
+  border: 1px solid rgba(29, 99, 214, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-list-item.reminder-item-overdue {
@@ -498,7 +505,7 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-title {
   margin-bottom: 4px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 680;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-description {
@@ -509,9 +516,10 @@ body {
   max-width: 100%;
   overflow: hidden;
   color: var(--my-blue-deep);
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 680;
   text-overflow: ellipsis;
-  border-color: rgba(23, 105, 224, 0.16);
+  border-color: rgba(29, 99, 214, 0.16);
   border-radius: 999px;
   background: rgba(232, 241, 255, 0.82);
 }
@@ -519,14 +527,15 @@ body {
 .shell-layout-my:not(.shell-layout-my-home) .ant-tag {
   max-width: 100%;
   overflow: hidden;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 680;
   text-overflow: ellipsis;
   border-radius: 999px;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .status-card {
   background:
-    linear-gradient(135deg, rgba(232, 241, 255, 0.92), rgba(255, 255, 255, 0.94)),
+    linear-gradient(135deg, rgba(238, 246, 255, 0.9), rgba(255, 255, 255, 0.95)),
     #ffffff;
 }
 
@@ -534,13 +543,35 @@ body {
   border-color: rgba(23, 105, 224, 0.12);
 }
 
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-grid > .ant-col {
+  width: auto;
+  max-width: none;
+  padding-inline: 0 !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-card .ant-card-body {
+  padding: 10px;
+}
+
 .shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button.ant-btn {
   color: var(--my-ink);
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   background:
-    radial-gradient(circle at 50% 0%, rgba(23, 105, 224, 0.12), transparent 42%),
-    rgba(255, 255, 255, 0.66);
+    radial-gradient(circle at 50% 0%, rgba(29, 99, 214, 0.08), transparent 42%),
+    rgba(255, 255, 255, 0.68);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button.ant-btn.ant-btn-lg {
+  min-height: 76px;
+  padding: 10px 6px;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button .ant-typography {
@@ -553,8 +584,8 @@ body {
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-descriptions-bordered .ant-descriptions-item-label {
   color: #334e68;
-  font-weight: 700;
-  background: rgba(232, 241, 255, 0.64);
+  font-weight: 680;
+  background: rgba(238, 246, 255, 0.72);
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-descriptions-bordered .ant-descriptions-item-content {
@@ -562,35 +593,53 @@ body {
   background: rgba(255, 255, 255, 0.84);
 }
 
+.shell-layout-my:not(.shell-layout-my-home) .ant-descriptions-view {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-empty,
+.shell-layout-my:not(.shell-layout-my-home) .ant-result {
+  padding: 28px 16px;
+  border: 1px dashed rgba(29, 99, 214, 0.16);
+  border-radius: 14px;
+  background: rgba(248, 251, 255, 0.78);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-alert {
+  border-radius: 12px;
+  border-color: rgba(29, 99, 214, 0.14);
+}
+
 .shell-layout-my:not(.shell-layout-my-home) .ant-pagination-item {
-  border-color: rgba(23, 105, 224, 0.14);
-  border-radius: 10px;
+  border-color: rgba(29, 99, 214, 0.14);
+  border-radius: 8px;
 }
 
 .shell-layout-my:not(.shell-layout-my-home) .ant-pagination-item-active {
   border-color: var(--my-blue);
-  box-shadow: 0 8px 16px rgba(23, 105, 224, 0.12);
+  box-shadow: 0 6px 14px rgba(29, 99, 214, 0.1);
 }
 
 .my-home-page {
   position: relative;
   min-height: calc(100vh - 94px);
   padding: 0 0 36px;
-  color: #102a43;
+  color: var(--my-ink);
   overflow: hidden;
 }
 
 .my-home-hero {
   isolation: isolate;
   position: relative;
-  min-height: 236px;
-  margin: 8px 16px 22px;
-  padding: 38px 28px 82px;
+  min-height: 224px;
+  margin: 8px 16px 18px;
+  padding: 36px 26px 76px;
   overflow: hidden;
-  border: 1px solid rgba(23, 105, 224, 0.1);
-  border-radius: 22px;
+  border: 1px solid rgba(29, 99, 214, 0.1);
+  border-radius: 20px;
   background: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 18px 42px rgba(23, 105, 224, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 12px 30px rgba(15, 39, 66, 0.08);
 }
 
 .my-home-hero::before,
@@ -609,8 +658,8 @@ body {
 .my-home-hero::after {
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 40%, rgba(255, 255, 255, 0.36) 66%, rgba(255, 255, 255, 0.02) 100%),
-    linear-gradient(180deg, rgba(244, 250, 255, 0.18) 0%, rgba(232, 244, 255, 0.08) 100%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.985) 0%, rgba(255, 255, 255, 0.95) 42%, rgba(255, 255, 255, 0.38) 68%, rgba(255, 255, 255, 0.04) 100%),
+    linear-gradient(180deg, rgba(244, 250, 255, 0.12) 0%, rgba(232, 244, 255, 0.06) 100%);
 }
 
 .my-home-hero-copy {
@@ -622,16 +671,16 @@ body {
 .my-home-title.ant-typography {
   margin: 0;
   color: #082659;
-  font-size: 36px;
+  font-size: 34px;
   line-height: 1.16;
-  font-weight: 800;
+  font-weight: 780;
 }
 
 .my-home-subtitle.ant-typography {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   color: #64748b;
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 .my-home-shortcut-icon {
@@ -653,8 +702,8 @@ body {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 16px;
-  padding: 0 40px 28px;
+  gap: 14px;
+  padding: 0 38px 26px;
 }
 
 .my-home-page .my-home-card-grid {
@@ -665,21 +714,21 @@ body {
   position: relative;
   display: grid;
   min-width: 0;
-  min-height: 156px;
+  min-height: 146px;
   place-items: center;
   align-content: center;
-  gap: 14px;
-  padding: 18px 10px 24px;
+  gap: 10px;
+  padding: 18px 10px 22px;
   overflow: hidden;
   color: inherit;
   text-align: center;
   text-decoration: none;
-  border: 1px solid rgba(23, 105, 224, 0.1);
-  border-radius: 16px;
+  border: 1px solid rgba(29, 99, 214, 0.11);
+  border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 253, 255, 0.94)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 253, 255, 0.95)),
     #ffffff;
-  box-shadow: 0 16px 34px rgba(23, 105, 224, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 24px rgba(15, 39, 66, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.96);
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
@@ -687,7 +736,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 18%, rgba(23, 105, 224, 0.08), transparent 34%);
+  background: radial-gradient(circle at 50% 18%, rgba(29, 99, 214, 0.06), transparent 34%);
   content: "";
 }
 
@@ -695,49 +744,63 @@ body {
   position: absolute;
   bottom: 16px;
   left: 50%;
-  width: 30px;
-  height: 4px;
+  width: 26px;
+  height: 3px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: #1769e0;
+  background: rgba(29, 99, 214, 0.86);
   content: "";
 }
 
 .my-home-page .my-home-shortcut-icon {
   position: relative;
   z-index: 1;
-  width: 68px;
-  height: 68px;
-  font-size: 31px;
-  color: #1769e0;
+  width: 62px;
+  height: 62px;
+  font-size: 29px;
+  color: var(--my-blue);
 }
 
 .my-home-page .my-home-shortcut-icon-blue {
-  border: 1px solid rgba(23, 105, 224, 0.08);
+  border: 1px solid rgba(29, 99, 214, 0.09);
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(232, 241, 255, 0.98), rgba(244, 248, 255, 0.92));
+  background: linear-gradient(180deg, rgba(236, 245, 255, 0.98), rgba(247, 250, 255, 0.94));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
-.my-home-page .my-home-shortcut-label.ant-typography {
+.my-home-page .my-home-shortcut-copy {
   position: relative;
   z-index: 1;
+  display: grid;
+  gap: 4px;
   min-width: 0;
-  color: #102a43;
+}
+
+.my-home-page .my-home-shortcut-label.ant-typography {
+  min-width: 0;
+  color: var(--my-ink);
   font-size: 17px;
   line-height: 1.35;
   font-weight: 700;
 }
 
+.my-home-page .my-home-shortcut-description.ant-typography {
+  display: none;
+  min-width: 0;
+  color: var(--my-ink-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .my-home-page .my-home-shortcut:hover,
 .my-home-page .my-home-shortcut:focus-visible {
   transform: translateY(-2px);
-  border-color: rgba(23, 105, 224, 0.24);
-  box-shadow: 0 20px 42px rgba(23, 105, 224, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  border-color: rgba(29, 99, 214, 0.24);
+  box-shadow: 0 14px 30px rgba(29, 99, 214, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
 .my-home-page .my-home-shortcut:focus-visible {
-  outline: 3px solid rgba(23, 105, 224, 0.24);
+  outline: 3px solid rgba(29, 99, 214, 0.22);
   outline-offset: 3px;
 }
 
@@ -1075,30 +1138,30 @@ body {
   .shell-layout-my .shell-panel {
     width: min(100%, 1600px);
     margin: 0 auto;
-    border-radius: 26px;
+    border-radius: 24px;
   }
 
   .shell-layout-my .shell-header {
     grid-template-columns: minmax(260px, 1fr) minmax(0, auto);
     align-items: center;
-    padding: 22px 28px;
+    padding: 20px 28px;
     gap: 24px;
-    border-bottom: 1px solid rgba(23, 105, 224, 0.08);
+    border-bottom: 1px solid rgba(29, 99, 214, 0.08);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.86)),
-      radial-gradient(circle at 100% 0%, rgba(25, 167, 206, 0.1), transparent 28%);
+      radial-gradient(circle at 100% 0%, rgba(26, 154, 186, 0.08), transparent 28%);
   }
 
   .shell-layout-my .shell-title {
     color: #082659;
-    font-size: 30px;
+    font-size: 29px;
     line-height: 1.15;
     letter-spacing: 0;
   }
 
   .shell-layout-my .shell-subtitle {
     margin-top: 8px;
-    color: #5b708a;
+    color: var(--my-ink-muted);
     font-size: 14px;
     font-weight: 600;
   }
@@ -1115,43 +1178,43 @@ body {
 
   .shell-layout-my .shell-desktop-actions .ant-btn {
     min-height: 42px;
-    padding-inline: 18px;
-    color: #0b58c7;
-    font-weight: 700;
-    border-color: rgba(23, 105, 224, 0.14);
+    padding-inline: 17px;
+    color: var(--my-blue-deep);
+    font-weight: 680;
+    border-color: rgba(29, 99, 214, 0.13);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 10px 22px rgba(23, 105, 224, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 39, 66, 0.06);
   }
 
   .shell-layout-my .shell-desktop-actions .ant-btn-primary {
     color: #ffffff;
-    border-color: rgba(23, 105, 224, 0.36);
+    border-color: rgba(29, 99, 214, 0.34);
     background: linear-gradient(180deg, #1769e0, #0b58c7);
-    box-shadow: 0 14px 28px rgba(23, 105, 224, 0.2);
+    box-shadow: 0 10px 22px rgba(29, 99, 214, 0.16);
   }
 
   .shell-layout-my .shell-desktop-actions .ant-btn:hover,
   .shell-layout-my .shell-desktop-actions .ant-btn:focus-visible {
     color: #1769e0;
-    border-color: rgba(23, 105, 224, 0.3);
-    background: rgba(232, 241, 255, 0.86);
+    border-color: rgba(29, 99, 214, 0.26);
+    background: rgba(236, 245, 255, 0.86);
   }
 
   .shell-layout-my .shell-desktop-actions .ant-btn-primary:hover,
   .shell-layout-my .shell-desktop-actions .ant-btn-primary:focus-visible {
     color: #ffffff;
-    border-color: rgba(23, 105, 224, 0.45);
+    border-color: rgba(29, 99, 214, 0.42);
     background: linear-gradient(180deg, #2580ff, #0b58c7);
   }
 
   .shell-layout-my .shell-user-card {
     min-width: 0;
     padding: 7px 10px;
-    border: 1px solid rgba(23, 105, 224, 0.12);
+    border: 1px solid rgba(29, 99, 214, 0.12);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.72);
-    box-shadow: 0 10px 22px rgba(23, 105, 224, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 39, 66, 0.06);
   }
 
   .shell-layout-my .shell-user-card .ant-avatar {
@@ -1178,16 +1241,16 @@ body {
   }
 
   .shell-layout-my .my-home-page {
-    width: min(100%, 1480px);
+    width: min(100%, 1460px);
     margin: 0 auto;
-    padding: 28px 28px 52px;
+    padding: 24px 28px 46px;
   }
 
   .shell-layout-my .my-home-hero {
-    min-height: clamp(250px, 28vh, 320px);
-    margin: 0 0 28px;
-    padding: 54px 52px 72px;
-    border-radius: 24px;
+    min-height: clamp(228px, 25vh, 292px);
+    margin: 0 0 22px;
+    padding: 44px 48px 62px;
+    border-radius: 22px;
   }
 
   .shell-layout-my .my-home-hero::before {
@@ -1197,7 +1260,7 @@ body {
   .shell-layout-my .my-home-hero::after {
     background:
       linear-gradient(90deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.94) 33%, rgba(255, 255, 255, 0.42) 58%, rgba(255, 255, 255, 0.04) 100%),
-      linear-gradient(180deg, rgba(244, 250, 255, 0.12) 0%, rgba(232, 244, 255, 0.08) 100%);
+      linear-gradient(180deg, rgba(244, 250, 255, 0.1) 0%, rgba(232, 244, 255, 0.06) 100%);
   }
 
   .shell-layout-my .my-home-hero-copy {
@@ -1205,21 +1268,25 @@ body {
   }
 
   .shell-layout-my .my-home-title.ant-typography {
-    font-size: clamp(34px, 2.8vw, 46px);
+    font-size: clamp(32px, 2.4vw, 40px);
   }
 
   .shell-layout-my .my-home-subtitle.ant-typography {
-    font-size: 17px;
+    font-size: 15px;
   }
 
   .shell-layout-my .my-home-page .my-home-grid {
     padding: 0;
-    gap: 18px;
+    gap: 16px;
   }
 
   .shell-layout-my .my-home-page .my-home-shortcut {
-    min-height: 170px;
-    border-radius: 18px;
+    min-height: 154px;
+    border-radius: 16px;
+  }
+
+  .shell-layout-my .my-home-page .my-home-shortcut-description.ant-typography {
+    display: block;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .shell-content {
@@ -1230,14 +1297,14 @@ body {
     width: min(100%, 1360px);
     min-height: calc(100vh - 126px);
     margin: 0 auto;
-    padding: 30px 30px 54px;
+    padding: 28px 30px 50px;
     overflow: visible;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .page-hero > h2.ant-typography,
   .shell-layout-my:not(.shell-layout-my-home) .page-hero > div:first-child h2.ant-typography {
     margin: 0 0 14px;
-    font-size: 30px;
+    font-size: 26px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .page-hero .ant-space-vertical {
@@ -1245,17 +1312,17 @@ body {
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .ant-card {
-    border-radius: 20px;
+    border-radius: 16px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .ant-card-body {
-    padding: 22px 24px;
+    padding: 20px 22px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .stacked-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px 18px;
+    gap: 14px 16px;
     align-items: end;
   }
 
@@ -1275,11 +1342,11 @@ body {
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .filter-panel {
-    max-width: 760px;
+    max-width: none;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .status-card {
-    max-width: 760px;
+    max-width: none;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .settings-card {
@@ -1289,7 +1356,7 @@ body {
   .shell-layout-my:not(.shell-layout-my-home) .settings-card .ant-form {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    gap: 16px;
     align-items: start;
   }
 
@@ -1315,7 +1382,7 @@ body {
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button.ant-btn {
-    min-height: 112px;
+    min-height: 104px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .page-primary-action {
@@ -1324,7 +1391,7 @@ body {
 
   .shell-layout-my:not(.shell-layout-my-home) .ant-list-item {
     align-items: center;
-    padding: 16px 18px;
+    padding: 14px 16px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .ant-list-item-action {
@@ -1381,7 +1448,7 @@ body {
 
   .shell-layout-my:not(.shell-layout-my-home) .page-hero > h2.ant-typography,
   .shell-layout-my:not(.shell-layout-my-home) .page-hero > div:first-child h2.ant-typography {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .shell-layout-my:not(.shell-layout-my-home) .ant-card {
@@ -1413,9 +1480,9 @@ body {
   }
 
   .my-home-hero {
-    min-height: 214px;
+    min-height: 206px;
     margin: 6px 10px 16px;
-    padding: 30px 18px 74px;
+    padding: 28px 18px 70px;
     border-radius: 18px;
   }
 
@@ -1430,7 +1497,7 @@ body {
   }
 
   .my-home-title.ant-typography {
-    font-size: 30px;
+    font-size: 29px;
   }
 
   .my-home-subtitle.ant-typography {
@@ -1448,7 +1515,7 @@ body {
   }
 
   .my-home-page .my-home-shortcut {
-    min-height: 126px;
+    min-height: 118px;
     padding: 14px 4px 20px;
     border-radius: 14px;
   }

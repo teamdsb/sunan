@@ -52,7 +52,10 @@ export function MyHomePage() {
               <span className="my-home-shortcut-icon my-home-shortcut-icon-blue" data-testid="my-home-shortcut-icon" aria-hidden="true">
                 <Icon />
               </span>
-              <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
+              <span className="my-home-shortcut-copy">
+                <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
+                <Typography.Text className="my-home-shortcut-description">{entry.description}</Typography.Text>
+              </span>
             </Link>
           );
         })}
