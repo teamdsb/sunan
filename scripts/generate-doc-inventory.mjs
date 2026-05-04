@@ -9,6 +9,7 @@ const files = execSync("rg --files -g '*.md'", { encoding: 'utf8' })
   .trim()
   .split(/\n/)
   .filter(Boolean)
+  .filter((file) => !file.startsWith('.agents/'))
   .sort();
 
 function read(file) {

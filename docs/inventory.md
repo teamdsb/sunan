@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-05-04
+updated: 2026-05-05
 replaces: []
 replaced_by: []
 ---
@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：165 个 Markdown 文件。
+总数：166 个 Markdown 文件。
 
 ## repository-root
 
@@ -81,6 +81,7 @@ replaced_by: []
 | [docs/specs/common/auth-spec.md](specs/common/auth-spec.md) | `current-spec` | `common` | 认证与授权规格 |
 | [docs/specs/common/db-conventions.md](specs/common/db-conventions.md) | `current-source` | `common` | 数据库规范 |
 | [docs/specs/common/file-upload-spec.md](specs/common/file-upload-spec.md) | `current-spec` | `common` | 文件上传规格 |
+| [docs/specs/common/frontend-experience-guidelines.md](specs/common/frontend-experience-guidelines.md) | `current-spec` | `common` | 前端体验与企业微信 H5 指引 |
 | [docs/specs/common/notification-spec.md](specs/common/notification-spec.md) | `current-spec` | `common` | 通知推送规格 |
 | [docs/specs/common/operations-observability-m6.md](specs/common/operations-observability-m6.md) | `operations` | `common` | M6 生产运维与可观测交付（Wave 4） |
 

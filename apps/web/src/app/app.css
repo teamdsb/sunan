@@ -241,7 +241,14 @@ body {
   overflow-x: auto;
 }
 
-.shell-layout-my-home {
+.shell-layout-my {
+  --my-ink: #102a43;
+  --my-ink-muted: #5b708a;
+  --my-blue: #1769e0;
+  --my-blue-deep: #0b58c7;
+  --my-cyan: #19a7ce;
+  --my-line: rgba(23, 105, 224, 0.12);
+  --my-soft: rgba(232, 241, 255, 0.72);
   background:
     radial-gradient(circle at 8% -8%, rgba(23, 105, 224, 0.22), transparent 34%),
     radial-gradient(circle at 96% 4%, rgba(25, 167, 206, 0.18), transparent 32%),
@@ -249,36 +256,308 @@ body {
   font-family: "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
-.shell-layout-my-home .shell-panel {
+.shell-layout-my .shell-panel {
   border-color: rgba(23, 105, 224, 0.12);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.94));
   box-shadow: 0 28px 70px rgba(16, 42, 67, 0.14);
 }
 
-.shell-layout-my-home .shell-header {
+.shell-layout-my .shell-header {
   border-bottom-color: rgba(23, 105, 224, 0.1);
   background: transparent;
 }
 
-.shell-layout-my-home .shell-mobile-page-title.ant-typography,
-.shell-layout-my-home .shell-title {
+.shell-layout-my .shell-mobile-page-title.ant-typography,
+.shell-layout-my .shell-title {
   color: #102a43;
   font-weight: 800;
 }
 
-.shell-layout-my-home .shell-mobile-more-button.ant-btn {
+.shell-layout-my .shell-mobile-more-button.ant-btn {
   color: #0b58c7;
   font-weight: 600;
 }
 
-.shell-layout-my-home .shell-subtitle {
+.shell-layout-my .shell-subtitle {
   color: #5b708a;
 }
 
-.shell-layout-my-home .shell-mobile-more-button.ant-btn:hover,
-.shell-layout-my-home .shell-mobile-more-button.ant-btn:focus-visible {
+.shell-layout-my .shell-mobile-more-button.ant-btn:hover,
+.shell-layout-my .shell-mobile-more-button.ant-btn:focus-visible {
   color: #1769e0;
   background: rgba(23, 105, 224, 0.08);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .shell-content {
+  min-height: calc(100vh - 92px);
+  background:
+    radial-gradient(circle at 0% 12%, rgba(23, 105, 224, 0.13), transparent 28%),
+    radial-gradient(circle at 100% 2%, rgba(25, 167, 206, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(248, 252, 255, 0.56), rgba(242, 248, 255, 0.92));
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .page-hero {
+  isolation: isolate;
+  position: relative;
+  min-height: calc(100vh - 96px);
+  padding: 18px 16px 30px;
+  overflow: hidden;
+  color: var(--my-ink);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .page-hero::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 190px;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(232, 241, 255, 0.72) 62%, rgba(206, 238, 248, 0.58)),
+    linear-gradient(170deg, transparent 0 58%, rgba(23, 105, 224, 0.14) 59%, rgba(25, 167, 206, 0.14) 72%, transparent 73%);
+  content: "";
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .page-hero > h2.ant-typography,
+.shell-layout-my:not(.shell-layout-my-home) .page-hero > div:first-child h2.ant-typography {
+  margin: 4px 0 8px;
+  color: #082659;
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-typography,
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-title {
+  color: var(--my-ink);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-typography-secondary,
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-description {
+  color: var(--my-ink-muted) !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-card {
+  overflow: hidden;
+  color: var(--my-ink);
+  border: 1px solid var(--my-line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 253, 255, 0.95)),
+    #ffffff;
+  box-shadow: 0 16px 36px rgba(23, 105, 224, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-card .ant-card {
+  border-color: rgba(23, 105, 224, 0.1);
+  background: linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(255, 255, 255, 0.92));
+  box-shadow: none;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-card-head {
+  border-bottom-color: rgba(23, 105, 224, 0.08);
+  background: linear-gradient(90deg, rgba(232, 241, 255, 0.72), rgba(255, 255, 255, 0.72));
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-card-head-title {
+  color: var(--my-ink);
+  font-weight: 700;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-form-item-label > label {
+  color: #334e68;
+  font-weight: 700;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-input,
+.shell-layout-my:not(.shell-layout-my-home) .ant-input-affix-wrapper,
+.shell-layout-my:not(.shell-layout-my-home) .ant-select-selector,
+.shell-layout-my:not(.shell-layout-my-home) .ant-input-group-addon .ant-btn {
+  min-height: 42px;
+  border-color: rgba(23, 105, 224, 0.14) !important;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-input:hover,
+.shell-layout-my:not(.shell-layout-my-home) .ant-input-affix-wrapper:hover,
+.shell-layout-my:not(.shell-layout-my-home) .ant-select-selector:hover,
+.shell-layout-my:not(.shell-layout-my-home) .ant-input:focus,
+.shell-layout-my:not(.shell-layout-my-home) .ant-input-affix-wrapper-focused,
+.shell-layout-my:not(.shell-layout-my-home) .ant-select-focused .ant-select-selector {
+  border-color: rgba(23, 105, 224, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.1) !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-primary {
+  border-color: var(--my-blue);
+  background: linear-gradient(180deg, var(--my-blue), var(--my-blue-deep));
+  box-shadow: 0 12px 22px rgba(23, 105, 224, 0.2);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-default:not(.ant-btn-dangerous),
+.shell-layout-my:not(.shell-layout-my-home) .filter-panel-toggle {
+  color: var(--my-blue-deep);
+  border-color: rgba(23, 105, 224, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-dangerous {
+  color: #cf1322;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .filter-panel-toggle {
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-link,
+.shell-layout-my:not(.shell-layout-my-home) a {
+  color: var(--my-blue-deep);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn:hover,
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn:focus-visible,
+.shell-layout-my:not(.shell-layout-my-home) a:hover,
+.shell-layout-my:not(.shell-layout-my-home) a:focus-visible {
+  color: var(--my-blue);
+  border-color: rgba(23, 105, 224, 0.32);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-dangerous:hover,
+.shell-layout-my:not(.shell-layout-my-home) .ant-btn-dangerous:focus-visible {
+  color: #a8071a;
+  border-color: #ff7875;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-segmented {
+  padding: 5px;
+  border: 1px solid rgba(23, 105, 224, 0.12);
+  border-radius: 14px;
+  background: rgba(232, 241, 255, 0.72);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-segmented-item {
+  border-radius: 10px;
+  color: #334e68;
+  font-weight: 700;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-segmented-item-selected {
+  color: var(--my-blue-deep);
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(23, 105, 224, 0.12);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-switch {
+  background: rgba(91, 112, 138, 0.34);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-switch.ant-switch-checked {
+  background: linear-gradient(90deg, var(--my-blue), var(--my-cyan));
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-items {
+  display: grid;
+  gap: 10px;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(23, 105, 224, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item.reminder-item-overdue {
+  border-inline-start-color: #cf1322 !important;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta {
+  min-width: 0;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-title {
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-list-item-meta-description {
+  word-break: break-word;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-tag:not([class*="ant-tag-"]) {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--my-blue-deep);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  border-color: rgba(23, 105, 224, 0.16);
+  border-radius: 999px;
+  background: rgba(232, 241, 255, 0.82);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-tag {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  border-radius: 999px;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .status-card {
+  background:
+    linear-gradient(135deg, rgba(232, 241, 255, 0.92), rgba(255, 255, 255, 0.94)),
+    #ffffff;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-card {
+  border-color: rgba(23, 105, 224, 0.12);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button.ant-btn {
+  color: var(--my-ink);
+  border: 0;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(23, 105, 224, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.66);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button .ant-typography {
+  color: inherit;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .reminder-stat-button .ant-typography-h2 {
+  color: var(--my-blue-deep);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-descriptions-bordered .ant-descriptions-item-label {
+  color: #334e68;
+  font-weight: 700;
+  background: rgba(232, 241, 255, 0.64);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-descriptions-bordered .ant-descriptions-item-content {
+  color: var(--my-ink);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-pagination-item {
+  border-color: rgba(23, 105, 224, 0.14);
+  border-radius: 10px;
+}
+
+.shell-layout-my:not(.shell-layout-my-home) .ant-pagination-item-active {
+  border-color: var(--my-blue);
+  box-shadow: 0 8px 16px rgba(23, 105, 224, 0.12);
 }
 
 .my-home-page {
@@ -772,6 +1051,43 @@ body {
 
   .shell-title {
     font-size: 22px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .page-hero {
+    min-height: calc(100vh - 78px);
+    padding: 12px 10px 24px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .page-hero::before {
+    height: 160px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .page-hero > h2.ant-typography,
+  .shell-layout-my:not(.shell-layout-my-home) .page-hero > div:first-child h2.ant-typography {
+    font-size: 26px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .ant-card {
+    border-radius: 16px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .ant-card-body {
+    padding: 16px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .ant-list-item {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .ant-list-item-action {
+    width: 100%;
+    margin-inline-start: 0;
+  }
+
+  .shell-layout-my:not(.shell-layout-my-home) .ant-list-item-action > li {
+    padding-inline-start: 0;
   }
 
   .my-home-page {

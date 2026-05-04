@@ -21,6 +21,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isMyRoute = location.pathname === '/my' || location.pathname.startsWith('/my/');
   const isMyHomeRoute = location.pathname === '/my';
 
   const currentModuleLabel = useMemo(
@@ -44,7 +45,7 @@ export function AppShell() {
 
   return (
     <Layout
-      className={['shell-layout', isMyHomeRoute ? 'shell-layout-my-home' : '']
+      className={['shell-layout', isMyRoute ? 'shell-layout-my' : '', isMyHomeRoute ? 'shell-layout-my-home' : '']
         .filter(Boolean)
         .join(' ')}
     >
