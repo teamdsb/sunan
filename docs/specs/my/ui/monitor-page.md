@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 船舶监控页面规格
 
 ## 适用路由

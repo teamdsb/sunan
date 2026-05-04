@@ -1,3 +1,10 @@
+---
+status: conditional-baseline
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 财务板块样表（M6 Wave C 自生成补料基线）
 
 ## 1. 说明

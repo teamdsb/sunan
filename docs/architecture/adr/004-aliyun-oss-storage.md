@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # ADR-004 阿里云 OSS 文件存储
 
 ## 状态

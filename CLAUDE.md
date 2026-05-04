@@ -1,4 +1,11 @@
-﻿# CLAUDE.md
+---
+status: current-index
+owner: repository
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# CLAUDE.md
 
 This file provides guidance to Claude Code when working in this repository.
 
@@ -14,7 +21,8 @@ The project still follows SDD + TDD discipline: spec first, tests second, implem
 
 ## Documentation Index
 
-- Full Markdown inventory and document status: `docs/README.md`
+- Documentation navigation and status policy: `docs/README.md`
+- Full Markdown inventory: `docs/inventory.md`
 - Agent-facing repository guidance: `AGENTS.md`
 - Domain specs: `docs/specs/*/README.md`
 

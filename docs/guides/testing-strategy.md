@@ -1,4 +1,11 @@
-﻿# 测试策略
+---
+status: current-source
+owner: guides
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# 测试策略
 
 ## 分层
 

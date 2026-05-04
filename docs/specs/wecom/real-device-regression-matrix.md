@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信四大板块真机回归矩阵（M6）
 
 ## 1. 文档定位

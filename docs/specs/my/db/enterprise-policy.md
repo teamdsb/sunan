@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # `enterprise_policies` 与 `enterprise_policy_files` 表规格
 
 ## 用途

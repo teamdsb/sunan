@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: procurement
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # procurement_orders 表规格
 
 ## 表用途

@@ -1,3 +1,10 @@
+---
+status: operations
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 采购模块企业微信上线检查清单（Wave5）
 
 ## 文档目标
@@ -72,7 +79,7 @@
 - `docs/specs/wecom/jssdk-spec.md`
 - `docs/specs/wecom/message-push-spec.md`
 - `docs/specs/wecom/approval-native-bridge-spec.md`
-- `docs/specs/procurement/acceptance-wave5.md`
+- `docs/archive/acceptance/procurement/acceptance-wave5.md`
 
 ## 历史别名说明
 

@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # `settingsApi` 状态规格
 
 ## 目标

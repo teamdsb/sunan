@@ -1,4 +1,11 @@
-﻿# Repository Guidelines
+---
+status: current-index
+owner: repository
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# Repository Guidelines
 
 ## Repository Index
 
@@ -17,9 +24,9 @@ Use this index to choose the right entry point before editing code or specs.
 
 | Need | Start here | Then check |
 |---|---|---|
-| Full Markdown index and document status | `docs/README.md` | Use status labels before treating a document as current |
+| Documentation navigation | `docs/README.md` | Use `docs/inventory.md` for the complete Markdown list |
 | Product baseline | `docs/需求文档.md` | `docs/glossary.md`, `docs/requirements/` |
-| Completed execution plan snapshot | `docs/execplans.md` | `docs/M1-execplans.md` through `docs/M6-execplans.md` for history |
+| Completed execution plan snapshot | `docs/execplans.md` | `docs/archive/execplans/M1-execplans.md` through `docs/archive/execplans/M6-execplans.md` for history |
 | Architecture | `docs/architecture/overview.md` | `docs/architecture/tech-stack.md`, `docs/architecture/security.md`, `docs/architecture/deployment.md`, `docs/architecture/adr/` |
 | Local setup and workflow | `docs/guides/getting-started.md` | `docs/guides/sdd-workflow.md`, `docs/guides/testing-strategy.md`, `docs/guides/wecom-dev-setup.md` |
 | Cross-domain API/DB/auth rules | `docs/specs/common/README.md` | `api-conventions.md`, `db-conventions.md`, `auth-spec.md`, `file-upload-spec.md`, `notification-spec.md` |
@@ -33,7 +40,7 @@ Use this index to choose the right entry point before editing code or specs.
 | M2 | 办事 | `docs/requirements/M2-办事.md` | `docs/specs/office/README.md` | `api/`, `db/`, `state/`, `ui/` |
 | M3 | 采购管理 | `docs/requirements/M3-采购管理.md` | `docs/specs/procurement/README.md` | `api/`, `db/`, `state/`, `ui/` |
 | M4-M6 | 工作平台 | `docs/requirements/M4-工作平台.md`, `docs/requirements/M6-全量兑现与完美上线.md` | `docs/specs/workbench/README.md` | `api/`, `db/`, `state/`, `ui/` |
-| M5-M6 | 上线强化与收口 | `docs/requirements/M5-上线强化与遗留收口.md`, `docs/requirements/M6-逐条需求对照表.md` | `docs/specs/common/README.md`, `docs/specs/wecom/README.md` | acceptance, quality gates, go-live, observability |
+| M5-M6 | 上线强化与收口 | `docs/requirements/M5-上线强化与遗留收口.md`, `docs/archive/audits/M6-逐条需求对照表.md` | `docs/specs/common/README.md`, `docs/specs/wecom/README.md` | acceptance, quality gates, go-live, observability |
 | Cross-cutting | 非功能需求 | `docs/requirements/非功能需求.md` | `docs/specs/common/README.md` | security, testing, operations, conventions |
 
 ### Change Navigation Rules
@@ -42,8 +49,8 @@ Use this index to choose the right entry point before editing code or specs.
 - For persistence changes, start from the domain `docs/specs/<domain>/db/*.md`, then verify `docs/specs/common/db-conventions.md`.
 - For UI or state changes, read the domain `ui/` page map and matching `state/` slice spec before changing `apps/web/src`.
 - For WeCom, approval, callback, token, or production cutover work, check `docs/specs/wecom/README.md` before implementation.
-- Treat `docs/README.md` as the Markdown inventory; if a document is marked `历史归档`, `验收归档`, `审计快照`, or `已取代`, do not use it as a current implementation source without checking the listed replacement.
-- When adding a new spec, update the nearest domain `README.md` and `docs/README.md`; update this index only when adding a new top-level domain, milestone, or primary entry point.
+- Treat `docs/inventory.md` as the Markdown inventory; if a document is marked `historical-archive`, `acceptance-archive`, `audit-snapshot`, or `superseded`, do not use it as a current implementation source without checking the listed replacement.
+- When adding a new spec, update the nearest domain `README.md` and `docs/inventory.md`; update `docs/README.md` or this index only when adding a new top-level domain, milestone, or primary entry point.
 
 ## Project Structure & Module Organization
 

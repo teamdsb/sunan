@@ -1,4 +1,11 @@
-﻿# 快速开始
+---
+status: current-index
+owner: guides
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# 快速开始
 
 ## 环境要求
 

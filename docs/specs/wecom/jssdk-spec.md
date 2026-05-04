@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信 JS-SDK 规格
 
 ## 概述

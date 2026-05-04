@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # ADR-002 React 18 + Ant Design Pro
 
 ## 状态

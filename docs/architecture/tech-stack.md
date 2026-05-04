@@ -1,3 +1,10 @@
+---
+status: current-source
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 技术选型与版本锁定
 
 ## 第一期技术栈（里程碑 1-4）

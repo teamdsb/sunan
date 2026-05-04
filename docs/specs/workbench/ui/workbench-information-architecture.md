@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台信息架构
 
 ## 1. 顶层结构

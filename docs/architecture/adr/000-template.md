@@ -1,3 +1,10 @@
+---
+status: template
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # ADR 模板
 
 ## 标题

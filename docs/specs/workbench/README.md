@@ -1,3 +1,10 @@
+---
+status: current-index
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台模块规格
 
 ## 模块定位
@@ -25,7 +32,7 @@
 | UI | `ui/workbench-information-architecture.md` | M4 已收口 |
 | UI | `ui/workbench-template-pages.md` | M4 已收口 |
 | UI | `ui/workbench-department-modules.md` | M5 已更新 |
-| Planning | `m5-optimization-backlog.md` | M5 历史输入 |
+| Planning | `docs/archive/backlogs/workbench/m5-optimization-backlog.md` | M5 历史输入 |
 | Planning | `../wecom/production-config-matrix.md` | M6 已新增 |
 | Planning | `finance-business-board-blocker.md` | M6 已更新（已解除） |
 | Planning | `finance-business-board-field-dictionary.md` | M6 Wave C 已新增 |
@@ -37,14 +44,14 @@
 
 - 当前真源：`db/workbench-module-matrix.md` 是模块矩阵真源；M6 及后续模块入口以它为准。
 - 条件基线：`finance-business-board-*.md` 是 M6 自生成补料基线；后续收到财务部正式样表时，应以变更单替换并回归验证。
-- 已取代：`finance-business-board-c1-gate-report.md` 只保留 C-1 初判历史，当前以 `finance-business-board-blocker.md` 和补料基线为准。
-- 历史归档：`acceptance-wave*.md`、`acceptance-m5-wave*.md`、`m5-optimization-backlog.md` 不作为当前待办清单。
+- 已取代：`docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md` 只保留 C-1 初判历史，当前以 `finance-business-board-blocker.md` 和补料基线为准。
+- 历史归档：M4/M5/M6 验收和 M5 backlog 已迁入 `docs/archive/`，不作为当前待办清单。
 
 ## M6 差异基线
 
 以下差异在 M6 中必须显式收口：
 
-1. 当前 `docs/execplans.md` 已切换为 M6，但 M1-M5 历史文档继续保留归档。
+1. `docs/execplans.md` 现在是历史入口 stub，M1-M6 执行计划正文已迁入 `docs/archive/execplans/`。
 2. 工作平台已从单页壳层升级为模块页、详情页、统计页、审批页路由（Wave 2 已完成）。
 3. 聚合模块 `business_operation_flow` 已降级为 legacy-only，新建入口使用拆分模块（Wave 2 已完成）。
 4. `海图更新` 已作为真实模块落地，字段范围覆盖更新批次、适用船舶、版本号、更新日期、更新说明、附件、确认记录、下次提醒日期（Wave 2 已完成）。
@@ -158,5 +165,5 @@
 - 文件上传基础：`docs/specs/common/file-upload-spec.md`
 - 消息推送基础：`docs/specs/common/notification-spec.md`
 - 企业微信 OAuth2 / JS-SDK / token 缓存：`docs/specs/wecom/*`
-- M4 历史验收：`acceptance-wave1.md` ~ `acceptance-wave8.md`
-- M5 历史验收：`acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md`
+- M4 历史验收：`docs/archive/acceptance/workbench/acceptance-wave1.md` ~ `acceptance-wave8.md`
+- M5 历史验收：`docs/archive/acceptance/workbench/acceptance-m5-wave1.md` ~ `acceptance-m5-wave4.md`

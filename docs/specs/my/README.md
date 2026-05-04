@@ -1,4 +1,11 @@
-﻿# 我的模块规格（里程碑 M1）
+---
+status: current-index
+owner: my
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
+# 我的模块规格（里程碑 M1）
 
 ## 模块定位
 

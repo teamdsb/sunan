@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: guides
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信开发环境配置
 
 ## 必备参数

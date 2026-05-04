@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台企业微信审批运维规格（M5）
 
 ## 1. 文档定位

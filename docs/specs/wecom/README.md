@@ -1,3 +1,10 @@
+---
+status: current-index
+owner: wecom
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 企业微信规格索引
 
 > 状态：当前企业微信集成入口。OAuth2、JS-SDK、token、回调、审批桥、消息、真机回归和上线切换从这里进入。
@@ -22,17 +29,16 @@
 | `template-binding-checklist.md` | 运维上线 | 审批模板绑定核对 |
 | `production-cutover-runbook.md` | 运维上线 | 正式上线切换、回滚和恢复 runbook |
 | `go-live-materials-checklist.md` | 运维上线 | 上线材料和证据清单 |
-| `go-live-preflight-2026-04-22.md` | 验收归档 | 2026-04-22 上线前最终核对记录 |
 | `real-device-regression-matrix.md` | 当前真源 | M6 及后续四大板块真机回归矩阵 |
 | `workbench-go-live-checklist.md` | 运维上线 | 工作平台上线检查清单 |
 | `procurement-go-live-checklist.md` | 运维上线 | 采购模块上线检查清单 |
-| `workbench-real-device-regression.md` | 已取代 | M5 工作平台真机回归模板；改用 `real-device-regression-matrix.md` |
 
-## 验收归档
+## 归档入口
 
-| 文件 | 状态 | 说明 |
+| 归档 | 状态 | 说明 |
 |---|---|---|
-| `acceptance-m6-wave3.md` | 验收归档 | M6 Wave 3 企业微信生产集成闭环验收 |
+| `docs/archive/acceptance/wecom/` | 验收归档 | M6 Wave 3 验收与 2026-04-22 preflight |
+| `docs/archive/superseded/wecom/workbench-real-device-regression.md` | 已取代 | M5 工作平台真机回归模板；改用 `real-device-regression-matrix.md` |
 
 ## 使用规则
 

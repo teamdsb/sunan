@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: docs
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 领域术语表
 
 本文档定义苏南船舶管理系统中使用的领域术语，供所有团队成员统一理解。

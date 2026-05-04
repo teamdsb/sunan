@@ -1,3 +1,10 @@
+---
+status: operations
+owner: architecture
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 部署架构
 
 ## 目标环境

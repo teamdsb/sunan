@@ -1,3 +1,10 @@
+---
+status: current-spec
+owner: workbench
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # 工作平台部门模块高保真要求
 
 ## 总经办

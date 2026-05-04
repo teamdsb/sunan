@@ -1,3 +1,10 @@
+---
+status: operations
+owner: common
+updated: 2026-05-04
+replaces: []
+replaced_by: []
+---
 # M6 生产运维与可观测交付（Wave 4）
 
 ## 1. 文档定位
