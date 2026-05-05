@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: common
-updated: 2026-05-04
+updated: 2026-05-05
 replaces: []
 replaced_by: []
 ---
@@ -17,6 +17,7 @@ replaced_by: []
 | `db-conventions.md` | 当前真源 | 主键、审计字段、软删除、migration、命名和索引约定 |
 | `auth-spec.md` | 当前规格 | 企业微信 OAuth2、JWT、角色与权限边界 |
 | `file-upload-spec.md` | 当前规格 | OSS 直传、文件元数据、业务绑定和访问控制 |
+| `frontend-experience-guidelines.md` | 当前规格 | 企业微信 H5 体验、蓝白企业风格、交互模式、首屏性能和页面改造验收基线 |
 | `notification-spec.md` | 当前规格 | 系统通知、企业微信消息和消息状态约定 |
 | `operations-observability-m6.md` | 运维上线 | M6 生产运维、可观测、告警和恢复 SOP；后续生产 SOP 可在此演进 |
 
@@ -33,4 +34,5 @@ replaced_by: []
 - 任何 API 规格新增或变更，必须同时检查 `api-conventions.md`。
 - 任何表结构、索引、审计字段或软删除改动，必须同时检查 `db-conventions.md`。
 - 涉及登录、权限、附件或消息时，先读本目录对应通用规格，再读领域规格。
+- 涉及页面体验、企业微信直达入口、移动端交互或首屏性能时，先读 `frontend-experience-guidelines.md`。
 - 验收归档类文档已迁入 `docs/archive/`，只记录历史证据；新增需求不要直接改历史验收结论。

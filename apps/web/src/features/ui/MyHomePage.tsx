@@ -24,15 +24,19 @@ const entryIcons: Record<string, ComponentType> = {
 
 export function MyHomePage() {
   return (
-    <>
-      <section className="page-hero my-home-hero">
-        <Typography.Title level={2}>我的模块首页</Typography.Title>
-        <Typography.Paragraph type="secondary">
-          快捷进入常用业务模块。
-        </Typography.Paragraph>
+    <div className="my-home-page" data-testid="my-home-page">
+      <section className="page-hero my-home-hero" aria-labelledby="my-home-title">
+        <div className="my-home-hero-copy">
+          <Typography.Title level={2} id="my-home-title" className="my-home-title">
+            我的模块首页
+          </Typography.Title>
+          <Typography.Paragraph className="my-home-subtitle">
+            快捷进入常用业务模块。
+          </Typography.Paragraph>
+        </div>
       </section>
 
-      <section className="my-home-grid my-home-icon-grid" data-testid="my-home-grid">
+      <section className="my-home-grid my-home-card-grid" data-testid="my-home-grid">
         {entries.map((entry) => {
           const Icon = entryIcons[entry.path] ?? FileSearchOutlined;
 
@@ -45,14 +49,17 @@ export function MyHomePage() {
               key={entry.path}
               aria-label={entry.label}
             >
-              <span className="my-home-shortcut-icon my-home-shortcut-icon-plain" data-testid="my-home-shortcut-icon" aria-hidden="true">
+              <span className="my-home-shortcut-icon my-home-shortcut-icon-blue" data-testid="my-home-shortcut-icon" aria-hidden="true">
                 <Icon />
               </span>
-              <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
+              <span className="my-home-shortcut-copy">
+                <Typography.Text className="my-home-shortcut-label">{entry.label}</Typography.Text>
+                <Typography.Text className="my-home-shortcut-description">{entry.description}</Typography.Text>
+              </span>
             </Link>
           );
         })}
       </section>
-    </>
+    </div>
   );
 }

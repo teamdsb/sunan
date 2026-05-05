@@ -19,41 +19,51 @@ describe('MyHomePage', () => {
     expect(screen.getByTestId('my-home-entry-my-settings')).toHaveAttribute('href', '/my/settings');
   });
 
-  it('renders desktop tiles with dedicated square layout hooks', () => {
+  it('renders the blue enterprise card grid hooks', () => {
     render(
       <MemoryRouter>
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-icon-grid');
+    expect(screen.getByTestId('my-home-page')).toHaveClass('my-home-page');
+    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-card-grid');
     expect(screen.getAllByRole('link')).toHaveLength(6);
   });
 
-  it('keeps the home page as a lightweight hub with a single-column friendly list hook', () => {
+  it('keeps the home page copy unchanged for the pilot', () => {
     render(
       <MemoryRouter>
         <MyHomePage />
       </MemoryRouter>,
     );
 
+    expect(screen.getByRole('heading', { name: '我的模块首页' })).toBeInTheDocument();
     expect(screen.getByText('快捷进入常用业务模块。')).toBeInTheDocument();
-    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-icon-grid');
   });
 
-  it('renders compact icon shortcuts instead of large cards', () => {
+  it('keeps hero artwork out of inline svg so it can be served as a compressed asset', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('.my-home-hero svg')).toBeNull();
+  });
+
+  it('renders enterprise shortcut cards with stable labels', () => {
     render(
       <MemoryRouter>
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.queryByTestId('my-home-tile')).toBeNull();
-    expect(screen.getByRole('link', { name: '企业资料' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '电子证照' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '企业资料' })).toHaveClass('my-home-shortcut');
+    expect(screen.getByRole('link', { name: '电子证照' })).toHaveClass('my-home-shortcut');
   });
 
-  it('renders shortcuts with plain icons instead of icon background plates', () => {
+  it('renders shortcuts with blue icon plates', () => {
     render(
       <MemoryRouter>
         <MyHomePage />
@@ -61,6 +71,6 @@ describe('MyHomePage', () => {
     );
 
     expect(screen.getAllByTestId('my-home-shortcut-icon')).toHaveLength(6);
-    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass('my-home-shortcut-icon', 'my-home-shortcut-icon-plain');
+    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass('my-home-shortcut-icon', 'my-home-shortcut-icon-blue');
   });
 });

@@ -19,7 +19,7 @@ export function SettingsPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>设置</Typography.Title>
-      <Card loading={isLoading}>
+      <Card loading={isLoading} className="settings-card">
         {errorText ? <Alert style={{ marginBottom: 12 }} type="error" showIcon message={errorText} /> : null}
         <Form
           form={form}

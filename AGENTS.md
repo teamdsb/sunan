@@ -90,6 +90,15 @@ Useful contract tooling:
 - Chinese file names are acceptable for requirements and business docs.
 - Use explicit absolute or repo-root-relative paths when cross-referencing.
 
+## Enterprise WeCom Product Context
+
+- Treat Enterprise WeCom as the primary runtime container and interaction frame for the whole product, not as a secondary login option layered onto a standalone web app.
+- Workbench entries should behave as independent deep links into their target capabilities. Product flows, routing, auth recovery, state initialization, notifications, file handling, and error states should all remain correct when a user enters directly from a WeCom workbench application.
+- Do not assume a user naturally starts at `/my` or moves through a broad in-app navigation tree before reaching a task. Internal navigation can exist, but core workflows should be designed around WeCom entry points and short task-oriented sessions.
+- Do not let `/my` or another module home eagerly import unrelated business domains. Route-level chunks should follow the workbench entry a user opens, so certificate, office, procurement, workbench, and settings pages can load on demand.
+- When adding cross-module interactions, check whether the behavior belongs inside the H5 app, the WeCom workbench, a WeCom message/notification, or a backend integration. Avoid web-only assumptions that conflict with Enterprise WeCom constraints, mobile H5 ergonomics, JS-SDK capabilities, OAuth recovery, or direct-entry performance.
+- For detailed frontend experience, interaction, visual baseline, and performance acceptance rules, use `docs/specs/common/frontend-experience-guidelines.md`.
+
 ## Testing Guidelines
 
 - Validate OpenAPI specs before merge.
