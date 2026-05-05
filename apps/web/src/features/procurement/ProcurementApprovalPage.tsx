@@ -108,7 +108,7 @@ export function ProcurementApprovalPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card office-admin-card">
+        <Card variant="borderless" className="placeholder-card office-admin-card">
           <Table rowKey="entityId" loading={isLoading} columns={columns} dataSource={rows} pagination={false} />
         </Card>
       </section>

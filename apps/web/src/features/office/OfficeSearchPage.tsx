@@ -57,12 +57,12 @@ export function OfficeSearchPage() {
 
       <section className="page-card-grid office-card-grid">
         {results.length === 0 ? (
-          <Card className="placeholder-card" bordered={false}>
+          <Card className="placeholder-card" variant="borderless">
             <Empty description={isLoading ? '搜索中…' : '没有匹配结果'} />
           </Card>
         ) : (
           results.map((entry) => (
-            <Card key={entry.id} className="placeholder-card office-entry-card" bordered={false}>
+            <Card key={entry.id} className="placeholder-card office-entry-card" variant="borderless">
               <Typography.Title level={4}>{entry.title}</Typography.Title>
               <Typography.Paragraph>{entry.summary}</Typography.Paragraph>
               <Button type="primary" loading={isOpening} onClick={() => void handleOpen(entry)}>

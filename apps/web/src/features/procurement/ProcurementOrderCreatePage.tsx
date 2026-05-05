@@ -134,7 +134,7 @@ export function ProcurementOrderCreatePage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card">
+        <Card variant="borderless" className="placeholder-card">
           <Form
             form={form}
             layout="vertical"

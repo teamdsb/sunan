@@ -205,14 +205,14 @@ export function OfficeAdminPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card office-admin-card">
+        <Card variant="borderless" className="placeholder-card office-admin-card">
           <Table rowKey="id" loading={isLoading} columns={columns} dataSource={entries} pagination={false} />
         </Card>
       </section>
 
       <section className="page-card-grid">
         <Card
-          bordered={false}
+          variant="borderless"
           className="placeholder-card office-admin-card"
           title="最近审计记录"
           extra={

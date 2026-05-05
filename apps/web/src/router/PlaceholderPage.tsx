@@ -15,7 +15,7 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
       <Row gutter={[16, 16]} className="page-card-grid">
         {['数据接入', '路由稳定', '组件可扩展'].map((item) => (
           <Col xs={24} md={8} key={item}>
-            <Card className="placeholder-card" bordered={false}>
+            <Card className="placeholder-card" variant="borderless">
               <Tag color="gold">Wave 1</Tag>
               <Typography.Title level={4}>{item}</Typography.Title>
               <Typography.Paragraph>

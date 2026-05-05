@@ -182,7 +182,7 @@ export function ProcurementOrderDetailPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" loading={isLoading}>
+        <Card variant="borderless" className="placeholder-card" loading={isLoading}>
           {order ? (
             <Descriptions bordered column={1} size="small" title={order.title}>
               <Descriptions.Item label="状态">
@@ -204,7 +204,7 @@ export function ProcurementOrderDetailPage() {
 
       {order && canEditDraft ? (
         <section className="page-card-grid">
-          <Card bordered={false} className="placeholder-card" title="草稿编辑">
+          <Card variant="borderless" className="placeholder-card" title="草稿编辑">
             <Form form={form} layout="vertical">
               <Form.Item name="title" label="标题" rules={[{ required: true }]}>
                 <Input maxLength={128} />
@@ -233,7 +233,7 @@ export function ProcurementOrderDetailPage() {
 
       {order && canEditDraft ? (
         <section className="page-card-grid">
-          <Card bordered={false} className="placeholder-card" title="附件绑定（输入 fileId，逗号分隔）">
+          <Card variant="borderless" className="placeholder-card" title="附件绑定（输入 fileId，逗号分隔）">
             <Space.Compact style={{ width: '100%' }}>
               <Input value={attachmentInput} onChange={(event) => setAttachmentInput(event.target.value)} placeholder="uuid-1,uuid-2" />
               <Button loading={isBinding} onClick={() => void handleBindAttachments()}>
@@ -246,7 +246,7 @@ export function ProcurementOrderDetailPage() {
 
       {order ? (
         <section className="page-card-grid">
-          <Card bordered={false} className="placeholder-card" title="已绑定附件">
+          <Card variant="borderless" className="placeholder-card" title="已绑定附件">
             <List
               dataSource={order.files ?? []}
               renderItem={(item) => (
@@ -261,7 +261,7 @@ export function ProcurementOrderDetailPage() {
       ) : null}
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="审批轨迹">
+        <Card variant="borderless" className="placeholder-card" title="审批轨迹">
           <Table rowKey="id" columns={approvalColumns} dataSource={approvals} pagination={false} />
         </Card>
       </section>

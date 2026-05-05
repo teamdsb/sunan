@@ -386,10 +386,10 @@ export function WorkbenchHomePage({
       </section>
 
       <section className="page-card-grid workbench-stats-grid">
-        <Card className="placeholder-card" bordered={false}>
+        <Card className="placeholder-card" variant="borderless">
           <Statistic title="当前待办" value={dashboard?.pendingTotal ?? 0} loading={dashboardLoading} />
         </Card>
-        <Card className="placeholder-card" bordered={false}>
+        <Card className="placeholder-card" variant="borderless">
           <Statistic title="待审批" value={dashboard?.approvalPendingTotal ?? 0} loading={dashboardLoading} />
         </Card>
       </section>
@@ -403,14 +403,14 @@ export function WorkbenchHomePage({
       {!statisticsOnly ? (
         <section className="page-card-grid workbench-module-grid" data-testid="workbench-module-grid">
           {visibleModuleCards.length === 0 ? (
-            <Card className="placeholder-card" bordered={false}>
+            <Card className="placeholder-card" variant="borderless">
               <Empty description={dashboardLoading ? '工作平台模块加载中…' : '暂无可访问模块'} />
             </Card>
           ) : (
             visibleModuleCards.map((item) => {
               const selected = activeModuleCode === item.moduleCode;
               return (
-                <Card key={item.moduleCode} className="placeholder-card" bordered={false}>
+                <Card key={item.moduleCode} className="placeholder-card" variant="borderless">
                   <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                     <Space wrap>
                       <Typography.Title level={4}>{item.moduleName}</Typography.Title>
@@ -431,7 +431,7 @@ export function WorkbenchHomePage({
       ) : null}
 
       <section className="page-card-grid">
-        <Card className="placeholder-card" bordered={false}>
+        <Card className="placeholder-card" variant="borderless">
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
               <Typography.Title level={4}>{resolvedRecordListTitle}</Typography.Title>
@@ -495,7 +495,7 @@ export function WorkbenchHomePage({
 
       {isAttendanceView ? (
         <section className="page-card-grid">
-          <Card className="placeholder-card" bordered={false}>
+          <Card className="placeholder-card" variant="borderless">
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               <Space wrap>
                 <Typography.Title level={4}>月度考勤统计</Typography.Title>
