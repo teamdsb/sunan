@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 const TEMPLATE_TYPES = [
   'ledger_form',
@@ -18,6 +18,15 @@ export class WorkbenchRecordListQueryDto {
   @IsOptional()
   @IsIn(TEMPLATE_TYPES)
   templateType?: (typeof TEMPLATE_TYPES)[number];
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  requiresApproval?: boolean;
 
   @IsOptional()
   @IsString()

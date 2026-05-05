@@ -82,6 +82,7 @@ export interface WorkbenchRecordQuery {
   moduleCode?: string;
   status?: string;
   templateType?: WorkbenchTemplateType;
+  requiresApproval?: boolean;
   page?: number;
   pageSize?: number;
 }

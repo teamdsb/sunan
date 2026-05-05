@@ -1,15 +1,19 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { FileEntity } from 'src/database/entities/file.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
+import { WorkbenchModuleEntity } from 'src/database/entities/workbench-module.entity';
 import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OssService } from 'src/modules/files/oss.service';
 import { In, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
@@ -54,6 +58,7 @@ interface WorkbenchModuleSummary {
   mobileFirst: boolean;
   sortOrder: number;
   visibleRoles: string[];
+  enabled?: boolean;
   legacyOnly?: boolean;
 }
 
@@ -151,6 +156,22 @@ interface ModuleSchemaDefinition {
 type PrintPaperSize = 'A4' | 'A3';
 
 const PENDING_STATUSES = new Set(['submitted', 'assigned', 'in_progress', 'pending_review', 'approval_pending', 'rework_required']);
+const WORKBENCH_TEMPLATE_TYPES: TemplateType[] = [
+  'ledger_form',
+  'operation_flow',
+  'inspection_rectification',
+  'attendance_statistics',
+  'service_asset',
+  'wecom_approval',
+];
+const PDF_A4_PAGE_WIDTH = 595;
+const PDF_A4_PAGE_HEIGHT = 842;
+const PDF_A3_PAGE_WIDTH = 842;
+const PDF_A3_PAGE_HEIGHT = 1191;
+const PDF_MARGIN_LEFT = 56;
+const PDF_MARGIN_TOP = 48;
+const PDF_LINE_HEIGHT = 20;
+const PDF_MAX_LINES_PER_PAGE = 35;
 
 const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
   {
@@ -435,7 +456,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '船舶检验',
     departmentCode: 'shipping',
     templateType: 'inspection_rectification',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -447,7 +468,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '密闭空间作业记录',
     departmentCode: 'shipping',
     templateType: 'inspection_rectification',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -459,7 +480,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '污油水接收作业',
     departmentCode: 'shipping',
     templateType: 'inspection_rectification',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -471,7 +492,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '海事安全检查记录',
     departmentCode: 'shipping',
     templateType: 'inspection_rectification',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -495,7 +516,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '船务部设备维修保养',
     departmentCode: 'shipping',
     templateType: 'service_asset',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -542,10 +563,10 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleCode: 'shipping_fuel_bunkering_approval',
     moduleName: '燃油加注审批',
     departmentCode: 'shipping',
-    templateType: 'wecom_approval',
+    templateType: 'service_asset',
     requiresApproval: true,
     supportsPrint: true,
-    supportsStatistics: false,
+    supportsStatistics: true,
     mobileFirst: true,
     sortOrder: 171,
     visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'],
@@ -561,6 +582,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     mobileFirst: true,
     sortOrder: 180,
     visibleRoles: ['system_admin', 'general_office', 'logistics'],
+    legacyOnly: true,
   },
   {
     moduleCode: 'logistics_warehouse',
@@ -615,7 +637,7 @@ const WORKBENCH_MODULES: WorkbenchModuleSummary[] = [
     moduleName: '后勤部车辆维修保养',
     departmentCode: 'logistics',
     templateType: 'service_asset',
-    requiresApproval: false,
+    requiresApproval: true,
     supportsPrint: true,
     supportsStatistics: true,
     mobileFirst: true,
@@ -1316,6 +1338,28 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
       },
     ],
   },
+  shipping_fuel_bunkering_approval: {
+    moduleCode: 'shipping_fuel_bunkering_approval',
+    templateType: 'service_asset',
+    sections: [
+      {
+        key: 'fuel',
+        title: '燃油加注与油耗月报',
+        fields: [
+          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
+          { key: 'fuelType', label: '燃油类型', required: true, inputType: 'text' },
+          { key: 'bunkeringDate', label: '加油日期', required: true, inputType: 'date' },
+          { key: 'bunkeringAmount', label: '本次加油量', required: true, inputType: 'number' },
+          { key: 'remainingFuelAmount', label: '剩余油量', required: true, inputType: 'number' },
+          { key: 'monthlyFuelConsumption', label: '月油耗', required: true, inputType: 'number' },
+          { key: 'reportMonth', label: '月报月份', required: true, inputType: 'text', placeholder: 'YYYY-MM' },
+          { key: 'requestedAmount', label: '申请加注量', required: false, inputType: 'number' },
+          { key: 'reason', label: '申请原因', required: true, inputType: 'textarea' },
+          { key: 'remark', label: '备注', required: false, inputType: 'textarea' },
+        ],
+      },
+    ],
+  },
   logistics_warehouse: {
     moduleCode: 'logistics_warehouse',
     templateType: 'service_asset',
@@ -1415,29 +1459,27 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
       },
     ],
   },
-  shipping_fuel_bunkering_approval: {
-    moduleCode: 'shipping_fuel_bunkering_approval',
-    templateType: 'wecom_approval',
-    sections: [
-      {
-        key: 'fuel',
-        title: '燃油加注审批单',
-        fields: [
-          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
-          { key: 'fuelType', label: '燃油类型', required: true, inputType: 'text' },
-          { key: 'requestedAmount', label: '申请加注量', required: true, inputType: 'number' },
-          { key: 'reason', label: '申请说明', required: true, inputType: 'textarea' },
-        ],
-      },
-    ],
-  },
+};
+
+const WORKBENCH_MODULE_DEFAULTS = new Map(WORKBENCH_MODULES.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
+const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
+  ...LEDGER_MODULE_SCHEMAS,
+  ...OPERATION_FLOW_MODULE_SCHEMAS,
+  ...INSPECTION_RECTIFICATION_MODULE_SCHEMAS,
+  ...ATTENDANCE_MODULE_SCHEMAS,
+  ...SERVICE_ASSET_MODULE_SCHEMAS,
+  ...WECOM_APPROVAL_MODULE_SCHEMAS,
 };
 
 @Injectable()
-export class WorkbenchService {
+export class WorkbenchService implements OnModuleInit {
   private readonly logger = new Logger(WorkbenchService.name);
 
   constructor(
+    @InjectRepository(WorkbenchModuleEntity)
+    private readonly moduleRepository: Repository<WorkbenchModuleEntity>,
+    @InjectRepository(WorkbenchTemplateEntity)
+    private readonly templateRepository: Repository<WorkbenchTemplateEntity>,
     @InjectRepository(WorkbenchRecordEntity)
     private readonly recordRepository: Repository<WorkbenchRecordEntity>,
     @InjectRepository(WorkbenchRecordStepEntity)
@@ -1452,10 +1494,17 @@ export class WorkbenchService {
     private readonly approvalSyncRepository: Repository<WecomApprovalInstanceSyncEntity>,
     @InjectRepository(WecomApprovalCallbackEventEntity)
     private readonly callbackEventRepository: Repository<WecomApprovalCallbackEventEntity>,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
+    private readonly ossService: OssService,
   ) {}
 
+  async onModuleInit() {
+    await this.syncRuntimeCatalog();
+  }
+
   async listModules(user: CurrentUser) {
-    const visibleModules = this.listVisibleModules(user);
+    const visibleModules = await this.listVisibleModules(user);
     const pendingMap = await this.computePendingCounts(user);
 
     return visibleModules.map((moduleItem) => ({
@@ -1472,7 +1521,7 @@ export class WorkbenchService {
   }
 
   async getModuleSchema(moduleCode: string, user: CurrentUser) {
-    const moduleItem = this.mustGetModule(moduleCode);
+    const moduleItem = await this.mustGetModule(moduleCode);
     if (moduleItem.legacyOnly) {
       throw new NotFoundException('module schema not found');
     }
@@ -1480,18 +1529,8 @@ export class WorkbenchService {
       throw new ForbiddenException('forbidden');
     }
 
-    const schema =
-      LEDGER_MODULE_SCHEMAS[moduleCode] ??
-      OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ??
-      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode] ??
-      ATTENDANCE_MODULE_SCHEMAS[moduleCode] ??
-      SERVICE_ASSET_MODULE_SCHEMAS[moduleCode] ??
-      WECOM_APPROVAL_MODULE_SCHEMAS[moduleCode];
-    if (!schema) {
-      throw new NotFoundException('module schema not found');
-    }
-
-    return schema;
+    const { schemaDefinition } = await this.mustGetModuleTemplate(moduleItem);
+    return schemaDefinition;
   }
 
   async getDashboard(user: CurrentUser) {
@@ -1521,7 +1560,8 @@ export class WorkbenchService {
     const visibleRecords = await this.listVisibleRecords(user);
     const recordsInMonth = visibleRecords.filter((record) => record.occurredAt.startsWith(monthPrefix));
 
-    const attendanceModules = WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics' && !moduleItem.legacyOnly);
+    const runtimeModules = await this.listRuntimeModules();
+    const attendanceModules = runtimeModules.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics' && !moduleItem.legacyOnly);
     const attendanceModuleCodes = new Set(attendanceModules.map((moduleItem) => moduleItem.moduleCode));
     const operationSourceCodes = new Set([
       'business_receiving_workgroup_flow',
@@ -1565,7 +1605,7 @@ export class WorkbenchService {
     });
 
     const operationTotals = [...operationSourceCodes].map((moduleCode) => {
-      const moduleItem = WORKBENCH_MODULES.find((item) => item.moduleCode === moduleCode);
+      const moduleItem = runtimeModules.find((item) => item.moduleCode === moduleCode) ?? WORKBENCH_MODULE_DEFAULTS.get(moduleCode);
       return {
         moduleCode,
         moduleName: moduleItem?.moduleName ?? moduleCode,
@@ -1651,10 +1691,19 @@ export class WorkbenchService {
     }
 
     if (query.templateType) {
+      const runtimeModules = await this.listRuntimeModules();
       const allowedModuleCodes = new Set(
-        WORKBENCH_MODULES.filter((moduleItem) => moduleItem.templateType === query.templateType).map((moduleItem) => moduleItem.moduleCode),
+        runtimeModules.filter((moduleItem) => moduleItem.templateType === query.templateType).map((moduleItem) => moduleItem.moduleCode),
       );
       records = records.filter((record) => allowedModuleCodes.has(record.moduleCode));
+    }
+
+    if (query.requiresApproval !== undefined) {
+      const runtimeModules = await this.listRuntimeModules();
+      const approvalModuleCodes = new Set(
+        runtimeModules.filter((moduleItem) => moduleItem.requiresApproval === query.requiresApproval).map((moduleItem) => moduleItem.moduleCode),
+      );
+      records = records.filter((record) => approvalModuleCodes.has(record.moduleCode));
     }
 
     if (query.keyword?.trim()) {
@@ -1677,22 +1726,12 @@ export class WorkbenchService {
   }
 
   async createRecord(dto: WorkbenchRecordCreateDto, user: CurrentUser) {
-    const moduleItem = this.mustGetModule(dto.moduleCode);
+    const moduleItem = await this.mustGetModule(dto.moduleCode);
     if (moduleItem.legacyOnly) {
       throw new BadRequestException('legacy module is read-only');
     }
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
-    }
-
-    const ledgerSchema = LEDGER_MODULE_SCHEMAS[dto.moduleCode];
-    const operationFlowSchema = OPERATION_FLOW_MODULE_SCHEMAS[dto.moduleCode];
-    const inspectionSchema = INSPECTION_RECTIFICATION_MODULE_SCHEMAS[dto.moduleCode];
-    const attendanceSchema = ATTENDANCE_MODULE_SCHEMAS[dto.moduleCode];
-    const serviceAssetSchema = SERVICE_ASSET_MODULE_SCHEMAS[dto.moduleCode];
-    const wecomApprovalSchema = WECOM_APPROVAL_MODULE_SCHEMAS[dto.moduleCode];
-    if (!ledgerSchema && !operationFlowSchema && !inspectionSchema && !attendanceSchema && !serviceAssetSchema && !wecomApprovalSchema) {
-      throw new BadRequestException('module schema not found');
     }
 
     if (
@@ -1706,23 +1745,13 @@ export class WorkbenchService {
       throw new BadRequestException('Wave 7 unsupported template type');
     }
 
-    const schemaDefinition =
-      ledgerSchema ??
-      operationFlowSchema ??
-      inspectionSchema ??
-      attendanceSchema ??
-      serviceAssetSchema ??
-      wecomApprovalSchema ??
-      null;
-    if (!schemaDefinition) {
-      throw new BadRequestException('module schema not found');
-    }
+    const { schemaDefinition, templateCode } = await this.mustGetModuleTemplate(moduleItem);
     const normalizedPayload = this.normalizeCreatePayload(dto.moduleCode, dto.payload);
     this.assertPayloadMatchesSchema(normalizedPayload, schemaDefinition);
 
     const now = new Date();
     const nowIso = now.toISOString();
-    const steps = this.buildInitialSteps(moduleItem.moduleCode);
+    const steps = this.buildInitialSteps(schemaDefinition);
     const initialStatus =
       moduleItem.templateType === 'ledger_form'
         ? 'draft'
@@ -1732,7 +1761,7 @@ export class WorkbenchService {
 
     const recordEntity = this.recordRepository.create({
       moduleCode: dto.moduleCode,
-      templateCode: `${dto.moduleCode}_v1`,
+      templateCode,
       recordNo: this.buildRecordNo(),
       recordSource: 'manual',
       title: dto.title.trim(),
@@ -1802,14 +1831,14 @@ export class WorkbenchService {
 
   async getRecordDetail(recordId: string, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
     const hydrated = await this.hydrateRecord(record);
     return this.toRecordDetail(hydrated);
   }
 
   async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
     let record = await this.mustGetRecord(recordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
 
     const steps = await this.stepRepository.find({
       where: { businessRecordId: record.id },
@@ -1818,16 +1847,9 @@ export class WorkbenchService {
 
     const fromStatus = record.status;
 
-    const moduleItem = this.mustGetModule(record.moduleCode);
+    const moduleItem = await this.mustGetModule(record.moduleCode);
     const isInspectionRectification = moduleItem.templateType === 'inspection_rectification';
-    const schemaDefinition =
-      LEDGER_MODULE_SCHEMAS[record.moduleCode] ??
-      OPERATION_FLOW_MODULE_SCHEMAS[record.moduleCode] ??
-      INSPECTION_RECTIFICATION_MODULE_SCHEMAS[record.moduleCode] ??
-      ATTENDANCE_MODULE_SCHEMAS[record.moduleCode] ??
-      SERVICE_ASSET_MODULE_SCHEMAS[record.moduleCode] ??
-      WECOM_APPROVAL_MODULE_SCHEMAS[record.moduleCode] ??
-      null;
+    const { schemaDefinition } = await this.mustGetModuleTemplate(moduleItem);
 
     if (dto.actionType === 'update_payload') {
       if (!dto.payload || typeof dto.payload !== 'object') {
@@ -1936,7 +1958,7 @@ export class WorkbenchService {
 
   async uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
 
     let stepId: string | null = null;
     if (dto.stepCode?.trim()) {
@@ -1952,16 +1974,21 @@ export class WorkbenchService {
       stepId = step.id;
     }
 
+    const file = await this.fileRepository.findOne({ where: { id: dto.fileId } });
+    if (!file) {
+      throw new NotFoundException('file not found');
+    }
+
     const uploadedAt = new Date();
     const attachment = await this.attachmentRepository.save(
       this.attachmentRepository.create({
         businessRecordId: record.id,
         stepId,
         category: dto.category,
-        fileId: dto.fileId,
-        fileName: `附件-${dto.fileId}`,
-        mimeType: 'application/octet-stream',
-        storagePath: null,
+        fileId: file.id,
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        storagePath: file.ossKey,
         uploadedBy: user.userId,
         uploadedAt,
         remark: dto.remark ?? null,
@@ -1989,7 +2016,7 @@ export class WorkbenchService {
 
   async getPrintSnapshot(recordId: string, user: CurrentUser, paperSize: PrintPaperSize = 'A4') {
     const record = await this.mustGetRecord(recordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
     const hydrated = await this.hydrateRecord(record);
 
     const renderedAt = new Date();
@@ -2000,14 +2027,21 @@ export class WorkbenchService {
       summary: hydrated.summary,
       payload: hydrated.payload,
       steps: hydrated.steps,
+      attachments: hydrated.attachments,
       paperSize,
     };
+    const pdfBuffer = this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
+    const printFile = await this.persistWorkbenchPrintPdf({
+      fileName: `workbench-${hydrated.id}-${paperSize}.pdf`,
+      buffer: pdfBuffer,
+      uploadedBy: user.userId,
+    });
 
     const snapshot = await this.printSnapshotRepository.save(
       this.printSnapshotRepository.create({
         businessRecordId: hydrated.id,
         templateVersion: 'v1',
-        renderedFileId: `print-${hydrated.id}`,
+        renderedFileId: printFile.id,
         renderedFormat: 'pdf',
         renderedAt,
         renderedBy: user.userId,
@@ -2029,10 +2063,77 @@ export class WorkbenchService {
     };
   }
 
+  private buildWorkbenchPrintPdf(record: WorkbenchRecord, snapshotData: Record<string, unknown>, renderedAt: Date, paperSize: PrintPaperSize): Buffer {
+    const payloadJson = JSON.stringify(snapshotData.payload ?? {}, null, 2);
+    const lines = [
+      `Record ID: ${record.id}`,
+      `Generated At: ${renderedAt.toISOString()}`,
+      `Paper Size: ${paperSize}`,
+      '',
+      'Workbench Record',
+      `Module: ${record.moduleCode}`,
+      `Template: ${record.templateCode}`,
+      `Title: ${record.title}`,
+      `Status: ${record.status}`,
+      `Vessel: ${record.vesselId ?? '-'}`,
+      '',
+      'Summary:',
+      ...this.wrapPdfTextLines(record.summary || '-', 74),
+      '',
+      'Payload:',
+      ...this.wrapPdfTextLines(payloadJson || '{}', 74),
+      '',
+      'Steps:',
+      ...(record.steps.length
+        ? record.steps.map((step, index) => `${index + 1}. ${step.stepName} / ${step.status} / ${step.rectificationStatus ?? '-'}`)
+        : ['-']),
+      '',
+      'Attachments:',
+      ...(record.attachments.length
+        ? record.attachments.map((attachment, index) => `${index + 1}. ${attachment.fileName} (${attachment.category}, ${attachment.fileId})`)
+        : ['-']),
+    ];
+
+    return this.buildPdf({
+      title: 'Workbench Print Snapshot',
+      lines,
+      paperSize,
+    });
+  }
+
+  private async persistWorkbenchPrintPdf(params: { fileName: string; buffer: Buffer; uploadedBy: string }): Promise<FileEntity> {
+    const ossKey = this.buildWorkbenchPrintOssKey();
+
+    try {
+      await this.ossService.uploadBuffer(ossKey, params.buffer, 'application/pdf', params.fileName);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.warn(`workbench print oss upload failed for ${ossKey}: ${message}`);
+    }
+
+    return this.fileRepository.save(
+      this.fileRepository.create({
+        ossKey,
+        fileName: params.fileName,
+        mimeType: 'application/pdf',
+        fileSize: params.buffer.length,
+        category: 'workbench_print_snapshots',
+        uploadedBy: params.uploadedBy,
+      }),
+    );
+  }
+
+  private buildWorkbenchPrintOssKey(): string {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+    return `workbench_print_snapshots/${year}/${month}/${randomUUID()}.pdf`;
+  }
+
   async launchApproval(dto: WorkbenchApprovalLaunchDto, user: CurrentUser) {
     const record = await this.mustGetRecord(dto.businessRecordId);
-    this.assertRecordVisible(record, user);
-    const moduleItem = this.mustGetModule(record.moduleCode);
+    await this.assertRecordVisible(record, user);
+    const moduleItem = await this.mustGetModule(record.moduleCode);
 
     if (!moduleItem.requiresApproval) {
       throw new BadRequestException('module does not require approval');
@@ -2217,7 +2318,7 @@ export class WorkbenchService {
     }
 
     const record = await this.mustGetRecord(instance.businessRecordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
 
     return this.toApprovalInstanceResponse(instance);
   }
@@ -2238,7 +2339,7 @@ export class WorkbenchService {
       }
 
       const record = await this.mustGetRecord(instance.businessRecordId);
-      this.assertRecordVisible(record, user);
+      await this.assertRecordVisible(record, user);
 
       instance.lastReconciledAt = new Date();
       instance.approvalSyncStatus = 'reconciled';
@@ -2280,7 +2381,7 @@ export class WorkbenchService {
     }
 
     const record = await this.mustGetRecord(instance.businessRecordId);
-    this.assertRecordVisible(record, user);
+    await this.assertRecordVisible(record, user);
 
     instance.retryCount += 1;
     instance.lastRetryAt = new Date();
@@ -2599,18 +2700,149 @@ export class WorkbenchService {
     throw new ForbiddenException('forbidden');
   }
 
-  private listVisibleModules(user: CurrentUser) {
-    return WORKBENCH_MODULES.filter((moduleItem) => !moduleItem.legacyOnly && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort(
+  private async syncRuntimeCatalog() {
+    for (const moduleItem of WORKBENCH_MODULES) {
+      const moduleSeed = {
+        moduleCode: moduleItem.moduleCode,
+        moduleName: moduleItem.moduleName,
+        departmentCode: moduleItem.departmentCode,
+        templateType: moduleItem.templateType,
+        requiresApproval: moduleItem.requiresApproval,
+        supportsPrint: moduleItem.supportsPrint,
+        supportsStatistics: moduleItem.supportsStatistics,
+        mobileFirst: moduleItem.mobileFirst,
+        sortOrder: moduleItem.sortOrder,
+        enabled: true,
+      };
+      const existingModule = await this.moduleRepository.findOne({ where: { moduleCode: moduleItem.moduleCode } });
+      if (!existingModule) {
+        await this.moduleRepository.save(this.moduleRepository.create(moduleSeed));
+      }
+
+      const schemaDefinition = MODULE_SCHEMA_DEFINITIONS[moduleItem.moduleCode];
+      if (!schemaDefinition) {
+        continue;
+      }
+
+      const templateCode = `${moduleItem.moduleCode}_v1`;
+      const templateSeed = {
+        moduleCode: moduleItem.moduleCode,
+        templateCode,
+        templateType: moduleItem.templateType,
+        schemaVersion: 1,
+        fieldSchema: schemaDefinition as unknown as Record<string, unknown>,
+        stepSchema: schemaDefinition.stepTemplates ?? [],
+        printSchema: { paperSizes: moduleItem.supportsPrint ? ['A4', 'A3'] : [] },
+        approvalTemplateCode: moduleItem.requiresApproval ? templateCode : null,
+        enabled: !moduleItem.legacyOnly,
+      };
+      const existingTemplate = await this.templateRepository.findOne({ where: { templateCode, schemaVersion: 1 } });
+      if (!existingTemplate) {
+        await this.templateRepository.save(this.templateRepository.create(templateSeed));
+      }
+    }
+  }
+
+  private async listRuntimeModules() {
+    const modules = await this.moduleRepository.find({
+      order: {
+        sortOrder: 'ASC',
+        moduleCode: 'ASC',
+      },
+    });
+
+    return modules.map((moduleEntity) => this.toRuntimeModule(moduleEntity));
+  }
+
+  private toRuntimeModule(moduleEntity: WorkbenchModuleEntity): WorkbenchModuleSummary {
+    const defaults = WORKBENCH_MODULE_DEFAULTS.get(moduleEntity.moduleCode);
+    const fallbackTemplateType = defaults?.templateType ?? 'ledger_form';
+    const templateType = WORKBENCH_TEMPLATE_TYPES.includes(moduleEntity.templateType as TemplateType)
+      ? (moduleEntity.templateType as TemplateType)
+      : fallbackTemplateType;
+
+    return {
+      moduleCode: moduleEntity.moduleCode,
+      moduleName: moduleEntity.moduleName,
+      departmentCode: moduleEntity.departmentCode,
+      templateType,
+      requiresApproval: moduleEntity.requiresApproval,
+      supportsPrint: moduleEntity.supportsPrint,
+      supportsStatistics: moduleEntity.supportsStatistics,
+      mobileFirst: moduleEntity.mobileFirst,
+      sortOrder: moduleEntity.sortOrder,
+      visibleRoles: [...(defaults?.visibleRoles ?? ['system_admin'])],
+      enabled: moduleEntity.enabled,
+      legacyOnly: defaults?.legacyOnly,
+    };
+  }
+
+  private async mustGetModuleTemplate(moduleItem: WorkbenchModuleSummary): Promise<{ schemaDefinition: ModuleSchemaDefinition; templateCode: string }> {
+    const template = await this.templateRepository.findOne({
+      where: {
+        moduleCode: moduleItem.moduleCode,
+        enabled: true,
+      },
+      order: {
+        schemaVersion: 'DESC',
+        updatedAt: 'DESC',
+      },
+    });
+
+    if (template) {
+      return {
+        schemaDefinition: this.toRuntimeSchemaDefinition(template, moduleItem),
+        templateCode: template.templateCode,
+      };
+    }
+
+    const fallbackSchema = MODULE_SCHEMA_DEFINITIONS[moduleItem.moduleCode];
+    if (!fallbackSchema) {
+      throw new BadRequestException('module schema not found');
+    }
+
+    return {
+      schemaDefinition: {
+        ...fallbackSchema,
+        templateType: moduleItem.templateType,
+      },
+      templateCode: `${moduleItem.moduleCode}_v1`,
+    };
+  }
+
+  private toRuntimeSchemaDefinition(template: WorkbenchTemplateEntity, moduleItem: WorkbenchModuleSummary): ModuleSchemaDefinition {
+    const fieldSchema = template.fieldSchema as Partial<ModuleSchemaDefinition>;
+    if (Array.isArray(fieldSchema.sections)) {
+      return {
+        ...fieldSchema,
+        moduleCode: moduleItem.moduleCode,
+        templateType: moduleItem.templateType,
+        stepTemplates: Array.isArray(fieldSchema.stepTemplates) ? fieldSchema.stepTemplates : (template.stepSchema as ModuleSchemaDefinition['stepTemplates']),
+      } as ModuleSchemaDefinition;
+    }
+
+    return {
+      moduleCode: moduleItem.moduleCode,
+      templateType: moduleItem.templateType,
+      sections: [],
+      stepTemplates: Array.isArray(template.stepSchema) ? (template.stepSchema as ModuleSchemaDefinition['stepTemplates']) : undefined,
+    };
+  }
+
+  private async listVisibleModules(user: CurrentUser) {
+    const runtimeModules = await this.listRuntimeModules();
+    return runtimeModules.filter((moduleItem) => moduleItem.enabled && !moduleItem.legacyOnly && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort(
       (a, b) => a.sortOrder - b.sortOrder,
     );
   }
 
-  private listReadableModules(user: CurrentUser) {
-    return WORKBENCH_MODULES.filter((moduleItem) => this.hasRoleAccess(user, moduleItem.visibleRoles)).sort((a, b) => a.sortOrder - b.sortOrder);
+  private async listReadableModules(user: CurrentUser) {
+    const runtimeModules = await this.listRuntimeModules();
+    return runtimeModules.filter((moduleItem) => moduleItem.enabled && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   private async listVisibleRecords(user: CurrentUser) {
-    const visibleModules = this.listReadableModules(user);
+    const visibleModules = await this.listReadableModules(user);
     const moduleCodes = visibleModules.map((moduleItem) => moduleItem.moduleCode);
     if (moduleCodes.length === 0) {
       return [];
@@ -2629,7 +2861,7 @@ export class WorkbenchService {
   }
 
   private async computePendingCounts(user: CurrentUser) {
-    const moduleCodes = this.listVisibleModules(user).map((moduleItem) => moduleItem.moduleCode);
+    const moduleCodes = (await this.listVisibleModules(user)).map((moduleItem) => moduleItem.moduleCode);
     if (moduleCodes.length === 0) {
       return new Map<string, number>();
     }
@@ -2663,9 +2895,8 @@ export class WorkbenchService {
     return user.roles.some((role) => visibleRoles.includes(role));
   }
 
-  private buildInitialSteps(moduleCode: string): WorkbenchStep[] {
-    const schema = OPERATION_FLOW_MODULE_SCHEMAS[moduleCode] ?? INSPECTION_RECTIFICATION_MODULE_SCHEMAS[moduleCode];
-    if (!schema?.stepTemplates?.length) {
+  private buildInitialSteps(schema: ModuleSchemaDefinition): WorkbenchStep[] {
+    if (!schema.stepTemplates?.length) {
       return [];
     }
 
@@ -2709,6 +2940,117 @@ export class WorkbenchService {
     return berth.includes('qz') || berth.includes('qinzhou') || workArea.includes('钦州') || workArea.includes('qinzhou') || vesselName.includes('钦州');
   }
 
+  private buildPdf(input: { title: string; lines: string[]; paperSize: PrintPaperSize }): Buffer {
+    const pageWidth = input.paperSize === 'A3' ? PDF_A3_PAGE_WIDTH : PDF_A4_PAGE_WIDTH;
+    const pageHeight = input.paperSize === 'A3' ? PDF_A3_PAGE_HEIGHT : PDF_A4_PAGE_HEIGHT;
+    const maxLinesPerPage = input.paperSize === 'A3' ? Math.floor((pageHeight - PDF_MARGIN_TOP * 2) / PDF_LINE_HEIGHT) - 2 : PDF_MAX_LINES_PER_PAGE;
+    const pages: string[][] = [];
+    for (let index = 0; index < input.lines.length; index += maxLinesPerPage) {
+      pages.push(input.lines.slice(index, index + maxLinesPerPage));
+    }
+
+    const pageStreams = pages.map((pageLines, pageIndex) => {
+      const commands: string[] = ['BT', '/F1 12 Tf'];
+      const pageTitle = `${input.title}  Page ${pageIndex + 1}/${pages.length}`;
+      commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(pageHeight - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`);
+
+      pageLines.forEach((line, lineIndex) => {
+        const y = pageHeight - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
+        commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`);
+      });
+
+      commands.push('ET');
+      return commands.join('\n');
+    });
+
+    return this.composePdf(pageStreams, pageWidth, pageHeight);
+  }
+
+  private composePdf(pageStreams: string[], pageWidth: number, pageHeight: number): Buffer {
+    const objects: string[] = [];
+    const pageObjectIds: number[] = [];
+
+    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+
+    let nextObjectId = 4;
+    pageStreams.forEach((stream) => {
+      const pageObjectId = nextObjectId;
+      const contentObjectId = nextObjectId + 1;
+
+      pageObjectIds.push(pageObjectId);
+      objects[pageObjectId] =
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
+      objects[contentObjectId] = `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
+
+      nextObjectId += 2;
+    });
+
+    objects[2] = `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageObjectIds.length} >>`;
+
+    const maxObjectId = nextObjectId - 1;
+    let pdf = '%PDF-1.4\n';
+    const offsets: number[] = [0];
+
+    for (let id = 1; id <= maxObjectId; id += 1) {
+      const objectBody = objects[id] ?? '<< >>';
+      offsets[id] = Buffer.byteLength(pdf, 'utf8');
+      pdf += `${id} 0 obj\n${objectBody}\nendobj\n`;
+    }
+
+    const xrefOffset = Buffer.byteLength(pdf, 'utf8');
+    pdf += `xref\n0 ${maxObjectId + 1}\n`;
+    pdf += '0000000000 65535 f \n';
+
+    for (let id = 1; id <= maxObjectId; id += 1) {
+      pdf += `${String(offsets[id] ?? 0).padStart(10, '0')} 00000 n \n`;
+    }
+
+    pdf += `trailer\n<< /Size ${maxObjectId + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    return Buffer.from(pdf, 'utf8');
+  }
+
+  private wrapPdfTextLines(text: string, maxUnitsPerLine: number): string[] {
+    const rawLines = text.replace(/\r\n/g, '\n').split('\n');
+    const wrapped: string[] = [];
+
+    rawLines.forEach((rawLine) => {
+      if (!rawLine) {
+        wrapped.push('');
+        return;
+      }
+
+      let currentLine = '';
+      let currentUnits = 0;
+      Array.from(rawLine).forEach((char) => {
+        const units = char.charCodeAt(0) > 255 ? 2 : 1;
+        if (currentUnits + units > maxUnitsPerLine && currentLine) {
+          wrapped.push(currentLine);
+          currentLine = char;
+          currentUnits = units;
+          return;
+        }
+        currentLine += char;
+        currentUnits += units;
+      });
+
+      if (currentLine) {
+        wrapped.push(currentLine);
+      }
+    });
+
+    return wrapped;
+  }
+
+  private escapePdfText(text: string): string {
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '');
+  }
+
   private toRecordDetail(record: WorkbenchRecord) {
     return {
       ...this.toRecordSummary(record),
@@ -2730,16 +3072,16 @@ export class WorkbenchService {
     return record;
   }
 
-  private mustGetModule(moduleCode: string) {
-    const moduleItem = WORKBENCH_MODULES.find((item) => item.moduleCode === moduleCode);
-    if (!moduleItem) {
+  private async mustGetModule(moduleCode: string) {
+    const moduleEntity = await this.moduleRepository.findOne({ where: { moduleCode } });
+    if (!moduleEntity) {
       throw new NotFoundException('workbench module not found');
     }
-    return moduleItem;
+    return this.toRuntimeModule(moduleEntity);
   }
 
-  private assertRecordVisible(record: WorkbenchRecordEntity, user: CurrentUser) {
-    const moduleItem = this.mustGetModule(record.moduleCode);
+  private async assertRecordVisible(record: WorkbenchRecordEntity, user: CurrentUser) {
+    const moduleItem = await this.mustGetModule(record.moduleCode);
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
     }
@@ -2759,7 +3101,7 @@ export class WorkbenchService {
   }
 
   private toRecordModel(record: WorkbenchRecordEntity, steps: WorkbenchStep[] = [], attachments: WorkbenchAttachment[] = [], actionLogs: WorkbenchActionLog[] = []) {
-    const moduleItem = this.mustGetModule(record.moduleCode);
+    const moduleItem = WORKBENCH_MODULE_DEFAULTS.get(record.moduleCode);
     return {
       id: record.id,
       moduleCode: record.moduleCode,
@@ -2774,7 +3116,7 @@ export class WorkbenchService {
       externalProcessInstanceId: record.externalProcessInstanceId,
       externalStatus: record.externalStatus,
       ownerUserId: record.ownerUserId,
-      visibleRoles: [...moduleItem.visibleRoles],
+      visibleRoles: [...(moduleItem?.visibleRoles ?? ['system_admin'])],
       payload: record.payload ?? {},
       steps,
       attachments,
@@ -2958,7 +3300,7 @@ export class WorkbenchService {
       return false;
     }
 
-    const moduleItem = this.mustGetModule(record.moduleCode);
+    const moduleItem = await this.mustGetModule(record.moduleCode);
     if (!moduleItem.requiresApproval) {
       return false;
     }

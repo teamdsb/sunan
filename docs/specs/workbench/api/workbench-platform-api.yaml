@@ -64,6 +64,10 @@ paths:
             type: string
             enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
         - in: query
+          name: requiresApproval
+          schema:
+            type: boolean
+        - in: query
           name: status
           schema:
             type: string

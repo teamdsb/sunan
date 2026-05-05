@@ -71,6 +71,17 @@ describe('WorkbenchHomePage', () => {
               supportsStatistics: true,
               mobileFirst: true,
             },
+            {
+              moduleCode: 'shipping_fuel_bunkering_approval',
+              moduleName: '燃油加注审批',
+              departmentCode: 'shipping',
+              templateType: 'service_asset',
+              pendingCount: 2,
+              requiresApproval: true,
+              supportsPrint: true,
+              supportsStatistics: true,
+              mobileFirst: true,
+            },
           ],
         },
       },
@@ -182,21 +193,102 @@ describe('WorkbenchHomePage', () => {
     });
   });
 
-  it('filters modules in approval board and requests records by approval template when no module selected', async () => {
+  it('filters modules in approval board and filters approval records without templateType when no module selected', async () => {
+    mockGetWorkbenchRecordsQuery.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 'record-1',
+            moduleCode: 'shipping_chart_update',
+            title: '海图批次 2026-04',
+            status: 'assigned',
+            vesselId: 'ship-1',
+            occurredAt: '2026-04-22T10:00:00.000+08:00',
+            approvalChannel: 'internal',
+          },
+          {
+            id: 'record-approval-1',
+            moduleCode: 'shipping_fuel_bunkering_approval',
+            title: '燃油加注 2026-04',
+            status: 'assigned',
+            vesselId: 'ship-1',
+            occurredAt: '2026-04-23T10:00:00.000+08:00',
+            approvalChannel: 'wecom_native',
+          },
+        ],
+        pagination: {
+          page: 1,
+          pageSize: 20,
+          total: 2,
+        },
+      },
+      isLoading: false,
+    });
+
     render(<WorkbenchHomePage routeAware moduleFilter="requiresApproval" />);
 
     expect(screen.queryByText('海图更新')).toBeNull();
     expect(screen.getByText('签到台')).toBeInTheDocument();
-    expect(screen.getByText('模块记录：签到台')).toBeInTheDocument();
+    expect(screen.getByText('燃油加注审批')).toBeInTheDocument();
+    expect(screen.getByText('审批相关记录')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '燃油加注 2026-04' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '海图批次 2026-04' })).toBeNull();
 
     await waitFor(() => {
       expect(mockGetWorkbenchRecordsQuery).toHaveBeenCalledWith(
-        expect.objectContaining({
-          templateType: 'wecom_approval',
+        {
+          requiresApproval: true,
           page: 1,
           pageSize: 20,
-        }),
+        },
       );
+    });
+    expect(mockGetWorkbenchRecordsQuery).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        templateType: 'wecom_approval',
+      }),
+    );
+  });
+
+  it('shows launch approval action for requiresApproval non-wecom detail and calls mutation', async () => {
+    mockLaunchWorkbenchApproval.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({ data: { processInstanceId: 'ww-approval-1' } }),
+    });
+    mockGetWorkbenchRecordQuery.mockReturnValue({
+      data: {
+        data: {
+          id: 'record-approval-1',
+          moduleCode: 'shipping_fuel_bunkering_approval',
+          title: '燃油加注 2026-04',
+          summary: '燃油加注申请',
+          status: 'assigned',
+          vesselId: 'ship-1',
+          occurredAt: '2026-04-23T10:00:00.000+08:00',
+          approvalChannel: 'wecom_native',
+          externalProcessInstanceId: null,
+          externalStatus: null,
+          steps: [],
+          attachments: [],
+          actionLogs: [],
+          payload: { amount: 120 },
+        },
+      },
+      isFetching: false,
+    });
+
+    render(<WorkbenchHomePage routeAware initialRecordId="record-approval-1" />);
+    fireEvent.click(screen.getByRole('button', { name: '发起企业微信审批' }));
+
+    await waitFor(() => {
+      expect(mockLaunchWorkbenchApproval).toHaveBeenCalledWith({
+        moduleCode: 'shipping_fuel_bunkering_approval',
+        businessRecordId: 'record-approval-1',
+        templateCode: 'shipping_fuel_bunkering_approval_v1',
+        title: '燃油加注 2026-04',
+        applicantUserId: 'current_user',
+        summary: '燃油加注申请',
+        payload: { amount: 120 },
+      });
     });
   });
 
