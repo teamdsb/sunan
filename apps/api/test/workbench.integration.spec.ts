@@ -160,7 +160,10 @@ describe('WorkbenchController integration', () => {
       .send({ category: 'evidence', fileId: file.id, stepCode: 'pre_shift_meeting' });
 
     expect(uploadAttachmentResponse.status).toBe(201);
-    expect((uploadAttachmentResponse.body as { data: { fileId: string } }).data.fileId).toBe(file.id);
+    expect((uploadAttachmentResponse.body as { data: { fileId: string; fileName: string } }).data).toMatchObject({
+      fileId: file.id,
+      fileName: 'evidence.jpg',
+    });
 
     const printResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get(`/api/v1/workbench/records/${flowRecordId}/print`)
@@ -551,6 +554,125 @@ describe('WorkbenchController integration', () => {
       .set('Authorization', 'Bearer token');
     expect(printA3Response.status).toBe(200);
     expect((printA3Response.body as { data: { paperSize: string } }).data.paperSize).toBe('A3');
+  });
+
+  it('aligns workbench module approval matrix and fuel bunkering service asset approval flow', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'workbench-admin-1',
+      roles: ['all_authenticated', 'system_admin', 'general_office', 'shipping', 'logistics'],
+      departments: ['总经办', '船务部', '后勤部'],
+      isAdmin: true,
+    };
+
+    const modulesResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules')
+      .set('Authorization', 'Bearer token');
+
+    expect(modulesResponse.status).toBe(200);
+    const modulesByCode = new Map(
+      (modulesResponse.body as { data: Array<{ moduleCode: string; templateType: string; requiresApproval: boolean; supportsStatistics: boolean }> }).data.map(
+        (moduleItem) => [moduleItem.moduleCode, moduleItem],
+      ),
+    );
+    for (const moduleCode of [
+      'shipping_vessel_inspection',
+      'shipping_confined_space_operation',
+      'shipping_oily_water_operation',
+      'shipping_maritime_safety_check',
+      'shipping_equipment_maintenance',
+      'logistics_vehicle_maintenance',
+    ]) {
+      expect(modulesByCode.get(moduleCode)?.requiresApproval).toBe(true);
+    }
+    expect(modulesByCode.get('shipping_attendance')?.requiresApproval).toBe(true);
+    expect(modulesByCode.get('shipping_watch')?.requiresApproval).toBe(true);
+    expect(modulesByCode.get('goa_training')?.requiresApproval).toBe(true);
+    expect(modulesByCode.get('shipping_fuel_bunkering_approval')).toMatchObject({
+      templateType: 'service_asset',
+      requiresApproval: true,
+      supportsStatistics: true,
+    });
+    expect(modulesByCode.has('logistics_asset_service')).toBe(false);
+
+    const fuelSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/modules/shipping_fuel_bunkering_approval/schema')
+      .set('Authorization', 'Bearer token');
+
+    expect(fuelSchemaResponse.status).toBe(200);
+    expect((fuelSchemaResponse.body as { data: { templateType: string } }).data.templateType).toBe('service_asset');
+    const fuelFields = (
+      (fuelSchemaResponse.body as { data: { sections: Array<{ fields: Array<{ key: string; required: boolean }> }> } }).data.sections[0]?.fields ?? []
+    ).map((field) => field.key);
+    expect(fuelFields).toEqual(
+      expect.arrayContaining([
+        'vesselName',
+        'fuelType',
+        'bunkeringDate',
+        'bunkeringAmount',
+        'remainingFuelAmount',
+        'monthlyFuelConsumption',
+        'reportMonth',
+        'reason',
+        'remark',
+        'requestedAmount',
+      ]),
+    );
+
+    const createFuelResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'shipping_fuel_bunkering_approval',
+        title: '燃油加注-苏南012',
+        summary: '2026-04 月报与加油记录',
+        vesselId: 'sunan-012',
+        payload: {
+          vesselName: '苏南012',
+          fuelType: '柴油',
+          bunkeringDate: '2026-04-25',
+          bunkeringAmount: 12.5,
+          remainingFuelAmount: 35.8,
+          monthlyFuelConsumption: 42.3,
+          reportMonth: '2026-04',
+          requestedAmount: 12.5,
+          reason: '月度运营补油',
+          remark: '按船舶油耗台账归档',
+        },
+      });
+
+    expect(createFuelResponse.status).toBe(201);
+    expect((createFuelResponse.body as { data: { moduleCode: string; status: string } }).data).toMatchObject({
+      moduleCode: 'shipping_fuel_bunkering_approval',
+      status: 'submitted',
+    });
+    const fuelRecordId = (createFuelResponse.body as { data: { id: string } }).data.id;
+
+    const approvalRecordsResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .query({ requiresApproval: true });
+    expect(approvalRecordsResponse.status).toBe(200);
+    const approvalRecords = (approvalRecordsResponse.body as { data: Array<{ id: string; moduleCode: string }> }).data;
+    expect(approvalRecords).toEqual(expect.arrayContaining([expect.objectContaining({ id: fuelRecordId })]));
+    expect(approvalRecords.every((record) => modulesByCode.get(record.moduleCode)?.requiresApproval === true)).toBe(true);
+
+    const launchFuelApprovalResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/wecom/approval/launch')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'shipping_fuel_bunkering_approval',
+        businessRecordId: fuelRecordId,
+        templateCode: 'shipping_fuel_bunkering_approval_v1',
+        title: '燃油加注-苏南012',
+        applicantUserId: currentUser.userId,
+      });
+
+    expect(launchFuelApprovalResponse.status).toBe(200);
+    expect((launchFuelApprovalResponse.body as { data: { processInstanceId: string; launchStatus: string } }).data).toMatchObject({
+      launchStatus: 'started',
+    });
+    expect((launchFuelApprovalResponse.body as { data: { processInstanceId: string } }).data.processInstanceId).toMatch(/^wbpi_/);
   });
 
   it('enforces module visibility by role (permission matrix baseline)', async () => {

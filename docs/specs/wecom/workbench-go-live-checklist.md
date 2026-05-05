@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: wecom
-updated: 2026-05-04
+updated: 2026-05-05
 replaces: []
 replaced_by: []
 ---
@@ -13,6 +13,10 @@ replaced_by: []
 
 最近一次执行记录：
 - [go-live-preflight-2026-04-22.md](../../archive/acceptance/wecom/go-live-preflight-2026-04-22.md)
+
+## 当前 P1 阻断记录
+
+- `WB-WECOM-APPROVAL-001`：工作平台审批发起仍生成本地 `wbpi_*` 镜像实例，尚未调用企业微信原生审批 API 创建真实审批实例；上线前必须补齐模板编码映射、真实发起、回调对账与失败补偿联调。
 
 ## 2. 应用与基础配置
 

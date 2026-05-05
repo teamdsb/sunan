@@ -112,10 +112,14 @@ export function WorkbenchHomePage({
   const dashboard = dashboardResponse?.data;
   const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
   const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
+  const approvalModuleCodes = useMemo(
+    () => new Set(moduleCards.filter((item) => item.requiresApproval).map((item) => item.moduleCode)),
+    [moduleCards],
+  );
   const recordsQuery = activeModuleCode
     ? { moduleCode: activeModuleCode, page: 1, pageSize: 20 }
     : moduleFilter === 'requiresApproval'
-      ? { templateType: 'wecom_approval' as const, page: 1, pageSize: 20 }
+      ? { requiresApproval: true, page: 1, pageSize: 20 }
       : { page: 1, pageSize: 20 };
   const { data: recordsResponse, isLoading: recordsLoading } = useGetWorkbenchRecordsQuery(recordsQuery);
   const { data: detailResponse, isFetching: detailLoading } = useGetWorkbenchRecordQuery(activeRecordId ?? '', {
@@ -135,7 +139,13 @@ export function WorkbenchHomePage({
   const [launchWorkbenchApproval, { isLoading: launchingApproval }] = useLaunchWorkbenchApprovalMutation();
   const [triggerPrintSnapshot, { isFetching: printingSnapshot }] = useLazyGetWorkbenchPrintSnapshotQuery();
 
-  const records = recordsResponse?.data ?? [];
+  const records = useMemo(() => {
+    const source = recordsResponse?.data ?? [];
+    if (moduleFilter !== 'requiresApproval' || activeModuleCode) {
+      return source;
+    }
+    return source.filter((record) => approvalModuleCodes.has(record.moduleCode));
+  }, [activeModuleCode, approvalModuleCodes, moduleFilter, recordsResponse?.data]);
   const visibleModuleCards = useMemo(
     () => moduleCards.filter((item) => (moduleFilter === 'requiresApproval' ? item.requiresApproval : true)),
     [moduleCards, moduleFilter],
@@ -169,13 +179,6 @@ export function WorkbenchHomePage({
       setActiveModuleCode(detailResponse.data.moduleCode);
     }
   }, [activeModuleCode, detailResponse?.data?.moduleCode]);
-
-  useEffect(() => {
-    if (moduleFilter !== 'requiresApproval' || activeModuleCode || visibleModuleCards.length === 0) {
-      return;
-    }
-    setActiveModuleCode(visibleModuleCards[0].moduleCode);
-  }, [activeModuleCode, moduleFilter, visibleModuleCards]);
 
   useEffect(() => {
     if (!detailResponse?.data) {
@@ -569,7 +572,7 @@ export function WorkbenchHomePage({
                   </Button>
                 </Space>
               ) : null}
-              {detailModule?.templateType === 'wecom_approval' && !detailResponse.data.externalProcessInstanceId ? (
+              {detailModule?.requiresApproval && !detailResponse.data.externalProcessInstanceId ? (
                 <Button type="primary" style={{ marginTop: 12 }} loading={launchingApproval} onClick={() => void triggerLaunchApproval()}>
                   发起企业微信审批
                 </Button>
