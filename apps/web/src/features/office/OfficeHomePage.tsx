@@ -89,17 +89,17 @@ export function OfficeHomePage() {
 
       <section className="page-card-grid office-card-grid" data-testid="office-entry-grid">
         {entries.length === 0 ? (
-          <Card className="placeholder-card" bordered={false}>
+          <Card className="placeholder-card" variant="borderless">
             <Empty description={isLoading ? '办事入口加载中…' : '当前没有可访问的办事入口'} />
           </Card>
         ) : (
           entries.map((entry) => {
             const Icon = iconMap[entry.categoryCode as keyof typeof iconMap] ?? AppstoreOutlined;
             return (
-              <Card key={entry.id} className="placeholder-card office-entry-card" bordered={false}>
+              <Card key={entry.id} className="placeholder-card office-entry-card" variant="borderless">
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                   <Space>
-                    <span className="my-home-shortcut-icon my-home-shortcut-icon-plain" aria-hidden="true">
+                    <span className="module-entry-icon" aria-hidden="true">
                       <Icon />
                     </span>
                     <div>

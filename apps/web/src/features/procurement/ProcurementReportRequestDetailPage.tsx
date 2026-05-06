@@ -93,7 +93,7 @@ export function ProcurementReportRequestDetailPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" loading={isLoading}>
+        <Card variant="borderless" className="placeholder-card" loading={isLoading}>
           {report ? (
             <Descriptions bordered column={1} size="small" title={report.reportNo}>
               <Descriptions.Item label="状态">
@@ -117,7 +117,7 @@ export function ProcurementReportRequestDetailPage() {
 
       {report ? (
         <section className="page-card-grid">
-          <Card bordered={false} className="placeholder-card" title="参数快照">
+          <Card variant="borderless" className="placeholder-card" title="参数快照">
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{JSON.stringify(report.snapshotParams, null, 2)}</pre>
           </Card>
         </section>
@@ -125,14 +125,14 @@ export function ProcurementReportRequestDetailPage() {
 
       {report ? (
         <section className="page-card-grid">
-          <Card bordered={false} className="placeholder-card" title="汇总快照">
+          <Card variant="borderless" className="placeholder-card" title="汇总快照">
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{JSON.stringify(report.snapshotSummary, null, 2)}</pre>
           </Card>
         </section>
       ) : null}
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="审批轨迹">
+        <Card variant="borderless" className="placeholder-card" title="审批轨迹">
           <Table rowKey="id" columns={approvalColumns} dataSource={approvals} pagination={false} />
         </Card>
       </section>

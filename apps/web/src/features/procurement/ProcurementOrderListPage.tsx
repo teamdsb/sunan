@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Input, Pagination, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Empty, Grid, Input, Pagination, Select, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -39,8 +39,18 @@ function formatDepartment(code: ProcurementDepartmentCode) {
   return departmentOptions.find((item) => item.value === code)?.label ?? code;
 }
 
+function formatMoney(value: number) {
+  return `¥${value.toFixed(2)}`;
+}
+
+function formatSubmittedAt(value: string | null) {
+  return value ? new Date(value).toLocaleString('zh-CN') : '未提交';
+}
+
 export function ProcurementOrderListPage() {
   const navigate = useNavigate();
+  const screens = Grid.useBreakpoint();
+  const isMobileOrderList = !screens.md;
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [keyword, setKeyword] = useState<string>('');
   const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode | undefined>(undefined);
@@ -85,7 +95,7 @@ export function ProcurementOrderListPage() {
         dataIndex: 'amount',
         key: 'amount',
         width: 120,
-        render: (value: number) => `¥${value.toFixed(2)}`,
+        render: (value: number) => formatMoney(value),
       },
       {
         title: '状态',
@@ -99,7 +109,7 @@ export function ProcurementOrderListPage() {
         dataIndex: 'submittedAt',
         key: 'submittedAt',
         width: 180,
-        render: (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+        render: (value: string | null) => formatSubmittedAt(value),
       },
       {
         title: '操作',
@@ -120,20 +130,20 @@ export function ProcurementOrderListPage() {
       <section className="page-hero">
         <Typography.Title level={2}>采购管理</Typography.Title>
         <Typography.Paragraph type="secondary">支持采购单草稿、提交、审批与附件留存。</Typography.Paragraph>
-        <Space wrap>
+        <div className="procurement-filter-bar">
           <Input.Search
+            className="procurement-filter-search"
             placeholder="搜索标题或摘要"
             allowClear
-            style={{ width: 240 }}
             onSearch={(value) => {
               setPage(1);
               setKeyword(value.trim());
             }}
           />
           <Select
+            className="procurement-filter-select"
             allowClear
             placeholder="部门"
-            style={{ width: 160 }}
             options={departmentOptions}
             value={departmentCode}
             onChange={(value) => {
@@ -142,9 +152,9 @@ export function ProcurementOrderListPage() {
             }}
           />
           <Select
+            className="procurement-filter-select"
             allowClear
             placeholder="状态"
-            style={{ width: 160 }}
             options={statusOptions}
             value={status}
             onChange={(value) => {
@@ -153,8 +163,8 @@ export function ProcurementOrderListPage() {
             }}
           />
           <Input
+            className="procurement-filter-date"
             type="date"
-            style={{ width: 180 }}
             placeholder="提交起始日期"
             min={minDayText}
             max={currentDayText}
@@ -165,8 +175,8 @@ export function ProcurementOrderListPage() {
             }}
           />
           <Input
+            className="procurement-filter-date"
             type="date"
-            style={{ width: 180 }}
             placeholder="提交截止日期"
             min={minDayText}
             max={currentDayText}
@@ -176,19 +186,63 @@ export function ProcurementOrderListPage() {
               setSubmittedTo(event.target.value || undefined);
             }}
           />
-          <Button type="primary" onClick={() => navigate(procurementRouteConfig.orderCreate.path)}>
+          <Button className="procurement-filter-create" type="primary" onClick={() => navigate(procurementRouteConfig.orderCreate.path)}>
             新建采购单
           </Button>
           <Button onClick={() => navigate(procurementRouteConfig.approvals.path)}>进入审批页</Button>
           <Button onClick={() => navigate(procurementRouteConfig.reports.path)}>进入报表页</Button>
           <Button onClick={() => navigate(procurementRouteConfig.reportApprovals.path)}>报表审批页</Button>
           {canManageDictionary ? <Button onClick={() => navigate(procurementRouteConfig.dictionaries.path)}>字典治理</Button> : null}
-        </Space>
+        </div>
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card office-admin-card">
-          <Table rowKey="id" loading={isLoading} columns={columns} dataSource={rows} pagination={false} />
+        <Card variant="borderless" className="placeholder-card office-admin-card procurement-order-list-card">
+          {isMobileOrderList ? (
+            <div className="procurement-order-mobile-list">
+              {isLoading ? (
+                <div className="procurement-order-mobile-empty">加载中...</div>
+              ) : rows.length === 0 ? (
+                <div className="procurement-order-mobile-empty">
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无采购单" />
+                </div>
+              ) : (
+                rows.map((record) => (
+                  <article className="procurement-order-mobile-item" key={record.id}>
+                    <div className="procurement-order-mobile-item-head">
+                      <div className="procurement-order-mobile-main">
+                        <Typography.Text className="procurement-order-mobile-label">单号</Typography.Text>
+                        <Typography.Title level={4}>{record.orderNo}</Typography.Title>
+                      </div>
+                      <Tag color={statusColor[record.status]}>{record.status}</Tag>
+                    </div>
+                    <Typography.Text strong className="procurement-order-mobile-title">
+                      {record.title}
+                    </Typography.Text>
+                    <dl className="procurement-order-mobile-meta">
+                      <div>
+                        <dt>部门</dt>
+                        <dd>{formatDepartment(record.departmentCode)}</dd>
+                      </div>
+                      <div>
+                        <dt>金额</dt>
+                        <dd>{formatMoney(record.amount)}</dd>
+                      </div>
+                      <div className="is-wide">
+                        <dt>提交时间</dt>
+                        <dd>{formatSubmittedAt(record.submittedAt)}</dd>
+                      </div>
+                    </dl>
+                    <Button type="primary" block onClick={() => navigate(`/procurement/orders/${record.id}`)}>
+                      查看详情
+                    </Button>
+                  </article>
+                ))
+              )}
+            </div>
+          ) : (
+            <Table rowKey="id" loading={isLoading} columns={columns} dataSource={rows} pagination={false} />
+          )}
           <div className="list-pagination">
             <Pagination
               current={meta.page}
@@ -198,7 +252,8 @@ export function ProcurementOrderListPage() {
                 setPage(nextPage);
                 setPageSize(nextPageSize);
               }}
-              showSizeChanger
+              showSizeChanger={!isMobileOrderList}
+              responsive
               pageSizeOptions={[10, 20, 50, 100]}
             />
           </div>

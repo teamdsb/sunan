@@ -154,19 +154,19 @@ export function ProcurementReportPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="月度汇总">
+        <Card variant="borderless" className="placeholder-card" title="月度汇总">
           <Table rowKey="label" loading={isMonthlyLoading} columns={monthlyColumns} dataSource={monthlyResponse?.data.items ?? []} pagination={false} />
         </Card>
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="年度趋势">
+        <Card variant="borderless" className="placeholder-card" title="年度趋势">
           <Table rowKey="label" loading={isYearlyLoading} columns={monthlyColumns} dataSource={yearlyResponse?.data.items ?? []} pagination={false} />
         </Card>
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="部门采购明细">
+        <Card variant="borderless" className="placeholder-card" title="部门采购明细">
           <Space wrap style={{ marginBottom: 16 }}>
             <Select style={{ width: 180 }} value={detailsDepartmentCode} options={departmentOptions} onChange={(value) => setDetailsDepartmentCode(value)} />
             <Form
@@ -207,7 +207,7 @@ export function ProcurementReportPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="部门细分明细（船舶/后勤）">
+        <Card variant="borderless" className="placeholder-card" title="部门细分明细（船舶/后勤）">
           <Space wrap style={{ marginBottom: 16 }}>
             <Select
               style={{ width: 180 }}
@@ -257,7 +257,7 @@ export function ProcurementReportPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="报表审批单列表">
+        <Card variant="borderless" className="placeholder-card" title="报表审批单列表">
           <Table rowKey="id" loading={isRequestLoading} columns={requestColumns} dataSource={requestResponse?.data ?? []} pagination={false} />
           <div className="list-pagination">
             <Button disabled={requestPage <= 1} onClick={() => setRequestPage((page) => page - 1)}>

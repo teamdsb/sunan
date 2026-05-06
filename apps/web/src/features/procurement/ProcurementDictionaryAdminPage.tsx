@@ -208,7 +208,7 @@ export function ProcurementDictionaryAdminPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card" title="新增字典项">
+        <Card variant="borderless" className="placeholder-card" title="新增字典项">
           <Form
             form={form}
             layout="inline"
@@ -249,7 +249,7 @@ export function ProcurementDictionaryAdminPage() {
       </section>
 
       <section className="page-card-grid">
-        <Card bordered={false} className="placeholder-card office-admin-card" title="字典项列表">
+        <Card variant="borderless" className="placeholder-card office-admin-card" title="字典项列表">
           <Table rowKey="id" loading={isLoading} columns={columns} dataSource={dimensionResponse?.data ?? []} pagination={false} />
         </Card>
       </section>

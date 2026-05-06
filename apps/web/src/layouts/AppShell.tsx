@@ -23,6 +23,10 @@ export function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isMyRoute = location.pathname === '/my' || location.pathname.startsWith('/my/');
   const isMyHomeRoute = location.pathname === '/my';
+  const currentModuleKey = useMemo(() => {
+    const moduleKey = location.pathname.split('/').filter(Boolean)[0] ?? 'my';
+    return ['my', 'office', 'procurement', 'workbench'].includes(moduleKey) ? moduleKey : 'my';
+  }, [location.pathname]);
 
   const currentModuleLabel = useMemo(
     () => resolveModuleLabel(location.pathname),
@@ -45,7 +49,13 @@ export function AppShell() {
 
   return (
     <Layout
-      className={['shell-layout', isMyRoute ? 'shell-layout-my' : '', isMyHomeRoute ? 'shell-layout-my-home' : '']
+      className={[
+        'shell-layout',
+        'shell-layout-enterprise',
+        `shell-layout-module-${currentModuleKey}`,
+        isMyRoute ? 'shell-layout-my' : '',
+        isMyHomeRoute ? 'shell-layout-my-home' : '',
+      ]
         .filter(Boolean)
         .join(' ')}
     >
