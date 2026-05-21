@@ -6,6 +6,10 @@ import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { ResponseInterceptor } from 'src/common/interceptors/response.interceptor';
 import { appEnv } from 'src/config/env';
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function configureApp(app: INestApplication): void {
   app.useGlobalPipes(
     new ValidationPipe({
@@ -16,8 +20,25 @@ export function configureApp(app: INestApplication): void {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
+  const allowedOrigins = new Set([
+    appEnv.WEB_PUBLIC_URL,
+    'http://localhost:5173',
+    'http://localhost:4173',
+  ]);
+  const appDomainPattern = new RegExp(
+    `^https://([a-z0-9-]+\\.)?${escapeRegex(appEnv.APP_DOMAIN)}$`,
+    'i',
+  );
+
   app.enableCors({
-    origin: [/localhost:\d+$/],
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(origin) || appDomainPattern.test(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   });
 

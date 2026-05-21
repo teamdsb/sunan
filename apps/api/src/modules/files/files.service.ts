@@ -42,7 +42,7 @@ export class FilesService {
     private readonly wecomHttpGateway: WecomHttpGateway,
   ) {}
 
-  createPresign(dto: FilePresignDto) {
+  async createPresign(dto: FilePresignDto) {
     const normalized = this.validateFileRequest(
       dto.category,
       dto.fileName,
@@ -50,7 +50,7 @@ export class FilesService {
       dto.fileSize,
     );
     const ossKey = this.buildOssKey(dto.category, normalized.extension);
-    const signature = this.ossService.createUploadSignature(
+    const signature = await this.ossService.createUploadSignature(
       ossKey,
       dto.mimeType,
       dto.fileName,
@@ -179,8 +179,8 @@ export class FilesService {
     }
   }
 
-  private toFileResponse(file: FileEntity): FileResponse {
-    const signature = this.ossService.createDownloadSignature(file.ossKey);
+  private async toFileResponse(file: FileEntity): Promise<FileResponse> {
+    const signature = await this.ossService.createDownloadSignature(file.ossKey);
 
     return {
       id: file.id,

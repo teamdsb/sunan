@@ -48,6 +48,7 @@ import { Wave31710000009000 } from './migrations/1710000009000-wave3-procurement
 import { Wave41710000010000 } from './migrations/1710000010000-wave4-procurement-dimension-items';
 import { Wave51710000011000 } from './migrations/1710000011000-wave5-workbench-runtime';
 import { Wave51710000012000 } from './migrations/1710000012000-wave5-workbench-approval-ops';
+import { Wave61710000013000 } from './migrations/1710000013000-wave6-workbench-module-split';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -107,6 +108,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave41710000010000,
     Wave51710000011000,
     Wave51710000012000,
+    Wave61710000013000,
   ],
   synchronize: false,
 });

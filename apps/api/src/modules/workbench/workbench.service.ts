@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
+import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -2477,16 +2478,36 @@ export class WorkbenchService implements OnModuleInit {
   }
 
   private verifyCallbackSourceIp(requestIp: string | null) {
-    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.length) {
+    const allowedRanges = this.getCallbackAllowedIpRanges();
+    if (!allowedRanges.length) {
       return;
     }
     const normalizedRequestIp = requestIp ? this.normalizeIp(requestIp) : null;
     if (!normalizedRequestIp) {
       throw new BadRequestException('callback request ip missing');
     }
-    if (!appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES.some((range) => this.isIpInRange(normalizedRequestIp, range))) {
+    if (!allowedRanges.some((range) => this.isIpInRange(normalizedRequestIp, range))) {
       throw new BadRequestException('callback request ip not allowed');
     }
+  }
+
+  private getCallbackAllowedIpRanges() {
+    const ranges = new Set(appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES);
+    const filePath = appEnv.WECOM_CALLBACK_ALLOWED_IP_RANGES_FILE;
+    if (filePath) {
+      try {
+        for (const range of readFileSync(filePath, 'utf8')
+          .split(/[\n,]/)
+          .map((item) => item.trim())
+          .filter((item) => item && !item.startsWith('#'))) {
+          ranges.add(range);
+        }
+      } catch {
+        // The generated IP list is refreshed by the ops timer. If it is
+        // temporarily missing, keep honoring static env ranges.
+      }
+    }
+    return Array.from(ranges);
   }
 
   private async registerCallbackEvent(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta, payloadDigest: string | null) {

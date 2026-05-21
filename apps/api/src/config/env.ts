@@ -13,6 +13,7 @@ const envSchema = z.object({
     .optional()
     .transform((value) => value === 'true'),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
+  REDIS_USERNAME: z.string().optional(),
   REDIS_PASSWORD: z.string().optional(),
   JWT_SECRET: z.string().min(32).default('01234567890123456789012345678901'),
   JWT_EXPIRES_IN: z.string().default('7200s'),
@@ -37,15 +38,23 @@ const envSchema = z.object({
             .filter(Boolean)
         : [],
     ),
+  WECOM_CALLBACK_ALLOWED_IP_RANGES_FILE: z.string().optional(),
   WECOM_CALLBACK_SIGNATURE_REQUIRED: z
     .string()
     .optional()
     .transform((value) => (value === undefined ? true : value === 'true')),
   WECOM_CALLBACK_MAX_SKEW_SECONDS: z.coerce.number().default(300),
+  OSS_DRIVER: z.enum(['aliyun', 's3']).default('aliyun'),
   OSS_REGION: z.string().default('oss-cn-hangzhou'),
   OSS_BUCKET: z.string().default('sunan-files'),
   OSS_ACCESS_KEY_ID: z.string().default('test-access-key-id'),
   OSS_ACCESS_KEY_SECRET: z.string().default('test-access-key-secret'),
+  OSS_ENDPOINT: z.string().url().optional(),
+  OSS_PUBLIC_ENDPOINT: z.string().url().optional(),
+  OSS_FORCE_PATH_STYLE: z
+    .string()
+    .optional()
+    .transform((value) => (value === undefined ? true : value === 'true')),
   OSS_PRESIGN_EXPIRE: z.coerce.number().default(300),
   OSS_DOWNLOAD_EXPIRE: z.coerce.number().default(900),
 });

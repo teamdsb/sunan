@@ -14,9 +14,9 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('presign')
-  createPresign(@Body() dto: FilePresignDto) {
+  async createPresign(@Body() dto: FilePresignDto) {
     return {
-      data: this.filesService.createPresign(dto),
+      data: await this.filesService.createPresign(dto),
     };
   }
 

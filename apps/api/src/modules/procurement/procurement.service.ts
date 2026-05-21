@@ -1599,7 +1599,7 @@ export class ProcurementService {
       }),
     );
 
-    const signature = this.ossService.createDownloadSignature(ossKey);
+    const signature = await this.ossService.createDownloadSignature(ossKey);
     return {
       fileId: file.id,
       downloadUrl: signature.downloadUrl,

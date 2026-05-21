@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily refresh for Sunan Enterprise WeCom callback IP allowlist
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+Persistent=true
+Unit=sunan-wecom-callback-ip-sync.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,10 @@
+.git
+.DS_Store
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+coverage
+*.log
+apps/web/dist-review-no-mock
+deploy/.env
