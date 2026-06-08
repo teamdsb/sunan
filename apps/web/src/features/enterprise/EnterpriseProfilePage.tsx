@@ -20,6 +20,21 @@ function readPageValue(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+const categoryLabelMap: Record<string, string> = {
+  license: '资质',
+  notice: '公告',
+};
+
+const statusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  published: '已发布',
+  archived: '已归档',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
+  return value ? map[value] ?? fallback : '-';
+}
+
 export function EnterpriseProfilePage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -128,7 +143,7 @@ export function EnterpriseProfilePage() {
                   </Button>,
                 ]}
               >
-                <List.Item.Meta title={item.title} description={`${item.category} · ${item.status}`} />
+                <List.Item.Meta title={item.title} description={`${labelFrom(categoryLabelMap, item.category, '未分类')} · ${labelFrom(statusLabelMap, item.status, '未知状态')}`} />
                 <Tag>{item.files.length} 附件</Tag>
               </List.Item>
             )}

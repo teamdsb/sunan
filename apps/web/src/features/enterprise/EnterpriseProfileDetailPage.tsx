@@ -1,4 +1,4 @@
-﻿import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
+﻿import { Alert, Button, Card, Form, Input, Select, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
@@ -11,6 +11,17 @@ import {
   useGetEnterpriseProfileByIdQuery,
   useUpdateEnterpriseProfileMutation,
 } from './enterpriseApi';
+
+const categoryOptions = [
+  { value: 'license', label: '资质' },
+  { value: 'notice', label: '公告' },
+];
+
+const statusOptions = [
+  { value: 'draft', label: '草稿' },
+  { value: 'published', label: '已发布' },
+  { value: 'archived', label: '已归档' },
+];
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
@@ -66,8 +77,8 @@ export function EnterpriseProfileDetailPage() {
           }}
         >
           <Form.Item name="title" label="标题" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="category" label="分类" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="status" label="状态" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="category" label="分类" rules={[{ required: true }]}><Select options={categoryOptions} /></Form.Item>
+          <Form.Item name="status" label="状态" rules={[{ required: true }]}><Select options={statusOptions} /></Form.Item>
           <Form.Item name="description" label="描述"><Input.TextArea rows={3} /></Form.Item>
           <Form.Item label="附件上传/预览">
             <FileUploadField category="enterprise-profiles" value={currentUpload} onChange={setUploaded} />

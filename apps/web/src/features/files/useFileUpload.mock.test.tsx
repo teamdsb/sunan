@@ -216,6 +216,7 @@ describe('useFileUpload mock mode', () => {
       agentConfig: vi.fn(),
       chooseImage: vi.fn(({ success }) => success({ localIds: ['local-1'] })),
       uploadImage: vi.fn(({ fail }) => fail(new Error('wecom upload failed'))),
+      invoke: vi.fn(),
       previewFile: vi.fn(),
     };
 

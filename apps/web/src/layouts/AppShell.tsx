@@ -15,6 +15,21 @@ import { logout } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
 import { moduleNavItems, resolveModuleLabel } from '../router/moduleNav';
 
+const roleLabelMap: Record<string, string> = {
+  all_authenticated: '全体成员',
+  system_admin: '系统管理员',
+  general_office: '总经办',
+  finance: '财务部',
+  business: '业务部',
+  shipping: '船务部',
+  logistics: '后勤部',
+  crew: '船员',
+};
+
+function formatRoleLabels(roles: string[]) {
+  return roles.map((role) => roleLabelMap[role] ?? '自定义角色').join(' / ') || '员工';
+}
+
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
   const dispatch = useAppDispatch();
@@ -107,7 +122,7 @@ export function AppShell() {
                 <div>
                   <Typography.Text strong>{user.name}</Typography.Text>
                   <br />
-                  <Tag color="cyan">{user.roles.join(' / ') || 'employee'}</Tag>
+                  <Tag color="cyan">{formatRoleLabels(user.roles)}</Tag>
                 </div>
               </Space>
             ) : null}
@@ -135,7 +150,7 @@ export function AppShell() {
                   <div>
                     <Typography.Text strong>{user.name}</Typography.Text>
                     <br />
-                    <Tag color="cyan">{user.roles.join(' / ') || 'employee'}</Tag>
+                    <Tag color="cyan">{formatRoleLabels(user.roles)}</Tag>
                   </div>
                 </Space>
               </div>

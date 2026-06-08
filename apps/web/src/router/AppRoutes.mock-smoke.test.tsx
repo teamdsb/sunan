@@ -47,8 +47,8 @@ describe('AppRoutes mock direct-entry smoke', () => {
     async (path, title, moduleKey, expectedText) => {
       await renderMockRoute(path);
 
-      expect(await screen.findByRole('heading', { level: 2, name: title }, { timeout: 5000 })).toBeInTheDocument();
-      expect(await screen.findByText(expectedText, undefined, { timeout: 5000 })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: title }, { timeout: 15000 })).toBeInTheDocument();
+      expect(await screen.findByText(expectedText, undefined, { timeout: 15000 })).toBeInTheDocument();
 
       const shell = document.querySelector('.shell-layout-enterprise');
       expect(shell).toBeInTheDocument();

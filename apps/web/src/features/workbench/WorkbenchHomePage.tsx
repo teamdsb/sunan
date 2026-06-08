@@ -18,7 +18,9 @@ import {
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useWecomJsSdk } from '../../hooks/useWecomJsSdk';
 import {
+  WorkbenchApprovalLaunchConfig,
   WorkbenchModuleSchemaField,
   WorkbenchRecordDetail,
   WorkbenchRecordSummary,
@@ -51,6 +53,82 @@ const templateColorMap: Record<string, string> = {
   service_asset: 'gold',
   wecom_approval: 'cyan',
 };
+
+const templateLabelMap: Record<string, string> = {
+  ledger_form: '台账表单',
+  operation_flow: '作业闭环',
+  inspection_rectification: '检查整改',
+  attendance_statistics: '考勤统计',
+  service_asset: '资产服务',
+  wecom_approval: '企业微信审批',
+};
+
+const approvalChannelLabelMap: Record<string, string> = {
+  internal: '系统内审批',
+  wecom_native: '企业微信审批',
+};
+
+const recordStatusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  assigned: '已分派',
+  in_progress: '处理中',
+  pending_review: '待审核',
+  rework_required: '需整改',
+  closed: '已关闭',
+  archived: '已归档',
+  approval_pending: '审批中',
+  approval_passed: '审批通过',
+  approval_rejected: '审批驳回',
+  approval_canceled: '审批撤销',
+  approval_terminated: '审批终止',
+};
+
+const stepStatusLabelMap: Record<string, string> = {
+  pending: '待处理',
+  in_progress: '进行中',
+  completed: '已完成',
+};
+
+const actionTypeLabelMap: Record<string, string> = {
+  submit: '提交',
+  assign: '分派',
+  start: '开始作业',
+  complete_step: '完成步骤',
+  update_payload: '更新信息',
+  submit_review: '提交审核',
+  request_rework: '退回整改',
+  close_record: '关闭记录',
+  archive: '归档',
+  launch_approval: '发起审批',
+  approval_callback: '审批回调',
+  approval_reconcile: '审批对账',
+  approval_retry: '审批重试',
+  approval_retry_reconcile: '审批重试对账',
+};
+
+const externalStatusLabelMap: Record<string, string> = {
+  pending: '审批中',
+  approved: '审批通过',
+  rejected: '审批驳回',
+  canceled: '审批撤销',
+  terminated: '审批终止',
+};
+
+const attachmentCategoryLabelMap: Record<string, string> = {
+  meeting_photo: '会议照片',
+  attachment: '附件',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback = '-') {
+  if (!value) {
+    return fallback;
+  }
+
+  return map[value] ?? fallback;
+}
+
+const WECOM_APPROVAL_AGENT_JS_API_LIST = ['thirdPartyOpenPage'];
 
 function renderDynamicField(field: WorkbenchModuleSchemaField) {
   if (field.key === 'learningStatus') {
@@ -93,7 +171,7 @@ export function WorkbenchHomePage({
   statisticsOnly = false,
   routeAware = false,
   heroTitle = '工作平台',
-  heroDescription = 'M6 正在收口工作平台全量模块、企业微信正式上线与生产交付闭环。',
+  heroDescription = '集中处理部门记录、审批、打印和统计任务。',
   moduleFilter = 'all',
   recordListTitle,
 }: WorkbenchHomePageProps = {}) {
@@ -107,6 +185,10 @@ export function WorkbenchHomePage({
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const wecomApprovalSdk = useWecomJsSdk({
+    jsApiList: [],
+    agentJsApiList: WECOM_APPROVAL_AGENT_JS_API_LIST,
+  });
 
   const { data: dashboardResponse, isLoading: dashboardLoading } = useGetWorkbenchDashboardQuery();
   const dashboard = dashboardResponse?.data;
@@ -151,6 +233,15 @@ export function WorkbenchHomePage({
     [moduleCards, moduleFilter],
   );
   const detailModule = detailResponse?.data ? moduleCards.find((item) => item.moduleCode === detailResponse.data.moduleCode) ?? null : null;
+  const schemaFieldLabelMap = useMemo(() => {
+    const labels = new Map<string, string>();
+    moduleSchemaResponse?.data.sections.forEach((section) => {
+      section.fields.forEach((field) => {
+        labels.set(field.key, field.label);
+      });
+    });
+    return labels;
+  }, [moduleSchemaResponse?.data.sections]);
   const isAttendanceView = statisticsOnly || activeModule?.templateType === 'attendance_statistics';
   const resolvedRecordListTitle =
     recordListTitle ??
@@ -243,6 +334,30 @@ export function WorkbenchHomePage({
     setCreateOpen(true);
   };
 
+  const openWecomApprovalPage = async (config: WorkbenchApprovalLaunchConfig) => {
+    if (!wecomApprovalSdk.isReady) {
+      messageApi.warning(wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试');
+      return false;
+    }
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        window.wx.invoke('thirdPartyOpenPage', config, (result) => {
+          const message = String(result.err_msg ?? result.errMsg ?? '');
+          if (!message || message.includes(':ok')) {
+            resolve();
+            return;
+          }
+          reject(new Error(message || '企业微信审批页打开失败'));
+        });
+      });
+      return true;
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : '企业微信审批页打开失败');
+      return false;
+    }
+  };
+
   const submitCreateRecord = async () => {
     if (!activeModuleCode) return;
 
@@ -297,11 +412,23 @@ export function WorkbenchHomePage({
       },
     }).unwrap();
 
-    messageApi.success(`动作已执行：${result.data.acceptedAction} -> ${result.data.status}`);
+    messageApi.success(
+      `动作已执行：${labelFrom(actionTypeLabelMap, result.data.acceptedAction, '状态变更')}，当前状态：${labelFrom(recordStatusLabelMap, result.data.status, '未知状态')}`,
+    );
+    if (result.data.approvalLaunchConfig) {
+      const opened = await openWecomApprovalPage(result.data.approvalLaunchConfig);
+      if (opened) {
+        messageApi.success(`企业微信审批页已打开：${result.data.approvalLaunchConfig.thirdNo}`);
+      }
+    }
   };
 
   const triggerLaunchApproval = async () => {
     if (!detailResponse?.data) return;
+    if (!wecomApprovalSdk.isReady) {
+      messageApi.warning(wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试');
+      return;
+    }
     const record = detailResponse.data;
     const result = await launchWorkbenchApproval({
       moduleCode: record.moduleCode,
@@ -313,7 +440,10 @@ export function WorkbenchHomePage({
       payload: record.payload,
     }).unwrap();
 
-    messageApi.success(`审批已发起：${result.data.processInstanceId}`);
+    const opened = await openWecomApprovalPage(result.data.wecomLaunchConfig);
+    if (opened) {
+      messageApi.success(`企业微信审批页已打开：${result.data.thirdNo}`);
+    }
   };
 
   const triggerPrint = async (paperSize: 'A4' | 'A3') => {
@@ -414,8 +544,8 @@ export function WorkbenchHomePage({
                   <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                     <Space wrap>
                       <Typography.Title level={4}>{item.moduleName}</Typography.Title>
-                      <Tag>{departmentLabelMap[item.departmentCode] ?? item.departmentCode}</Tag>
-                      <Tag color={templateColorMap[item.templateType] ?? 'default'}>{item.templateType}</Tag>
+                      <Tag>{labelFrom(departmentLabelMap, item.departmentCode, '未配置部门')}</Tag>
+                      <Tag color={templateColorMap[item.templateType] ?? 'default'}>{labelFrom(templateLabelMap, item.templateType, '其他模块')}</Tag>
                       {item.requiresApproval ? <Tag color="cyan">企业微信审批</Tag> : null}
                     </Space>
                     <Typography.Text type="secondary">待办：{item.pendingCount}</Typography.Text>
@@ -474,12 +604,14 @@ export function WorkbenchHomePage({
                   dataIndex: 'status',
                   key: 'status',
                   width: 160,
+                  render: (value: string) => <Tag>{labelFrom(recordStatusLabelMap, value, '未知状态')}</Tag>,
                 },
                 {
                   title: '审批通道',
                   dataIndex: 'approvalChannel',
                   key: 'approvalChannel',
                   width: 160,
+                  render: (value: string) => labelFrom(approvalChannelLabelMap, value, '审批通道'),
                 },
                 {
                   title: '时间',
@@ -536,7 +668,13 @@ export function WorkbenchHomePage({
                 pagination={false}
                 columns={[
                   { title: '模块', dataIndex: 'moduleName', key: 'moduleName' },
-                  { title: '部门', dataIndex: 'departmentCode', key: 'departmentCode', width: 140 },
+                  {
+                    title: '部门',
+                    dataIndex: 'departmentCode',
+                    key: 'departmentCode',
+                    width: 140,
+                    render: (value: string) => labelFrom(departmentLabelMap, value, '未配置部门'),
+                  },
                   { title: '记录数', dataIndex: 'recordCount', key: 'recordCount', width: 120 },
                 ]}
               />
@@ -558,9 +696,9 @@ export function WorkbenchHomePage({
               <Typography.Title level={4}>{detailResponse.data.title}</Typography.Title>
               <Typography.Paragraph>{detailResponse.data.summary}</Typography.Paragraph>
               <Space wrap>
-                <Tag>{detailResponse.data.status}</Tag>
-                <Tag>{detailResponse.data.approvalChannel}</Tag>
-                {detailResponse.data.externalStatus ? <Tag color="cyan">{detailResponse.data.externalStatus}</Tag> : null}
+                <Tag>{labelFrom(recordStatusLabelMap, detailResponse.data.status, '未知状态')}</Tag>
+                <Tag>{labelFrom(approvalChannelLabelMap, detailResponse.data.approvalChannel, '审批通道')}</Tag>
+                {detailResponse.data.externalStatus ? <Tag color="cyan">{labelFrom(externalStatusLabelMap, detailResponse.data.externalStatus, '外部状态')}</Tag> : null}
               </Space>
               {detailModule?.supportsPrint ? (
                 <Space wrap style={{ marginTop: 12 }}>
@@ -595,7 +733,7 @@ export function WorkbenchHomePage({
                     <Space direction="vertical" size={2}>
                       <Typography.Text strong>{step.stepName}</Typography.Text>
                       <Typography.Text type="secondary">
-                        {step.stepCode} / {step.status}
+                        状态：{labelFrom(stepStatusLabelMap, step.status, '未知状态')}
                       </Typography.Text>
                     </Space>
                   </List.Item>
@@ -736,7 +874,7 @@ export function WorkbenchHomePage({
                 renderItem={([key, value]) => (
                   <List.Item>
                     <Space>
-                      <Tag>{key}</Tag>
+                      <Tag>{schemaFieldLabelMap.get(key) ?? '自定义字段'}</Tag>
                       <Typography.Text>{String(value)}</Typography.Text>
                     </Space>
                   </List.Item>
@@ -766,7 +904,7 @@ export function WorkbenchHomePage({
                 renderItem={(attachment) => (
                   <List.Item>
                     <Space>
-                      <Tag>{attachment.category}</Tag>
+                      <Tag>{labelFrom(attachmentCategoryLabelMap, attachment.category, '附件')}</Tag>
                       <Typography.Text>{attachment.fileName}</Typography.Text>
                     </Space>
                   </List.Item>
@@ -783,9 +921,9 @@ export function WorkbenchHomePage({
                 renderItem={(log) => (
                   <List.Item>
                     <Space direction="vertical" size={2}>
-                      <Typography.Text strong>{log.actionType}</Typography.Text>
+                      <Typography.Text strong>{labelFrom(actionTypeLabelMap, log.actionType, '状态变更')}</Typography.Text>
                       <Typography.Text type="secondary">
-                        {log.operatorUserId}：{log.fromStatus} → {log.toStatus}
+                        {log.operatorUserId}：{labelFrom(recordStatusLabelMap, log.fromStatus, '未知状态')} → {labelFrom(recordStatusLabelMap, log.toStatus, '未知状态')}
                       </Typography.Text>
                     </Space>
                   </List.Item>
@@ -851,7 +989,6 @@ export function WorkbenchHomePage({
                   renderItem={(step) => (
                     <List.Item>
                       <Space>
-                        <Tag>{step.stepCode}</Tag>
                         <Typography.Text>{step.stepName}</Typography.Text>
                       </Space>
                     </List.Item>
@@ -870,7 +1007,6 @@ export function WorkbenchHomePage({
                   renderItem={(step) => (
                     <List.Item>
                       <Space>
-                        <Tag>{step.stepCode}</Tag>
                         <Typography.Text>{step.stepName}</Typography.Text>
                       </Space>
                     </List.Item>

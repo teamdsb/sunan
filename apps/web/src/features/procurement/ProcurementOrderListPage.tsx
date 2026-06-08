@@ -35,8 +35,20 @@ const statusColor: Record<ProcurementOrderStatus, string> = {
   rejected: 'red',
 };
 
+const statusLabelMap: Record<ProcurementOrderStatus, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  dept_approved: '部门通过',
+  final_approved: '终审通过',
+  rejected: '已驳回',
+};
+
 function formatDepartment(code: ProcurementDepartmentCode) {
-  return departmentOptions.find((item) => item.value === code)?.label ?? code;
+  return departmentOptions.find((item) => item.value === code)?.label ?? '未配置部门';
+}
+
+function formatStatus(status: ProcurementOrderStatus) {
+  return statusLabelMap[status] ?? '未知状态';
 }
 
 function formatMoney(value: number) {
@@ -102,7 +114,7 @@ export function ProcurementOrderListPage() {
         dataIndex: 'status',
         key: 'status',
         width: 120,
-        render: (value: ProcurementOrderStatus) => <Tag color={statusColor[value]}>{value}</Tag>,
+        render: (value: ProcurementOrderStatus) => <Tag color={statusColor[value]}>{formatStatus(value)}</Tag>,
       },
       {
         title: '提交时间',
@@ -214,7 +226,7 @@ export function ProcurementOrderListPage() {
                         <Typography.Text className="procurement-order-mobile-label">单号</Typography.Text>
                         <Typography.Title level={4}>{record.orderNo}</Typography.Title>
                       </div>
-                      <Tag color={statusColor[record.status]}>{record.status}</Tag>
+                      <Tag color={statusColor[record.status]}>{formatStatus(record.status)}</Tag>
                     </div>
                     <Typography.Text strong className="procurement-order-mobile-title">
                       {record.title}
@@ -269,7 +281,7 @@ export function ProcurementOrderListPage() {
           type="info"
           showIcon
           message="审批通道说明"
-          description="当前里程碑固定使用 internal 审批通道；wecom_native 保留为后续桥接扩展。"
+          description="采购审批默认走系统内审批；企业微信原生审批通道会在对应业务启用后自动接入。"
         />
       </section>
     </>

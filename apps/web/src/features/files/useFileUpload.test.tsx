@@ -94,6 +94,7 @@ describe('useFileUpload', () => {
       agentConfig: vi.fn(),
       chooseImage: vi.fn(({ success }) => success({ localIds: ['local-1'] })),
       uploadImage: vi.fn(({ success }) => success({ serverId: 'media-1' })),
+      invoke: vi.fn(),
       previewFile: vi.fn(),
     };
 
@@ -139,6 +140,7 @@ describe('useFileUpload', () => {
       agentConfig: vi.fn(),
       chooseImage: vi.fn(),
       uploadImage: vi.fn(),
+      invoke: vi.fn(),
       previewFile: vi.fn(),
     };
 

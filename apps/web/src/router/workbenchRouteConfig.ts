@@ -19,7 +19,7 @@ export const workbenchRouteConfig = {
   attendanceStatistics: {
     path: '/workbench/statistics/attendance',
     label: '考勤统计',
-    description: '查看 M6 月度签到与统计汇总看板。',
+    description: '查看月度签到与统计汇总看板。',
   },
   approvals: {
     path: '/workbench/approvals',

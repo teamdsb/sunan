@@ -9,8 +9,11 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
 import type {
+  WecomApprovalTemplateCreateRequest,
+  WecomApprovalTemplateCreateResponse,
   WecomDepartmentListResponse,
   WecomMediaResponse,
+  WecomOpenApprovalDataResponse,
   WecomTicketResponse,
   WecomTokenResponse,
   WecomUserDetailResponse,
@@ -70,6 +73,28 @@ export class WecomHttpGateway {
     });
   }
 
+  async createApprovalTemplate(
+    accessToken: string,
+    payload: WecomApprovalTemplateCreateRequest,
+  ): Promise<WecomApprovalTemplateCreateResponse> {
+    return this.post<WecomApprovalTemplateCreateResponse>(
+      '/cgi-bin/oa/approval/create_template',
+      accessToken,
+      payload,
+    );
+  }
+
+  async getOpenApprovalData(
+    accessToken: string,
+    thirdNo: string,
+  ): Promise<WecomOpenApprovalDataResponse> {
+    return this.post<WecomOpenApprovalDataResponse>(
+      '/cgi-bin/corp/getopenapprovaldata',
+      accessToken,
+      { thirdNo },
+    );
+  }
+
   async getMedia(accessToken: string, mediaId: string): Promise<WecomMediaResponse> {
     try {
       const response = (await firstValueFrom(
@@ -103,28 +128,7 @@ export class WecomHttpGateway {
         this.httpService.get<T>(`https://qyapi.weixin.qq.com${url}`, { params }),
       );
 
-      if (
-        typeof data === 'object' &&
-        data !== null &&
-        'errcode' in data &&
-        typeof data.errcode === 'number' &&
-        data.errcode !== 0
-      ) {
-        const responseBody = data as { errcode: number; errmsg?: string };
-        if (data.errcode === 42001) {
-          throw new HttpException('WeCom token expired', HttpStatus.UNAUTHORIZED);
-        }
-
-        if (data.errcode === 45009) {
-          throw new ServiceUnavailableException('WeCom API quota exceeded');
-        }
-
-        throw new BadGatewayException(
-          typeof responseBody.errmsg === 'string'
-            ? responseBody.errmsg
-            : 'WeCom API error',
-        );
-      }
+      this.assertSuccess(data);
 
       return data;
     } catch (error) {
@@ -133,6 +137,57 @@ export class WecomHttpGateway {
       }
 
       throw new BadGatewayException('Failed to reach WeCom API');
+    }
+  }
+
+  private async post<T>(
+    url: string,
+    accessToken: string,
+    body: unknown,
+  ): Promise<T> {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post<T>(`https://qyapi.weixin.qq.com${url}`, body, {
+          params: {
+            access_token: accessToken,
+          },
+        }),
+      );
+
+      this.assertSuccess(data);
+
+      return data;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new BadGatewayException('Failed to reach WeCom API');
+    }
+  }
+
+  private assertSuccess(data: unknown): void {
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'errcode' in data &&
+      typeof data.errcode === 'number' &&
+      data.errcode !== 0
+    ) {
+      const responseBody = data as { errcode: number; errmsg?: string };
+      if (responseBody.errcode === 42001) {
+        throw new HttpException('WeCom token expired', HttpStatus.UNAUTHORIZED);
+      }
+
+      if (responseBody.errcode === 45009) {
+        throw new ServiceUnavailableException('WeCom API quota exceeded');
+      }
+
+      throw new BadGatewayException(
+        typeof responseBody.errmsg === 'string'
+          ? responseBody.errmsg
+          : 'WeCom API error',
+      );
     }
   }
 }

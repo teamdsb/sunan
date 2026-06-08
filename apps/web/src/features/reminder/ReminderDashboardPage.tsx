@@ -20,6 +20,28 @@ const statCards: Array<{ key: ReminderFilter; label: string; badge: string }> = 
   { key: 'acknowledged', label: '已确认', badge: '已确认' },
 ];
 
+const ownerTypeLabelMap: Record<string, string> = {
+  vessel: '船舶',
+  vehicle: '车辆',
+  personnel: '人员',
+};
+
+const reminderTypeLabelMap: Record<string, string> = {
+  upcoming: '即将到期',
+  overdue: '逾期',
+};
+
+const reminderStatusLabelMap: Record<string, string> = {
+  pending: '待处理',
+  sent: '已发送',
+  acknowledged: '已确认',
+  failed: '发送失败',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
+  return value ? map[value] ?? fallback : '-';
+}
+
 function readViewMode(rawView: string | null, fallback: ReminderViewMode): ReminderViewMode {
   if (rawView === 'dashboard' || rawView === 'list') {
     return rawView;
@@ -189,7 +211,7 @@ export function ReminderDashboardPage() {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     {(dashboard?.byOwnerType ?? []).map((item) => (
                       <Space key={item.ownerType} style={{ justifyContent: 'space-between', width: '100%' }}>
-                        <Typography.Text>{item.ownerType}</Typography.Text>
+                        <Typography.Text>{labelFrom(ownerTypeLabelMap, item.ownerType, '其他对象')}</Typography.Text>
                         <Tag color="blue">{item.count}</Tag>
                       </Space>
                     ))}
@@ -230,9 +252,9 @@ export function ReminderDashboardPage() {
                       allowClear
                       placeholder="全部"
                       options={[
-                        { value: 'vessel', label: 'vessel' },
-                        { value: 'vehicle', label: 'vehicle' },
-                        { value: 'personnel', label: 'personnel' },
+                        { value: 'vessel', label: '船舶' },
+                        { value: 'vehicle', label: '车辆' },
+                        { value: 'personnel', label: '人员' },
                       ]}
                       onChange={(nextOwnerType) =>
                         applySearch({
@@ -316,9 +338,9 @@ export function ReminderDashboardPage() {
                 />
                 <Space wrap>
                   <Tag color={isOverdueReminder(item) ? 'red' : 'default'}>
-                    {isOverdueReminder(item) ? '逾期' : item.reminderType}
+                    {isOverdueReminder(item) ? '逾期' : labelFrom(reminderTypeLabelMap, item.reminderType, '其他提醒')}
                   </Tag>
-                  <Tag color={item.status === 'acknowledged' ? 'green' : 'blue'}>{item.status}</Tag>
+                  <Tag color={item.status === 'acknowledged' ? 'green' : 'blue'}>{labelFrom(reminderStatusLabelMap, item.status, '未知状态')}</Tag>
                 </Space>
               </List.Item>
             )}

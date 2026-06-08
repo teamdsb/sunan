@@ -17,6 +17,28 @@ const departmentOptions = [
   { label: '后勤部', value: 'logistics_dept' },
 ];
 
+const statusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  dept_approved: '部门通过',
+  final_approved: '终审通过',
+  rejected: '已驳回',
+};
+
+const actionLabelMap: Record<'approve' | 'reject' | 'return', string> = {
+  approve: '通过',
+  reject: '驳回',
+  return: '退回',
+};
+
+function formatDepartment(value: string | null) {
+  return value ? departmentOptions.find((item) => item.value === value)?.label ?? '未配置部门' : '-';
+}
+
+function formatStatus(value: string) {
+  return statusLabelMap[value] ?? '未知状态';
+}
+
 export function ProcurementApprovalPage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -27,7 +49,7 @@ export function ProcurementApprovalPage() {
   const rows = response?.data ?? [];
 
   const handleAction = async (task: ProcurementPendingTask, action: 'approve' | 'reject' | 'return') => {
-    const comment = window.prompt(`请输入审批意见（${action}）`) ?? '';
+    const comment = window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
     if (action !== 'approve' && !comment.trim()) {
       messageApi.warning('退回和驳回需要审批意见');
       return;
@@ -46,7 +68,7 @@ export function ProcurementApprovalPage() {
         dataIndex: 'departmentCode',
         key: 'departmentCode',
         width: 140,
-        render: (value: string | null) => value ?? '-',
+        render: (value: string | null) => formatDepartment(value),
       },
       { title: '审批节点', dataIndex: 'approvalLevel', key: 'approvalLevel', width: 120 },
       {
@@ -54,7 +76,7 @@ export function ProcurementApprovalPage() {
         dataIndex: 'status',
         key: 'status',
         width: 140,
-        render: (value: string) => <Tag color={value === 'submitted' ? 'gold' : 'blue'}>{value}</Tag>,
+        render: (value: string) => <Tag color={value === 'submitted' ? 'gold' : 'blue'}>{formatStatus(value)}</Tag>,
       },
       {
         title: '提交时间',
@@ -118,7 +140,7 @@ export function ProcurementApprovalPage() {
           type="info"
           showIcon
           message="审批来源"
-          description="当前阶段仅支持 internal 审批动作，external 来源为后续企业微信原生审批桥接预留。"
+          description="当前采购审批在系统内完成；企业微信审批来源会在对应业务启用后自动接入。"
         />
       </section>
     </>

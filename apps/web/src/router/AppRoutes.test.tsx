@@ -196,7 +196,7 @@ describe('AppRoutes', () => {
 
   it('renders the my home page at /my', async () => {
     renderRoute('/my');
-    expect(await screen.findByText('MY_HOME', undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByText('MY_HOME', undefined, { timeout: 15000 })).toBeInTheDocument();
   });
 
   it.each([

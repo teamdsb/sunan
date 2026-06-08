@@ -47,6 +47,7 @@ describe('useWecomJsSdk', () => {
       agentConfig: vi.fn(({ success }) => success()),
       chooseImage: vi.fn(),
       uploadImage: vi.fn(),
+      invoke: vi.fn(),
       previewFile: vi.fn(),
     };
 
@@ -101,6 +102,7 @@ describe('useWecomJsSdk', () => {
       agentConfig: vi.fn(),
       chooseImage: vi.fn(),
       uploadImage: vi.fn(),
+      invoke: vi.fn(),
       previewFile: vi.fn(),
     };
 

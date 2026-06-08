@@ -24,6 +24,10 @@ const iconMap = {
   other: SettingOutlined,
 } as const;
 
+function formatCategoryName(categories: Array<{ code: string; name: string }>, code: string) {
+  return categories.find((category) => category.code === code)?.name ?? '未分类';
+}
+
 export function OfficeHomePage() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
@@ -104,7 +108,7 @@ export function OfficeHomePage() {
                     </span>
                     <div>
                       <Typography.Title level={4}>{entry.title}</Typography.Title>
-                      <Tag>{categories.find((category) => category.code === entry.categoryCode)?.name ?? entry.categoryCode}</Tag>
+                      <Tag>{formatCategoryName(categories, entry.categoryCode)}</Tag>
                     </div>
                   </Space>
                   <Typography.Paragraph>{entry.summary}</Typography.Paragraph>

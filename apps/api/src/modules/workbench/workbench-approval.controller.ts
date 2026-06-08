@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { WecomCallbackValidationService } from 'src/modules/wecom/wecom-callback-validation.service';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
@@ -11,7 +13,10 @@ import { WorkbenchService } from './workbench.service';
 
 @Controller('/api/v1/wecom/approval')
 export class WorkbenchApprovalController {
-  constructor(private readonly service: WorkbenchService) {}
+  constructor(
+    private readonly service: WorkbenchService,
+    private readonly validationService: WecomCallbackValidationService,
+  ) {}
 
   @Post('launch')
   @HttpCode(200)
@@ -23,7 +28,7 @@ export class WorkbenchApprovalController {
   @Post('callback')
   @HttpCode(200)
   async handleCallback(
-    @Body() dto: WorkbenchApprovalCallbackDto,
+    @Body() dto: WorkbenchApprovalCallbackDto | string | Record<string, unknown>,
     @Headers('x-wecom-signature') xWecomSignature: string | undefined,
     @Query('msg_signature') msgSignature: string | undefined,
     @Headers('x-wecom-timestamp') xWecomTimestamp: string | undefined,
@@ -41,6 +46,25 @@ export class WorkbenchApprovalController {
         requestIp: xForwardedFor?.split(',')[0]?.trim() ?? xRealIp?.trim() ?? null,
       }),
     };
+  }
+
+  @Get('callback')
+  verifyCallbackUrl(
+    @Query('signature') signature: string | undefined,
+    @Query('msg_signature') msgSignature: string | undefined,
+    @Query('timestamp') timestamp: string | undefined,
+    @Query('nonce') nonce: string | undefined,
+    @Query('echostr') echoStr: string | undefined,
+    @Res() response: Response,
+  ): void {
+    const verifiedEcho = this.validationService.verifyUrl({
+      signature,
+      msgSignature,
+      timestamp,
+      nonce,
+      echoStr,
+    });
+    response.type('text/plain; charset=utf-8').send(verifiedEcho);
   }
 
   @Get('instances')

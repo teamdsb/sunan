@@ -154,6 +154,29 @@ export interface WorkbenchApprovalLaunchPayload {
   payload?: Record<string, unknown>;
 }
 
+export interface WorkbenchApprovalLaunchConfig {
+  oaType: '10001';
+  templateId: string;
+  thirdNo: string;
+  extData: {
+    fieldList: Array<{
+      title: string;
+      type: 'text' | 'link';
+      value: string;
+    }>;
+  };
+}
+
+export interface WorkbenchApprovalLaunchResult {
+  processInstanceId: string;
+  thirdNo: string;
+  wecomTemplateId: string;
+  approvalChannel: 'wecom_native';
+  launchStatus: string;
+  mirrorStatus: string;
+  wecomLaunchConfig: WorkbenchApprovalLaunchConfig;
+}
+
 export interface WorkbenchAttendanceStatistics {
   month: string;
   summary: {
@@ -242,7 +265,7 @@ export const workbenchApi = baseApi.injectEndpoints({
       invalidatesTags: ['Workbench', 'WorkbenchRecord'],
     }),
     performWorkbenchRecordAction: builder.mutation<
-      { data: { recordId: string; status: string; acceptedAction: string } },
+      { data: { recordId: string; status: string; acceptedAction: string; approvalLaunchConfig?: WorkbenchApprovalLaunchConfig | null } },
       { recordId: string; data: WorkbenchRecordActionPayload }
     >({
       query: ({ recordId, data }) => ({
@@ -253,7 +276,7 @@ export const workbenchApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, arg) => ['Workbench', 'WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
     }),
     launchWorkbenchApproval: builder.mutation<
-      { data: { processInstanceId: string; approvalChannel: 'wecom_native'; launchStatus: string; mirrorStatus: string } },
+      { data: WorkbenchApprovalLaunchResult },
       WorkbenchApprovalLaunchPayload
     >({
       query: (data) => ({ url: '/wecom/approval/launch', method: 'POST', data }),

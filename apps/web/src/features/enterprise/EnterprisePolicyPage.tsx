@@ -26,6 +26,16 @@ function readPageValue(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+const policyStatusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  published: '已发布',
+  deprecated: '已废弃',
+};
+
+function formatPolicyStatus(status: string) {
+  return policyStatusLabelMap[status] ?? '未知状态';
+}
+
 export function EnterprisePolicyPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -143,7 +153,7 @@ export function EnterprisePolicyPage() {
                   </Button>,
                 ]}
               >
-                <List.Item.Meta title={item.title} description={`${item.policyCode} · ${item.version} · ${item.status}`} />
+                <List.Item.Meta title={item.title} description={`${item.policyCode} · ${item.version} · ${formatPolicyStatus(item.status)}`} />
               </List.Item>
             )}
           />
@@ -222,7 +232,13 @@ export function EnterprisePolicyDetailPage() {
             <Input />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Input />
+            <Select
+              options={[
+                { value: 'draft', label: '草稿' },
+                { value: 'published', label: '已发布' },
+                { value: 'deprecated', label: '已废弃' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="summary" label="摘要">
             <Input.TextArea rows={3} />
@@ -244,7 +260,7 @@ export function EnterprisePolicyDetailPage() {
         <List
           size="small"
           dataSource={versions?.data ?? []}
-          renderItem={(item) => <List.Item>{item.version} · {item.status}</List.Item>}
+          renderItem={(item) => <List.Item>{item.version} · {formatPolicyStatus(item.status)}</List.Item>}
         />
       </Card>
     </section>

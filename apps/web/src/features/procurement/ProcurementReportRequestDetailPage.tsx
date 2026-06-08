@@ -21,6 +21,56 @@ const statusColor: Record<ProcurementReportRequestStatus, string> = {
   rejected: 'red',
 };
 
+const statusLabelMap: Record<ProcurementReportRequestStatus, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  dept_approved: '部门通过',
+  finance_approved: '财务通过',
+  final_approved: '终审通过',
+  rejected: '已驳回',
+};
+
+const reportTypeLabelMap: Record<string, string> = {
+  monthly: '月报',
+  yearly: '年报',
+};
+
+const departmentLabelMap: Record<string, string> = {
+  general_office: '总经办',
+  business_dept: '业务部',
+  finance_dept: '财务部',
+  shipping_dept: '船务部',
+  logistics_dept: '后勤部',
+};
+
+const approvalChannelLabelMap: Record<string, string> = {
+  internal: '系统内审批',
+  wecom_native: '企业微信审批',
+};
+
+const approvalActionLabelMap: Record<string, string> = {
+  approve: '通过',
+  reject: '驳回',
+  return: '退回',
+};
+
+const approvalSourceLabelMap: Record<string, string> = {
+  internal: '系统内审批',
+  external: '企业微信审批',
+};
+
+const externalStatusLabelMap: Record<string, string> = {
+  pending: '审批中',
+  approved: '审批通过',
+  rejected: '审批驳回',
+  canceled: '审批撤销',
+  terminated: '审批终止',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
+  return value ? map[value] ?? fallback : '-';
+}
+
 export function ProcurementReportRequestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -40,11 +90,11 @@ export function ProcurementReportRequestDetailPage() {
   const approvalColumns: ColumnsType<ProcurementApprovalRecord> = useMemo(
     () => [
       { title: '节点', dataIndex: 'approvalLevel', key: 'approvalLevel', width: 120 },
-      { title: '动作', dataIndex: 'action', key: 'action', width: 120 },
+      { title: '动作', dataIndex: 'action', key: 'action', width: 120, render: (value: string) => labelFrom(approvalActionLabelMap, value, '其他操作') },
       { title: '审批人', dataIndex: 'approvedBy', key: 'approvedBy', width: 160 },
       { title: '审批时间', dataIndex: 'approvedAt', key: 'approvedAt', width: 180, render: (value: string) => new Date(value).toLocaleString('zh-CN') },
       { title: '意见', dataIndex: 'comment', key: 'comment', render: (value: string | null) => value || '-' },
-      { title: '来源', dataIndex: 'source', key: 'source', width: 120 },
+      { title: '来源', dataIndex: 'source', key: 'source', width: 120, render: (value: string) => labelFrom(approvalSourceLabelMap, value, '其他来源') },
     ],
     [],
   );
@@ -97,17 +147,17 @@ export function ProcurementReportRequestDetailPage() {
           {report ? (
             <Descriptions bordered column={1} size="small" title={report.reportNo}>
               <Descriptions.Item label="状态">
-                <Tag color={statusColor[report.status]}>{report.status}</Tag>
+                <Tag color={statusColor[report.status]}>{labelFrom(statusLabelMap, report.status, '未知状态')}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="类型">{report.reportType}</Descriptions.Item>
+              <Descriptions.Item label="类型">{labelFrom(reportTypeLabelMap, report.reportType, '其他报表')}</Descriptions.Item>
               <Descriptions.Item label="周期">
                 {report.periodMonth ? `${report.periodYear}-${String(report.periodMonth).padStart(2, '0')}` : report.periodYear}
               </Descriptions.Item>
-              <Descriptions.Item label="部门">{report.departmentCode ?? '-'}</Descriptions.Item>
+              <Descriptions.Item label="部门">{labelFrom(departmentLabelMap, report.departmentCode, '未配置部门')}</Descriptions.Item>
               <Descriptions.Item label="提交时间">{report.submittedAt ? new Date(report.submittedAt).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
               <Descriptions.Item label="终审时间">{report.finalApprovedAt ? new Date(report.finalApprovedAt).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
-              <Descriptions.Item label="审批通道">{report.approvalChannel}</Descriptions.Item>
-              <Descriptions.Item label="外部流程状态">{report.externalStatus ?? '-'}</Descriptions.Item>
+              <Descriptions.Item label="审批通道">{labelFrom(approvalChannelLabelMap, report.approvalChannel, '审批通道')}</Descriptions.Item>
+              <Descriptions.Item label="外部流程状态">{labelFrom(externalStatusLabelMap, report.externalStatus, '外部状态')}</Descriptions.Item>
             </Descriptions>
           ) : (
             <Alert type="warning" showIcon message="报表审批单不存在或无权限查看" />

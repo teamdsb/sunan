@@ -34,6 +34,14 @@ const statusColor: Record<ProcurementOrderStatus, string> = {
   rejected: 'red',
 };
 
+const statusLabelMap: Record<ProcurementOrderStatus, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  dept_approved: '部门通过',
+  final_approved: '终审通过',
+  rejected: '已驳回',
+};
+
 const departmentLabel: Record<ProcurementDepartmentCode, string> = {
   general_office: '总经办',
   business_dept: '业务部',
@@ -41,6 +49,29 @@ const departmentLabel: Record<ProcurementDepartmentCode, string> = {
   shipping_dept: '船务部',
   logistics_dept: '后勤部',
 };
+
+const approvalActionLabelMap: Record<string, string> = {
+  approve: '通过',
+  reject: '驳回',
+  return: '退回',
+};
+
+const approvalSourceLabelMap: Record<string, string> = {
+  internal: '系统内审批',
+  external: '企业微信审批',
+};
+
+const externalStatusLabelMap: Record<string, string> = {
+  pending: '审批中',
+  approved: '审批通过',
+  rejected: '审批驳回',
+  canceled: '审批撤销',
+  terminated: '审批终止',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
+  return value ? map[value] ?? fallback : '-';
+}
 
 export function ProcurementOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -82,7 +113,7 @@ export function ProcurementOrderDetailPage() {
   const approvalColumns: ColumnsType<ProcurementApprovalRecord> = useMemo(
     () => [
       { title: '节点', dataIndex: 'approvalLevel', key: 'approvalLevel', width: 120 },
-      { title: '动作', dataIndex: 'action', key: 'action', width: 120 },
+      { title: '动作', dataIndex: 'action', key: 'action', width: 120, render: (value: string) => labelFrom(approvalActionLabelMap, value, '其他操作') },
       { title: '审批人', dataIndex: 'approvedBy', key: 'approvedBy', width: 160 },
       {
         title: '时间',
@@ -92,7 +123,7 @@ export function ProcurementOrderDetailPage() {
         render: (value: string) => new Date(value).toLocaleString('zh-CN'),
       },
       { title: '意见', dataIndex: 'comment', key: 'comment', render: (value: string | null) => value || '-' },
-      { title: '来源', dataIndex: 'source', key: 'source', width: 120 },
+      { title: '来源', dataIndex: 'source', key: 'source', width: 120, render: (value: string) => labelFrom(approvalSourceLabelMap, value, '其他来源') },
     ],
     [],
   );
@@ -186,15 +217,15 @@ export function ProcurementOrderDetailPage() {
           {order ? (
             <Descriptions bordered column={1} size="small" title={order.title}>
               <Descriptions.Item label="状态">
-                <Tag color={statusColor[order.status]}>{order.status}</Tag>
+                <Tag color={statusColor[order.status]}>{labelFrom(statusLabelMap, order.status, '未知状态')}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="单号">{order.orderNo}</Descriptions.Item>
-              <Descriptions.Item label="部门">{departmentLabel[order.departmentCode]}</Descriptions.Item>
+              <Descriptions.Item label="部门">{labelFrom(departmentLabel, order.departmentCode, '未配置部门')}</Descriptions.Item>
               <Descriptions.Item label="细分">{order.dimensionKey || '-'}</Descriptions.Item>
               <Descriptions.Item label="金额">¥{order.amount.toFixed(2)}</Descriptions.Item>
               <Descriptions.Item label="摘要">{order.summary}</Descriptions.Item>
               <Descriptions.Item label="提交时间">{order.submittedAt ? new Date(order.submittedAt).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
-              <Descriptions.Item label="外部流程状态">{order.externalStatus || '-'}</Descriptions.Item>
+              <Descriptions.Item label="外部流程状态">{labelFrom(externalStatusLabelMap, order.externalStatus, '外部状态')}</Descriptions.Item>
             </Descriptions>
           ) : (
             <Alert type="warning" showIcon message="采购单不存在或无权限查看" />

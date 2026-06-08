@@ -31,6 +31,24 @@ const reportStatusColor: Record<string, string> = {
   rejected: 'red',
 };
 
+const reportStatusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  dept_approved: '部门通过',
+  finance_approved: '财务通过',
+  final_approved: '终审通过',
+  rejected: '已驳回',
+};
+
+const reportTypeLabelMap: Record<string, string> = {
+  monthly: '月报',
+  yearly: '年报',
+};
+
+function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
+  return value ? map[value] ?? fallback : '-';
+}
+
 export function ProcurementReportPage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -86,7 +104,7 @@ export function ProcurementReportPage() {
   const requestColumns: ColumnsType<ProcurementReportRequest> = useMemo(
     () => [
       { title: '单号', dataIndex: 'reportNo', key: 'reportNo', width: 180 },
-      { title: '类型', dataIndex: 'reportType', key: 'reportType', width: 120 },
+      { title: '类型', dataIndex: 'reportType', key: 'reportType', width: 120, render: (value: string) => labelFrom(reportTypeLabelMap, value, '其他报表') },
       {
         title: '周期',
         key: 'period',
@@ -98,7 +116,7 @@ export function ProcurementReportPage() {
         dataIndex: 'status',
         key: 'status',
         width: 140,
-        render: (value: string) => <Tag color={reportStatusColor[value] ?? 'default'}>{value}</Tag>,
+        render: (value: string) => <Tag color={reportStatusColor[value] ?? 'default'}>{labelFrom(reportStatusLabelMap, value, '未知状态')}</Tag>,
       },
       {
         title: '操作',
@@ -199,7 +217,7 @@ export function ProcurementReportPage() {
               { title: '单号', dataIndex: 'orderNo', key: 'orderNo', width: 160 },
               { title: '标题', dataIndex: 'title', key: 'title' },
               { title: '金额', dataIndex: 'amount', key: 'amount', render: (value: number) => `¥${value.toFixed(2)}`, width: 120 },
-              { title: '状态', dataIndex: 'status', key: 'status', width: 140 },
+              { title: '状态', dataIndex: 'status', key: 'status', width: 140, render: (value: string) => labelFrom(reportStatusLabelMap, value, '未知状态') },
               { title: '提交时间', dataIndex: 'submittedAt', key: 'submittedAt', width: 180, render: (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN') : '-') },
             ]}
           />
@@ -250,7 +268,7 @@ export function ProcurementReportPage() {
               { title: '细分对象', dataIndex: 'dimensionKey', key: 'dimensionKey', width: 180, render: (value: string | null) => value ?? '-' },
               { title: '标题', dataIndex: 'title', key: 'title' },
               { title: '金额', dataIndex: 'amount', key: 'amount', render: (value: number) => `¥${value.toFixed(2)}`, width: 120 },
-              { title: '状态', dataIndex: 'status', key: 'status', width: 140 },
+              { title: '状态', dataIndex: 'status', key: 'status', width: 140, render: (value: string) => reportStatusLabelMap[value] ?? value },
             ]}
           />
         </Card>
@@ -278,7 +296,7 @@ export function ProcurementReportPage() {
           type="info"
           showIcon
           message="统计口径"
-          description="报表统计纳入 submitted / dept_approved / final_approved / rejected，默认支持近 3 年范围。"
+          description="报表统计纳入已提交、部门通过、终审通过和已驳回数据，默认支持近 3 年范围。"
         />
       </section>
     </>

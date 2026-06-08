@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
@@ -6,6 +6,7 @@ import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
+import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
 import { WorkbenchModuleEntity } from 'src/database/entities/workbench-module.entity';
 import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-print-snapshot.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
@@ -15,6 +16,9 @@ import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-recor
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OssService } from 'src/modules/files/oss.service';
+import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
+import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
+import type { WecomApprovalTemplateCreateRequest } from 'src/modules/wecom/wecom.types';
 import { In, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
@@ -38,7 +42,7 @@ type TemplateType =
 
 type ApprovalChannel = 'internal' | 'wecom_native';
 
-type LaunchStatus = 'queued' | 'started';
+type LaunchStatus = 'queued' | 'prepared' | 'started';
 
 type ApprovalMirrorStatus =
   | 'approval_pending'
@@ -121,6 +125,19 @@ interface ApprovalInstance {
   lastCallbackAt: string | null;
   lastReconciledAt: string | null;
   callbackVersion: number;
+}
+
+interface WecomApprovalLaunchConfig {
+  oaType: '10001';
+  templateId: string;
+  thirdNo: string;
+  extData: {
+    fieldList: Array<{
+      title: string;
+      type: 'text' | 'link';
+      value: string;
+    }>;
+  };
 }
 
 interface ApprovalCallbackRequestMeta {
@@ -1491,6 +1508,8 @@ export class WorkbenchService implements OnModuleInit {
     private readonly actionLogRepository: Repository<WorkbenchRecordActionLogEntity>,
     @InjectRepository(WorkbenchPrintSnapshotEntity)
     private readonly printSnapshotRepository: Repository<WorkbenchPrintSnapshotEntity>,
+    @InjectRepository(WecomApprovalTemplateBindingEntity)
+    private readonly approvalTemplateBindingRepository: Repository<WecomApprovalTemplateBindingEntity>,
     @InjectRepository(WecomApprovalInstanceSyncEntity)
     private readonly approvalSyncRepository: Repository<WecomApprovalInstanceSyncEntity>,
     @InjectRepository(WecomApprovalCallbackEventEntity)
@@ -1498,6 +1517,8 @@ export class WorkbenchService implements OnModuleInit {
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
     private readonly ossService: OssService,
+    private readonly wecomTokenService: WecomTokenService,
+    private readonly wecomHttpGateway: WecomHttpGateway,
   ) {}
 
   async onModuleInit() {
@@ -1943,9 +1964,10 @@ export class WorkbenchService implements OnModuleInit {
     });
 
     // 总经办培训模块在学习完成后自动发起审批，避免人工遗漏。
+    let approvalLaunchConfig: WecomApprovalLaunchConfig | null = null;
     if (dto.actionType === 'update_payload') {
-      const autoApprovalTriggered = await this.tryAutoLaunchTrainingApproval(record, user);
-      if (autoApprovalTriggered) {
+      approvalLaunchConfig = await this.tryAutoLaunchTrainingApproval(record, user);
+      if (approvalLaunchConfig) {
         record = await this.mustGetRecord(record.id);
       }
     }
@@ -1954,6 +1976,7 @@ export class WorkbenchService implements OnModuleInit {
       recordId: record.id,
       status: record.status,
       acceptedAction: dto.actionType,
+      approvalLaunchConfig,
     };
   }
 
@@ -2134,6 +2157,9 @@ export class WorkbenchService implements OnModuleInit {
   async launchApproval(dto: WorkbenchApprovalLaunchDto, user: CurrentUser) {
     const record = await this.mustGetRecord(dto.businessRecordId);
     await this.assertRecordVisible(record, user);
+    if (dto.moduleCode !== record.moduleCode) {
+      throw new BadRequestException('approval module does not match record');
+    }
     const moduleItem = await this.mustGetModule(record.moduleCode);
 
     if (!moduleItem.requiresApproval) {
@@ -2144,9 +2170,21 @@ export class WorkbenchService implements OnModuleInit {
       throw new BadRequestException('approval process already exists for this record');
     }
 
-    const processInstanceId = `wbpi_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const { schemaDefinition, templateCode } = await this.mustGetModuleTemplate(moduleItem);
+    const resolvedTemplateCode = dto.templateCode?.trim() || templateCode;
+    const templateBinding = await this.ensureWecomApprovalTemplateBinding(moduleItem, resolvedTemplateCode, schemaDefinition);
+    const processInstanceId = this.buildApprovalThirdNo(record);
+    const launchConfig = this.buildWecomApprovalLaunchConfig(
+      templateBinding.wecomTemplateId,
+      processInstanceId,
+      record,
+      dto,
+      schemaDefinition,
+    );
     const now = new Date();
-    this.logger.log(`approval launch started: record=${record.id}, module=${record.moduleCode}, process=${processInstanceId}`);
+    this.logger.log(
+      `approval launch prepared: record=${record.id}, module=${record.moduleCode}, template=${templateBinding.wecomTemplateId}, thirdNo=${processInstanceId}`,
+    );
 
     await this.approvalSyncRepository.save(
       this.approvalSyncRepository.create({
@@ -2154,7 +2192,7 @@ export class WorkbenchService implements OnModuleInit {
         moduleCode: record.moduleCode,
         approvalChannel: 'wecom_native',
         processInstanceId,
-        wecomTemplateId: null,
+        wecomTemplateId: templateBinding.wecomTemplateId,
         externalStatus: 'pending',
         internalMirrorStatus: 'approval_pending',
         approvalSyncStatus: 'pending',
@@ -2167,7 +2205,11 @@ export class WorkbenchService implements OnModuleInit {
         lastRetryAt: null,
         syncErrorCode: null,
         syncErrorMessage: null,
-        rawPayloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
+        rawPayloadDigest: JSON.stringify({
+          thirdNo: processInstanceId,
+          templateId: templateBinding.wecomTemplateId,
+          payload: dto.payload ?? {},
+        }),
       }),
     );
 
@@ -2184,22 +2226,210 @@ export class WorkbenchService implements OnModuleInit {
       fromStatus: 'submitted',
       toStatus: 'approval_pending',
       comment: dto.summary ?? null,
-      payloadDigest: dto.payload ? JSON.stringify(dto.payload) : null,
+      payloadDigest: JSON.stringify({
+        thirdNo: processInstanceId,
+        templateId: templateBinding.wecomTemplateId,
+      }),
     });
 
-    const launchStatus: LaunchStatus = 'started';
+    const launchStatus: LaunchStatus = 'prepared';
 
     return {
       processInstanceId,
+      thirdNo: processInstanceId,
+      wecomTemplateId: templateBinding.wecomTemplateId,
       approvalChannel: 'wecom_native' as const,
       launchStatus,
       mirrorStatus: 'approval_pending',
       approvalSyncStatus: 'pending',
+      wecomLaunchConfig: launchConfig,
     };
   }
 
-  async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto, meta: ApprovalCallbackRequestMeta) {
-    const normalizedDto = this.normalizeApprovalCallbackDto(dto);
+  private async ensureWecomApprovalTemplateBinding(
+    moduleItem: WorkbenchModuleSummary,
+    templateCode: string,
+    schemaDefinition: ModuleSchemaDefinition,
+  ) {
+    const existing = await this.approvalTemplateBindingRepository.findOne({
+      where: {
+        moduleCode: moduleItem.moduleCode,
+        templateCode,
+        enabled: true,
+      },
+      order: {
+        version: 'DESC',
+        updatedAt: 'DESC',
+      },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const accessToken = await this.wecomTokenService.getAccessToken();
+    const createPayload = this.buildWecomApprovalTemplateCreatePayload(moduleItem, schemaDefinition);
+    const response = await this.wecomHttpGateway.createApprovalTemplate(accessToken, createPayload);
+    if (!response.template_id) {
+      throw new BadGatewayException('WeCom approval template_id missing');
+    }
+
+    const latestSceneBinding = await this.approvalTemplateBindingRepository.findOne({
+      where: {
+        approvalScene: moduleItem.moduleCode,
+      },
+      order: {
+        version: 'DESC',
+      },
+    });
+
+    try {
+      return await this.approvalTemplateBindingRepository.save(
+        this.approvalTemplateBindingRepository.create({
+          moduleCode: moduleItem.moduleCode,
+          templateCode,
+          wecomTemplateId: response.template_id,
+          approvalScene: moduleItem.moduleCode,
+          version: (latestSceneBinding?.version ?? 0) + 1,
+          visibleRoles: moduleItem.visibleRoles,
+          enabled: true,
+        }),
+      );
+    } catch (error) {
+      if (!this.isUniqueViolation(error)) {
+        throw error;
+      }
+
+      const raced = await this.approvalTemplateBindingRepository.findOne({
+        where: {
+          moduleCode: moduleItem.moduleCode,
+          templateCode,
+          enabled: true,
+        },
+        order: {
+          version: 'DESC',
+          updatedAt: 'DESC',
+        },
+      });
+      if (raced) {
+        return raced;
+      }
+      throw error;
+    }
+  }
+
+  private buildWecomApprovalTemplateCreatePayload(
+    moduleItem: WorkbenchModuleSummary,
+    schemaDefinition: ModuleSchemaDefinition,
+  ): WecomApprovalTemplateCreateRequest {
+    const fields = schemaDefinition.sections.flatMap((section) => section.fields);
+    const controls = (fields.length > 0 ? fields : [{
+      key: 'summary',
+      label: '申请摘要',
+      required: true,
+      inputType: 'textarea' as const,
+      placeholder: '请输入申请摘要',
+    }])
+      .slice(0, 20)
+      .map((field, index) => {
+        const control = this.toWecomApprovalControl(field.inputType);
+        return {
+          property: {
+            control,
+            id: `${control}-${String(index + 1).padStart(2, '0')}`,
+            title: [{ text: field.label, lang: 'zh_CN' as const }],
+            placeholder: [{ text: field.placeholder ?? field.label, lang: 'zh_CN' as const }],
+            require: field.required ? 1 as const : 0 as const,
+            un_print: 0 as const,
+          },
+          config: control === 'Date' ? { date: { type: 'day' } } : {},
+        };
+      });
+
+    return {
+      template_name: [
+        {
+          text: moduleItem.moduleName,
+          lang: 'zh_CN',
+        },
+      ],
+      template_content: {
+        controls,
+      },
+    };
+  }
+
+  private toWecomApprovalControl(inputType: ModuleSchemaField['inputType']): 'Text' | 'Textarea' | 'Number' | 'Date' {
+    switch (inputType) {
+      case 'textarea':
+        return 'Textarea';
+      case 'number':
+        return 'Number';
+      case 'date':
+        return 'Date';
+      default:
+        return 'Text';
+    }
+  }
+
+  private buildApprovalThirdNo(record: WorkbenchRecordEntity) {
+    const shortRecordId = record.id.replace(/-/g, '').slice(0, 12);
+    const randomSuffix = randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+    return `SN-${shortRecordId}-${Date.now()}-${randomSuffix}`;
+  }
+
+  private buildWecomApprovalLaunchConfig(
+    templateId: string,
+    thirdNo: string,
+    record: WorkbenchRecordEntity,
+    dto: WorkbenchApprovalLaunchDto,
+    schemaDefinition: ModuleSchemaDefinition,
+  ): WecomApprovalLaunchConfig {
+    const fieldList: WecomApprovalLaunchConfig['extData']['fieldList'] = [
+      { title: '业务标题', type: 'text', value: dto.title || record.title },
+      { title: '业务摘要', type: 'text', value: dto.summary || record.summary },
+      { title: '申请人', type: 'text', value: dto.applicantUserId },
+      {
+        title: '记录详情',
+        type: 'link',
+        value: `${appEnv.WEB_PUBLIC_URL.replace(/\/$/, '')}/workbench/records/${record.id}`,
+      },
+    ];
+
+    const payload = dto.payload ?? record.payload ?? {};
+    for (const field of schemaDefinition.sections.flatMap((section) => section.fields)) {
+      const raw = payload[field.key];
+      if (raw === undefined || raw === null || String(raw).trim() === '') {
+        continue;
+      }
+      fieldList.push({
+        title: field.label,
+        type: 'text',
+        value: this.toApprovalDisplayValue(raw),
+      });
+    }
+
+    return {
+      oaType: '10001',
+      templateId,
+      thirdNo,
+      extData: {
+        fieldList,
+      },
+    };
+  }
+
+  private toApprovalDisplayValue(value: unknown) {
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+
+  async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto | string | Record<string, unknown>, meta: ApprovalCallbackRequestMeta) {
+    const normalizedDto = this.normalizeApprovalCallbackDto(this.coerceApprovalCallbackDto(dto));
     this.verifyCallbackSignature(normalizedDto, meta);
 
     const payloadDigest = normalizedDto.payload ? JSON.stringify(normalizedDto.payload) : null;
@@ -2333,39 +2563,34 @@ export class WorkbenchService implements OnModuleInit {
     const instanceMap = new Map(instances.map((instance) => [instance.processInstanceId, instance]));
 
     const reconciled: string[] = [];
+    const failed: string[] = [];
+    const accessToken = instances.length > 0 ? await this.wecomTokenService.getAccessToken() : null;
     for (const processInstanceId of dto.processInstanceIds) {
       const instance = instanceMap.get(processInstanceId);
       if (!instance) {
         continue;
       }
 
-      const record = await this.mustGetRecord(instance.businessRecordId);
-      await this.assertRecordVisible(record, user);
-
-      instance.lastReconciledAt = new Date();
-      instance.approvalSyncStatus = 'reconciled';
-      instance.syncErrorCode = null;
-      instance.syncErrorMessage = null;
-      reconciled.push(processInstanceId);
-
-      await this.appendActionLog(record.id, {
-        actionType: 'approval_reconcile',
-        source: 'reconcile',
-        operatorUserId: user.userId,
-        fromStatus: record.status,
-        toStatus: record.status,
-        comment: dto.reason ?? null,
-        payloadDigest: JSON.stringify({ processInstanceId }),
-      });
-    }
-
-    if (instances.length > 0) {
-      await this.approvalSyncRepository.save(instances);
+      try {
+        if (!accessToken) {
+          throw new BadGatewayException('WeCom access_token missing');
+        }
+        await this.refreshApprovalInstanceFromWecom(instance, accessToken, user, dto.reason ?? null, 'approval_reconcile');
+        reconciled.push(processInstanceId);
+      } catch (error) {
+        instance.approvalSyncStatus = 'failed';
+        instance.syncErrorCode = 'wecom_reconcile_failed';
+        instance.syncErrorMessage = this.toErrorMessage(error);
+        await this.approvalSyncRepository.save(instance);
+        failed.push(processInstanceId);
+      }
     }
 
     return {
       acceptedCount: reconciled.length,
+      failedCount: failed.length,
       processInstanceIds: reconciled,
+      failedProcessInstanceIds: failed,
       queuedAt: new Date().toISOString(),
     };
   }
@@ -2396,6 +2621,18 @@ export class WorkbenchService implements OnModuleInit {
 
     await this.approvalSyncRepository.save(instance);
 
+    if (strategy === 'fetch_instance_detail' || strategy === 'full_reconcile') {
+      try {
+        const accessToken = await this.wecomTokenService.getAccessToken();
+        await this.refreshApprovalInstanceFromWecom(instance, accessToken, user, dto.reason ?? null, 'approval_retry_reconcile');
+      } catch (error) {
+        instance.approvalSyncStatus = 'failed';
+        instance.syncErrorCode = 'wecom_retry_reconcile_failed';
+        instance.syncErrorMessage = this.toErrorMessage(error);
+        await this.approvalSyncRepository.save(instance);
+      }
+    }
+
     await this.appendActionLog(record.id, {
       actionType: 'approval_retry',
       source: 'system',
@@ -2413,6 +2650,58 @@ export class WorkbenchService implements OnModuleInit {
       strategy,
       queuedAt: new Date().toISOString(),
     };
+  }
+
+  private async refreshApprovalInstanceFromWecom(
+    instance: WecomApprovalInstanceSyncEntity,
+    accessToken: string,
+    user: CurrentUser,
+    reason: string | null,
+    actionType: string,
+  ) {
+    const record = await this.mustGetRecord(instance.businessRecordId);
+    await this.assertRecordVisible(record, user);
+
+    const response = await this.wecomHttpGateway.getOpenApprovalData(accessToken, instance.processInstanceId);
+    const externalStatus = this.toCallbackStatusFromOpenApprovalStatus(
+      response.data?.OpenSpStatus ?? response.data?.OpenSpstatus,
+    );
+    if (!externalStatus) {
+      throw new BadGatewayException('WeCom approval status missing');
+    }
+
+    const mirrorStatus = this.toMirrorStatus(externalStatus);
+    const fromStatus = record.status;
+    instance.externalStatus = externalStatus;
+    instance.internalMirrorStatus = mirrorStatus;
+    instance.approvalSyncStatus = 'reconciled';
+    instance.lastReconciledAt = new Date();
+    instance.wecomTemplateId = response.data?.OpenTemplateId ?? instance.wecomTemplateId;
+    instance.syncErrorCode = null;
+    instance.syncErrorMessage = null;
+    instance.rawPayloadDigest = JSON.stringify(response.data ?? {});
+
+    record.externalStatus = externalStatus;
+    record.status = mirrorStatus;
+
+    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.save(record)]);
+
+    await this.appendActionLog(record.id, {
+      actionType,
+      source: 'reconcile',
+      operatorUserId: user.userId,
+      fromStatus,
+      toStatus: mirrorStatus,
+      comment: reason,
+      payloadDigest: JSON.stringify(response.data ?? { processInstanceId: instance.processInstanceId }),
+    });
+  }
+
+  private toErrorMessage(error: unknown) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
   }
 
   private toApprovalInstanceResponse(instance: WecomApprovalInstanceSyncEntity) {
@@ -2582,6 +2871,125 @@ export class WorkbenchService implements OnModuleInit {
     return (((part0 << 24) >>> 0) + ((part1 << 16) >>> 0) + ((part2 << 8) >>> 0) + part3) >>> 0;
   }
 
+  private coerceApprovalCallbackDto(input: WorkbenchApprovalCallbackDto | string | Record<string, unknown>): WorkbenchApprovalCallbackDto {
+    if (typeof input === 'string') {
+      const trimmed = input.trim();
+      if (trimmed.startsWith('{')) {
+        try {
+          return this.coerceApprovalCallbackDto(JSON.parse(trimmed) as Record<string, unknown>);
+        } catch {
+          throw new BadRequestException('callback payload invalid');
+        }
+      }
+      return this.parsePlainApprovalXmlCallback(trimmed);
+    }
+
+    const raw = input as Record<string, unknown>;
+    const encrypt = this.pickString(raw, 'encrypt', 'Encrypt');
+    if (encrypt) {
+      return {
+        eventId: this.pickString(raw, 'eventId', 'EventID') ?? `encrypted-${this.sha1(encrypt).slice(0, 16)}`,
+        processInstanceId: this.pickString(raw, 'processInstanceId', 'ProcessInstanceId') ?? 'encrypted',
+        status: this.normalizeCallbackStatus(this.pickString(raw, 'status', 'Status')) ?? 'pending',
+        callbackVersion: this.pickNumber(raw, 'callbackVersion', 'CallbackVersion') ?? 1,
+        encrypted: true,
+        encrypt,
+        payload: this.pickObject(raw, 'payload'),
+      };
+    }
+
+    const processInstanceId =
+      this.pickString(raw, 'processInstanceId', 'ProcessInstanceId', 'thirdNo', 'ThirdNo') ?? '';
+    const status =
+      this.normalizeCallbackStatus(this.pickString(raw, 'status', 'Status')) ??
+      this.toCallbackStatusFromOpenApprovalStatus(this.pickNumber(raw, 'openSpStatus', 'OpenSpStatus', 'OpenSpstatus'));
+    const callbackVersion = this.pickNumber(raw, 'callbackVersion', 'CallbackVersion', 'CreateTime') ?? 1;
+    const eventId =
+      this.pickString(raw, 'eventId', 'EventID') ??
+      `${processInstanceId}:${callbackVersion}:${status}`;
+
+    if (!processInstanceId || !status) {
+      throw new BadRequestException('callback payload invalid');
+    }
+
+    return {
+      eventId,
+      processInstanceId,
+      status,
+      callbackVersion: Math.max(1, callbackVersion),
+      payload: this.pickObject(raw, 'payload'),
+    };
+  }
+
+  private parsePlainApprovalXmlCallback(raw: string): WorkbenchApprovalCallbackDto {
+    const encrypt = this.readXmlTag(raw, 'Encrypt');
+    if (encrypt) {
+      return {
+        eventId: this.readXmlTag(raw, 'EventID') ?? `encrypted-${this.sha1(encrypt).slice(0, 16)}`,
+        processInstanceId: 'encrypted',
+        status: 'pending',
+        callbackVersion: 1,
+        encrypted: true,
+        encrypt,
+      };
+    }
+
+    const thirdNo = this.readXmlTag(raw, 'ThirdNo') ?? this.readXmlTag(raw, 'ProcessInstanceId');
+    const status = this.toCallbackStatusFromOpenApprovalStatus(Number(this.readXmlTag(raw, 'OpenSpStatus')));
+    const callbackVersion = Number(this.readXmlTag(raw, 'CreateTime') ?? Date.now());
+    if (!thirdNo || !status) {
+      throw new BadRequestException('callback payload invalid');
+    }
+
+    return {
+      eventId: this.readXmlTag(raw, 'EventID') ?? `${thirdNo}:${callbackVersion}:${status}`,
+      processInstanceId: thirdNo,
+      status,
+      callbackVersion: Math.max(1, callbackVersion),
+      payload: {
+        openTemplateId: this.readXmlTag(raw, 'OpenTemplateId'),
+        openSpName: this.readXmlTag(raw, 'OpenSpName'),
+        applyUserId: this.readXmlTag(raw, 'ApplyUserId'),
+      },
+    };
+  }
+
+  private pickString(source: Record<string, unknown>, ...keys: string[]) {
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+    return undefined;
+  }
+
+  private pickNumber(source: Record<string, unknown>, ...keys: string[]) {
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+      }
+      if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  private pickObject(source: Record<string, unknown>, key: string) {
+    const value = source[key];
+    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
+  }
+
+  private readXmlTag(raw: string, tag: string) {
+    const matched = raw.match(new RegExp(`<${tag}><!\\[CDATA\\[(.*?)\\]\\]><\\/${tag}>|<${tag}>(.*?)<\\/${tag}>`, 'i'));
+    return matched?.[1] ?? matched?.[2] ?? undefined;
+  }
+
   private normalizeApprovalCallbackDto(dto: WorkbenchApprovalCallbackDto): WorkbenchApprovalCallbackDto {
     if (!dto.encrypted) {
       return dto;
@@ -2650,10 +3058,16 @@ export class WorkbenchService implements OnModuleInit {
     try {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       const callbackVersionCandidate = parsed.callbackVersion;
+      const openStatus = typeof parsed.OpenSpStatus === 'number' ? parsed.OpenSpStatus : typeof parsed.OpenSpstatus === 'number' ? parsed.OpenSpstatus : undefined;
       return {
         eventId: typeof parsed.eventId === 'string' ? parsed.eventId : undefined,
-        processInstanceId: typeof parsed.processInstanceId === 'string' ? parsed.processInstanceId : undefined,
-        status: this.normalizeCallbackStatus(typeof parsed.status === 'string' ? parsed.status : undefined),
+        processInstanceId:
+          typeof parsed.processInstanceId === 'string'
+            ? parsed.processInstanceId
+            : typeof parsed.ThirdNo === 'string'
+              ? parsed.ThirdNo
+              : undefined,
+        status: this.normalizeCallbackStatus(typeof parsed.status === 'string' ? parsed.status : undefined) ?? this.toCallbackStatusFromOpenApprovalStatus(openStatus),
         callbackVersion:
           typeof callbackVersionCandidate === 'number'
             ? callbackVersionCandidate
@@ -2669,11 +3083,12 @@ export class WorkbenchService implements OnModuleInit {
       };
 
       const callbackVersionText = read('CallbackVersion');
-      const callbackVersion = callbackVersionText ? Number(callbackVersionText) : undefined;
+      const callbackVersion = callbackVersionText ? Number(callbackVersionText) : Number(read('CreateTime'));
+      const openStatus = Number(read('OpenSpStatus'));
       return {
-        eventId: read('EventID'),
-        processInstanceId: read('ProcessInstanceId'),
-        status: this.normalizeCallbackStatus(read('Status')),
+        eventId: read('EventID') ?? `${read('ThirdNo') ?? read('ProcessInstanceId')}:${callbackVersion}:${openStatus}`,
+        processInstanceId: read('ProcessInstanceId') ?? read('ThirdNo'),
+        status: this.normalizeCallbackStatus(read('Status')) ?? this.toCallbackStatusFromOpenApprovalStatus(openStatus),
         callbackVersion: Number.isFinite(callbackVersion) ? callbackVersion : undefined,
         payload: undefined,
       };
@@ -2689,6 +3104,21 @@ export class WorkbenchService implements OnModuleInit {
       return normalized;
     }
     return undefined;
+  }
+
+  private toCallbackStatusFromOpenApprovalStatus(status: number | undefined): WorkbenchApprovalCallbackDto['status'] | undefined {
+    switch (status) {
+      case 1:
+        return 'pending';
+      case 2:
+        return 'approved';
+      case 3:
+        return 'rejected';
+      case 4:
+        return 'canceled';
+      default:
+        return undefined;
+    }
   }
 
   private normalizeIp(ip: string) {
@@ -3313,17 +3743,17 @@ export class WorkbenchService implements OnModuleInit {
     return normalized;
   }
 
-  private async tryAutoLaunchTrainingApproval(record: WorkbenchRecordEntity, user: CurrentUser): Promise<boolean> {
+  private async tryAutoLaunchTrainingApproval(record: WorkbenchRecordEntity, user: CurrentUser): Promise<WecomApprovalLaunchConfig | null> {
     if (record.moduleCode !== 'goa_training') {
-      return false;
+      return null;
     }
     if (record.externalProcessInstanceId) {
-      return false;
+      return null;
     }
 
     const moduleItem = await this.mustGetModule(record.moduleCode);
     if (!moduleItem.requiresApproval) {
-      return false;
+      return null;
     }
 
     const payload = record.payload ?? {};
@@ -3334,10 +3764,27 @@ export class WorkbenchService implements OnModuleInit {
 
     const isCompleted = learningStatus === 'completed' || Boolean(completedAt) || (Number.isFinite(progress) && progress >= 100);
     if (!isCompleted) {
-      return false;
+      return null;
     }
 
-    const processInstanceId = `wbpi_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const { schemaDefinition, templateCode } = await this.mustGetModuleTemplate(moduleItem);
+    const templateBinding = await this.ensureWecomApprovalTemplateBinding(moduleItem, templateCode, schemaDefinition);
+    const processInstanceId = this.buildApprovalThirdNo(record);
+    const launchConfig = this.buildWecomApprovalLaunchConfig(
+      templateBinding.wecomTemplateId,
+      processInstanceId,
+      record,
+      {
+        moduleCode: record.moduleCode,
+        businessRecordId: record.id,
+        templateCode,
+        title: record.title,
+        applicantUserId: user.userId,
+        summary: record.summary,
+        payload: record.payload,
+      },
+      schemaDefinition,
+    );
     const now = new Date();
     await this.approvalSyncRepository.save(
       this.approvalSyncRepository.create({
@@ -3345,7 +3792,7 @@ export class WorkbenchService implements OnModuleInit {
         moduleCode: record.moduleCode,
         approvalChannel: 'wecom_native',
         processInstanceId,
-        wecomTemplateId: null,
+        wecomTemplateId: templateBinding.wecomTemplateId,
         externalStatus: 'pending',
         internalMirrorStatus: 'approval_pending',
         approvalSyncStatus: 'pending',
@@ -3358,7 +3805,11 @@ export class WorkbenchService implements OnModuleInit {
         lastRetryAt: null,
         syncErrorCode: null,
         syncErrorMessage: null,
-        rawPayloadDigest: record.payload ? JSON.stringify(record.payload) : null,
+        rawPayloadDigest: JSON.stringify({
+          thirdNo: processInstanceId,
+          templateId: templateBinding.wecomTemplateId,
+          payload: record.payload ?? {},
+        }),
       }),
     );
 
@@ -3376,10 +3827,13 @@ export class WorkbenchService implements OnModuleInit {
       fromStatus,
       toStatus: 'approval_pending',
       comment: '培训完成自动发起审批',
-      payloadDigest: record.payload ? JSON.stringify(record.payload) : null,
+      payloadDigest: JSON.stringify({
+        thirdNo: processInstanceId,
+        templateId: templateBinding.wecomTemplateId,
+      }),
     });
 
-    this.logger.log(`training auto approval launched: record=${record.id}, process=${processInstanceId}`);
-    return true;
+    this.logger.log(`training auto approval prepared: record=${record.id}, thirdNo=${processInstanceId}`);
+    return launchConfig;
   }
 }

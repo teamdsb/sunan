@@ -16,16 +16,32 @@ import {
   useUpdateOfficeEntryMutation,
 } from './officeApi';
 
-const roleOptions = [
-  'all_authenticated',
-  'system_admin',
-  'general_office',
-  'finance',
-  'business',
-  'shipping',
-  'logistics',
-  'crew',
-].map((role) => ({ label: role, value: role }));
+const roleLabelMap: Record<string, string> = {
+  all_authenticated: '全体成员',
+  system_admin: '系统管理员',
+  general_office: '总经办',
+  finance: '财务部',
+  business: '业务部',
+  shipping: '船务部',
+  logistics: '后勤部',
+  crew: '船员',
+};
+
+const roleOptions = Object.entries(roleLabelMap).map(([value, label]) => ({ label, value }));
+
+const statusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  published: '已发布',
+  disabled: '已停用',
+};
+
+const auditActionLabelMap: Record<string, string> = {
+  create: '创建',
+  update: '更新',
+  publish: '发布',
+  disable: '停用',
+  open: '打开',
+};
 
 const targetTypeOptions = [
   { label: '外部地址', value: 'external_url' },
@@ -36,6 +52,18 @@ const openModeOptions = [
   { label: '当前 WebView', value: 'current_webview' },
   { label: '新窗口', value: 'new_window' },
 ];
+
+function formatCategoryName(categories: Array<{ code: string; name: string }>, code: string) {
+  return categories.find((category) => category.code === code)?.name ?? '未分类';
+}
+
+function formatEntryStatus(status: string) {
+  return statusLabelMap[status] ?? '未知状态';
+}
+
+function formatAuditAction(action: string) {
+  return auditActionLabelMap[action] ?? '其他操作';
+}
 
 export function OfficeAdminPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -75,14 +103,14 @@ export function OfficeAdminPage() {
         title: '分类',
         dataIndex: 'categoryCode',
         key: 'categoryCode',
-        render: (value: string) => categories.find((category) => category.code === value)?.name ?? value,
+        render: (value: string) => formatCategoryName(categories, value),
       },
       { title: '目标', dataIndex: 'targetValue', key: 'targetValue', ellipsis: true },
       {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
-        render: (value: string) => <Tag color={value === 'published' ? 'green' : value === 'disabled' ? 'default' : 'gold'}>{value}</Tag>,
+        render: (value: string) => <Tag color={value === 'published' ? 'green' : value === 'disabled' ? 'default' : 'gold'}>{formatEntryStatus(value)}</Tag>,
       },
       {
         title: '操作',
@@ -106,12 +134,12 @@ export function OfficeAdminPage() {
   const auditColumns: ColumnsType<OfficeAuditRecord> = useMemo(
     () => [
       { title: '时间', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => new Date(value).toLocaleString('zh-CN') },
-      { title: '动作', dataIndex: 'action', key: 'action' },
+      { title: '动作', dataIndex: 'action', key: 'action', render: (value: string) => formatAuditAction(value) },
       { title: '入口', dataIndex: 'entryTitle', key: 'entryTitle' },
-      { title: '分类', dataIndex: 'categoryCode', key: 'categoryCode' },
+      { title: '分类', dataIndex: 'categoryCode', key: 'categoryCode', render: (value: string) => formatCategoryName(categories, value) },
       { title: '操作人', dataIndex: 'operatorUserId', key: 'operatorUserId' },
     ],
-    [],
+    [categories],
   );
 
   const handleCreate = () => {
@@ -224,11 +252,11 @@ export function OfficeAdminPage() {
                 value={auditAction}
                 onChange={(value) => setAuditAction(value)}
                 options={[
-                  { label: 'create', value: 'create' },
-                  { label: 'update', value: 'update' },
-                  { label: 'publish', value: 'publish' },
-                  { label: 'disable', value: 'disable' },
-                  { label: 'open', value: 'open' },
+                  { label: '创建', value: 'create' },
+                  { label: '更新', value: 'update' },
+                  { label: '发布', value: 'publish' },
+                  { label: '停用', value: 'disable' },
+                  { label: '打开', value: 'open' },
                 ]}
               />
               <Select

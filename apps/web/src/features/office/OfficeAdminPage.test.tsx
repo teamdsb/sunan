@@ -86,7 +86,7 @@ describe('OfficeAdminPage', () => {
 
     expect(screen.getAllByText('海事入口').length).toBeGreaterThan(0);
     expect(screen.getByText('最近审计记录')).toBeInTheDocument();
-    expect(screen.getByText('publish')).toBeInTheDocument();
+    expect(screen.getByText('发布')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /新增入口/ }));
 
     await waitFor(() => expect(screen.getByText('新增办事入口')).toBeInTheDocument());

@@ -11,6 +11,8 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
+import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
+import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
 import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase } from 'test/pg-test-container';
 
@@ -31,6 +33,15 @@ const authGuard: CanActivate = {
     req.user = currentUser;
     return true;
   },
+};
+
+const wecomTokenServiceMock = {
+  getAccessToken: jest.fn(),
+};
+
+const wecomHttpGatewayMock = {
+  createApprovalTemplate: jest.fn(),
+  getOpenApprovalData: jest.fn(),
 };
 
 @Module({
@@ -80,6 +91,10 @@ describe('WorkbenchController integration', () => {
     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue(authGuard)
+      .overrideProvider(WecomTokenService)
+      .useValue(wecomTokenServiceMock)
+      .overrideProvider(WecomHttpGateway)
+      .useValue(wecomHttpGatewayMock)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -87,6 +102,14 @@ describe('WorkbenchController integration', () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
+    wecomTokenServiceMock.getAccessToken.mockResolvedValue('test-access-token');
+    wecomHttpGatewayMock.createApprovalTemplate.mockResolvedValue({ template_id: 'tpl-shipping-voyage' });
+    wecomHttpGatewayMock.getOpenApprovalData.mockResolvedValue({
+      data: {
+        OpenSpStatus: 2,
+        OpenTemplateId: 'tpl-shipping-voyage',
+      },
+    });
   });
 
   afterAll(async () => {
@@ -206,7 +229,26 @@ describe('WorkbenchController integration', () => {
       });
 
     expect(launchApprovalResponse.status).toBe(200);
-    const processInstanceId = (launchApprovalResponse.body as { data: { processInstanceId: string } }).data.processInstanceId;
+    const launchApprovalData = launchApprovalResponse.body as {
+      data: {
+        processInstanceId: string;
+        thirdNo: string;
+        wecomTemplateId: string;
+        launchStatus: string;
+        wecomLaunchConfig: { templateId: string; thirdNo: string };
+      };
+    };
+    const processInstanceId = launchApprovalData.data.processInstanceId;
+    expect(launchApprovalData.data).toMatchObject({
+      thirdNo: processInstanceId,
+      wecomTemplateId: 'tpl-shipping-voyage',
+      launchStatus: 'prepared',
+      wecomLaunchConfig: {
+        templateId: 'tpl-shipping-voyage',
+        thirdNo: processInstanceId,
+      },
+    });
+    expect(wecomHttpGatewayMock.createApprovalTemplate).toHaveBeenCalled();
 
     const callbackSignature = buildCallbackSignature({
       eventId: 'evt-1',
@@ -328,6 +370,7 @@ describe('WorkbenchController integration', () => {
     const approvalSyncRepository = dataSource.getRepository(WecomApprovalInstanceSyncEntity);
     const approvalSync = await approvalSyncRepository.findOneByOrFail({ processInstanceId });
     expect(approvalSync.approvalSyncStatus).toBe('reconciled');
+    expect(approvalSync.wecomTemplateId).toBe('tpl-shipping-voyage');
     expect(approvalSync.callbackVersion).toBe(1);
     expect(approvalSync.lastReconciledAt).not.toBeNull();
     expect(approvalSync.retryCount).toBeGreaterThanOrEqual(1);
@@ -442,15 +485,22 @@ describe('WorkbenchController integration', () => {
           learningStatus: 'completed',
           learningProgressPercent: 100,
         },
-      });
+    });
     expect(updateTrainingPayloadResponse.status).toBe(201);
-    expect((updateTrainingPayloadResponse.body as { data: { status: string } }).data.status).toBe('approval_pending');
+    expect(
+      (updateTrainingPayloadResponse.body as { data: { status: string; approvalLaunchConfig: { templateId: string; thirdNo: string } } }).data,
+    ).toMatchObject({
+      status: 'approval_pending',
+      approvalLaunchConfig: {
+        templateId: 'tpl-shipping-voyage',
+      },
+    });
 
     const trainingDetailResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get(`/api/v1/workbench/records/${trainingRecordId}`)
       .set('Authorization', 'Bearer token');
     expect(trainingDetailResponse.status).toBe(200);
-    expect((trainingDetailResponse.body as { data: { externalProcessInstanceId: string | null } }).data.externalProcessInstanceId).toMatch(/^wbpi_/);
+    expect((trainingDetailResponse.body as { data: { externalProcessInstanceId: string | null } }).data.externalProcessInstanceId).toMatch(/^SN-/);
     expect((trainingDetailResponse.body as { data: { approvalChannel: string } }).data.approvalChannel).toBe('wecom_native');
 
     const meetingSchemaResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
@@ -670,9 +720,9 @@ describe('WorkbenchController integration', () => {
 
     expect(launchFuelApprovalResponse.status).toBe(200);
     expect((launchFuelApprovalResponse.body as { data: { processInstanceId: string; launchStatus: string } }).data).toMatchObject({
-      launchStatus: 'started',
+      launchStatus: 'prepared',
     });
-    expect((launchFuelApprovalResponse.body as { data: { processInstanceId: string } }).data.processInstanceId).toMatch(/^wbpi_/);
+    expect((launchFuelApprovalResponse.body as { data: { processInstanceId: string } }).data.processInstanceId).toMatch(/^SN-/);
   });
 
   it('enforces module visibility by role (permission matrix baseline)', async () => {

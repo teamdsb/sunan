@@ -13,6 +13,7 @@ const mockCreateWorkbenchRecord = vi.fn();
 const mockPerformWorkbenchRecordAction = vi.fn();
 const mockLaunchWorkbenchApproval = vi.fn();
 const mockUploadWorkbenchRecordAttachment = vi.fn();
+const mockWxInvoke = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -37,9 +38,24 @@ vi.mock('./workbenchApi', () => ({
   useUploadWorkbenchRecordAttachmentMutation: () => [mockUploadWorkbenchRecordAttachment, { isLoading: false }],
 }));
 
+vi.mock('../../hooks/useWecomJsSdk', () => ({
+  useWecomJsSdk: () => ({ isReady: true, error: null }),
+}));
+
 describe('WorkbenchHomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockWxInvoke.mockImplementation((_api, _config, callback) => callback({ err_msg: 'thirdPartyOpenPage:ok' }));
+    window.wx = {
+      config: vi.fn(),
+      ready: vi.fn(),
+      error: vi.fn(),
+      agentConfig: vi.fn(),
+      chooseImage: vi.fn(),
+      uploadImage: vi.fn(),
+      invoke: mockWxInvoke,
+      previewFile: vi.fn(),
+    };
     mockTriggerPrintSnapshot.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { paperSize: 'A4', renderedFormat: 'pdf' } }) });
     mockUploadWorkbenchRecordAttachment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { id: 'att-1' } }) });
     mockGetWorkbenchDashboardQuery.mockReturnValue({
@@ -252,7 +268,19 @@ describe('WorkbenchHomePage', () => {
 
   it('shows launch approval action for requiresApproval non-wecom detail and calls mutation', async () => {
     mockLaunchWorkbenchApproval.mockReturnValue({
-      unwrap: vi.fn().mockResolvedValue({ data: { processInstanceId: 'ww-approval-1' } }),
+      unwrap: vi.fn().mockResolvedValue({
+        data: {
+          processInstanceId: 'ww-approval-1',
+          thirdNo: 'ww-approval-1',
+          wecomTemplateId: 'tpl-1',
+          wecomLaunchConfig: {
+            oaType: '10001',
+            templateId: 'tpl-1',
+            thirdNo: 'ww-approval-1',
+            extData: { fieldList: [] },
+          },
+        },
+      }),
     });
     mockGetWorkbenchRecordQuery.mockReturnValue({
       data: {
@@ -289,6 +317,11 @@ describe('WorkbenchHomePage', () => {
         summary: '燃油加注申请',
         payload: { amount: 120 },
       });
+      expect(mockWxInvoke).toHaveBeenCalledWith(
+        'thirdPartyOpenPage',
+        expect.objectContaining({ templateId: 'tpl-1', thirdNo: 'ww-approval-1' }),
+        expect.any(Function),
+      );
     });
   });
 

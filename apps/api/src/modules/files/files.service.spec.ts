@@ -35,19 +35,19 @@ describe('FilesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    ossService.createUploadSignature.mockReturnValue({
+    ossService.createUploadSignature.mockResolvedValue({
       uploadUrl: 'https://oss.example.com/upload',
       expiresAt: '2026-01-01T00:00:00.000Z',
       headers: { 'Content-Type': 'application/pdf' },
     });
-    ossService.createDownloadSignature.mockReturnValue({
+    ossService.createDownloadSignature.mockResolvedValue({
       downloadUrl: 'https://oss.example.com/download',
       expiresAt: '2026-01-01T00:10:00.000Z',
     });
   });
 
-  it('creates a presigned upload payload', () => {
-    const result = service.createPresign({
+  it('creates a presigned upload payload', async () => {
+    const result = await service.createPresign({
       category: 'certificates',
       fileName: '证书.pdf',
       mimeType: 'application/pdf',
@@ -58,15 +58,15 @@ describe('FilesService', () => {
     expect(ossService.createUploadSignature.mock.calls.length).toBe(1);
   });
 
-  it('rejects unsupported categories', () => {
-    expect(() =>
+  it('rejects unsupported categories', async () => {
+    await expect(
       service.createPresign({
         category: 'unknown',
         fileName: '证书.pdf',
         mimeType: 'application/pdf',
         fileSize: 1024,
       }),
-    ).toThrow(BadRequestException);
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('registers callback and returns download url', async () => {

@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { text } from 'express';
 
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { ResponseInterceptor } from 'src/common/interceptors/response.interceptor';
@@ -11,6 +12,7 @@ function escapeRegex(value: string): string {
 }
 
 export function configureApp(app: INestApplication): void {
+  app.use(text({ type: ['text/xml', 'application/xml'] }));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

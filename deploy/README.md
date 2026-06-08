@@ -168,6 +168,33 @@ certbot certonly --webroot -w /dev/sunan/sunan-nginx/acme \
 
 `/api/v1/wecom/callback` 已支持企业微信 URL 校验请求，会按 Token 校验签名，并在加密模式下解密 `echostr` 后以纯文本返回。2026-05-21 已写入真实 `WECOM_CORP_ID`、`WECOM_AGENT_ID`、`WECOM_AGENT_SECRET`、`WECOM_SYSTEM_ADMIN_USER_IDS`、`WECOM_CALLBACK_TOKEN` 和 `WECOM_ENCODING_AES_KEY`；`WECOM_CALLBACK_ALLOWED_IP_RANGES` 已恢复为默认空值，并由每日自动任务合并官方回调 IP 段与后续手写追加值。
 
+### 工作平台审批真实调用链路
+
+工作平台审批已按“自建应用审批流程引擎”方式接入：
+
+- 后端 `POST /api/v1/wecom/approval/launch` 会检查模块模板绑定。
+- 若当前业务模块还没有企业微信审批模板绑定，系统会调用企业微信“创建审批模板 API”自动创建模板，并把返回的 `template_id` 写入 `wecom_approval_template_bindings.wecom_template_id`。
+- 系统会生成唯一 `thirdNo`，写入 `wecom_approval_instance_syncs.process_instance_id`，并返回前端 `thirdPartyOpenPage` 所需参数。
+- 前端在企业微信客户端内通过 JS-SDK 调用 `wx.invoke('thirdPartyOpenPage', ...)` 打开真实企业微信审批页。
+- 企业微信回调进入 `https://api.qzssncb.com/api/v1/wecom/approval/callback`，系统完成验签、解密、幂等和镜像状态更新。
+- 管理员对账/重试接口会调用 `getopenapprovaldata` 拉取企业微信真实审批状态，并以企业微信状态为准更新系统镜像。
+
+上线首测建议：
+
+1. 在企业微信后台确认自建应用具有审批模板创建/审批流程引擎相关 API 权限。
+2. 在企业微信客户端中打开 `https://app.qzssncb.com`，使用可见范围内成员登录。
+3. 新建一个需要审批的工作平台记录，点击“发起企业微信审批”。
+4. 页面应打开企业微信审批页；提交后，企业微信后台应能看到真实审批单。
+5. 在数据库检查模板和实例：
+
+```bash
+docker exec -it sunan-db psql -U sunan -d sunan -c \
+  "select module_code, template_code, wecom_template_id, enabled, updated_at from wecom_approval_template_bindings order by updated_at desc limit 10;"
+
+docker exec -it sunan-db psql -U sunan -d sunan -c \
+  "select process_instance_id, wecom_template_id, external_status, approval_sync_status, updated_at from wecom_approval_instance_syncs order by updated_at desc limit 10;"
+```
+
 已验证：
 
 - 企业微信 `gettoken` 返回 `errcode=0`

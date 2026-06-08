@@ -6,7 +6,7 @@ export function WorkbenchAttendancePage() {
       routeAware
       statisticsOnly
       heroTitle="考勤统计"
-      heroDescription="M6 将签到台与月度统计从工作台首页中拆出，形成可直达的统计看板入口。"
+      heroDescription="查看月度签到汇总、部门记录和考勤趋势。"
       recordListTitle="考勤相关记录"
     />
   );

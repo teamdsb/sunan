@@ -13,6 +13,15 @@ const ownerTabs = [
   { label: '人员', value: 'personnel' },
 ] as const;
 const scrollStoragePrefix = 'certificate-list-scroll:';
+const certificateStatusLabelMap: Record<string, string> = {
+  active: '有效',
+  expired: '已过期',
+  archived: '已归档',
+};
+
+function formatCertificateStatus(status: string) {
+  return certificateStatusLabelMap[status] ?? '未知状态';
+}
 
 function readPageValue(value: string | null, fallback: number): number {
   if (!value) {
@@ -173,7 +182,7 @@ export function CertificateListPage() {
                       {item.title}
                     </Link>
                   }
-                  description={`${item.ownerName} · ${item.expiryDate} · ${item.status}`}
+                  description={`${item.ownerName} · ${item.expiryDate} · ${formatCertificateStatus(item.status)}`}
                 />
               </List.Item>
             )}

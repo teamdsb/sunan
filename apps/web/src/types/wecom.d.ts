@@ -35,6 +35,22 @@ declare global {
         success: (result: { serverId: string }) => void;
         fail?: (error: unknown) => void;
       }) => void;
+      invoke: (
+        api: 'thirdPartyOpenPage',
+        params: {
+          oaType: '10001' | '10002';
+          templateId: string;
+          thirdNo: string;
+          extData?: {
+            fieldList?: Array<{
+              title: string;
+              type: 'text' | 'link';
+              value: string;
+            }>;
+          };
+        },
+        callback: (result: { err_msg?: string; errMsg?: string; [key: string]: unknown }) => void,
+      ) => void;
       previewFile: (params: {
         url: string;
         name: string;
