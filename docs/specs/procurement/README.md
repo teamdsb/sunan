@@ -39,6 +39,7 @@ replaced_by: []
 | UI | `ui/report-approval-page.md` | Wave 1 已收口 |
 | UI | `ui/dictionary-admin-page.md` | Wave 1 已收口 |
 | UI | `ui/print-export.md` | Wave 1 已收口 |
+| Design | `budget-and-responsive-form-design.md` | 待书面复核 |
 
 ## 核心范围
 
