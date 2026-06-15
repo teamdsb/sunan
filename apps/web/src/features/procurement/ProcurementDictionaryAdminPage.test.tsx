@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProcurementDictionaryAdminPage } from './ProcurementDictionaryAdminPage';
 
-const mockNavigate = vi.fn();
 const mockCurrentUser = vi.fn();
 const mockGetDimensions = vi.fn();
 const mockRefetch = vi.fn();
@@ -10,25 +9,29 @@ const mockCreateDimension = vi.fn();
 const mockUpdateDimension = vi.fn();
 const mockDisableDimension = vi.fn();
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
 vi.mock('../../app/hooks', () => ({
   useAppSelector: (
-    selector: (state: { auth: { currentUser: { userId: string; roles: string[] } | null } }) => unknown,
+    selector: (state: {
+      auth: { currentUser: { userId: string; roles: string[] } | null };
+    }) => unknown,
   ) => selector({ auth: { currentUser: mockCurrentUser() } }),
 }));
 
 vi.mock('./procurementApi', () => ({
-  useGetProcurementDimensionsQuery: (params: unknown) => mockGetDimensions(params),
-  useCreateProcurementDimensionMutation: () => [mockCreateDimension, { isLoading: false }],
-  useUpdateProcurementDimensionMutation: () => [mockUpdateDimension, { isLoading: false }],
-  useDisableProcurementDimensionMutation: () => [mockDisableDimension, { isLoading: false }],
+  useGetProcurementDimensionsQuery: (params: unknown) =>
+    mockGetDimensions(params),
+  useCreateProcurementDimensionMutation: () => [
+    mockCreateDimension,
+    { isLoading: false },
+  ],
+  useUpdateProcurementDimensionMutation: () => [
+    mockUpdateDimension,
+    { isLoading: false },
+  ],
+  useDisableProcurementDimensionMutation: () => [
+    mockDisableDimension,
+    { isLoading: false },
+  ],
 }));
 
 describe('ProcurementDictionaryAdminPage', () => {
@@ -97,5 +100,18 @@ describe('ProcurementDictionaryAdminPage', () => {
     });
 
     expect(promptSpy).toHaveBeenCalled();
+  });
+
+  it('uses the global navigation instead of a procurement return button', () => {
+    mockCurrentUser.mockReturnValue({
+      userId: 'admin-1',
+      roles: ['all_authenticated', 'system_admin'],
+    });
+
+    render(<ProcurementDictionaryAdminPage />);
+
+    expect(
+      screen.queryByRole('button', { name: '返回采购首页' }),
+    ).not.toBeInTheDocument();
   });
 });

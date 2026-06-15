@@ -7,7 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { appEnv } from 'src/config/env';
 
 const timestampColumnType = 'timestamptz';
 

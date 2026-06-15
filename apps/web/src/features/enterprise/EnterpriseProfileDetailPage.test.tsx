@@ -6,22 +6,12 @@ import { EnterpriseProfileDetailPage } from './EnterpriseProfileDetailPage';
 const mockGetById = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
-const mockNavigate = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
     <button onClick={() => props.onChange?.({ id: 'f1' })}>upload</button>
   ),
 }));
-
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 vi.mock('./enterpriseApi', () => ({
   useGetEnterpriseProfileByIdQuery: () => mockGetById(),
@@ -40,7 +30,7 @@ describe('EnterpriseProfileDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('replaces history when returning to the filtered list', () => {
+  it('relies on the global navigation instead of a return button', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -53,12 +43,9 @@ describe('EnterpriseProfileDetailPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
-
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/my/enterprise-profile?page=2&pageSize=10&category=license&status=draft',
-      { replace: true },
-    );
+    expect(
+      screen.queryByRole('button', { name: '返回列表' }),
+    ).not.toBeInTheDocument();
   });
 
   it('supports edit and bind files', async () => {

@@ -39,4 +39,9 @@ export const procurementRouteConfig = {
     label: '字典治理',
     description: '维护船舶/后勤细分项字典。',
   },
+  budgets: {
+    path: '/procurement/budgets',
+    label: '年度预算',
+    description: '维护年度采购预算并查看执行情况。',
+  },
 } as const;

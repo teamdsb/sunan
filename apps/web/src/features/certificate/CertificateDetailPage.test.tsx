@@ -6,22 +6,12 @@ import { CertificateDetailPage } from './CertificateDetailPage';
 const mockGet = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
-const mockNavigate = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
     <button onClick={() => props.onChange?.({ id: 'f2' })}>upload</button>
   ),
 }));
-
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
@@ -40,7 +30,7 @@ describe('CertificateDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('replaces history when returning to the certificate list', () => {
+  it('relies on the global navigation instead of a return button', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -53,12 +43,9 @@ describe('CertificateDetailPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
-
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
-      { replace: true },
-    );
+    expect(
+      screen.queryByRole('button', { name: '返回列表' }),
+    ).not.toBeInTheDocument();
   });
 
   it('renders detail, edit and bind file', async () => {

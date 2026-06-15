@@ -1,4 +1,13 @@
-import { Button, Card, Form, Input, InputNumber, Select, Space, Typography, message } from 'antd';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Typography,
+  message,
+} from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -31,17 +40,21 @@ export function ProcurementOrderCreatePage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<ProcurementOrderFormValues>();
-  const [createOrder, { isLoading: isCreating }] = useCreateProcurementOrderMutation();
-  const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
-  const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode>('general_office');
-  const { data: dimensionResponse, isLoading: isDimensionLoading } = useGetProcurementDimensionsQuery(
-    departmentCode === 'shipping_dept' || departmentCode === 'logistics_dept'
-      ? {
-          departmentCode,
-          isEnabled: true,
-        }
-      : undefined,
-  );
+  const [createOrder, { isLoading: isCreating }] =
+    useCreateProcurementOrderMutation();
+  const [submitOrder, { isLoading: isSubmitting }] =
+    useSubmitProcurementOrderMutation();
+  const [departmentCode, setDepartmentCode] =
+    useState<ProcurementDepartmentCode>('general_office');
+  const { data: dimensionResponse, isLoading: isDimensionLoading } =
+    useGetProcurementDimensionsQuery(
+      departmentCode === 'shipping_dept' || departmentCode === 'logistics_dept'
+        ? {
+            departmentCode,
+            isEnabled: true,
+          }
+        : undefined,
+    );
 
   const dimensionTypeOptions = useMemo(() => {
     if (departmentCode === 'shipping_dept') {
@@ -63,7 +76,10 @@ export function ProcurementOrderCreatePage() {
     }
 
     if (value === 'logistics_dept') {
-      form.setFieldsValue({ dimensionType: 'logistics_category', dimensionKey: undefined });
+      form.setFieldsValue({
+        dimensionType: 'logistics_category',
+        dimensionKey: undefined,
+      });
       return;
     }
 
@@ -73,7 +89,9 @@ export function ProcurementOrderCreatePage() {
   const dimensionItemOptions = useMemo(
     () =>
       (dimensionResponse?.data ?? [])
-        .filter((item) => item.departmentCode === departmentCode && item.isEnabled)
+        .filter(
+          (item) => item.departmentCode === departmentCode && item.isEnabled,
+        )
         .map((item) => ({
           label: `${item.dimensionName} (${item.dimensionKey})`,
           value: item.dimensionKey,
@@ -130,7 +148,9 @@ export function ProcurementOrderCreatePage() {
       {contextHolder}
       <section className="page-hero">
         <Typography.Title level={2}>新建采购单</Typography.Title>
-        <Typography.Paragraph type="secondary">支持先保存草稿，再提交审批。</Typography.Paragraph>
+        <Typography.Paragraph type="secondary">
+          支持先保存草稿，再提交审批。
+        </Typography.Paragraph>
       </section>
 
       <section className="page-card-grid">
@@ -138,56 +158,102 @@ export function ProcurementOrderCreatePage() {
           <Form
             form={form}
             layout="vertical"
+            className="sunan-form-grid"
             initialValues={{
               departmentCode: 'general_office',
               dimensionType: 'none',
             }}
           >
-            <Form.Item name="departmentCode" label="部门" rules={[{ required: true }]}>
-              <Select options={departmentOptions} onChange={handleDepartmentChange} />
+            <Form.Item
+              name="departmentCode"
+              label="部门"
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={departmentOptions}
+                onChange={handleDepartmentChange}
+              />
             </Form.Item>
 
-            <Form.Item name="dimensionType" label="细分类型" rules={[{ required: true }]}>
-              <Select options={dimensionTypeOptions} disabled={departmentCode !== 'shipping_dept' && departmentCode !== 'logistics_dept'} />
+            <Form.Item
+              name="dimensionType"
+              label="细分类型"
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={dimensionTypeOptions}
+                disabled={
+                  departmentCode !== 'shipping_dept' &&
+                  departmentCode !== 'logistics_dept'
+                }
+              />
             </Form.Item>
 
-            {departmentCode === 'shipping_dept' || departmentCode === 'logistics_dept' ? (
-              <Form.Item name="dimensionKey" label="细分对象" rules={[{ required: true, message: '请填写细分对象' }]}>
+            {departmentCode === 'shipping_dept' ||
+            departmentCode === 'logistics_dept' ? (
+              <Form.Item
+                name="dimensionKey"
+                label="细分对象"
+                rules={[{ required: true, message: '请填写细分对象' }]}
+              >
                 <Select
                   showSearch
                   loading={isDimensionLoading}
                   options={dimensionItemOptions}
-                  placeholder={departmentCode === 'shipping_dept' ? '请选择船舶' : '请选择后勤类别'}
+                  placeholder={
+                    departmentCode === 'shipping_dept'
+                      ? '请选择船舶'
+                      : '请选择后勤类别'
+                  }
                   optionFilterProp="label"
                 />
               </Form.Item>
             ) : null}
 
-            <Form.Item name="title" label="标题" rules={[{ required: true, message: '请填写采购标题' }]}>
+            <Form.Item
+              name="title"
+              label="标题"
+              rules={[{ required: true, message: '请填写采购标题' }]}
+            >
               <Input maxLength={128} />
             </Form.Item>
 
-            <Form.Item name="summary" label="摘要/事由" rules={[{ required: true, message: '请填写采购摘要' }]}>
+            <Form.Item
+              className="sunan-form-field-wide"
+              name="summary"
+              label="摘要/事由"
+              rules={[{ required: true, message: '请填写采购摘要' }]}
+            >
               <Input.TextArea rows={4} />
             </Form.Item>
 
-            <Form.Item name="amount" label="金额" rules={[{ required: true, message: '请填写采购金额' }]}>
-              <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+            <Form.Item
+              name="amount"
+              label="金额"
+              rules={[{ required: true, message: '请填写采购金额' }]}
+            >
+              <InputNumber min={0} precision={2} />
             </Form.Item>
 
             <Form.Item name="expenseDate" label="费用日期（可选）">
               <Input type="date" />
             </Form.Item>
 
-            <Space wrap>
-              <Button onClick={() => navigate('/procurement')}>返回列表</Button>
-              <Button loading={isCreating} onClick={() => void handleSaveDraft()}>
+            <div className="sunan-form-actions">
+              <Button
+                loading={isCreating}
+                onClick={() => void handleSaveDraft()}
+              >
                 保存草稿
               </Button>
-              <Button type="primary" loading={isCreating || isSubmitting} onClick={() => void handleSaveAndSubmit()}>
+              <Button
+                type="primary"
+                loading={isCreating || isSubmitting}
+                onClick={() => void handleSaveAndSubmit()}
+              >
                 保存并提交
               </Button>
-            </Space>
+            </div>
           </Form>
         </Card>
       </section>

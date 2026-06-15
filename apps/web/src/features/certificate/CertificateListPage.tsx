@@ -83,6 +83,9 @@ export function CertificateListPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>电子证照</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        按持有对象、状态和关键词查询证照，并查看到期与附件信息。
+      </Typography.Paragraph>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Segmented
           block

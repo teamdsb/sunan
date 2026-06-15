@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
+const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
   DB_HOST: z.string().default('127.0.0.1'),
@@ -59,11 +59,148 @@ const envSchema = z.object({
   OSS_DOWNLOAD_EXPIRE: z.coerce.number().default(900),
 });
 
+const productionRequiredKeys = [
+  'DB_PASSWORD',
+  'REDIS_PASSWORD',
+  'JWT_SECRET',
+  'WECOM_CORP_ID',
+  'WECOM_AGENT_ID',
+  'WECOM_AGENT_SECRET',
+  'WECOM_REDIRECT_URI',
+  'WEB_PUBLIC_URL',
+  'API_PUBLIC_URL',
+  'APP_DOMAIN',
+  'WECOM_SYSTEM_ADMIN_USER_IDS',
+  'WECOM_CALLBACK_TOKEN',
+  'WECOM_ENCODING_AES_KEY',
+  'OSS_BUCKET',
+  'OSS_ACCESS_KEY_ID',
+  'OSS_ACCESS_KEY_SECRET',
+] as const;
+
+const productionSecretMinimums = {
+  DB_PASSWORD: 16,
+  REDIS_PASSWORD: 16,
+  JWT_SECRET: 32,
+  WECOM_AGENT_SECRET: 16,
+  WECOM_CALLBACK_TOKEN: 16,
+  OSS_ACCESS_KEY_SECRET: 16,
+} as const;
+
+const insecureProductionValues = new Set([
+  'postgres',
+  '01234567890123456789012345678901',
+  'ww-test-corp',
+  'test-agent-secret',
+  'test-callback-token',
+  'test-access-key-id',
+  'test-access-key-secret',
+  'example.com',
+  'https://example.com',
+  'https://api.example.com',
+]);
+
+const envSchema = baseEnvSchema.superRefine((env, context) => {
+  if (env.NODE_ENV !== 'production') {
+    return;
+  }
+
+  for (const key of productionRequiredKeys) {
+    const value = env[key];
+    if (typeof value !== 'string' || value.trim() === '') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${key} is required in production`,
+        path: [key],
+      });
+    }
+  }
+
+  for (const [key, minimum] of Object.entries(productionSecretMinimums)) {
+    const value = env[key as keyof typeof productionSecretMinimums];
+    if (typeof value === 'string' && value.length < minimum) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${key} must contain at least ${minimum} characters in production`,
+        path: [key],
+      });
+    }
+  }
+
+  for (const key of productionRequiredKeys) {
+    const value = env[key];
+    if (
+      typeof value === 'string' &&
+      (insecureProductionValues.has(value) || /replace-(?:me|with)/i.test(value))
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${key} still contains a development placeholder`,
+        path: [key],
+      });
+    }
+  }
+
+  for (const key of ['WEB_PUBLIC_URL', 'API_PUBLIC_URL', 'WECOM_REDIRECT_URI'] as const) {
+    if (env[key] && new URL(env[key]).protocol !== 'https:') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${key} must use HTTPS in production`,
+        path: [key],
+      });
+    }
+  }
+
+  if (env.WECOM_ENCODING_AES_KEY && env.WECOM_ENCODING_AES_KEY.length !== 43) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'WECOM_ENCODING_AES_KEY must contain exactly 43 characters',
+      path: ['WECOM_ENCODING_AES_KEY'],
+    });
+  }
+
+  if (!env.WECOM_CALLBACK_SIGNATURE_REQUIRED) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'WECOM_CALLBACK_SIGNATURE_REQUIRED must be true in production',
+      path: ['WECOM_CALLBACK_SIGNATURE_REQUIRED'],
+    });
+  }
+
+  if (env.OSS_DRIVER === 's3') {
+    if (!env.OSS_ENDPOINT) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'OSS_ENDPOINT is required when OSS_DRIVER=s3',
+        path: ['OSS_ENDPOINT'],
+      });
+    }
+    if (!env.OSS_PUBLIC_ENDPOINT) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'OSS_PUBLIC_ENDPOINT is required when OSS_DRIVER=s3',
+        path: ['OSS_PUBLIC_ENDPOINT'],
+      });
+    } else if (new URL(env.OSS_PUBLIC_ENDPOINT).protocol !== 'https:') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'OSS_PUBLIC_ENDPOINT must use HTTPS in production',
+        path: ['OSS_PUBLIC_ENDPOINT'],
+      });
+    }
+  }
+});
+
 export type AppEnv = z.infer<typeof envSchema>;
 
-const envInput = {
-  ...process.env,
-  WECOM_CALLBACK_TOKEN: process.env.WECOM_CALLBACK_TOKEN ?? process.env.WECOM_TOKEN,
-};
+export function parseAppEnv(
+  input: Record<string, string | undefined>,
+): AppEnv {
+  return envSchema.parse({
+    ...input,
+    WECOM_CALLBACK_TOKEN:
+      input.WECOM_CALLBACK_TOKEN ?? input.WECOM_TOKEN,
+  });
+}
 
-export const appEnv = envSchema.parse(envInput);
+export const appEnv = parseAppEnv(process.env);

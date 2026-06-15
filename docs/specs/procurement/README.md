@@ -1,10 +1,11 @@
 ---
 status: current-index
 owner: procurement
-updated: 2026-05-04
+updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
+
 # 采购管理模块规格（里程碑 M3）
 
 ## 模块定位
@@ -15,31 +16,35 @@ replaced_by: []
 
 ## 规格文档清单
 
-| 层次 | 文件 | 状态 |
-|---|---|---|
-| API | `api/procurement-order-api.yaml` | Wave 1 已收口 |
-| API | `api/procurement-approval-api.yaml` | Wave 1 已收口 |
-| API | `api/procurement-report-api.yaml` | Wave 1 已收口 |
-| API | `api/procurement-dictionary-api.yaml` | Wave 1 已收口 |
-| DB | `db/schema.md` | Wave 1 已收口 |
-| DB | `db/procurement-orders.md` | Wave 1 已收口 |
-| DB | `db/procurement-order-approvals.md` | Wave 1 已收口 |
-| DB | `db/procurement-order-files.md` | Wave 1 已收口 |
-| DB | `db/procurement-reports.md` | Wave 1 已收口 |
-| DB | `db/procurement-report-approvals.md` | Wave 1 已收口 |
-| DB | `db/procurement-dimension-items.md` | Wave 1 已收口 |
-| State | `state/procurement-slice.md` | Wave 1 已收口 |
-| State | `state/report-slice.md` | Wave 1 已收口 |
-| State | `state/dictionary-slice.md` | Wave 1 已收口 |
-| UI | `ui/page-map.md` | Wave 1 已收口 |
-| UI | `ui/order-create-page.md` | Wave 1 已收口 |
-| UI | `ui/order-list-page.md` | Wave 1 已收口 |
-| UI | `ui/approval-page.md` | Wave 1 已收口 |
-| UI | `ui/report-page.md` | Wave 1 已收口 |
-| UI | `ui/report-approval-page.md` | Wave 1 已收口 |
-| UI | `ui/dictionary-admin-page.md` | Wave 1 已收口 |
-| UI | `ui/print-export.md` | Wave 1 已收口 |
-| Design | `budget-and-responsive-form-design.md` | 待书面复核 |
+| 层次   | 文件                                   | 状态          |
+| ------ | -------------------------------------- | ------------- |
+| API    | `api/procurement-order-api.yaml`       | Wave 1 已收口 |
+| API    | `api/procurement-approval-api.yaml`    | Wave 1 已收口 |
+| API    | `api/procurement-report-api.yaml`      | Wave 1 已收口 |
+| API    | `api/procurement-dictionary-api.yaml`  | Wave 1 已收口 |
+| API    | `api/procurement-budget-api.yaml`      | 当前规格      |
+| DB     | `db/schema.md`                         | Wave 1 已收口 |
+| DB     | `db/procurement-orders.md`             | Wave 1 已收口 |
+| DB     | `db/procurement-order-approvals.md`    | Wave 1 已收口 |
+| DB     | `db/procurement-order-files.md`        | Wave 1 已收口 |
+| DB     | `db/procurement-reports.md`            | Wave 1 已收口 |
+| DB     | `db/procurement-report-approvals.md`   | Wave 1 已收口 |
+| DB     | `db/procurement-dimension-items.md`    | Wave 1 已收口 |
+| DB     | `db/procurement-budgets.md`            | 当前规格      |
+| State  | `state/procurement-slice.md`           | Wave 1 已收口 |
+| State  | `state/report-slice.md`                | Wave 1 已收口 |
+| State  | `state/dictionary-slice.md`            | Wave 1 已收口 |
+| State  | `state/budget-slice.md`                | 当前规格      |
+| UI     | `ui/page-map.md`                       | Wave 1 已收口 |
+| UI     | `ui/order-create-page.md`              | Wave 1 已收口 |
+| UI     | `ui/order-list-page.md`                | Wave 1 已收口 |
+| UI     | `ui/approval-page.md`                  | Wave 1 已收口 |
+| UI     | `ui/report-page.md`                    | Wave 1 已收口 |
+| UI     | `ui/report-approval-page.md`           | Wave 1 已收口 |
+| UI     | `ui/dictionary-admin-page.md`          | Wave 1 已收口 |
+| UI     | `ui/print-export.md`                   | Wave 1 已收口 |
+| UI     | `ui/budget-admin-page.md`              | 当前规格      |
+| Design | `budget-and-responsive-form-design.md` | 已确认并实施  |
 
 ## 核心范围
 
@@ -50,6 +55,7 @@ replaced_by: []
 - 附件留存：采购附件上传与绑定
 - 历史查询：默认支持近 3 年
 - 字典治理：船舶部/后勤部细分项由总经办与系统管理员维护
+- 年度预算：按年度、部门和采购分类维护预算，统计终审通过采购单的执行金额
 
 ## 原生审批预留策略
 
@@ -63,12 +69,12 @@ replaced_by: []
 
 ## Wave 1 验收对照
 
-| 验收项 | 对应规格 |
-|---|---|
-| 采购单包含 `approval_channel` 与外部流程预留字段 | `db/procurement-orders.md`、`api/procurement-order-api.yaml` |
+| 验收项                                               | 对应规格                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 采购单包含 `approval_channel` 与外部流程预留字段     | `db/procurement-orders.md`、`api/procurement-order-api.yaml`   |
 | 报表审批单包含 `approval_channel` 与外部流程预留字段 | `db/procurement-reports.md`、`api/procurement-report-api.yaml` |
-| 审批动作明确 `source=internal|external` | `db/procurement-order-approvals.md`、`db/procurement-report-approvals.md`、`api/procurement-approval-api.yaml` |
-| 未来桥接接口 `501 Not Implemented` 契约 | `docs/specs/wecom/approval-native-bridge-spec.md` |
+| 审批动作明确 `source=internal                        | external`                                                      | `db/procurement-order-approvals.md`、`db/procurement-report-approvals.md`、`api/procurement-approval-api.yaml` |
+| 未来桥接接口 `501 Not Implemented` 契约              | `docs/specs/wecom/approval-native-bridge-spec.md`              |
 
 ## 约束对齐
 

@@ -84,7 +84,6 @@ describe('ReminderController integration', () => {
   let shippingReminderId: string;
   let shippingPeerReminderId: string;
   let officeReminderId: string;
-  let vesselId: string;
   let vehicleId: string;
   let personnelId: string;
   let certificateId: string;
@@ -128,16 +127,14 @@ describe('ReminderController integration', () => {
       )
     ).id;
 
-    vesselId = (
-      await vesselRepo.save(
-        vesselRepo.create({
-          code: 'SN012-REM',
-          name: '\u82CF\u5357012-\u63D0\u9192\u6D4B\u8BD5',
-          category: 'main_vessel',
-          status: 'active',
-        }),
-      )
-    ).id;
+    await vesselRepo.save(
+      vesselRepo.create({
+        code: 'SN012-REM',
+        name: '\u82CF\u5357012-\u63D0\u9192\u6D4B\u8BD5',
+        category: 'main_vessel',
+        status: 'active',
+      }),
+    );
 
     vehicleId = (
       await vehicleRepo.save(

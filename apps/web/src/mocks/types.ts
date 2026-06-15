@@ -6,6 +6,7 @@ import type { MonitorMockState } from './fixtures/monitor';
 import type { OfficeMockState } from './fixtures/office';
 import type { ReminderMockState } from './fixtures/reminders';
 import type { SettingsMockState } from './fixtures/settings';
+import type { ProcurementMockState } from './fixtures/procurement';
 
 export interface MockRequest {
   url: string;
@@ -28,6 +29,7 @@ export interface MockRuntimeState {
   monitor: MonitorMockState;
   office: OfficeMockState;
   settings: SettingsMockState;
+  procurement: ProcurementMockState;
 }
 
 export interface MockHandlerContext {

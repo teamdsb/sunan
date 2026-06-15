@@ -22,11 +22,11 @@ export function configureApp(app: INestApplication): void {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
-  const allowedOrigins = new Set([
-    appEnv.WEB_PUBLIC_URL,
-    'http://localhost:5173',
-    'http://localhost:4173',
-  ]);
+  const allowedOrigins = new Set([appEnv.WEB_PUBLIC_URL]);
+  if (appEnv.NODE_ENV !== 'production') {
+    allowedOrigins.add('http://localhost:5173');
+    allowedOrigins.add('http://localhost:4173');
+  }
   const appDomainPattern = new RegExp(
     `^https://([a-z0-9-]+\\.)?${escapeRegex(appEnv.APP_DOMAIN)}$`,
     'i',

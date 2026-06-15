@@ -1,10 +1,11 @@
 ---
-status: proposed-spec
+status: current-spec
 owner: procurement
 updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
+
 # 采购年度预算与全站响应式表单设计
 
 ## 目标
@@ -57,21 +58,21 @@ JSON 缺少可靠的年度、部门、分类唯一约束，不利于并发更新
 
 ### `procurement_budgets`
 
-| 字段 | 类型 | 约束 | 说明 |
-|---|---|---|---|
-| `id` | UUID | PK | 主键 |
-| `budget_year` | INTEGER | NOT NULL | 预算年度 |
-| `department_code` | VARCHAR(32) | NOT NULL | 采购部门编码 |
-| `dimension_type` | VARCHAR(32) | NOT NULL | `none/vessel/logistics_category` |
-| `dimension_key` | VARCHAR(64) | NULL | 细分稳定键 |
-| `dimension_name_snapshot` | VARCHAR(128) | NOT NULL | 创建或调整时的展示名快照 |
-| `budget_amount` | NUMERIC(12,2) | NOT NULL, CHECK > 0 | 预算金额 |
-| `is_enabled` | BOOLEAN | NOT NULL default true | 是否参与当前预算汇总 |
-| `created_by` | VARCHAR(64) | NOT NULL | 创建人 UserId |
-| `updated_by` | VARCHAR(64) | NOT NULL | 最后修改人 UserId |
-| `created_at` | TIMESTAMPTZ | NOT NULL | 创建时间 |
-| `updated_at` | TIMESTAMPTZ | NOT NULL | 更新时间 |
-| `deleted_at` | TIMESTAMPTZ | NULL | 仅保留通用软删除字段，不开放硬删除或删除 API |
+| 字段                      | 类型          | 约束                  | 说明                                         |
+| ------------------------- | ------------- | --------------------- | -------------------------------------------- |
+| `id`                      | UUID          | PK                    | 主键                                         |
+| `budget_year`             | INTEGER       | NOT NULL              | 预算年度                                     |
+| `department_code`         | VARCHAR(32)   | NOT NULL              | 采购部门编码                                 |
+| `dimension_type`          | VARCHAR(32)   | NOT NULL              | `none/vessel/logistics_category`             |
+| `dimension_key`           | VARCHAR(64)   | NULL                  | 细分稳定键                                   |
+| `dimension_name_snapshot` | VARCHAR(128)  | NOT NULL              | 创建或调整时的展示名快照                     |
+| `budget_amount`           | NUMERIC(12,2) | NOT NULL, CHECK > 0   | 预算金额                                     |
+| `is_enabled`              | BOOLEAN       | NOT NULL default true | 是否参与当前预算汇总                         |
+| `created_by`              | VARCHAR(64)   | NOT NULL              | 创建人 UserId                                |
+| `updated_by`              | VARCHAR(64)   | NOT NULL              | 最后修改人 UserId                            |
+| `created_at`              | TIMESTAMPTZ   | NOT NULL              | 创建时间                                     |
+| `updated_at`              | TIMESTAMPTZ   | NOT NULL              | 更新时间                                     |
+| `deleted_at`              | TIMESTAMPTZ   | NULL                  | 仅保留通用软删除字段，不开放硬删除或删除 API |
 
 约束：
 
@@ -83,19 +84,19 @@ JSON 缺少可靠的年度、部门、分类唯一约束，不利于并发更新
 
 ### `procurement_budget_audits`
 
-| 字段 | 类型 | 约束 | 说明 |
-|---|---|---|---|
-| `id` | UUID | PK | 主键 |
-| `budget_id` | UUID | FK, NOT NULL | 对应预算 |
-| `action` | VARCHAR(32) | NOT NULL | `create/update/enable/disable` |
-| `before_amount` | NUMERIC(12,2) | NULL | 修改前金额 |
-| `after_amount` | NUMERIC(12,2) | NULL | 修改后金额 |
-| `before_enabled` | BOOLEAN | NULL | 修改前启用状态 |
-| `after_enabled` | BOOLEAN | NULL | 修改后启用状态 |
-| `change_reason` | VARCHAR(500) | NOT NULL | 修改原因或备注 |
-| `payload_snapshot` | JSONB | NOT NULL default `{}` | 部门、分类和名称等完整快照 |
-| `changed_by` | VARCHAR(64) | NOT NULL | 操作人 UserId |
-| `changed_at` | TIMESTAMPTZ | NOT NULL | 操作时间 |
+| 字段               | 类型          | 约束                  | 说明                           |
+| ------------------ | ------------- | --------------------- | ------------------------------ |
+| `id`               | UUID          | PK                    | 主键                           |
+| `budget_id`        | UUID          | FK, NOT NULL          | 对应预算                       |
+| `action`           | VARCHAR(32)   | NOT NULL              | `create/update/enable/disable` |
+| `before_amount`    | NUMERIC(12,2) | NULL                  | 修改前金额                     |
+| `after_amount`     | NUMERIC(12,2) | NULL                  | 修改后金额                     |
+| `before_enabled`   | BOOLEAN       | NULL                  | 修改前启用状态                 |
+| `after_enabled`    | BOOLEAN       | NULL                  | 修改后启用状态                 |
+| `change_reason`    | VARCHAR(500)  | NOT NULL              | 修改原因或备注                 |
+| `payload_snapshot` | JSONB         | NOT NULL default `{}` | 部门、分类和名称等完整快照     |
+| `changed_by`       | VARCHAR(64)   | NOT NULL              | 操作人 UserId                  |
+| `changed_at`       | TIMESTAMPTZ   | NOT NULL              | 操作时间                       |
 
 审计记录只追加、不更新、不删除。
 
@@ -226,12 +227,12 @@ mock runtime 增加与正式 API 同结构的预算资源和聚合逻辑。页�
 
 ### 断点
 
-| 视口 | 查询区 | 业务表单 | 操作按钮 |
-|---|---|---|---|
-| `>= 1280px` | 4 列或自适应 `minmax(180px, 1fr)` | 12 列网格，常规字段占 3-6 列 | 右对齐，可保持内容宽度 |
-| `769-1279px` | 2-3 列 | 2 列 | 行尾对齐 |
-| `431-768px` | 2 列，搜索跨两列 | 1-2 列，长字段跨整行 | 等宽排列 |
-| `<= 430px` | 1 列 | 1 列 | 主按钮全宽，次按钮可并排或全宽 |
+| 视口         | 查询区                            | 业务表单                     | 操作按钮                       |
+| ------------ | --------------------------------- | ---------------------------- | ------------------------------ |
+| `>= 1280px`  | 4 列或自适应 `minmax(180px, 1fr)` | 12 列网格，常规字段占 3-6 列 | 右对齐，可保持内容宽度         |
+| `769-1279px` | 2-3 列                            | 2 列                         | 行尾对齐                       |
+| `431-768px`  | 2 列，搜索跨两列                  | 1-2 列，长字段跨整行         | 等宽排列                       |
+| `<= 430px`   | 1 列                              | 1 列                         | 主按钮全宽，次按钮可并排或全宽 |
 
 统一控制高度：桌面至少 `42px`，移动端至少 `46px`。标签置于控件上方，避免
 中文标签与输入框在窄屏相互挤压。错误提示在字段下方占独立行。

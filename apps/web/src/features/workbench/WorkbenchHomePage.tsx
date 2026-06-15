@@ -11,13 +11,13 @@ import {
   Select,
   Space,
   Statistic,
-  Table,
   Tag,
   Typography,
   message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { useWecomJsSdk } from '../../hooks/useWecomJsSdk';
 import {
   WorkbenchApprovalLaunchConfig,
@@ -120,7 +120,23 @@ const attachmentCategoryLabelMap: Record<string, string> = {
   attachment: '附件',
 };
 
-function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback = '-') {
+const workbenchSchedule = [
+  { time: '09:30', title: '总经办例会', note: '会议室 A · 需打印纪要' },
+  { time: '14:00', title: '船舶安全检查', note: '苏南 16 号 · 船务部' },
+  { time: '16:30', title: '采购评审', note: '雷达维保服务合同' },
+] as const;
+
+const workbenchPriority = [
+  { title: '证书到期确认', note: '剩余 4 小时', risk: '高' },
+  { title: '年度培训计划', note: '剩余 1 天', risk: '中' },
+  { title: '台账表单复核', note: '剩余 3 天', risk: '低' },
+] as const;
+
+function labelFrom(
+  map: Record<string, string>,
+  value: string | null | undefined,
+  fallback = '-',
+) {
   if (!value) {
     return fallback;
   }
@@ -147,11 +163,20 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
     return <Input.TextArea rows={3} placeholder={field.placeholder} />;
   }
 
-  return <Input type={field.inputType === 'number' ? 'number' : 'text'} placeholder={field.placeholder} />;
+  return (
+    <Input
+      type={field.inputType === 'number' ? 'number' : 'text'}
+      placeholder={field.placeholder}
+    />
+  );
 }
 
 function getCurrentStep(record: WorkbenchRecordDetail) {
-  return record.steps.find((step) => step.status === 'in_progress') ?? record.steps.find((step) => step.status === 'pending') ?? null;
+  return (
+    record.steps.find((step) => step.status === 'in_progress') ??
+    record.steps.find((step) => step.status === 'pending') ??
+    null
+  );
 }
 
 export interface WorkbenchHomePageProps {
@@ -175,12 +200,19 @@ export function WorkbenchHomePage({
   moduleFilter = 'all',
   recordListTitle,
 }: WorkbenchHomePageProps = {}) {
-  const [activeModuleCode, setActiveModuleCode] = useState<string | null>(initialModuleCode);
-  const [activeRecordId, setActiveRecordId] = useState<string | null>(initialRecordId);
+  const [activeModuleCode, setActiveModuleCode] = useState<string | null>(
+    initialModuleCode,
+  );
+  const [activeRecordId, setActiveRecordId] = useState<string | null>(
+    initialRecordId,
+  );
   const [createOpen, setCreateOpen] = useState(false);
   const [statisticsMonth, setStatisticsMonth] = useState('2026-04');
-  const [trainingProgressPercent, setTrainingProgressPercent] = useState<string>('0');
-  const [trainingProgressStatus, setTrainingProgressStatus] = useState<'not_started' | 'in_progress' | 'completed'>('not_started');
+  const [trainingProgressPercent, setTrainingProgressPercent] =
+    useState<string>('0');
+  const [trainingProgressStatus, setTrainingProgressStatus] = useState<
+    'not_started' | 'in_progress' | 'completed'
+  >('not_started');
   const [meetingPhotoFileId, setMeetingPhotoFileId] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
@@ -190,12 +222,22 @@ export function WorkbenchHomePage({
     agentJsApiList: WECOM_APPROVAL_AGENT_JS_API_LIST,
   });
 
-  const { data: dashboardResponse, isLoading: dashboardLoading } = useGetWorkbenchDashboardQuery();
+  const { data: dashboardResponse, isLoading: dashboardLoading } =
+    useGetWorkbenchDashboardQuery();
   const dashboard = dashboardResponse?.data;
-  const moduleCards = useMemo(() => dashboard?.modules ?? [], [dashboard?.modules]);
-  const activeModule = moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
+  const moduleCards = useMemo(
+    () => dashboard?.modules ?? [],
+    [dashboard?.modules],
+  );
+  const activeModule =
+    moduleCards.find((item) => item.moduleCode === activeModuleCode) ?? null;
   const approvalModuleCodes = useMemo(
-    () => new Set(moduleCards.filter((item) => item.requiresApproval).map((item) => item.moduleCode)),
+    () =>
+      new Set(
+        moduleCards
+          .filter((item) => item.requiresApproval)
+          .map((item) => item.moduleCode),
+      ),
     [moduleCards],
   );
   const recordsQuery = activeModuleCode
@@ -203,36 +245,66 @@ export function WorkbenchHomePage({
     : moduleFilter === 'requiresApproval'
       ? { requiresApproval: true, page: 1, pageSize: 20 }
       : { page: 1, pageSize: 20 };
-  const { data: recordsResponse, isLoading: recordsLoading } = useGetWorkbenchRecordsQuery(recordsQuery);
-  const { data: detailResponse, isFetching: detailLoading } = useGetWorkbenchRecordQuery(activeRecordId ?? '', {
-    skip: !activeRecordId,
-  });
+  const { data: recordsResponse, isLoading: recordsLoading } =
+    useGetWorkbenchRecordsQuery(recordsQuery);
+  const { data: detailResponse, isFetching: detailLoading } =
+    useGetWorkbenchRecordQuery(activeRecordId ?? '', {
+      skip: !activeRecordId,
+    });
 
-  const { data: moduleSchemaResponse, isLoading: schemaLoading } = useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
-    skip: !activeModuleCode,
-  });
-  const { data: attendanceStatisticsResponse, isLoading: attendanceStatisticsLoading } = useGetWorkbenchAttendanceStatisticsQuery(statisticsMonth ? { month: statisticsMonth } : undefined, {
-    skip: !statisticsOnly && activeModule?.templateType !== 'attendance_statistics',
-  });
+  const { data: moduleSchemaResponse, isLoading: schemaLoading } =
+    useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
+      skip: !activeModuleCode,
+    });
+  const {
+    data: attendanceStatisticsResponse,
+    isLoading: attendanceStatisticsLoading,
+  } = useGetWorkbenchAttendanceStatisticsQuery(
+    statisticsMonth ? { month: statisticsMonth } : undefined,
+    {
+      skip:
+        !statisticsOnly &&
+        activeModule?.templateType !== 'attendance_statistics',
+    },
+  );
 
-  const [createWorkbenchRecord, { isLoading: creatingRecord }] = useCreateWorkbenchRecordMutation();
-  const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] = usePerformWorkbenchRecordActionMutation();
-  const [uploadWorkbenchRecordAttachment, { isLoading: uploadingAttachment }] = useUploadWorkbenchRecordAttachmentMutation();
-  const [launchWorkbenchApproval, { isLoading: launchingApproval }] = useLaunchWorkbenchApprovalMutation();
-  const [triggerPrintSnapshot, { isFetching: printingSnapshot }] = useLazyGetWorkbenchPrintSnapshotQuery();
+  const [createWorkbenchRecord, { isLoading: creatingRecord }] =
+    useCreateWorkbenchRecordMutation();
+  const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] =
+    usePerformWorkbenchRecordActionMutation();
+  const [uploadWorkbenchRecordAttachment, { isLoading: uploadingAttachment }] =
+    useUploadWorkbenchRecordAttachmentMutation();
+  const [launchWorkbenchApproval, { isLoading: launchingApproval }] =
+    useLaunchWorkbenchApprovalMutation();
+  const [triggerPrintSnapshot, { isFetching: printingSnapshot }] =
+    useLazyGetWorkbenchPrintSnapshotQuery();
 
   const records = useMemo(() => {
     const source = recordsResponse?.data ?? [];
     if (moduleFilter !== 'requiresApproval' || activeModuleCode) {
       return source;
     }
-    return source.filter((record) => approvalModuleCodes.has(record.moduleCode));
-  }, [activeModuleCode, approvalModuleCodes, moduleFilter, recordsResponse?.data]);
+    return source.filter((record) =>
+      approvalModuleCodes.has(record.moduleCode),
+    );
+  }, [
+    activeModuleCode,
+    approvalModuleCodes,
+    moduleFilter,
+    recordsResponse?.data,
+  ]);
   const visibleModuleCards = useMemo(
-    () => moduleCards.filter((item) => (moduleFilter === 'requiresApproval' ? item.requiresApproval : true)),
+    () =>
+      moduleCards.filter((item) =>
+        moduleFilter === 'requiresApproval' ? item.requiresApproval : true,
+      ),
     [moduleCards, moduleFilter],
   );
-  const detailModule = detailResponse?.data ? moduleCards.find((item) => item.moduleCode === detailResponse.data.moduleCode) ?? null : null;
+  const detailModule = detailResponse?.data
+    ? (moduleCards.find(
+        (item) => item.moduleCode === detailResponse.data.moduleCode,
+      ) ?? null)
+    : null;
   const schemaFieldLabelMap = useMemo(() => {
     const labels = new Map<string, string>();
     moduleSchemaResponse?.data.sections.forEach((section) => {
@@ -242,10 +314,15 @@ export function WorkbenchHomePage({
     });
     return labels;
   }, [moduleSchemaResponse?.data.sections]);
-  const isAttendanceView = statisticsOnly || activeModule?.templateType === 'attendance_statistics';
+  const isAttendanceView =
+    statisticsOnly || activeModule?.templateType === 'attendance_statistics';
   const resolvedRecordListTitle =
     recordListTitle ??
-    (activeModule ? `模块记录：${activeModule.moduleName}` : moduleFilter === 'requiresApproval' ? '审批相关记录' : '全部模块记录');
+    (activeModule
+      ? `模块记录：${activeModule.moduleName}`
+      : moduleFilter === 'requiresApproval'
+        ? '审批相关记录'
+        : '全部模块记录');
   const canCreateRecord =
     activeModule?.templateType === 'ledger_form' ||
     activeModule?.templateType === 'operation_flow' ||
@@ -281,10 +358,20 @@ export function WorkbenchHomePage({
     if (detailResponse.data.moduleCode === 'goa_training') {
       const progressRaw = detailResponse.data.payload.learningProgressPercent;
       const progressNumber =
-        typeof progressRaw === 'number' ? progressRaw : Number(String(progressRaw ?? '').trim());
-      setTrainingProgressPercent(Number.isFinite(progressNumber) ? String(progressNumber) : '0');
-      const statusRaw = String(detailResponse.data.payload.learningStatus ?? '').trim();
-      if (statusRaw === 'in_progress' || statusRaw === 'completed' || statusRaw === 'not_started') {
+        typeof progressRaw === 'number'
+          ? progressRaw
+          : Number(String(progressRaw ?? '').trim());
+      setTrainingProgressPercent(
+        Number.isFinite(progressNumber) ? String(progressNumber) : '0',
+      );
+      const statusRaw = String(
+        detailResponse.data.payload.learningStatus ?? '',
+      ).trim();
+      if (
+        statusRaw === 'in_progress' ||
+        statusRaw === 'completed' ||
+        statusRaw === 'not_started'
+      ) {
         setTrainingProgressStatus(statusRaw);
       } else {
         setTrainingProgressStatus('not_started');
@@ -334,9 +421,13 @@ export function WorkbenchHomePage({
     setCreateOpen(true);
   };
 
-  const openWecomApprovalPage = async (config: WorkbenchApprovalLaunchConfig) => {
+  const openWecomApprovalPage = async (
+    config: WorkbenchApprovalLaunchConfig,
+  ) => {
     if (!wecomApprovalSdk.isReady) {
-      messageApi.warning(wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试');
+      messageApi.warning(
+        wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试',
+      );
       return false;
     }
 
@@ -353,7 +444,9 @@ export function WorkbenchHomePage({
       });
       return true;
     } catch (error) {
-      messageApi.error(error instanceof Error ? error.message : '企业微信审批页打开失败');
+      messageApi.error(
+        error instanceof Error ? error.message : '企业微信审批页打开失败',
+      );
       return false;
     }
   };
@@ -362,7 +455,10 @@ export function WorkbenchHomePage({
     if (!activeModuleCode) return;
 
     const values = await form.validateFields();
-    const payloadEntries = Object.entries(values.payload ?? {}).filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '');
+    const payloadEntries = Object.entries(values.payload ?? {}).filter(
+      ([, value]) =>
+        value !== undefined && value !== null && String(value).trim() !== '',
+    );
     const payload = Object.fromEntries(payloadEntries);
 
     await createWorkbenchRecord({
@@ -401,7 +497,13 @@ export function WorkbenchHomePage({
 
   const triggerRecordAction = async (
     recordId: string,
-    actionType: 'start' | 'complete_step' | 'update_payload' | 'submit_review' | 'request_rework' | 'close_record',
+    actionType:
+      | 'start'
+      | 'complete_step'
+      | 'update_payload'
+      | 'submit_review'
+      | 'request_rework'
+      | 'close_record',
     payload?: Record<string, unknown>,
   ) => {
     const result = await performWorkbenchRecordAction({
@@ -416,9 +518,13 @@ export function WorkbenchHomePage({
       `动作已执行：${labelFrom(actionTypeLabelMap, result.data.acceptedAction, '状态变更')}，当前状态：${labelFrom(recordStatusLabelMap, result.data.status, '未知状态')}`,
     );
     if (result.data.approvalLaunchConfig) {
-      const opened = await openWecomApprovalPage(result.data.approvalLaunchConfig);
+      const opened = await openWecomApprovalPage(
+        result.data.approvalLaunchConfig,
+      );
       if (opened) {
-        messageApi.success(`企业微信审批页已打开：${result.data.approvalLaunchConfig.thirdNo}`);
+        messageApi.success(
+          `企业微信审批页已打开：${result.data.approvalLaunchConfig.thirdNo}`,
+        );
       }
     }
   };
@@ -426,7 +532,9 @@ export function WorkbenchHomePage({
   const triggerLaunchApproval = async () => {
     if (!detailResponse?.data) return;
     if (!wecomApprovalSdk.isReady) {
-      messageApi.warning(wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试');
+      messageApi.warning(
+        wecomApprovalSdk.error ?? '企业微信审批能力初始化中，请稍后重试',
+      );
       return;
     }
     const record = detailResponse.data;
@@ -448,12 +556,21 @@ export function WorkbenchHomePage({
 
   const triggerPrint = async (paperSize: 'A4' | 'A3') => {
     if (!detailResponse?.data) return;
-    const result = await triggerPrintSnapshot({ recordId: detailResponse.data.id, paperSize }).unwrap();
-    messageApi.success(`打印快照已生成：${result.data.paperSize} / ${result.data.renderedFormat}`);
+    const result = await triggerPrintSnapshot({
+      recordId: detailResponse.data.id,
+      paperSize,
+    }).unwrap();
+    messageApi.success(
+      `打印快照已生成：${result.data.paperSize} / ${result.data.renderedFormat}`,
+    );
   };
 
   const triggerTrainingProgressUpdate = async () => {
-    if (!detailResponse?.data || detailResponse.data.moduleCode !== 'goa_training') return;
+    if (
+      !detailResponse?.data ||
+      detailResponse.data.moduleCode !== 'goa_training'
+    )
+      return;
     const parsed = Number(trainingProgressPercent);
     if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
       messageApi.warning('学习进度需为 0-100 的数字');
@@ -462,12 +579,18 @@ export function WorkbenchHomePage({
     await triggerRecordAction(detailResponse.data.id, 'update_payload', {
       learningStatus: trainingProgressStatus,
       learningProgressPercent: parsed,
-      ...(trainingProgressStatus === 'completed' ? { completedAt: new Date().toISOString().slice(0, 10) } : {}),
+      ...(trainingProgressStatus === 'completed'
+        ? { completedAt: new Date().toISOString().slice(0, 10) }
+        : {}),
     });
   };
 
   const triggerUploadMeetingPhoto = async () => {
-    if (!detailResponse?.data || detailResponse.data.moduleCode !== 'goa_meeting') return;
+    if (
+      !detailResponse?.data ||
+      detailResponse.data.moduleCode !== 'goa_meeting'
+    )
+      return;
     const fileId = meetingPhotoFileId.trim();
     if (!fileId) {
       messageApi.warning('请先输入会议照片 fileId');
@@ -483,7 +606,9 @@ export function WorkbenchHomePage({
       },
     }).unwrap();
 
-    const existingRaw = String(detailResponse.data.payload.photoAttachmentIds ?? '').trim();
+    const existingRaw = String(
+      detailResponse.data.payload.photoAttachmentIds ?? '',
+    ).trim();
     const existing = existingRaw
       ? existingRaw
           .split(',')
@@ -501,70 +626,211 @@ export function WorkbenchHomePage({
   return (
     <>
       {contextHolder}
-      <section className="page-hero">
-        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+      <section className="page-hero sunan-page-hero workbench-command-hero">
+        <div>
           <Typography.Title level={2}>{heroTitle}</Typography.Title>
-          <Typography.Paragraph type="secondary">{heroDescription}</Typography.Paragraph>
-          {routeAware ? (
-            <Space wrap>
-              <Button onClick={goHome}>返回工作台首页</Button>
-              <Button onClick={() => navigate('/workbench/statistics/attendance')}>考勤统计</Button>
-              <Button onClick={() => navigate('/workbench/approvals')}>审批看板</Button>
-            </Space>
-          ) : null}
-        </Space>
+          <Typography.Paragraph type="secondary">
+            {heroDescription}
+          </Typography.Paragraph>
+        </div>
+        {routeAware ? (
+          <Space wrap className="sunan-hero-actions">
+            <Button
+              onClick={() => navigate('/workbench/statistics/attendance')}
+            >
+              考勤统计
+            </Button>
+            <Button onClick={() => navigate('/workbench/approvals')}>
+              审批看板
+            </Button>
+          </Space>
+        ) : null}
       </section>
 
-      <section className="page-card-grid workbench-stats-grid">
-        <Card className="placeholder-card" variant="borderless">
-          <Statistic title="当前待办" value={dashboard?.pendingTotal ?? 0} loading={dashboardLoading} />
-        </Card>
-        <Card className="placeholder-card" variant="borderless">
-          <Statistic title="待审批" value={dashboard?.approvalPendingTotal ?? 0} loading={dashboardLoading} />
-        </Card>
+      <section className="workbench-stats-grid">
+        <article className="workbench-stat-card">
+          <Statistic
+            title="当前待办"
+            value={dashboard?.pendingTotal ?? 0}
+            loading={dashboardLoading}
+          />
+          <span>+4 今日</span>
+        </article>
+        <article className="workbench-stat-card">
+          <Statistic
+            title="待审批"
+            value={dashboard?.approvalPendingTotal ?? 0}
+            loading={dashboardLoading}
+          />
+          <span>2 紧急</span>
+        </article>
+        <article className="workbench-stat-card">
+          <Statistic
+            title="活跃模块"
+            value={visibleModuleCards.length}
+            loading={dashboardLoading}
+          />
+          <span>按流程阶段管理</span>
+        </article>
+        <article className="workbench-stat-card">
+          <Statistic
+            title="本页记录"
+            value={records.length}
+            loading={recordsLoading}
+          />
+          <span>低于 SLA</span>
+        </article>
       </section>
 
-      <section className="page-card-grid">
-        {dashboard?.alerts.map((alert) => (
-          <Alert key={alert.code} type="info" showIcon message={alert.message} />
-        ))}
-      </section>
-
-      {!statisticsOnly ? (
-        <section className="page-card-grid workbench-module-grid" data-testid="workbench-module-grid">
-          {visibleModuleCards.length === 0 ? (
-            <Card className="placeholder-card" variant="borderless">
-              <Empty description={dashboardLoading ? '工作平台模块加载中…' : '暂无可访问模块'} />
-            </Card>
-          ) : (
-            visibleModuleCards.map((item) => {
-              const selected = activeModuleCode === item.moduleCode;
-              return (
-                <Card key={item.moduleCode} className="placeholder-card" variant="borderless">
-                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                    <Space wrap>
-                      <Typography.Title level={4}>{item.moduleName}</Typography.Title>
-                      <Tag>{labelFrom(departmentLabelMap, item.departmentCode, '未配置部门')}</Tag>
-                      <Tag color={templateColorMap[item.templateType] ?? 'default'}>{labelFrom(templateLabelMap, item.templateType, '其他模块')}</Tag>
-                      {item.requiresApproval ? <Tag color="cyan">企业微信审批</Tag> : null}
-                    </Space>
-                    <Typography.Text type="secondary">待办：{item.pendingCount}</Typography.Text>
-                    <Button type={selected ? 'primary' : 'default'} onClick={() => openModule(item.moduleCode)}>
-                      {selected ? '已选中' : '查看记录'}
-                    </Button>
-                  </Space>
-                </Card>
-              );
-            })
-          )}
+      {dashboard?.alerts.length ? (
+        <section className="sunan-alert-band workbench-alerts">
+          {dashboard.alerts.map((alert) => (
+            <Alert
+              key={alert.code}
+              type="info"
+              showIcon
+              message={alert.message}
+            />
+          ))}
         </section>
       ) : null}
 
-      <section className="page-card-grid">
+      {!statisticsOnly ? (
+        <section className="workbench-board-layout">
+          <div className="workbench-board-main">
+            <div className="sunan-panel-heading">
+              <Typography.Title level={2}>任务看板</Typography.Title>
+              <Typography.Text>按流程阶段拖拽管理</Typography.Text>
+            </div>
+            <div
+              className="workbench-module-grid"
+              data-testid="workbench-module-grid"
+            >
+              {visibleModuleCards.length === 0 ? (
+                <Card className="placeholder-card" variant="borderless">
+                  <Empty
+                    description={
+                      dashboardLoading
+                        ? '工作平台模块加载中…'
+                        : '暂无可访问模块'
+                    }
+                  />
+                </Card>
+              ) : (
+                visibleModuleCards.map((item) => {
+                  const selected = activeModuleCode === item.moduleCode;
+                  return (
+                    <article
+                      key={item.moduleCode}
+                      className={[
+                        'workbench-module-card',
+                        selected ? 'is-selected' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      <div>
+                        <Typography.Title level={4}>
+                          {item.moduleName}
+                        </Typography.Title>
+                        <Typography.Text type="secondary">
+                          {labelFrom(
+                            departmentLabelMap,
+                            item.departmentCode,
+                            '未配置部门',
+                          )}{' '}
+                          · 待办 {item.pendingCount}
+                        </Typography.Text>
+                      </div>
+                      <Space wrap>
+                        <Tag
+                          color={
+                            templateColorMap[item.templateType] ?? 'default'
+                          }
+                        >
+                          {labelFrom(
+                            templateLabelMap,
+                            item.templateType,
+                            '其他模块',
+                          )}
+                        </Tag>
+                        {item.requiresApproval ? (
+                          <Tag color="cyan">企业微信审批</Tag>
+                        ) : null}
+                      </Space>
+                      <Button
+                        type={selected ? 'primary' : 'default'}
+                        onClick={() => openModule(item.moduleCode)}
+                      >
+                        {selected ? '已选中' : '查看记录'}
+                      </Button>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <aside className="workbench-side-rail">
+            <section
+              className="workbench-schedule-panel"
+              aria-labelledby="workbench-schedule-title"
+            >
+              <div className="sunan-panel-heading">
+                <Typography.Title level={2} id="workbench-schedule-title">
+                  今日排程
+                </Typography.Title>
+                <Typography.Text>3 项</Typography.Text>
+              </div>
+              <div className="workbench-schedule-list">
+                {workbenchSchedule.map((item) => (
+                  <article className="workbench-schedule-item" key={item.time}>
+                    <span>{item.time}</span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <small>{item.note}</small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section
+              className="workbench-priority-panel"
+              aria-labelledby="workbench-priority-title"
+            >
+              <div className="sunan-panel-heading">
+                <Typography.Title level={2} id="workbench-priority-title">
+                  审批优先级
+                </Typography.Title>
+                <Typography.Text>SLA</Typography.Text>
+              </div>
+              <div className="workbench-priority-list">
+                {workbenchPriority.map((item) => (
+                  <article className="workbench-priority-item" key={item.title}>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>{item.note}</small>
+                    </span>
+                    <Tag>{item.risk}</Tag>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </aside>
+        </section>
+      ) : null}
+
+      <section className="page-card-grid workbench-record-grid">
         <Card className="placeholder-card" variant="borderless">
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
-              <Typography.Title level={4}>{resolvedRecordListTitle}</Typography.Title>
+            <Space
+              style={{ width: '100%', justifyContent: 'space-between' }}
+              wrap
+            >
+              <Typography.Title level={4}>
+                {resolvedRecordListTitle}
+              </Typography.Title>
               {canCreateRecord ? (
                 <Button type="primary" onClick={openCreateDrawer}>
                   {activeModule?.templateType === 'operation_flow'
@@ -582,7 +848,7 @@ export function WorkbenchHomePage({
               ) : null}
             </Space>
 
-            <Table<WorkbenchRecordSummary>
+            <ResponsiveTable<WorkbenchRecordSummary>
               rowKey="id"
               loading={recordsLoading}
               dataSource={records}
@@ -604,14 +870,19 @@ export function WorkbenchHomePage({
                   dataIndex: 'status',
                   key: 'status',
                   width: 160,
-                  render: (value: string) => <Tag>{labelFrom(recordStatusLabelMap, value, '未知状态')}</Tag>,
+                  render: (value: string) => (
+                    <Tag>
+                      {labelFrom(recordStatusLabelMap, value, '未知状态')}
+                    </Tag>
+                  ),
                 },
                 {
                   title: '审批通道',
                   dataIndex: 'approvalChannel',
                   key: 'approvalChannel',
                   width: 160,
-                  render: (value: string) => labelFrom(approvalChannelLabelMap, value, '审批通道'),
+                  render: (value: string) =>
+                    labelFrom(approvalChannelLabelMap, value, '审批通道'),
                 },
                 {
                   title: '时间',
@@ -629,42 +900,130 @@ export function WorkbenchHomePage({
         <section className="page-card-grid">
           <Card className="placeholder-card" variant="borderless">
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Space wrap>
+              <div className="sunan-query-grid">
                 <Typography.Title level={4}>月度考勤统计</Typography.Title>
                 <Input
                   value={statisticsMonth}
                   onChange={(event) => setStatisticsMonth(event.target.value)}
                   placeholder="YYYY-MM"
-                  style={{ width: 160 }}
                 />
-              </Space>
-              <Space wrap>
-                <Statistic title="总签到数" value={attendanceStatisticsResponse?.data.summary.totalCheckIns ?? 0} loading={attendanceStatisticsLoading} />
-                <Statistic
-                  title="财务/船务签到"
-                  value={attendanceStatisticsResponse?.data.summary.financeAndShippingCheckIns ?? 0}
-                  loading={attendanceStatisticsLoading}
-                />
-                <Statistic
-                  title="业务/工作组签到"
-                  value={attendanceStatisticsResponse?.data.summary.operationFlowCheckIns ?? 0}
-                  loading={attendanceStatisticsLoading}
-                />
-                <Statistic title="上午签到" value={attendanceStatisticsResponse?.data.summary.morningCount ?? 0} loading={attendanceStatisticsLoading} />
-                <Statistic title="下午签到" value={attendanceStatisticsResponse?.data.summary.afternoonCount ?? 0} loading={attendanceStatisticsLoading} />
-                <Statistic title="钦州范围内" value={attendanceStatisticsResponse?.data.summary.inRangeCount ?? 0} loading={attendanceStatisticsLoading} />
-                <Statistic title="钦州范围外" value={attendanceStatisticsResponse?.data.summary.outRangeCount ?? 0} loading={attendanceStatisticsLoading} />
-                <Statistic
-                  title="出差/外派"
-                  value={attendanceStatisticsResponse?.data.summary.businessTripCount ?? 0}
-                  loading={attendanceStatisticsLoading}
-                />
-              </Space>
-              <Table
+              </div>
+              <div
+                className="workbench-attendance-stat-grid"
+                data-testid="workbench-attendance-stat-grid"
+              >
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="总签到数"
+                    value={
+                      attendanceStatisticsResponse?.data.summary.totalCheckIns ??
+                      0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="财务/船务签到"
+                    value={
+                      attendanceStatisticsResponse?.data.summary
+                        .financeAndShippingCheckIns ?? 0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="业务/工作组签到"
+                    value={
+                      attendanceStatisticsResponse?.data.summary
+                        .operationFlowCheckIns ?? 0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="上午签到"
+                    value={
+                      attendanceStatisticsResponse?.data.summary.morningCount ??
+                      0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="下午签到"
+                    value={
+                      attendanceStatisticsResponse?.data.summary
+                        .afternoonCount ?? 0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="钦州范围内"
+                    value={
+                      attendanceStatisticsResponse?.data.summary.inRangeCount ??
+                      0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="钦州范围外"
+                    value={
+                      attendanceStatisticsResponse?.data.summary
+                        .outRangeCount ?? 0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+                <div
+                  className="workbench-attendance-stat-card"
+                  data-testid="workbench-attendance-stat-card"
+                >
+                  <Statistic
+                    title="出差/外派"
+                    value={
+                      attendanceStatisticsResponse?.data.summary
+                        .businessTripCount ?? 0
+                    }
+                    loading={attendanceStatisticsLoading}
+                  />
+                </div>
+              </div>
+              <ResponsiveTable
                 rowKey="moduleCode"
                 size="small"
                 loading={attendanceStatisticsLoading}
-                dataSource={attendanceStatisticsResponse?.data.moduleTotals ?? []}
+                dataSource={
+                  attendanceStatisticsResponse?.data.moduleTotals ?? []
+                }
                 pagination={false}
                 columns={[
                   { title: '模块', dataIndex: 'moduleName', key: 'moduleName' },
@@ -673,9 +1032,15 @@ export function WorkbenchHomePage({
                     dataIndex: 'departmentCode',
                     key: 'departmentCode',
                     width: 140,
-                    render: (value: string) => labelFrom(departmentLabelMap, value, '未配置部门'),
+                    render: (value: string) =>
+                      labelFrom(departmentLabelMap, value, '未配置部门'),
                   },
-                  { title: '记录数', dataIndex: 'recordCount', key: 'recordCount', width: 120 },
+                  {
+                    title: '记录数',
+                    dataIndex: 'recordCount',
+                    key: 'recordCount',
+                    width: 120,
+                  },
                 ]}
               />
             </Space>
@@ -693,25 +1058,61 @@ export function WorkbenchHomePage({
         {detailResponse?.data ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <Typography.Title level={4}>{detailResponse.data.title}</Typography.Title>
-              <Typography.Paragraph>{detailResponse.data.summary}</Typography.Paragraph>
+              <Typography.Title level={4}>
+                {detailResponse.data.title}
+              </Typography.Title>
+              <Typography.Paragraph>
+                {detailResponse.data.summary}
+              </Typography.Paragraph>
               <Space wrap>
-                <Tag>{labelFrom(recordStatusLabelMap, detailResponse.data.status, '未知状态')}</Tag>
-                <Tag>{labelFrom(approvalChannelLabelMap, detailResponse.data.approvalChannel, '审批通道')}</Tag>
-                {detailResponse.data.externalStatus ? <Tag color="cyan">{labelFrom(externalStatusLabelMap, detailResponse.data.externalStatus, '外部状态')}</Tag> : null}
+                <Tag>
+                  {labelFrom(
+                    recordStatusLabelMap,
+                    detailResponse.data.status,
+                    '未知状态',
+                  )}
+                </Tag>
+                <Tag>
+                  {labelFrom(
+                    approvalChannelLabelMap,
+                    detailResponse.data.approvalChannel,
+                    '审批通道',
+                  )}
+                </Tag>
+                {detailResponse.data.externalStatus ? (
+                  <Tag color="cyan">
+                    {labelFrom(
+                      externalStatusLabelMap,
+                      detailResponse.data.externalStatus,
+                      '外部状态',
+                    )}
+                  </Tag>
+                ) : null}
               </Space>
               {detailModule?.supportsPrint ? (
                 <Space wrap style={{ marginTop: 12 }}>
-                  <Button loading={printingSnapshot} onClick={() => void triggerPrint('A4')}>
+                  <Button
+                    loading={printingSnapshot}
+                    onClick={() => void triggerPrint('A4')}
+                  >
                     打印 A4
                   </Button>
-                  <Button loading={printingSnapshot} onClick={() => void triggerPrint('A3')}>
+                  <Button
+                    loading={printingSnapshot}
+                    onClick={() => void triggerPrint('A3')}
+                  >
                     打印 A3
                   </Button>
                 </Space>
               ) : null}
-              {detailModule?.requiresApproval && !detailResponse.data.externalProcessInstanceId ? (
-                <Button type="primary" style={{ marginTop: 12 }} loading={launchingApproval} onClick={() => void triggerLaunchApproval()}>
+              {detailModule?.requiresApproval &&
+              !detailResponse.data.externalProcessInstanceId ? (
+                <Button
+                  type="primary"
+                  style={{ marginTop: 12 }}
+                  loading={launchingApproval}
+                  onClick={() => void triggerLaunchApproval()}
+                >
                   发起企业微信审批
                 </Button>
               ) : null}
@@ -733,7 +1134,8 @@ export function WorkbenchHomePage({
                     <Space direction="vertical" size={2}>
                       <Typography.Text strong>{step.stepName}</Typography.Text>
                       <Typography.Text type="secondary">
-                        状态：{labelFrom(stepStatusLabelMap, step.status, '未知状态')}
+                        状态：
+                        {labelFrom(stepStatusLabelMap, step.status, '未知状态')}
                       </Typography.Text>
                     </Space>
                   </List.Item>
@@ -745,7 +1147,12 @@ export function WorkbenchHomePage({
                     <Button
                       type="primary"
                       loading={actionSubmitting}
-                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'start')}
+                      onClick={() =>
+                        void triggerRecordAction(
+                          detailResponse.data.id,
+                          'start',
+                        )
+                      }
                     >
                       开始作业
                     </Button>
@@ -755,33 +1162,46 @@ export function WorkbenchHomePage({
                       <Button
                         loading={actionSubmitting}
                         onClick={() => {
-                          const currentStep = getCurrentStep(detailResponse.data);
+                          const currentStep = getCurrentStep(
+                            detailResponse.data,
+                          );
                           if (!currentStep) {
                             messageApi.warning('当前没有可推进步骤');
                             return;
                           }
-                          void triggerRecordAction(detailResponse.data.id, 'complete_step', {
-                            stepCode: currentStep.stepCode,
-                            rectificationRequired: false,
-                          });
+                          void triggerRecordAction(
+                            detailResponse.data.id,
+                            'complete_step',
+                            {
+                              stepCode: currentStep.stepCode,
+                              rectificationRequired: false,
+                            },
+                          );
                         }}
                       >
                         完成当前步骤
                       </Button>
-                      {detailModule?.templateType === 'inspection_rectification' ? (
+                      {detailModule?.templateType ===
+                      'inspection_rectification' ? (
                         <Button
                           loading={actionSubmitting}
                           onClick={() => {
-                            const currentStep = getCurrentStep(detailResponse.data);
+                            const currentStep = getCurrentStep(
+                              detailResponse.data,
+                            );
                             if (!currentStep) {
                               messageApi.warning('当前没有可推进步骤');
                               return;
                             }
-                            void triggerRecordAction(detailResponse.data.id, 'complete_step', {
-                              stepCode: currentStep.stepCode,
-                              rectificationRequired: true,
-                              rectificationStatus: 'submitted',
-                            });
+                            void triggerRecordAction(
+                              detailResponse.data.id,
+                              'complete_step',
+                              {
+                                stepCode: currentStep.stepCode,
+                                rectificationRequired: true,
+                                rectificationStatus: 'submitted',
+                              },
+                            );
                           }}
                         >
                           标记整改并推进
@@ -798,11 +1218,15 @@ export function WorkbenchHomePage({
                           messageApi.warning('当前没有可推进步骤');
                           return;
                         }
-                        void triggerRecordAction(detailResponse.data.id, 'complete_step', {
-                          stepCode: currentStep.stepCode,
-                          rectificationRequired: true,
-                          rectificationStatus: 'completed',
-                        });
+                        void triggerRecordAction(
+                          detailResponse.data.id,
+                          'complete_step',
+                          {
+                            stepCode: currentStep.stepCode,
+                            rectificationRequired: true,
+                            rectificationStatus: 'completed',
+                          },
+                        );
                       }}
                     >
                       整改完成并继续
@@ -813,22 +1237,42 @@ export function WorkbenchHomePage({
                       <Button
                         type="primary"
                         loading={actionSubmitting}
-                        onClick={() => void triggerRecordAction(detailResponse.data.id, 'submit_review')}
+                        onClick={() =>
+                          void triggerRecordAction(
+                            detailResponse.data.id,
+                            'submit_review',
+                          )
+                        }
                       >
                         提交审核
                       </Button>
-                      {detailModule?.templateType === 'inspection_rectification' ? (
-                        <Button loading={actionSubmitting} onClick={() => void triggerRecordAction(detailResponse.data.id, 'request_rework')}>
+                      {detailModule?.templateType ===
+                      'inspection_rectification' ? (
+                        <Button
+                          loading={actionSubmitting}
+                          onClick={() =>
+                            void triggerRecordAction(
+                              detailResponse.data.id,
+                              'request_rework',
+                            )
+                          }
+                        >
                           退回整改
                         </Button>
                       ) : null}
                     </>
                   ) : null}
-                  {detailResponse.data.status !== 'closed' && detailResponse.data.status !== 'archived' ? (
+                  {detailResponse.data.status !== 'closed' &&
+                  detailResponse.data.status !== 'archived' ? (
                     <Button
                       danger
                       loading={actionSubmitting}
-                      onClick={() => void triggerRecordAction(detailResponse.data.id, 'close_record')}
+                      onClick={() =>
+                        void triggerRecordAction(
+                          detailResponse.data.id,
+                          'close_record',
+                        )
+                      }
                     >
                       关闭记录
                     </Button>
@@ -840,12 +1284,18 @@ export function WorkbenchHomePage({
             {detailResponse.data.moduleCode === 'goa_training' ? (
               <div>
                 <Typography.Title level={5}>学习进度</Typography.Title>
-                <Progress percent={Math.max(0, Math.min(100, Number(trainingProgressPercent) || 0))} />
-                <Space wrap style={{ marginTop: 8 }}>
+                <Progress
+                  percent={Math.max(
+                    0,
+                    Math.min(100, Number(trainingProgressPercent) || 0),
+                  )}
+                />
+                <div className="sunan-query-grid" style={{ marginTop: 8 }}>
                   <Select
-                    style={{ width: 180 }}
                     value={trainingProgressStatus}
-                    onChange={(value: 'not_started' | 'in_progress' | 'completed') => setTrainingProgressStatus(value)}
+                    onChange={(
+                      value: 'not_started' | 'in_progress' | 'completed',
+                    ) => setTrainingProgressStatus(value)}
                     options={[
                       { value: 'not_started', label: '未开始' },
                       { value: 'in_progress', label: '进行中' },
@@ -853,15 +1303,19 @@ export function WorkbenchHomePage({
                     ]}
                   />
                   <Input
-                    style={{ width: 140 }}
                     value={trainingProgressPercent}
-                    onChange={(event) => setTrainingProgressPercent(event.target.value)}
+                    onChange={(event) =>
+                      setTrainingProgressPercent(event.target.value)
+                    }
                     placeholder="0-100"
                   />
-                  <Button loading={actionSubmitting} onClick={() => void triggerTrainingProgressUpdate()}>
+                  <Button
+                    loading={actionSubmitting}
+                    onClick={() => void triggerTrainingProgressUpdate()}
+                  >
                     更新学习进度
                   </Button>
-                </Space>
+                </div>
               </div>
             ) : null}
 
@@ -885,17 +1339,21 @@ export function WorkbenchHomePage({
             <div>
               <Typography.Title level={5}>附件</Typography.Title>
               {detailResponse.data.moduleCode === 'goa_meeting' ? (
-                <Space wrap style={{ marginBottom: 12 }}>
+                <div className="sunan-query-grid" style={{ marginBottom: 12 }}>
                   <Input
-                    style={{ width: 260 }}
                     placeholder="输入会议照片 fileId"
                     value={meetingPhotoFileId}
-                    onChange={(event) => setMeetingPhotoFileId(event.target.value)}
+                    onChange={(event) =>
+                      setMeetingPhotoFileId(event.target.value)
+                    }
                   />
-                  <Button loading={uploadingAttachment || actionSubmitting} onClick={() => void triggerUploadMeetingPhoto()}>
+                  <Button
+                    loading={uploadingAttachment || actionSubmitting}
+                    onClick={() => void triggerUploadMeetingPhoto()}
+                  >
                     上传会议照片
                   </Button>
-                </Space>
+                </div>
               ) : null}
               <List
                 bordered
@@ -904,7 +1362,13 @@ export function WorkbenchHomePage({
                 renderItem={(attachment) => (
                   <List.Item>
                     <Space>
-                      <Tag>{labelFrom(attachmentCategoryLabelMap, attachment.category, '附件')}</Tag>
+                      <Tag>
+                        {labelFrom(
+                          attachmentCategoryLabelMap,
+                          attachment.category,
+                          '附件',
+                        )}
+                      </Tag>
                       <Typography.Text>{attachment.fileName}</Typography.Text>
                     </Space>
                   </List.Item>
@@ -921,9 +1385,26 @@ export function WorkbenchHomePage({
                 renderItem={(log) => (
                   <List.Item>
                     <Space direction="vertical" size={2}>
-                      <Typography.Text strong>{labelFrom(actionTypeLabelMap, log.actionType, '状态变更')}</Typography.Text>
+                      <Typography.Text strong>
+                        {labelFrom(
+                          actionTypeLabelMap,
+                          log.actionType,
+                          '状态变更',
+                        )}
+                      </Typography.Text>
                       <Typography.Text type="secondary">
-                        {log.operatorUserId}：{labelFrom(recordStatusLabelMap, log.fromStatus, '未知状态')} → {labelFrom(recordStatusLabelMap, log.toStatus, '未知状态')}
+                        {log.operatorUserId}：
+                        {labelFrom(
+                          recordStatusLabelMap,
+                          log.fromStatus,
+                          '未知状态',
+                        )}{' '}
+                        →{' '}
+                        {labelFrom(
+                          recordStatusLabelMap,
+                          log.toStatus,
+                          '未知状态',
+                        )}
                       </Typography.Text>
                     </Space>
                   </List.Item>
@@ -939,17 +1420,19 @@ export function WorkbenchHomePage({
       <Drawer
         title={
           activeModule
-            ? `${activeModule.templateType === 'operation_flow'
-                ? '新建作业闭环记录'
-                : activeModule.templateType === 'inspection_rectification'
-                  ? '新建检查整改记录'
-                  : activeModule.templateType === 'attendance_statistics'
-                    ? '新建考勤统计记录'
-                    : activeModule.templateType === 'service_asset'
-                      ? '新建资产服务记录'
-                      : activeModule.templateType === 'wecom_approval'
-                        ? '新建审批记录'
-                  : '新建台账记录'} - ${activeModule.moduleName}`
+            ? `${
+                activeModule.templateType === 'operation_flow'
+                  ? '新建作业闭环记录'
+                  : activeModule.templateType === 'inspection_rectification'
+                    ? '新建检查整改记录'
+                    : activeModule.templateType === 'attendance_statistics'
+                      ? '新建考勤统计记录'
+                      : activeModule.templateType === 'service_asset'
+                        ? '新建资产服务记录'
+                        : activeModule.templateType === 'wecom_approval'
+                          ? '新建审批记录'
+                          : '新建台账记录'
+              } - ${activeModule.moduleName}`
             : '新建记录'
         }
         placement="right"
@@ -957,7 +1440,11 @@ export function WorkbenchHomePage({
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         extra={
-          <Button type="primary" onClick={() => void submitCreateRecord()} loading={creatingRecord}>
+          <Button
+            type="primary"
+            onClick={() => void submitCreateRecord()}
+            loading={creatingRecord}
+          >
             提交
           </Button>
         }
@@ -966,10 +1453,18 @@ export function WorkbenchHomePage({
           <Empty description="请先选择模块" />
         ) : (
           <Form layout="vertical" form={form}>
-            <Form.Item label="记录标题" name="title" rules={[{ required: true, message: '请输入记录标题' }]}>
+            <Form.Item
+              label="记录标题"
+              name="title"
+              rules={[{ required: true, message: '请输入记录标题' }]}
+            >
               <Input placeholder="输入记录标题" />
             </Form.Item>
-            <Form.Item label="摘要" name="summary" rules={[{ required: true, message: '请输入摘要' }]}>
+            <Form.Item
+              label="摘要"
+              name="summary"
+              rules={[{ required: true, message: '请输入摘要' }]}
+            >
               <Input.TextArea rows={3} placeholder="输入摘要说明" />
             </Form.Item>
             <Form.Item label="发生时间（ISO，可选）" name="occurredAt">
@@ -979,9 +1474,16 @@ export function WorkbenchHomePage({
               <Input placeholder="例如：sunan-012" />
             </Form.Item>
 
-            {moduleSchemaResponse?.data.templateType === 'operation_flow' && moduleSchemaResponse.data.stepTemplates?.length ? (
-              <Card size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
-                <Typography.Title level={5}>流程步骤（自动初始化）</Typography.Title>
+            {moduleSchemaResponse?.data.templateType === 'operation_flow' &&
+            moduleSchemaResponse.data.stepTemplates?.length ? (
+              <Card
+                size="small"
+                style={{ marginBottom: 12 }}
+                loading={schemaLoading}
+              >
+                <Typography.Title level={5}>
+                  流程步骤（自动初始化）
+                </Typography.Title>
                 <List
                   size="small"
                   bordered
@@ -997,9 +1499,17 @@ export function WorkbenchHomePage({
               </Card>
             ) : null}
 
-            {moduleSchemaResponse?.data.templateType === 'inspection_rectification' && moduleSchemaResponse.data.stepTemplates?.length ? (
-              <Card size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
-                <Typography.Title level={5}>整改步骤（自动初始化）</Typography.Title>
+            {moduleSchemaResponse?.data.templateType ===
+              'inspection_rectification' &&
+            moduleSchemaResponse.data.stepTemplates?.length ? (
+              <Card
+                size="small"
+                style={{ marginBottom: 12 }}
+                loading={schemaLoading}
+              >
+                <Typography.Title level={5}>
+                  整改步骤（自动初始化）
+                </Typography.Title>
                 <List
                   size="small"
                   bordered
@@ -1016,14 +1526,23 @@ export function WorkbenchHomePage({
             ) : null}
 
             {moduleSchemaResponse?.data.sections.map((section) => (
-              <Card key={section.key} size="small" style={{ marginBottom: 12 }} loading={schemaLoading}>
+              <Card
+                key={section.key}
+                size="small"
+                style={{ marginBottom: 12 }}
+                loading={schemaLoading}
+              >
                 <Typography.Title level={5}>{section.title}</Typography.Title>
                 {section.fields.map((field) => (
                   <Form.Item
                     key={field.key}
                     label={field.label}
                     name={['payload', field.key]}
-                    rules={field.required ? [{ required: true, message: `请填写${field.label}` }] : undefined}
+                    rules={
+                      field.required
+                        ? [{ required: true, message: `请填写${field.label}` }]
+                        : undefined
+                    }
                   >
                     {renderDynamicField(field)}
                   </Form.Item>

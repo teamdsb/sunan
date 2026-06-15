@@ -1,5 +1,4 @@
 ﻿import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
 
 const timestampColumnType = 'timestamptz';
 
@@ -32,4 +31,3 @@ export class UserSettingsEntity {
   @UpdateDateColumn({ name: 'updated_at', type: timestampColumnType })
   updatedAt!: Date;
 }
-

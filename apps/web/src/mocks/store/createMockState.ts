@@ -6,6 +6,7 @@ import { createMonitorsMockState } from '../fixtures/monitor';
 import { createOfficeMockState } from '../fixtures/office';
 import { createReminderMockState } from '../fixtures/reminders';
 import { createSettingsMockState } from '../fixtures/settings';
+import { createProcurementMockState } from '../fixtures/procurement';
 import {
   buildRouteKey,
   hasPathParams,
@@ -20,7 +21,10 @@ export function createMockState(handlers: MockRouteDefinition[]): MockState {
 
   for (const handler of handlers) {
     const routeKey = buildRouteKey(handler.method, handler.path);
-    const routeShape = buildRouteKey(handler.method, normalizeRouteShape(handler.path));
+    const routeShape = buildRouteKey(
+      handler.method,
+      normalizeRouteShape(handler.path),
+    );
 
     if (routeShapes.has(routeShape)) {
       throw new Error(`Duplicate mock route shape: ${routeShape}`);
@@ -32,7 +36,8 @@ export function createMockState(handlers: MockRouteDefinition[]): MockState {
       const conflictingPatternRoute = patternRoutes.find(
         (route) =>
           buildRouteKey(route.method, route.path) !== routeKey &&
-          buildRouteKey(route.method, '') === buildRouteKey(handler.method, '') &&
+          buildRouteKey(route.method, '') ===
+            buildRouteKey(handler.method, '') &&
           routePatternsConflict(route.path, handler.path),
       );
 
@@ -60,6 +65,7 @@ export function createMockState(handlers: MockRouteDefinition[]): MockState {
       settings: createSettingsMockState(),
       monitor: createMonitorsMockState(),
       office: createOfficeMockState(),
+      procurement: createProcurementMockState(),
     },
   };
 }

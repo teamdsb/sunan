@@ -1,8 +1,21 @@
-import { Alert, Button, Card, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Table, Typography, message } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Select,
+  Space,
+  Switch,
+  Typography,
+  message,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
+import { ResponsiveTable } from '../../components/ResponsiveTable';
 import {
   ProcurementDimensionItem,
   useCreateProcurementDimensionMutation,
@@ -19,41 +32,66 @@ interface CreateFormValues {
   sortOrder?: number;
 }
 
-const departmentOptions: Array<{ label: string; value: 'shipping_dept' | 'logistics_dept' }> = [
+const departmentOptions: Array<{
+  label: string;
+  value: 'shipping_dept' | 'logistics_dept';
+}> = [
   { label: '船务部', value: 'shipping_dept' },
   { label: '后勤部', value: 'logistics_dept' },
 ];
 
-const statusOptions: Array<{ label: string; value: 'all' | 'enabled' | 'disabled' }> = [
+const statusOptions: Array<{
+  label: string;
+  value: 'all' | 'enabled' | 'disabled';
+}> = [
   { label: '全部', value: 'all' },
   { label: '仅启用', value: 'enabled' },
   { label: '仅停用', value: 'disabled' },
 ];
 
 export function ProcurementDictionaryAdminPage() {
-  const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<CreateFormValues>();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
 
-  const canManage = Boolean(currentUser && (currentUser.roles.includes('system_admin') || currentUser.roles.includes('general_office')));
+  const canManage = Boolean(
+    currentUser &&
+    (currentUser.roles.includes('system_admin') ||
+      currentUser.roles.includes('general_office')),
+  );
 
-  const [departmentCode, setDepartmentCode] = useState<'shipping_dept' | 'logistics_dept'>('shipping_dept');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [departmentCode, setDepartmentCode] = useState<
+    'shipping_dept' | 'logistics_dept'
+  >('shipping_dept');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'enabled' | 'disabled'
+  >('all');
 
-  const { data: dimensionResponse, isLoading, refetch } = useGetProcurementDimensionsQuery({
+  const {
+    data: dimensionResponse,
+    isLoading,
+    refetch,
+  } = useGetProcurementDimensionsQuery({
     departmentCode,
     isEnabled: statusFilter === 'all' ? undefined : statusFilter === 'enabled',
   });
 
-  const [createDimension, { isLoading: isCreating }] = useCreateProcurementDimensionMutation();
-  const [updateDimension, { isLoading: isUpdating }] = useUpdateProcurementDimensionMutation();
-  const [disableDimension, { isLoading: isDisabling }] = useDisableProcurementDimensionMutation();
+  const [createDimension, { isLoading: isCreating }] =
+    useCreateProcurementDimensionMutation();
+  const [updateDimension, { isLoading: isUpdating }] =
+    useUpdateProcurementDimensionMutation();
+  const [disableDimension, { isLoading: isDisabling }] =
+    useDisableProcurementDimensionMutation();
 
-  const handleDepartmentChange = (value: 'shipping_dept' | 'logistics_dept') => {
+  const handleDepartmentChange = (
+    value: 'shipping_dept' | 'logistics_dept',
+  ) => {
     setDepartmentCode(value);
     form.setFieldValue('departmentCode', value);
-    form.setFieldValue('dimensionType', value === 'shipping_dept' ? 'vessel' : 'logistics_category');
+    form.setFieldValue(
+      'dimensionType',
+      value === 'shipping_dept' ? 'vessel' : 'logistics_category',
+    );
   };
 
   const handleCreate = async () => {
@@ -78,7 +116,10 @@ export function ProcurementDictionaryAdminPage() {
       return;
     }
 
-    const nextSortOrderInput = window.prompt('请输入新的排序值', String(item.sortOrder));
+    const nextSortOrderInput = window.prompt(
+      '请输入新的排序值',
+      String(item.sortOrder),
+    );
     if (nextSortOrderInput === null) {
       return;
     }
@@ -108,16 +149,23 @@ export function ProcurementDictionaryAdminPage() {
         dataIndex: 'departmentCode',
         key: 'departmentCode',
         width: 120,
-        render: (value: ProcurementDimensionItem['departmentCode']) => (value === 'shipping_dept' ? '船务部' : '后勤部'),
+        render: (value: ProcurementDimensionItem['departmentCode']) =>
+          value === 'shipping_dept' ? '船务部' : '后勤部',
       },
       {
         title: '类型',
         dataIndex: 'dimensionType',
         key: 'dimensionType',
         width: 140,
-        render: (value: ProcurementDimensionItem['dimensionType']) => (value === 'vessel' ? '船舶' : '后勤类别'),
+        render: (value: ProcurementDimensionItem['dimensionType']) =>
+          value === 'vessel' ? '船舶' : '后勤类别',
       },
-      { title: '键值', dataIndex: 'dimensionKey', key: 'dimensionKey', width: 180 },
+      {
+        title: '键值',
+        dataIndex: 'dimensionKey',
+        key: 'dimensionKey',
+        width: 180,
+      },
       { title: '名称', dataIndex: 'dimensionName', key: 'dimensionName' },
       { title: '排序', dataIndex: 'sortOrder', key: 'sortOrder', width: 100 },
       {
@@ -176,7 +224,14 @@ export function ProcurementDictionaryAdminPage() {
         ),
       },
     ],
-    [disableDimension, isDisabling, isUpdating, messageApi, refetch, updateDimension],
+    [
+      disableDimension,
+      isDisabling,
+      isUpdating,
+      messageApi,
+      refetch,
+      updateDimension,
+    ],
   );
 
   if (!canManage) {
@@ -185,10 +240,17 @@ export function ProcurementDictionaryAdminPage() {
         {contextHolder}
         <section className="page-hero">
           <Typography.Title level={2}>字典治理</Typography.Title>
-          <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
+          <Typography.Paragraph type="secondary">
+            维护采购部门与类型字典，控制录单页可选项。
+          </Typography.Paragraph>
         </section>
         <section className="page-card-grid">
-          <Alert type="error" showIcon message="无权限访问" description="仅总经办与系统管理员可访问字典治理页。" />
+          <Alert
+            type="error"
+            showIcon
+            message="无权限访问"
+            description="仅总经办与系统管理员可访问字典治理页。"
+          />
         </section>
       </>
     );
@@ -199,30 +261,57 @@ export function ProcurementDictionaryAdminPage() {
       {contextHolder}
       <section className="page-hero">
         <Typography.Title level={2}>字典治理</Typography.Title>
-        <Typography.Paragraph type="secondary">维护船务部和后勤部细分字典项，停用项不会在录单页出现。</Typography.Paragraph>
-        <Space wrap>
-          <Select style={{ width: 180 }} value={departmentCode} options={departmentOptions} onChange={handleDepartmentChange} />
-          <Select style={{ width: 140 }} value={statusFilter} options={statusOptions} onChange={(value) => setStatusFilter(value)} />
-          <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
-        </Space>
+        <Typography.Paragraph type="secondary">
+          维护船务部和后勤部细分字典项，停用项不会在录单页出现。
+        </Typography.Paragraph>
+        <div className="sunan-query-grid sunan-query-toolbar">
+          <Select
+            value={departmentCode}
+            options={departmentOptions}
+            onChange={handleDepartmentChange}
+          />
+          <Select
+            value={statusFilter}
+            options={statusOptions}
+            onChange={(value) => setStatusFilter(value)}
+          />
+        </div>
       </section>
 
       <section className="page-card-grid">
-        <Card variant="borderless" className="placeholder-card" title="新增字典项">
+        <Card
+          variant="borderless"
+          className="placeholder-card"
+          title="新增字典项"
+        >
           <Form
             form={form}
-            layout="inline"
+            layout="vertical"
+            className="sunan-form-grid"
             initialValues={{
               departmentCode,
-              dimensionType: departmentCode === 'shipping_dept' ? 'vessel' : 'logistics_category',
+              dimensionType:
+                departmentCode === 'shipping_dept'
+                  ? 'vessel'
+                  : 'logistics_category',
             }}
           >
-            <Form.Item name="departmentCode" label="部门" rules={[{ required: true }]}>
-              <Select style={{ width: 140 }} options={departmentOptions} onChange={handleDepartmentChange} />
-            </Form.Item>
-            <Form.Item name="dimensionType" label="类型" rules={[{ required: true }]}>
+            <Form.Item
+              name="departmentCode"
+              label="部门"
+              rules={[{ required: true }]}
+            >
               <Select
-                style={{ width: 140 }}
+                options={departmentOptions}
+                onChange={handleDepartmentChange}
+              />
+            </Form.Item>
+            <Form.Item
+              name="dimensionType"
+              label="类型"
+              rules={[{ required: true }]}
+            >
+              <Select
                 options={
                   form.getFieldValue('departmentCode') === 'shipping_dept'
                     ? [{ label: '船舶', value: 'vessel' }]
@@ -230,27 +319,50 @@ export function ProcurementDictionaryAdminPage() {
                 }
               />
             </Form.Item>
-            <Form.Item name="dimensionKey" label="键值" rules={[{ required: true, message: '请输入稳定键' }]}>
-              <Input style={{ width: 180 }} maxLength={64} placeholder="如 su-nan-012 / canteen" />
+            <Form.Item
+              name="dimensionKey"
+              label="键值"
+              rules={[{ required: true, message: '请输入稳定键' }]}
+            >
+              <Input maxLength={64} placeholder="如 su-nan-012 / canteen" />
             </Form.Item>
-            <Form.Item name="dimensionName" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-              <Input style={{ width: 180 }} maxLength={128} />
+            <Form.Item
+              name="dimensionName"
+              label="名称"
+              rules={[{ required: true, message: '请输入名称' }]}
+            >
+              <Input maxLength={128} />
             </Form.Item>
             <Form.Item name="sortOrder" label="排序">
-              <InputNumber style={{ width: 120 }} min={0} precision={0} />
+              <InputNumber min={0} precision={0} />
             </Form.Item>
-            <Form.Item>
-              <Button type="primary" loading={isCreating} onClick={() => void handleCreate()}>
+            <div className="sunan-form-actions">
+              <Button
+                type="primary"
+                loading={isCreating}
+                onClick={() => void handleCreate()}
+              >
                 新增
               </Button>
-            </Form.Item>
+            </div>
           </Form>
         </Card>
       </section>
 
       <section className="page-card-grid">
-        <Card variant="borderless" className="placeholder-card office-admin-card" title="字典项列表">
-          <Table rowKey="id" loading={isLoading} columns={columns} dataSource={dimensionResponse?.data ?? []} pagination={false} />
+        <Card
+          variant="borderless"
+          className="placeholder-card office-admin-card"
+          title="字典项列表"
+        >
+          <ResponsiveTable
+            rowKey="id"
+            loading={isLoading}
+            columns={columns}
+            dataSource={dimensionResponse?.data ?? []}
+            pagination={false}
+            scroll={{ x: 920 }}
+          />
         </Card>
       </section>
     </>

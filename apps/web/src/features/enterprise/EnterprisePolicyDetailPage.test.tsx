@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { EnterprisePolicyDetailPage } from './EnterprisePolicyPage';
 
 const mockGetById = vi.fn();
@@ -21,11 +21,6 @@ vi.mock('./enterpriseApi', () => ({
   useBindEnterprisePolicyFilesMutation: () => [mockBind],
 }));
 
-function LocationDisplay() {
-  const location = useLocation();
-  return <div data-testid="location-search">{location.search}</div>;
-}
-
 describe('EnterprisePolicyDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,7 +30,7 @@ describe('EnterprisePolicyDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('preserves the filtered back target in the detail page', () => {
+  it('relies on the global navigation instead of a return button', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -45,15 +40,12 @@ describe('EnterprisePolicyDetailPage', () => {
         <Routes>
           <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
         </Routes>
-        <LocationDisplay />
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
-
-    expect(screen.getByTestId('location-search')).toHaveTextContent(
-      '?page=3&pageSize=20&status=published&keyword=demo',
-    );
+    expect(
+      screen.queryByRole('button', { name: '返回列表' }),
+    ).not.toBeInTheDocument();
   });
 
   it('supports edit and file bind', async () => {

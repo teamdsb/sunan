@@ -14,6 +14,7 @@ replaced_by: []
 - M4 已冻结模块矩阵、模板抽象、页面壳层和企业微信审批桥。
 - M5 已完成运行时落库、审批运维、真机回归模板和遗留边界收口。
 - M6 的重点是把“规格已冻结”进一步推进到“代码、路由、上线交付物和企业微信正式配置全部兑现”。
+- M7/M8 在现有工作平台之上增加安全领域底座与专业聚合流程，当前规划入口为 `docs/specs/safety/README.md`；不新增第五个一级板块。
 
 ## 规格文档清单
 
@@ -148,20 +149,18 @@ replaced_by: []
 
 ## 推荐阅读顺序
 
-1. `docs/requirements/M6-全量兑现与完美上线.md`
-2. `db/workbench-module-matrix.md`
-3. `finance-business-board-field-dictionary.md`
-4. `finance-business-board-sample-forms.md`
-5. `finance-business-board-flowchart.md`
-6. `finance-business-board-print-template.md`
-7. `api/workbench-platform-api.yaml`
-8. `api/workbench-approval-api.yaml`
-9. `state/workbench-records.md`
-10. `state/workbench-approval-sync.md`
-11. `docs/specs/wecom/production-config-matrix.md`
-12. `docs/specs/wecom/callback-security-spec.md`
-13. `docs/specs/wecom/production-cutover-runbook.md`
-14. `docs/specs/wecom/go-live-materials-checklist.md`
+1. `docs/execplans.md`
+2. `docs/requirements/M7-安全管理底座与核心闭环.md` 或 `docs/requirements/M8-专业安全业务深化与体系完善.md`
+3. `docs/specs/safety/README.md`
+4. `db/workbench-module-matrix.md`
+5. `api/workbench-platform-api.yaml`
+6. `api/workbench-approval-api.yaml`
+7. `state/workbench-records.md`
+8. `state/workbench-approval-sync.md`
+9. `docs/specs/wecom/production-config-matrix.md`
+10. `docs/specs/wecom/callback-security-spec.md`
+11. `docs/specs/wecom/production-cutover-runbook.md`
+12. `docs/specs/wecom/go-live-materials-checklist.md`
 
 ## 与其他文档的关系
 

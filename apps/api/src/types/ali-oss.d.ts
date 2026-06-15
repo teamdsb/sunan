@@ -18,6 +18,8 @@ declare module 'ali-oss' {
 
     signatureUrl(name: string, options?: SignatureUrlOptions): string;
 
+    getBucketInfo(name: string): Promise<unknown>;
+
     put(name: string, file: Buffer, options?: PutOptions): Promise<unknown>;
   }
 }

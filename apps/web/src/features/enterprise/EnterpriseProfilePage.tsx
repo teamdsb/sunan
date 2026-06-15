@@ -58,6 +58,9 @@ export function EnterpriseProfilePage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>企业资料</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        创建、筛选和维护企业资料，集中管理分类、状态与附件。
+      </Typography.Paragraph>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Card>
           <Form

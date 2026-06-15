@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
 import type {
   ProcurementApprovalChannel,
   ProcurementDepartmentCode,

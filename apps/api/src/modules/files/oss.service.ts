@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   GetObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -159,6 +160,19 @@ export class OssService {
         Metadata: {
           'original-name': originalName,
         },
+      }),
+    );
+  }
+
+  async checkConnection(): Promise<void> {
+    if (this.aliyunClient) {
+      await this.aliyunClient.getBucketInfo(appEnv.OSS_BUCKET);
+      return;
+    }
+
+    await this.getS3Client().send(
+      new HeadBucketCommand({
+        Bucket: appEnv.OSS_BUCKET,
       }),
     );
   }

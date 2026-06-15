@@ -9,6 +9,7 @@ export function App() {
   return (
     <ConfigProvider
       locale={zhCN}
+      button={{ autoInsertSpace: false }}
       theme={{
         token: {
           colorPrimary: '#1769e0',

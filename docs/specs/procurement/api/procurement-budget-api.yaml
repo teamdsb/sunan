@@ -1,0 +1,324 @@
+openapi: 3.0.3
+info:
+  title: Procurement Budget API
+  version: 1.0.0
+paths:
+  /api/v1/procurement/budgets/summary:
+    get:
+      summary: 查询年度采购预算汇总
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSummaryResponse'
+  /api/v1/procurement/admin/budgets:
+    get:
+      summary: 查询年度采购预算配置（总经办/系统管理员）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+        - in: query
+          name: departmentCode
+          schema:
+            $ref: '#/components/schemas/DepartmentCode'
+        - in: query
+          name: isEnabled
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetListResponse'
+        '403':
+          description: Forbidden
+    post:
+      summary: 新增年度采购预算（总经办/系统管理员）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetResponse'
+        '409':
+          description: BUDGET_SCOPE_CONFLICT
+        '422':
+          description: BUDGET_DIMENSION_INVALID
+  /api/v1/procurement/admin/budgets/{id}:
+    patch:
+      summary: 调整或停启用年度采购预算（总经办/系统管理员）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetResponse'
+        '404':
+          description: Not Found
+  /api/v1/procurement/admin/budgets/{id}/audits:
+    get:
+      summary: 查询年度采购预算审计记录（总经办/系统管理员）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetAuditListResponse'
+components:
+  schemas:
+    DepartmentCode:
+      type: string
+      enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+    DimensionType:
+      type: string
+      enum: [none, vessel, logistics_category]
+    BudgetSummaryItem:
+      type: object
+      required:
+        - departmentCode
+        - dimensionType
+        - dimensionName
+        - budgetAmount
+        - executedAmount
+        - executionRate
+        - overBudgetAmount
+        - isOverBudget
+        - isConfigured
+      properties:
+        departmentCode:
+          $ref: '#/components/schemas/DepartmentCode'
+        dimensionType:
+          $ref: '#/components/schemas/DimensionType'
+        dimensionKey:
+          type: string
+          nullable: true
+        dimensionName:
+          type: string
+        budgetAmount:
+          type: number
+          format: double
+        executedAmount:
+          type: number
+          format: double
+        executionRate:
+          type: number
+          format: double
+        overBudgetAmount:
+          type: number
+          format: double
+        isOverBudget:
+          type: boolean
+        isConfigured:
+          type: boolean
+    BudgetSummary:
+      type: object
+      required: [year, budgetAmount, executedAmount, executionRate, overBudgetAmount, isOverBudget, items]
+      properties:
+        year:
+          type: integer
+        budgetAmount:
+          type: number
+          format: double
+        executedAmount:
+          type: number
+          format: double
+        executionRate:
+          type: number
+          format: double
+        overBudgetAmount:
+          type: number
+          format: double
+        isOverBudget:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetSummaryItem'
+    Budget:
+      allOf:
+        - $ref: '#/components/schemas/BudgetSummaryItem'
+        - type: object
+          required: [id, budgetYear, dimensionNameSnapshot, isEnabled, createdBy, updatedBy, createdAt, updatedAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            budgetYear:
+              type: integer
+            dimensionNameSnapshot:
+              type: string
+            isEnabled:
+              type: boolean
+            createdBy:
+              type: string
+            updatedBy:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    BudgetCreate:
+      type: object
+      required: [budgetYear, departmentCode, dimensionType, budgetAmount, changeReason]
+      properties:
+        budgetYear:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+        departmentCode:
+          $ref: '#/components/schemas/DepartmentCode'
+        dimensionType:
+          $ref: '#/components/schemas/DimensionType'
+        dimensionKey:
+          type: string
+          nullable: true
+        budgetAmount:
+          type: number
+          format: double
+          exclusiveMinimum: true
+          minimum: 0
+        changeReason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    BudgetUpdate:
+      type: object
+      required: [changeReason]
+      properties:
+        budgetAmount:
+          type: number
+          format: double
+          exclusiveMinimum: true
+          minimum: 0
+        isEnabled:
+          type: boolean
+        changeReason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    BudgetAudit:
+      type: object
+      required: [id, budgetId, action, changeReason, payloadSnapshot, changedBy, changedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        budgetId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [create, update, enable, disable]
+        beforeAmount:
+          type: number
+          nullable: true
+        afterAmount:
+          type: number
+          nullable: true
+        beforeEnabled:
+          type: boolean
+          nullable: true
+        afterEnabled:
+          type: boolean
+          nullable: true
+        changeReason:
+          type: string
+        payloadSnapshot:
+          type: object
+          additionalProperties: true
+        changedBy:
+          type: string
+        changedAt:
+          type: string
+          format: date-time
+    BudgetSummaryResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/BudgetSummary'
+    BudgetResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Budget'
+    BudgetListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Budget'
+    BudgetAuditListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetAudit'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

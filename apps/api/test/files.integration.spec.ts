@@ -14,7 +14,6 @@ import {
 import request from 'supertest';
 
 import { configureApp } from 'src/app.bootstrap';
-import { FileEntity } from 'src/database/entities/file.entity';
 import { FilesModule } from 'src/modules/files/files.module';
 import { OssService } from 'src/modules/files/oss.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';

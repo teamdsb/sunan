@@ -1,5 +1,4 @@
 ﻿import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
 
 const timestampColumnType = 'timestamptz';
 
@@ -20,4 +19,3 @@ export class EnterpriseProfileFileEntity {
   @CreateDateColumn({ name: 'created_at', type: timestampColumnType })
   createdAt!: Date;
 }
-

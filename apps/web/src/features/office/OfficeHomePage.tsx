@@ -24,6 +24,13 @@ const iconMap = {
   other: SettingOutlined,
 } as const;
 
+const approvalSteps = [
+  { step: '01', title: '资料提交', note: '申请人上传表单与附件', status: '完成' },
+  { step: '02', title: '部门审核', note: '船务部或总经办确认', status: '进行中' },
+  { step: '03', title: '外部办理', note: '海事 / 船检 / 园区', status: '待触发' },
+  { step: '04', title: '结果归档', note: '证照与附件回写', status: '自动' },
+] as const;
+
 function formatCategoryName(categories: Array<{ code: string; name: string }>, code: string) {
   return categories.find((category) => category.code === code)?.name ?? '未分类';
 }
@@ -65,64 +72,97 @@ export function OfficeHomePage() {
 
   return (
     <>
-      <section className="page-hero">
-        <Typography.Title level={2}>办事</Typography.Title>
-        <Typography.Paragraph type="secondary">
-          在企业微信工作台内统一访问办公端口，支持按分类浏览和搜索。
-        </Typography.Paragraph>
-        <Space wrap>
-          <Input
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            placeholder="搜索办事入口"
-            prefix={<SearchOutlined />}
-            style={{ width: 260 }}
-          />
-          <Button type="primary" onClick={handleSearch}>
-            搜索
-          </Button>
+      <section className="page-hero sunan-page-hero office-command-hero">
+        <div>
+          <Typography.Title level={2}>统一办事入口，按部门与主题快速办理</Typography.Title>
+          <Typography.Paragraph type="secondary">
+            搜索、分类、审批链路和治理台入口集中在同一屏，降低企业微信 H5 跳转成本。
+          </Typography.Paragraph>
+        </div>
+        <Space wrap className="sunan-hero-actions">
           {canManageOffice(categories) ? (
-            <Button onClick={() => navigate(officeRouteConfig.officeAdmin.path)}>进入治理台</Button>
+            <Button type="primary" onClick={() => navigate(officeRouteConfig.officeAdmin.path)}>进入治理台</Button>
           ) : null}
         </Space>
       </section>
 
-      <section className="page-hero office-filter-panel">
+      <section className="office-search-panel">
+        <Input
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+          onPressEnter={handleSearch}
+          placeholder="搜索办事入口、表单或审批事项"
+          prefix={<SearchOutlined />}
+        />
+        <Button type="primary" onClick={handleSearch}>
+          搜索
+        </Button>
+        <Button onClick={handleSearch}>高级筛选</Button>
+      </section>
+
+      <section className="office-filter-panel">
         <Segmented block options={categoryOptions} value={categoryCode} onChange={(value) => setCategoryCode(String(value))} />
       </section>
 
-      <section className="page-card-grid office-card-grid" data-testid="office-entry-grid">
-        {entries.length === 0 ? (
-          <Card className="placeholder-card" variant="borderless">
-            <Empty description={isLoading ? '办事入口加载中…' : '当前没有可访问的办事入口'} />
-          </Card>
-        ) : (
-          entries.map((entry) => {
-            const Icon = iconMap[entry.categoryCode as keyof typeof iconMap] ?? AppstoreOutlined;
-            return (
-              <Card key={entry.id} className="placeholder-card office-entry-card" variant="borderless">
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <Space>
-                    <span className="module-entry-icon" aria-hidden="true">
-                      <Icon />
-                    </span>
-                    <div>
-                      <Typography.Title level={4}>{entry.title}</Typography.Title>
-                      <Tag>{formatCategoryName(categories, entry.categoryCode)}</Tag>
-                    </div>
-                  </Space>
-                  <Typography.Paragraph>{entry.summary}</Typography.Paragraph>
-                  <Button type="primary" onClick={() => void handleOpen(entry)} loading={isOpening}>
-                    打开入口
-                  </Button>
-                </Space>
+      <section className="office-dashboard">
+        <div className="office-entry-panel">
+          <div className="sunan-panel-heading">
+            <Typography.Title level={2}>高频办事入口</Typography.Title>
+            <Typography.Text>共 {entries.length} 个入口</Typography.Text>
+          </div>
+          <div className="office-card-grid" data-testid="office-entry-grid">
+            {entries.length === 0 ? (
+              <Card className="placeholder-card" variant="borderless">
+                <Empty description={isLoading ? '办事入口加载中…' : '当前没有可访问的办事入口'} />
               </Card>
-            );
-          })
-        )}
+            ) : (
+              entries.map((entry) => {
+                const Icon = iconMap[entry.categoryCode as keyof typeof iconMap] ?? AppstoreOutlined;
+                return (
+                  <Card key={entry.id} className="placeholder-card office-entry-card" variant="borderless">
+                    <Space direction="vertical" size="middle" className="office-entry-card-body">
+                      <span className="module-entry-icon" aria-hidden="true">
+                        <Icon />
+                      </span>
+                      <div>
+                        <Typography.Title level={4}>{entry.title}</Typography.Title>
+                        <Typography.Paragraph>{entry.summary}</Typography.Paragraph>
+                      </div>
+                      <div className="office-entry-card-footer">
+                        <Tag>{formatCategoryName(categories, entry.categoryCode)}</Tag>
+                        <Button type="primary" onClick={() => void handleOpen(entry)} loading={isOpening}>
+                          打开入口
+                        </Button>
+                      </div>
+                    </Space>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <aside className="office-approval-panel" aria-labelledby="office-approval-title">
+          <div className="sunan-panel-heading">
+            <Typography.Title level={2} id="office-approval-title">审批链路</Typography.Title>
+            <Typography.Text>近 7 天</Typography.Text>
+          </div>
+          <div className="office-approval-list">
+            {approvalSteps.map((item) => (
+              <article className="office-approval-item" key={item.step}>
+                <span>{item.step}</span>
+                <div>
+                  <strong>{item.title}</strong>
+                  <small>{item.note}</small>
+                </div>
+                <Tag>{item.status}</Tag>
+              </article>
+            ))}
+          </div>
+        </aside>
       </section>
 
-      <section className="page-card-grid">
+      <section className="sunan-alert-band">
         <Alert
           type="info"
           showIcon

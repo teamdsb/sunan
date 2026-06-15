@@ -6,6 +6,7 @@ import { monitorHandlers } from './monitor';
 import { officeHandlers } from './office';
 import { reminderHandlers } from './reminders';
 import { settingsHandlers } from './settings';
+import { procurementHandlers } from './procurement';
 import type { MockRouteDefinition } from '../types';
 import { createMockResponse } from '../utils';
 
@@ -24,5 +25,6 @@ export const mockHandlers: MockRouteDefinition[] = [
   ...enterpriseHandlers,
   ...monitorHandlers,
   ...officeHandlers,
+  ...procurementHandlers,
   ...settingsHandlers,
 ];

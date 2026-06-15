@@ -16,6 +16,8 @@ import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit
 import { OfficeEntryEntity } from 'src/database/entities/office-entry.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
+import { ProcurementBudgetAuditEntity } from 'src/database/entities/procurement-budget-audit.entity';
+import { ProcurementBudgetEntity } from 'src/database/entities/procurement-budget.entity';
 import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
 import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
 import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.entity';
@@ -49,6 +51,8 @@ import { Wave31710000009000 } from 'src/database/migrations/1710000009000-wave3-
 import { Wave41710000010000 } from 'src/database/migrations/1710000010000-wave4-procurement-dimension-items';
 import { Wave51710000011000 } from 'src/database/migrations/1710000011000-wave5-workbench-runtime';
 import { Wave51710000012000 } from 'src/database/migrations/1710000012000-wave5-workbench-approval-ops';
+import { Wave61710000013000 } from 'src/database/migrations/1710000013000-wave6-workbench-module-split';
+import { ProcurementBudgets1710000014000 } from 'src/database/migrations/1710000014000-procurement-budgets';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -67,6 +71,8 @@ const ALL_TEST_ENTITIES = [
   OfficeCategoryEntity,
   OfficeEntryEntity,
   OfficeEntryAuditEntity,
+  ProcurementBudgetEntity,
+  ProcurementBudgetAuditEntity,
   ProcurementDimensionItemEntity,
   ProcurementOrderEntity,
   ProcurementOrderApprovalEntity,
@@ -101,6 +107,8 @@ const ALL_TEST_MIGRATIONS = [
   Wave41710000010000,
   Wave51710000011000,
   Wave51710000012000,
+  Wave61710000013000,
+  ProcurementBudgets1710000014000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

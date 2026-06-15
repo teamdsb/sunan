@@ -17,7 +17,7 @@ import { configureApp } from 'src/app.bootstrap';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { HealthController } from 'src/health/health.controller';
 import { AuthModule } from 'src/modules/auth/auth.module';
-import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { FilesModule } from 'src/modules/files/files.module';
 import { REDIS_CLIENT } from 'src/modules/wecom/wecom.constants';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
@@ -34,6 +34,7 @@ import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
     }),
     WecomModule,
     AuthModule,
+    FilesModule,
   ],
   controllers: [HealthController],
 })

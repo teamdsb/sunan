@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: procurement
-updated: 2026-05-04
+updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
@@ -18,9 +18,11 @@ replaced_by: []
 | `/procurement/reports` | 报表页 | 月报/年报/明细查询与导出 |
 | `/procurement/report-approvals` | 报表审批页 | 报表审批单列表与审批 |
 | `/procurement/dictionaries` | 字典治理页 | 船舶/后勤细分项管理 |
+| `/procurement/budgets` | 预算管理页 | 年度、部门、分类预算和审计管理 |
 
 ## 导航原则
 
 1. `/procurement` 为采购模块首页。
 2. 审批页按“采购单审批”“报表审批”分开，避免混淆。
 3. 字典治理页仅对总经办和系统管理员可见。
+4. 预算管理页仅对总经办和系统管理员可见，预算汇总对所有已认证用户可读。

@@ -1,5 +1,4 @@
 ﻿import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
 
 const timestampColumnType = 'timestamptz';
 
@@ -44,4 +43,3 @@ export class ShipMonitorEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: timestampColumnType, nullable: true })
   deletedAt!: Date | null;
 }
-

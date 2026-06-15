@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -78,14 +78,21 @@ describe('AppShell mock mode', () => {
     );
 
     expect(screen.getAllByRole('button', { name: /更多/ }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('heading', { name: '我的' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('heading', { name: '苏南船舶管理' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('navigation', { name: '移动模块导航' })).toBeNull();
+    expect(screen.getByRole('navigation', { name: '底部模块导航' })).toBeInTheDocument();
     expect(screen.queryByText('当前页面')).toBeNull();
 
     await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
 
-    expect(screen.getAllByRole('button', { name: '我的' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: '办事' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: '采购管理' }).length).toBeGreaterThan(0);
+    const drawer = document.querySelector('.shell-mobile-drawer') as HTMLElement;
+    expect(within(drawer).getByRole('button', { name: '我的' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '办事中心' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '采购管理' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '证书提醒' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '办事治理台' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '采购报表' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: '考勤统计' })).toBeInTheDocument();
   });
 
   it('navigates when tapping a mobile drawer button body', async () => {
@@ -116,7 +123,8 @@ describe('AppShell mock mode', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent('/my/reminders');
 
     await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
-    await user.click(screen.getAllByRole('button', { name: '办事' }).at(-1)!);
+    const drawer = document.querySelector('.shell-mobile-drawer') as HTMLElement;
+    await user.click(within(drawer).getByRole('button', { name: '办事首页' }));
 
     expect(screen.getByTestId('location-path')).toHaveTextContent('/office');
   });
@@ -142,7 +150,51 @@ describe('AppShell mock mode', () => {
 
     await user.click(screen.getAllByRole('button', { name: /更多/ }).at(-1)!);
 
-    expect(screen.getAllByRole('button', { name: '我的' }).at(-1)).toHaveClass('shell-mobile-nav-item', 'is-active');
-    expect(screen.getAllByRole('button', { name: '办事' }).at(-1)).toHaveClass('shell-mobile-nav-item');
+    expect(document.querySelector('.shell-mobile-drawer .shell-mobile-nav-item.is-active')).toHaveTextContent('证书提醒');
+    expect(document.querySelector('.shell-mobile-drawer .shell-mobile-nav-item:not(.is-active)')).toHaveClass('shell-mobile-nav-item');
+  });
+
+  it('renders collapsible desktop sidebar navigation', async () => {
+    setViewport(1280);
+
+    const { createStore } = await import('../app/store');
+    const { bootstrapAuth } = await import('../features/auth/bootstrap');
+    const { AppShell } = await import('./AppShell');
+    const store = createStore();
+    const user = userEvent.setup();
+
+    await bootstrapAuth(store.dispatch);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/procurement']}>
+          <AppShell />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    const sidebar = screen.getByRole('complementary', { name: '桌面模块导航' });
+
+    expect(sidebar).toBeInTheDocument();
+    expect(within(sidebar).getByRole('button', { name: '采购管理' })).toHaveClass('shell-sidebar-group-trigger', 'is-active');
+    expect(within(sidebar).getByRole('button', { name: '采购管理' })).toHaveAttribute('aria-expanded', 'true');
+    expect(within(sidebar).getByRole('button', { name: '我的' })).toHaveAttribute('aria-expanded', 'false');
+    expect(within(sidebar).getByRole('button', { name: '采购单列表' })).toHaveClass('shell-sidebar-subitem', 'is-active');
+    expect(within(sidebar).getByRole('button', { name: '采购报表' })).toBeInTheDocument();
+
+    await user.click(within(sidebar).getByRole('button', { name: '办事中心' }));
+
+    expect(within(sidebar).getByRole('button', { name: '采购管理' })).toHaveAttribute('aria-expanded', 'false');
+    expect(within(sidebar).getByRole('button', { name: '办事中心' })).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(within(sidebar).getByRole('button', { name: '我的' }));
+
+    expect(within(sidebar).getByRole('button', { name: '办事中心' })).toHaveAttribute('aria-expanded', 'false');
+    expect(within(sidebar).getByRole('button', { name: '我的' })).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByRole('button', { name: '收起左侧导航' }));
+
+    expect(document.querySelector('.shell-main-layout')).toHaveClass('is-sidebar-collapsed');
+    expect(screen.getByRole('button', { name: '展开左侧导航' })).toBeInTheDocument();
   });
 });

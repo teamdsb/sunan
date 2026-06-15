@@ -19,6 +19,9 @@ export function SettingsPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>设置</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        配置提醒视图、证照分组和消息推送偏好。
+      </Typography.Paragraph>
       <Card loading={isLoading} className="settings-card">
         {errorText ? <Alert style={{ marginBottom: 12 }} type="error" showIcon message={errorText} /> : null}
         <Form

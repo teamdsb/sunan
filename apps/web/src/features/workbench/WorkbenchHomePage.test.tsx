@@ -163,13 +163,11 @@ describe('WorkbenchHomePage', () => {
   it('supports route-aware navigation for workbench entry links', () => {
     render(<WorkbenchHomePage routeAware />);
 
-    fireEvent.click(screen.getByRole('button', { name: '返回工作台首页' }));
     fireEvent.click(screen.getByRole('button', { name: '考勤统计' }));
     fireEvent.click(screen.getByRole('button', { name: '审批看板' }));
     fireEvent.click(screen.getAllByRole('button', { name: '查看记录' })[0]);
     fireEvent.click(screen.getByRole('button', { name: '海图批次 2026-04' }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/workbench');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/statistics/attendance');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/approvals');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/modules/shipping_chart_update');
@@ -330,6 +328,12 @@ describe('WorkbenchHomePage', () => {
 
     expect(screen.queryByTestId('workbench-module-grid')).toBeNull();
     expect(screen.getByText('月度考勤统计')).toBeInTheDocument();
+    expect(screen.getByTestId('workbench-attendance-stat-grid')).toHaveClass(
+      'workbench-attendance-stat-grid',
+    );
+    expect(screen.getAllByTestId('workbench-attendance-stat-card')).toHaveLength(
+      8,
+    );
     expect(mockGetWorkbenchAttendanceStatisticsQuery).toHaveBeenCalledWith(
       { month: '2026-04' },
       { skip: false },

@@ -22,19 +22,6 @@ import type { ReminderJobEnvelope, ReminderOwnerType, ReminderType } from './rem
 const SEND_LOCK_TTL_MS = 15 * 60 * 1000;
 const DISPATCHING_STALE_AFTER_MS = SEND_LOCK_TTL_MS;
 
-interface ReminderRecipient {
-  userId: string;
-  roles: string[];
-  departmentCodes: string[];
-  departmentNames: string[];
-  isSystemAdmin: boolean;
-}
-
-interface ViewerContext {
-  viewer: WecomUserEntity | null;
-  roles: Set<string>;
-}
-
 @Injectable()
 export class CertificateReminderEngineService {
   private readonly logger = new Logger(CertificateReminderEngineService.name);

@@ -10,10 +10,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
-import { Brackets, In, IsNull, Repository } from 'typeorm';
+import { Brackets, DataSource, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { appEnv } from 'src/config/env';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { ProcurementBudgetAuditEntity } from 'src/database/entities/procurement-budget-audit.entity';
+import { ProcurementBudgetEntity } from 'src/database/entities/procurement-budget.entity';
 import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
 import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
 import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
@@ -25,6 +27,9 @@ import { OssService } from 'src/modules/files/oss.service';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 import { ProcurementApprovalActionDto } from './dto/procurement-approval-action.dto';
 import { ProcurementApprovalListQueryDto } from './dto/procurement-approval-list-query.dto';
+import { ProcurementBudgetCreateDto } from './dto/procurement-budget-create.dto';
+import { ProcurementBudgetListQueryDto } from './dto/procurement-budget-list-query.dto';
+import { ProcurementBudgetUpdateDto } from './dto/procurement-budget-update.dto';
 import { ProcurementDimensionCreateDto } from './dto/procurement-dimension-create.dto';
 import { ProcurementDimensionListQueryDto } from './dto/procurement-dimension-list-query.dto';
 import { ProcurementDimensionUpdateDto } from './dto/procurement-dimension-update.dto';
@@ -47,6 +52,7 @@ import {
   PROCUREMENT_REPORT_TYPES,
   type ProcurementApprovalLevel,
   type ProcurementApprovalSource,
+  type ProcurementBudgetAuditAction,
   type ProcurementDepartmentCode,
   type ProcurementDimensionType,
   type ProcurementOrderStatus,
@@ -55,9 +61,21 @@ import {
   type ProcurementReportType,
 } from './procurement.constants';
 
-const INCLUDED_REPORT_ORDER_STATUSES: ProcurementOrderStatus[] = ['submitted', 'dept_approved', 'final_approved', 'rejected'];
-const PENDING_REPORT_REQUEST_STATUSES: ProcurementReportRequestStatus[] = ['submitted', 'dept_approved', 'finance_approved'];
-const DICTIONARY_DEPARTMENT_CODES = ['shipping_dept', 'logistics_dept'] as const;
+const INCLUDED_REPORT_ORDER_STATUSES: ProcurementOrderStatus[] = [
+  'submitted',
+  'dept_approved',
+  'final_approved',
+  'rejected',
+];
+const PENDING_REPORT_REQUEST_STATUSES: ProcurementReportRequestStatus[] = [
+  'submitted',
+  'dept_approved',
+  'finance_approved',
+];
+const DICTIONARY_DEPARTMENT_CODES = [
+  'shipping_dept',
+  'logistics_dept',
+] as const;
 const DICTIONARY_DIMENSION_TYPES = ['vessel', 'logistics_category'] as const;
 const PDF_PAGE_WIDTH = 595;
 const PDF_PAGE_HEIGHT = 842;
@@ -112,11 +130,29 @@ interface PrintResultDto {
   downloadUrl: string;
 }
 
+interface BudgetExecutionRow {
+  departmentCode: ProcurementDepartmentCode;
+  dimensionType: ProcurementDimensionType;
+  dimensionKey: string | null;
+  executedAmount: string;
+}
+
+interface NormalizedBudgetDimension {
+  dimensionType: ProcurementDimensionType;
+  dimensionKey: string | null;
+  dimensionNameSnapshot: string;
+}
+
 @Injectable()
 export class ProcurementService {
   private readonly logger = new Logger(ProcurementService.name);
 
   constructor(
+    private readonly dataSource: DataSource,
+    @InjectRepository(ProcurementBudgetEntity)
+    private readonly budgetRepository: Repository<ProcurementBudgetEntity>,
+    @InjectRepository(ProcurementBudgetAuditEntity)
+    private readonly budgetAuditRepository: Repository<ProcurementBudgetAuditEntity>,
     @InjectRepository(ProcurementDimensionItemEntity)
     private readonly dimensionItemRepository: Repository<ProcurementDimensionItemEntity>,
     @InjectRepository(ProcurementOrderEntity)
@@ -137,17 +173,324 @@ export class ProcurementService {
     private readonly wecomMessageService: WecomMessageService,
   ) {}
 
-  async listDimensionItems(query: ProcurementDimensionListQueryDto, user: CurrentUser): Promise<DimensionItemDto[]> {
+  async getBudgetSummary(year: number, user: CurrentUser) {
     this.assertCanViewReports(user);
 
-    const qb = this.dimensionItemRepository.createQueryBuilder('item').where('item.deletedAt IS NULL');
+    const budgets = await this.budgetRepository.find({
+      where: { budgetYear: year, isEnabled: true, deletedAt: IsNull() },
+      order: {
+        departmentCode: 'ASC',
+        dimensionType: 'ASC',
+        dimensionKey: 'ASC',
+      },
+    });
+    const executedAmounts = await this.getBudgetExecutedAmounts(year);
+    const dimensionNames = await this.getBudgetDimensionNames();
+    const budgetMap = new Map(
+      budgets.map((budget) => [this.toBudgetScopeKey(budget), budget]),
+    );
+    const scopeKeys = new Set([...budgetMap.keys(), ...executedAmounts.keys()]);
+
+    const items = Array.from(scopeKeys)
+      .map((scopeKey) => {
+        const budget = budgetMap.get(scopeKey);
+        const parsedScope = this.parseBudgetScopeKey(scopeKey);
+        const budgetAmount = this.roundMoney(budget?.budgetAmount ?? 0);
+        const executedAmount = this.roundMoney(
+          executedAmounts.get(scopeKey) ?? 0,
+        );
+        const executionRate = this.calculateExecutionRate(
+          budgetAmount,
+          executedAmount,
+        );
+        const overBudgetAmount = this.roundMoney(
+          Math.max(executedAmount - budgetAmount, 0),
+        );
+
+        return {
+          departmentCode: parsedScope.departmentCode,
+          dimensionType: parsedScope.dimensionType,
+          dimensionKey: parsedScope.dimensionKey,
+          dimensionName:
+            budget?.dimensionNameSnapshot ??
+            dimensionNames.get(scopeKey) ??
+            (parsedScope.dimensionType === 'none'
+              ? '未细分'
+              : (parsedScope.dimensionKey ?? '未配置')),
+          budgetAmount,
+          executedAmount,
+          executionRate,
+          overBudgetAmount,
+          isOverBudget: budgetAmount > 0 && executedAmount > budgetAmount,
+          isConfigured: Boolean(budget),
+        };
+      })
+      .sort((left, right) =>
+        `${left.departmentCode}|${left.dimensionType}|${left.dimensionName}`.localeCompare(
+          `${right.departmentCode}|${right.dimensionType}|${right.dimensionName}`,
+          'zh-CN',
+        ),
+      );
+
+    const budgetAmount = this.roundMoney(
+      budgets.reduce((sum, budget) => sum + budget.budgetAmount, 0),
+    );
+    const executedAmount = this.roundMoney(
+      Array.from(executedAmounts.values()).reduce(
+        (sum, amount) => sum + amount,
+        0,
+      ),
+    );
+    const overBudgetAmount = this.roundMoney(
+      Math.max(executedAmount - budgetAmount, 0),
+    );
+
+    return {
+      year,
+      budgetAmount,
+      executedAmount,
+      executionRate: this.calculateExecutionRate(budgetAmount, executedAmount),
+      overBudgetAmount,
+      isOverBudget: budgetAmount > 0 && executedAmount > budgetAmount,
+      items,
+    };
+  }
+
+  async listBudgets(query: ProcurementBudgetListQueryDto, user: CurrentUser) {
+    this.assertCanManageDimensionDictionary(user);
+
+    const qb = this.budgetRepository
+      .createQueryBuilder('budget')
+      .where('budget.deletedAt IS NULL')
+      .andWhere('budget.budgetYear = :year', { year: query.year });
 
     if (query.departmentCode) {
-      qb.andWhere('item.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+      qb.andWhere('budget.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
+    }
+    if (typeof query.isEnabled === 'boolean') {
+      qb.andWhere('budget.isEnabled = :isEnabled', {
+        isEnabled: query.isEnabled,
+      });
+    }
+
+    const [budgets, executedAmounts] = await Promise.all([
+      qb
+        .orderBy('budget.departmentCode', 'ASC')
+        .addOrderBy('budget.dimensionType', 'ASC')
+        .addOrderBy('budget.dimensionKey', 'ASC')
+        .getMany(),
+      this.getBudgetExecutedAmounts(query.year),
+    ]);
+
+    return budgets.map((budget) =>
+      this.toBudgetDto(
+        budget,
+        executedAmounts.get(this.toBudgetScopeKey(budget)) ?? 0,
+      ),
+    );
+  }
+
+  async createBudget(dto: ProcurementBudgetCreateDto, user: CurrentUser) {
+    this.assertCanManageDimensionDictionary(user);
+    const changeReason = dto.changeReason.trim();
+    if (!changeReason) {
+      throw new BadRequestException('change reason is required');
+    }
+
+    const dimension = await this.normalizeBudgetDimension(
+      dto.departmentCode,
+      dto.dimensionType,
+      dto.dimensionKey,
+    );
+    const existed = await this.budgetRepository.findOne({
+      where: {
+        budgetYear: dto.budgetYear,
+        departmentCode: dto.departmentCode,
+        dimensionType: dimension.dimensionType,
+        dimensionKey:
+          dimension.dimensionKey === null ? IsNull() : dimension.dimensionKey,
+        deletedAt: IsNull(),
+      },
+    });
+    if (existed) {
+      throw new ConflictException('budget scope already exists');
+    }
+
+    let budget: ProcurementBudgetEntity;
+    try {
+      budget = await this.dataSource.transaction(async (manager) => {
+        const budgetRepository = manager.getRepository(ProcurementBudgetEntity);
+        const auditRepository = manager.getRepository(
+          ProcurementBudgetAuditEntity,
+        );
+        const saved = await budgetRepository.save(
+          budgetRepository.create({
+            budgetYear: dto.budgetYear,
+            departmentCode: dto.departmentCode,
+            dimensionType: dimension.dimensionType,
+            dimensionKey: dimension.dimensionKey,
+            dimensionNameSnapshot: dimension.dimensionNameSnapshot,
+            budgetAmount: this.roundMoney(dto.budgetAmount),
+            isEnabled: true,
+            createdBy: user.userId,
+            updatedBy: user.userId,
+          }),
+        );
+
+        await auditRepository.save(
+          auditRepository.create({
+            budgetId: saved.id,
+            action: 'create',
+            beforeAmount: null,
+            afterAmount: saved.budgetAmount,
+            beforeEnabled: null,
+            afterEnabled: true,
+            changeReason,
+            changedBy: user.userId,
+            payloadSnapshot: this.toBudgetAuditSnapshot(saved),
+          }),
+        );
+        return saved;
+      });
+    } catch (error) {
+      if (this.isUniqueViolation(error)) {
+        throw new ConflictException('budget scope already exists');
+      }
+      throw error;
+    }
+
+    const executedAmounts = await this.getBudgetExecutedAmounts(
+      budget.budgetYear,
+    );
+    return this.toBudgetDto(
+      budget,
+      executedAmounts.get(this.toBudgetScopeKey(budget)) ?? 0,
+    );
+  }
+
+  async updateBudget(
+    id: string,
+    dto: ProcurementBudgetUpdateDto,
+    user: CurrentUser,
+  ) {
+    this.assertCanManageDimensionDictionary(user);
+    const changeReason = dto.changeReason.trim();
+    if (!changeReason) {
+      throw new BadRequestException('change reason is required');
+    }
+    if (
+      typeof dto.budgetAmount !== 'number' &&
+      typeof dto.isEnabled !== 'boolean'
+    ) {
+      throw new BadRequestException('budgetAmount or isEnabled is required');
+    }
+
+    const budget = await this.dataSource.transaction(async (manager) => {
+      const budgetRepository = manager.getRepository(ProcurementBudgetEntity);
+      const auditRepository = manager.getRepository(
+        ProcurementBudgetAuditEntity,
+      );
+      const current = await budgetRepository.findOne({
+        where: { id, deletedAt: IsNull() },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!current) {
+        throw new NotFoundException('procurement budget not found');
+      }
+
+      const beforeAmount = current.budgetAmount;
+      const beforeEnabled = current.isEnabled;
+      const nextAmount =
+        typeof dto.budgetAmount === 'number'
+          ? this.roundMoney(dto.budgetAmount)
+          : current.budgetAmount;
+      const nextEnabled =
+        typeof dto.isEnabled === 'boolean' ? dto.isEnabled : current.isEnabled;
+      if (nextAmount === beforeAmount && nextEnabled === beforeEnabled) {
+        throw new BadRequestException('budget change has no effect');
+      }
+
+      current.budgetAmount = nextAmount;
+      current.isEnabled = nextEnabled;
+      current.updatedBy = user.userId;
+      const saved = await budgetRepository.save(current);
+      const action: ProcurementBudgetAuditAction =
+        beforeEnabled !== nextEnabled
+          ? nextEnabled
+            ? 'enable'
+            : 'disable'
+          : 'update';
+
+      await auditRepository.save(
+        auditRepository.create({
+          budgetId: saved.id,
+          action,
+          beforeAmount,
+          afterAmount: saved.budgetAmount,
+          beforeEnabled,
+          afterEnabled: saved.isEnabled,
+          changeReason,
+          changedBy: user.userId,
+          payloadSnapshot: this.toBudgetAuditSnapshot(saved),
+        }),
+      );
+      return saved;
+    });
+
+    const executedAmounts = await this.getBudgetExecutedAmounts(
+      budget.budgetYear,
+    );
+    return this.toBudgetDto(
+      budget,
+      executedAmounts.get(this.toBudgetScopeKey(budget)) ?? 0,
+    );
+  }
+
+  async listBudgetAudits(id: string, user: CurrentUser) {
+    this.assertCanManageDimensionDictionary(user);
+    await this.mustFindBudget(id);
+    const audits = await this.budgetAuditRepository.find({
+      where: { budgetId: id },
+      order: { changedAt: 'DESC' },
+    });
+
+    return audits.map((audit) => ({
+      id: audit.id,
+      budgetId: audit.budgetId,
+      action: audit.action,
+      beforeAmount: audit.beforeAmount,
+      afterAmount: audit.afterAmount,
+      beforeEnabled: audit.beforeEnabled,
+      afterEnabled: audit.afterEnabled,
+      changeReason: audit.changeReason,
+      payloadSnapshot: audit.payloadSnapshot,
+      changedBy: audit.changedBy,
+      changedAt: audit.changedAt.toISOString(),
+    }));
+  }
+
+  async listDimensionItems(
+    query: ProcurementDimensionListQueryDto,
+    user: CurrentUser,
+  ): Promise<DimensionItemDto[]> {
+    this.assertCanViewReports(user);
+
+    const qb = this.dimensionItemRepository
+      .createQueryBuilder('item')
+      .where('item.deletedAt IS NULL');
+
+    if (query.departmentCode) {
+      qb.andWhere('item.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
     }
 
     if (typeof query.isEnabled === 'boolean') {
-      qb.andWhere('item.isEnabled = :isEnabled', { isEnabled: query.isEnabled });
+      qb.andWhere('item.isEnabled = :isEnabled', {
+        isEnabled: query.isEnabled,
+      });
     }
 
     const rows = await qb
@@ -160,7 +503,10 @@ export class ProcurementService {
     return rows.map((row) => this.toDimensionItemDto(row));
   }
 
-  async createDimensionItem(dto: ProcurementDimensionCreateDto, user: CurrentUser): Promise<DimensionItemDto> {
+  async createDimensionItem(
+    dto: ProcurementDimensionCreateDto,
+    user: CurrentUser,
+  ): Promise<DimensionItemDto> {
     this.assertCanManageDimensionDictionary(user);
     this.assertDimensionScope(dto.departmentCode, dto.dimensionType);
 
@@ -198,7 +544,11 @@ export class ProcurementService {
     return this.toDimensionItemDto(item);
   }
 
-  async updateDimensionItem(id: string, dto: ProcurementDimensionUpdateDto, user: CurrentUser): Promise<DimensionItemDto> {
+  async updateDimensionItem(
+    id: string,
+    dto: ProcurementDimensionUpdateDto,
+    user: CurrentUser,
+  ): Promise<DimensionItemDto> {
     this.assertCanManageDimensionDictionary(user);
     const item = await this.mustFindDimensionItem(id);
 
@@ -242,7 +592,9 @@ export class ProcurementService {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
 
-    const qb = this.orderRepository.createQueryBuilder('order').where('order.deletedAt IS NULL');
+    const qb = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.deletedAt IS NULL');
 
     if (!this.canViewAllOrders(user)) {
       qb.andWhere('order.createdBy = :createdBy', { createdBy: user.userId });
@@ -252,21 +604,31 @@ export class ProcurementService {
       const normalized = `%${query.keyword.trim().toLowerCase()}%`;
       qb.andWhere(
         new Brackets((subQb) => {
-          subQb.where('LOWER(order.title) LIKE :keyword', { keyword: normalized }).orWhere('LOWER(order.summary) LIKE :keyword', { keyword: normalized });
+          subQb
+            .where('LOWER(order.title) LIKE :keyword', { keyword: normalized })
+            .orWhere('LOWER(order.summary) LIKE :keyword', {
+              keyword: normalized,
+            });
         }),
       );
     }
 
     if (query.departmentCode) {
-      qb.andWhere('order.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+      qb.andWhere('order.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
     }
 
     if (query.dimensionType) {
-      qb.andWhere('order.dimensionType = :dimensionType', { dimensionType: query.dimensionType });
+      qb.andWhere('order.dimensionType = :dimensionType', {
+        dimensionType: query.dimensionType,
+      });
     }
 
     if (query.dimensionKey?.trim()) {
-      qb.andWhere('order.dimensionKey = :dimensionKey', { dimensionKey: query.dimensionKey.trim() });
+      qb.andWhere('order.dimensionKey = :dimensionKey', {
+        dimensionKey: query.dimensionKey.trim(),
+      });
     }
 
     if (query.status) {
@@ -274,16 +636,25 @@ export class ProcurementService {
     }
 
     if (query.approvalChannel) {
-      qb.andWhere('order.approvalChannel = :approvalChannel', { approvalChannel: query.approvalChannel });
+      qb.andWhere('order.approvalChannel = :approvalChannel', {
+        approvalChannel: query.approvalChannel,
+      });
     }
 
-    const submittedRange = this.normalizeSubmittedDateRange(query.submittedFrom, query.submittedTo);
+    const submittedRange = this.normalizeSubmittedDateRange(
+      query.submittedFrom,
+      query.submittedTo,
+    );
     if (submittedRange.submittedFrom) {
-      qb.andWhere('order.submittedAt >= :submittedFrom', { submittedFrom: submittedRange.submittedFrom.toISOString() });
+      qb.andWhere('order.submittedAt >= :submittedFrom', {
+        submittedFrom: submittedRange.submittedFrom.toISOString(),
+      });
     }
 
     if (submittedRange.submittedTo) {
-      qb.andWhere('order.submittedAt <= :submittedTo', { submittedTo: submittedRange.submittedTo.toISOString() });
+      qb.andWhere('order.submittedAt <= :submittedTo', {
+        submittedTo: submittedRange.submittedTo.toISOString(),
+      });
     }
 
     const [rows, total] = await qb
@@ -307,7 +678,11 @@ export class ProcurementService {
     const approvalChannel = dto.approvalChannel ?? 'internal';
     this.assertApprovalChannel(approvalChannel);
 
-    const normalizedDimension = this.normalizeDimension(dto.departmentCode, dto.dimensionType, dto.dimensionKey);
+    const normalizedDimension = this.normalizeDimension(
+      dto.departmentCode,
+      dto.dimensionType,
+      dto.dimensionKey,
+    );
     const orderNo = await this.generateOrderNo();
 
     const entity = this.orderRepository.create({
@@ -340,14 +715,23 @@ export class ProcurementService {
     return this.toOrderDetail(order);
   }
 
-  async updateOrderDraft(id: string, dto: ProcurementOrderUpdateDto, user: CurrentUser) {
+  async updateOrderDraft(
+    id: string,
+    dto: ProcurementOrderUpdateDto,
+    user: CurrentUser,
+  ) {
     const order = await this.mustFindOrder(id);
     this.assertCanEditDraft(order, user);
 
     const nextDepartmentCode = dto.departmentCode ?? order.departmentCode;
     const nextDimensionType = dto.dimensionType ?? order.dimensionType;
-    const nextDimensionKey = dto.dimensionKey ?? order.dimensionKey ?? undefined;
-    const normalizedDimension = this.normalizeDimension(nextDepartmentCode, nextDimensionType, nextDimensionKey);
+    const nextDimensionKey =
+      dto.dimensionKey ?? order.dimensionKey ?? undefined;
+    const normalizedDimension = this.normalizeDimension(
+      nextDepartmentCode,
+      nextDimensionType,
+      nextDimensionKey,
+    );
 
     Object.assign(order, {
       departmentCode: nextDepartmentCode,
@@ -390,16 +774,24 @@ export class ProcurementService {
     return this.getOrderDetail(id, user);
   }
 
-  async bindOrderAttachments(id: string, dto: ProcurementOrderBindFilesDto, user: CurrentUser) {
+  async bindOrderAttachments(
+    id: string,
+    dto: ProcurementOrderBindFilesDto,
+    user: CurrentUser,
+  ) {
     const order = await this.mustFindOrder(id);
     this.assertCanEditDraft(order, user);
 
-    const files = await this.fileRepository.find({ where: { id: In(dto.fileIds) } });
+    const files = await this.fileRepository.find({
+      where: { id: In(dto.fileIds) },
+    });
     if (files.length !== dto.fileIds.length) {
       throw new NotFoundException('file not found');
     }
 
-    const existing = await this.orderFileRepository.find({ where: { orderId: id } });
+    const existing = await this.orderFileRepository.find({
+      where: { orderId: id },
+    });
     const existingSet = new Set(existing.map((item) => item.fileId));
 
     const rows = dto.fileIds
@@ -446,11 +838,16 @@ export class ProcurementService {
       '',
       'Attachments:',
       ...(detail.files?.length
-        ? detail.files.map((file, index) => `${index + 1}. ${file.fileName} (${file.mimeType}, ${file.fileSize} bytes)`)
+        ? detail.files.map(
+            (file, index) =>
+              `${index + 1}. ${file.fileName} (${file.mimeType}, ${file.fileSize} bytes)`,
+          )
         : ['-']),
     ];
 
-    const amountLineIndex = lines.findIndex((line) => line.startsWith('Amount (CNY):'));
+    const amountLineIndex = lines.findIndex((line) =>
+      line.startsWith('Amount (CNY):'),
+    );
     const pdfBuffer = this.buildA4Pdf({
       title: 'Procurement Order',
       lines,
@@ -465,7 +862,10 @@ export class ProcurementService {
     });
   }
 
-  async printReportRequest(id: string, user: CurrentUser): Promise<PrintResultDto> {
+  async printReportRequest(
+    id: string,
+    user: CurrentUser,
+  ): Promise<PrintResultDto> {
     const report = await this.mustFindReport(id);
     this.assertCanViewReport(report, user);
 
@@ -508,7 +908,10 @@ export class ProcurementService {
     return printResult;
   }
 
-  async listPendingApprovals(query: ProcurementApprovalListQueryDto, user: CurrentUser) {
+  async listPendingApprovals(
+    query: ProcurementApprovalListQueryDto,
+    user: CurrentUser,
+  ) {
     const includeOrders = !query.entityType || query.entityType === 'order';
     const includeReports = !query.entityType || query.entityType === 'report';
 
@@ -528,13 +931,19 @@ export class ProcurementService {
       const orderRows = await this.orderRepository.find({
         where: {
           deletedAt: IsNull(),
-          status: In(['submitted', 'dept_approved'] satisfies ProcurementOrderStatus[]),
+          status: In([
+            'submitted',
+            'dept_approved',
+          ] satisfies ProcurementOrderStatus[]),
         },
         order: { submittedAt: 'ASC', createdAt: 'ASC' },
       });
 
       orderRows.forEach((row) => {
-        if (query.departmentCode && row.departmentCode !== query.departmentCode) {
+        if (
+          query.departmentCode &&
+          row.departmentCode !== query.departmentCode
+        ) {
           return;
         }
 
@@ -567,7 +976,10 @@ export class ProcurementService {
       });
 
       reportRows.forEach((row) => {
-        if (query.departmentCode && row.departmentCode !== query.departmentCode) {
+        if (
+          query.departmentCode &&
+          row.departmentCode !== query.departmentCode
+        ) {
           return;
         }
 
@@ -603,24 +1015,41 @@ export class ProcurementService {
     const order = await this.mustFindOrder(id);
     this.assertCanViewOrder(order, user);
 
-    const rows = await this.orderApprovalRepository.find({ where: { orderId: id }, order: { approvedAt: 'ASC' } });
+    const rows = await this.orderApprovalRepository.find({
+      where: { orderId: id },
+      order: { approvedAt: 'ASC' },
+    });
     return rows.map((row) => this.toApprovalDto(row));
   }
 
-  async actionOrderApproval(id: string, dto: ProcurementApprovalActionDto, user: CurrentUser) {
+  async actionOrderApproval(
+    id: string,
+    dto: ProcurementApprovalActionDto,
+    user: CurrentUser,
+  ) {
     const order = await this.mustFindOrder(id);
     const source = dto.source ?? 'internal';
     this.assertApprovalSource(source);
 
     const approvalLevel = this.resolveApprovalLevel(order, user);
     if (!approvalLevel) {
-      if (order.status === 'draft' || order.status === 'final_approved' || order.status === 'rejected') {
-        throw new ConflictException('current status does not allow approval action');
+      if (
+        order.status === 'draft' ||
+        order.status === 'final_approved' ||
+        order.status === 'rejected'
+      ) {
+        throw new ConflictException(
+          'current status does not allow approval action',
+        );
       }
       throw new ForbiddenException('forbidden');
     }
 
-    const nextStatus = this.resolveNextStatus(order.status, approvalLevel, dto.action);
+    const nextStatus = this.resolveNextStatus(
+      order.status,
+      approvalLevel,
+      dto.action,
+    );
     order.status = nextStatus;
     order.updatedBy = user.userId;
 
@@ -659,15 +1088,22 @@ export class ProcurementService {
     };
   }
 
-  async getMonthlyReport(query: ProcurementReportMonthlyQueryDto, user: CurrentUser) {
+  async getMonthlyReport(
+    query: ProcurementReportMonthlyQueryDto,
+    user: CurrentUser,
+  ) {
     this.assertCanViewReports(user);
     this.assertYearInLastThreeYears(query.year);
 
     const monthText = String(query.month).padStart(2, '0');
-    const startAt = new Date(`${query.year}-${monthText}-01T00:00:00.000+08:00`);
+    const startAt = new Date(
+      `${query.year}-${monthText}-01T00:00:00.000+08:00`,
+    );
     const endMonth = query.month === 12 ? 1 : query.month + 1;
     const endYear = query.month === 12 ? query.year + 1 : query.year;
-    const endAt = new Date(`${endYear}-${String(endMonth).padStart(2, '0')}-01T00:00:00.000+08:00`);
+    const endAt = new Date(
+      `${endYear}-${String(endMonth).padStart(2, '0')}-01T00:00:00.000+08:00`,
+    );
 
     const qb = this.orderRepository
       .createQueryBuilder('order')
@@ -675,17 +1111,28 @@ export class ProcurementService {
       .addSelect('SUM(order.amount)', 'amount')
       .addSelect('COUNT(order.id)', 'orderCount')
       .where('order.deletedAt IS NULL')
-      .andWhere('order.status IN (:...statuses)', { statuses: INCLUDED_REPORT_ORDER_STATUSES })
-      .andWhere('order.submittedAt >= :startAt', { startAt: startAt.toISOString() })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: INCLUDED_REPORT_ORDER_STATUSES,
+      })
+      .andWhere('order.submittedAt >= :startAt', {
+        startAt: startAt.toISOString(),
+      })
       .andWhere('order.submittedAt < :endAt', { endAt: endAt.toISOString() })
       .groupBy('order.departmentCode')
       .orderBy('order.departmentCode', 'ASC');
 
     if (query.departmentCode) {
-      qb.andWhere('order.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+      qb.andWhere('order.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
     }
 
-    const rows = await qb.getRawMany<{ label: string; amount: string; ordercount: string; orderCount?: string }>();
+    const rows = await qb.getRawMany<{
+      label: string;
+      amount: string;
+      ordercount: string;
+      orderCount?: string;
+    }>();
 
     return {
       year: query.year,
@@ -698,7 +1145,10 @@ export class ProcurementService {
     };
   }
 
-  async getYearlyReport(query: ProcurementReportYearlyQueryDto, user: CurrentUser) {
+  async getYearlyReport(
+    query: ProcurementReportYearlyQueryDto,
+    user: CurrentUser,
+  ) {
     this.assertCanViewReports(user);
     this.assertYearInLastThreeYears(query.year);
 
@@ -707,21 +1157,32 @@ export class ProcurementService {
 
     const qb = this.orderRepository
       .createQueryBuilder('order')
-      .select("EXTRACT(MONTH FROM order.submittedAt)", 'month')
+      .select('EXTRACT(MONTH FROM order.submittedAt)', 'month')
       .addSelect('SUM(order.amount)', 'amount')
       .addSelect('COUNT(order.id)', 'orderCount')
       .where('order.deletedAt IS NULL')
-      .andWhere('order.status IN (:...statuses)', { statuses: INCLUDED_REPORT_ORDER_STATUSES })
-      .andWhere('order.submittedAt >= :startAt', { startAt: startAt.toISOString() })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: INCLUDED_REPORT_ORDER_STATUSES,
+      })
+      .andWhere('order.submittedAt >= :startAt', {
+        startAt: startAt.toISOString(),
+      })
       .andWhere('order.submittedAt < :endAt', { endAt: endAt.toISOString() })
-      .groupBy("EXTRACT(MONTH FROM order.submittedAt)")
+      .groupBy('EXTRACT(MONTH FROM order.submittedAt)')
       .orderBy('month', 'ASC');
 
     if (query.departmentCode) {
-      qb.andWhere('order.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+      qb.andWhere('order.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
     }
 
-    const rows = await qb.getRawMany<{ month: string; amount: string; ordercount: string; orderCount?: string }>();
+    const rows = await qb.getRawMany<{
+      month: string;
+      amount: string;
+      ordercount: string;
+      orderCount?: string;
+    }>();
     const rowMap = new Map(rows.map((row) => [Number(row.month), row]));
 
     return {
@@ -739,7 +1200,10 @@ export class ProcurementService {
     };
   }
 
-  async getDepartmentDetails(query: ProcurementReportDepartmentDetailsQueryDto, user: CurrentUser) {
+  async getDepartmentDetails(
+    query: ProcurementReportDepartmentDetailsQueryDto,
+    user: CurrentUser,
+  ) {
     this.assertCanViewReports(user);
     const range = this.normalizeDateRange(query.startDate, query.endDate);
 
@@ -755,17 +1219,28 @@ export class ProcurementService {
       .addSelect('order.status', 'status')
       .addSelect('order.submittedAt', 'submitted_at')
       .where('order.deletedAt IS NULL')
-      .andWhere('order.status IN (:...statuses)', { statuses: INCLUDED_REPORT_ORDER_STATUSES })
-      .andWhere('order.departmentCode = :departmentCode', { departmentCode: query.departmentCode })
-      .andWhere('order.submittedAt >= :startAt', { startAt: range.startAt.toISOString() })
-      .andWhere('order.submittedAt <= :endAt', { endAt: range.endAt.toISOString() })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: INCLUDED_REPORT_ORDER_STATUSES,
+      })
+      .andWhere('order.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      })
+      .andWhere('order.submittedAt >= :startAt', {
+        startAt: range.startAt.toISOString(),
+      })
+      .andWhere('order.submittedAt <= :endAt', {
+        endAt: range.endAt.toISOString(),
+      })
       .orderBy('order.submittedAt', 'DESC')
       .getRawMany<ReportDetailRow>();
 
     return rows.map((row) => this.toReportDetailItem(row));
   }
 
-  async getDimensionDetails(query: ProcurementReportDimensionDetailsQueryDto, user: CurrentUser) {
+  async getDimensionDetails(
+    query: ProcurementReportDimensionDetailsQueryDto,
+    user: CurrentUser,
+  ) {
     this.assertCanViewReports(user);
     this.assertDimensionDetailsScope(query.departmentCode, query.dimensionType);
 
@@ -783,42 +1258,65 @@ export class ProcurementService {
       .addSelect('order.status', 'status')
       .addSelect('order.submittedAt', 'submitted_at')
       .where('order.deletedAt IS NULL')
-      .andWhere('order.status IN (:...statuses)', { statuses: INCLUDED_REPORT_ORDER_STATUSES })
-      .andWhere('order.departmentCode = :departmentCode', { departmentCode: query.departmentCode })
-      .andWhere('order.dimensionType = :dimensionType', { dimensionType: query.dimensionType })
-      .andWhere('order.submittedAt >= :startAt', { startAt: range.startAt.toISOString() })
-      .andWhere('order.submittedAt <= :endAt', { endAt: range.endAt.toISOString() })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: INCLUDED_REPORT_ORDER_STATUSES,
+      })
+      .andWhere('order.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      })
+      .andWhere('order.dimensionType = :dimensionType', {
+        dimensionType: query.dimensionType,
+      })
+      .andWhere('order.submittedAt >= :startAt', {
+        startAt: range.startAt.toISOString(),
+      })
+      .andWhere('order.submittedAt <= :endAt', {
+        endAt: range.endAt.toISOString(),
+      })
       .orderBy('order.submittedAt', 'DESC');
 
     if (query.dimensionKey?.trim()) {
-      qb.andWhere('order.dimensionKey = :dimensionKey', { dimensionKey: query.dimensionKey.trim() });
+      qb.andWhere('order.dimensionKey = :dimensionKey', {
+        dimensionKey: query.dimensionKey.trim(),
+      });
     }
 
     const rows = await qb.getRawMany<ReportDetailRow>();
     return rows.map((row) => this.toReportDetailItem(row));
   }
 
-  async listReportRequests(query: ProcurementReportRequestListQueryDto, user: CurrentUser) {
+  async listReportRequests(
+    query: ProcurementReportRequestListQueryDto,
+    user: CurrentUser,
+  ) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
 
-    const qb = this.reportRepository.createQueryBuilder('report').where('report.deletedAt IS NULL');
+    const qb = this.reportRepository
+      .createQueryBuilder('report')
+      .where('report.deletedAt IS NULL');
 
     if (!this.canViewReportRequestsAll(user)) {
       qb.andWhere('report.createdBy = :createdBy', { createdBy: user.userId });
     }
 
     if (query.reportType) {
-      qb.andWhere('report.reportType = :reportType', { reportType: query.reportType });
+      qb.andWhere('report.reportType = :reportType', {
+        reportType: query.reportType,
+      });
     }
 
     if (query.periodYear) {
       this.assertYearInLastThreeYears(query.periodYear);
-      qb.andWhere('report.periodYear = :periodYear', { periodYear: query.periodYear });
+      qb.andWhere('report.periodYear = :periodYear', {
+        periodYear: query.periodYear,
+      });
     }
 
     if (query.departmentCode) {
-      qb.andWhere('report.departmentCode = :departmentCode', { departmentCode: query.departmentCode });
+      qb.andWhere('report.departmentCode = :departmentCode', {
+        departmentCode: query.departmentCode,
+      });
     }
 
     if (query.status) {
@@ -842,7 +1340,10 @@ export class ProcurementService {
     };
   }
 
-  async createReportRequestDraft(dto: ProcurementReportRequestCreateDto, user: CurrentUser) {
+  async createReportRequestDraft(
+    dto: ProcurementReportRequestCreateDto,
+    user: CurrentUser,
+  ) {
     this.assertCanViewReports(user);
 
     const approvalChannel = dto.approvalChannel ?? 'internal';
@@ -850,7 +1351,12 @@ export class ProcurementService {
     this.assertYearInLastThreeYears(dto.periodYear);
     this.assertReportRequestPeriod(dto.reportType, dto.periodMonth);
 
-    const snapshotSummary = await this.computeReportSnapshotSummary(dto.reportType, dto.periodYear, dto.periodMonth ?? null, dto.departmentCode ?? null);
+    const snapshotSummary = await this.computeReportSnapshotSummary(
+      dto.reportType,
+      dto.periodYear,
+      dto.periodMonth ?? null,
+      dto.departmentCode ?? null,
+    );
     const reportNo = await this.generateReportNo();
 
     const entity = this.reportRepository.create({
@@ -905,25 +1411,42 @@ export class ProcurementService {
     const report = await this.mustFindReport(id);
     this.assertCanViewReport(report, user);
 
-    const rows = await this.reportApprovalRepository.find({ where: { reportId: id }, order: { approvedAt: 'ASC' } });
+    const rows = await this.reportApprovalRepository.find({
+      where: { reportId: id },
+      order: { approvedAt: 'ASC' },
+    });
     return rows.map((row) => this.toReportApprovalDto(row));
   }
 
-  async actionReportApproval(id: string, dto: ProcurementApprovalActionDto, user: CurrentUser) {
+  async actionReportApproval(
+    id: string,
+    dto: ProcurementApprovalActionDto,
+    user: CurrentUser,
+  ) {
     const report = await this.mustFindReport(id);
     const source = dto.source ?? 'internal';
     this.assertApprovalSource(source);
 
     const approvalLevel = this.resolveReportApprovalLevel(report, user);
     if (!approvalLevel) {
-      if (report.status === 'draft' || report.status === 'final_approved' || report.status === 'rejected') {
-        throw new ConflictException('current status does not allow approval action');
+      if (
+        report.status === 'draft' ||
+        report.status === 'final_approved' ||
+        report.status === 'rejected'
+      ) {
+        throw new ConflictException(
+          'current status does not allow approval action',
+        );
       }
       throw new ForbiddenException('forbidden');
     }
 
     const previousStatus = report.status;
-    const nextStatus = this.resolveNextReportStatus(report.status, approvalLevel, dto.action);
+    const nextStatus = this.resolveNextReportStatus(
+      report.status,
+      approvalLevel,
+      dto.action,
+    );
 
     report.status = nextStatus;
     report.updatedBy = user.userId;
@@ -968,11 +1491,20 @@ export class ProcurementService {
   }
 
   private canViewAllOrders(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('general_office');
+    return (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office')
+    );
   }
 
   private canApproveAnyOrder(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('general_office') || Object.values(DEPARTMENT_ROLE_MAP).some((role) => user.roles.includes(role));
+    return (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office') ||
+      Object.values(DEPARTMENT_ROLE_MAP).some((role) =>
+        user.roles.includes(role),
+      )
+    );
   }
 
   private canViewReports(user: CurrentUser) {
@@ -987,7 +1519,10 @@ export class ProcurementService {
   }
 
   private canManageDimensionDictionary(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('general_office');
+    return (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office')
+    );
   }
 
   private assertCanManageDimensionDictionary(user: CurrentUser) {
@@ -999,37 +1534,68 @@ export class ProcurementService {
   }
 
   private assertDimensionScope(departmentCode: string, dimensionType: string) {
-    if (!DICTIONARY_DEPARTMENT_CODES.includes(departmentCode as (typeof DICTIONARY_DEPARTMENT_CODES)[number])) {
+    if (
+      !DICTIONARY_DEPARTMENT_CODES.includes(
+        departmentCode as (typeof DICTIONARY_DEPARTMENT_CODES)[number],
+      )
+    ) {
       throw new BadRequestException('invalid department code');
     }
 
-    if (!DICTIONARY_DIMENSION_TYPES.includes(dimensionType as (typeof DICTIONARY_DIMENSION_TYPES)[number])) {
+    if (
+      !DICTIONARY_DIMENSION_TYPES.includes(
+        dimensionType as (typeof DICTIONARY_DIMENSION_TYPES)[number],
+      )
+    ) {
       throw new BadRequestException('invalid dimension type');
     }
 
     if (departmentCode === 'shipping_dept' && dimensionType !== 'vessel') {
-      throw new BadRequestException('shipping_dept only supports vessel dimensionType');
+      throw new BadRequestException(
+        'shipping_dept only supports vessel dimensionType',
+      );
     }
 
-    if (departmentCode === 'logistics_dept' && dimensionType !== 'logistics_category') {
-      throw new BadRequestException('logistics_dept only supports logistics_category dimensionType');
+    if (
+      departmentCode === 'logistics_dept' &&
+      dimensionType !== 'logistics_category'
+    ) {
+      throw new BadRequestException(
+        'logistics_dept only supports logistics_category dimensionType',
+      );
     }
   }
 
   private canViewReportRequestsAll(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('general_office') || user.roles.includes('finance');
+    return (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office') ||
+      user.roles.includes('finance')
+    );
   }
 
   private canApproveAnyReport(user: CurrentUser) {
-    if (user.roles.includes('system_admin') || user.roles.includes('general_office') || user.roles.includes('finance')) {
+    if (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office') ||
+      user.roles.includes('finance')
+    ) {
       return true;
     }
 
-    return Object.values(DEPARTMENT_ROLE_MAP).some((role) => user.roles.includes(role));
+    return Object.values(DEPARTMENT_ROLE_MAP).some((role) =>
+      user.roles.includes(role),
+    );
   }
 
-  private resolveApprovalLevel(order: ProcurementOrderEntity, user: CurrentUser): ProcurementApprovalLevel | null {
-    if (order.status === 'submitted' && this.canDepartmentApprove(order.departmentCode, user)) {
+  private resolveApprovalLevel(
+    order: ProcurementOrderEntity,
+    user: CurrentUser,
+  ): ProcurementApprovalLevel | null {
+    if (
+      order.status === 'submitted' &&
+      this.canDepartmentApprove(order.departmentCode, user)
+    ) {
       return 'dept';
     }
 
@@ -1040,8 +1606,14 @@ export class ProcurementService {
     return null;
   }
 
-  private resolveReportApprovalLevel(report: ProcurementReportEntity, user: CurrentUser): ProcurementReportApprovalLevel | null {
-    if (report.status === 'submitted' && this.canReportDepartmentApprove(report.departmentCode, user)) {
+  private resolveReportApprovalLevel(
+    report: ProcurementReportEntity,
+    user: CurrentUser,
+  ): ProcurementReportApprovalLevel | null {
+    if (
+      report.status === 'submitted' &&
+      this.canReportDepartmentApprove(report.departmentCode, user)
+    ) {
       return 'dept';
     }
 
@@ -1056,7 +1628,10 @@ export class ProcurementService {
     return null;
   }
 
-  private canDepartmentApprove(departmentCode: ProcurementDepartmentCode, user: CurrentUser) {
+  private canDepartmentApprove(
+    departmentCode: ProcurementDepartmentCode,
+    user: CurrentUser,
+  ) {
     if (user.roles.includes('system_admin')) {
       return true;
     }
@@ -1065,7 +1640,10 @@ export class ProcurementService {
     return user.roles.includes(requiredRole);
   }
 
-  private canReportDepartmentApprove(departmentCode: ProcurementDepartmentCode | null, user: CurrentUser) {
+  private canReportDepartmentApprove(
+    departmentCode: ProcurementDepartmentCode | null,
+    user: CurrentUser,
+  ) {
     if (user.roles.includes('system_admin')) {
       return true;
     }
@@ -1079,11 +1657,16 @@ export class ProcurementService {
   }
 
   private canFinanceApprove(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('finance');
+    return (
+      user.roles.includes('system_admin') || user.roles.includes('finance')
+    );
   }
 
   private canFinalApprove(user: CurrentUser) {
-    return user.roles.includes('system_admin') || user.roles.includes('general_office');
+    return (
+      user.roles.includes('system_admin') ||
+      user.roles.includes('general_office')
+    );
   }
 
   private assertCanViewOrder(order: ProcurementOrderEntity, user: CurrentUser) {
@@ -1098,7 +1681,10 @@ export class ProcurementService {
     throw new NotFoundException('procurement order not found');
   }
 
-  private assertCanViewReport(report: ProcurementReportEntity, user: CurrentUser) {
+  private assertCanViewReport(
+    report: ProcurementReportEntity,
+    user: CurrentUser,
+  ) {
     if (
       report.createdBy === user.userId ||
       this.canViewReportRequestsAll(user) ||
@@ -1115,19 +1701,29 @@ export class ProcurementService {
       throw new ConflictException('only draft order can be edited');
     }
 
-    if (order.createdBy === user.userId || user.roles.includes('system_admin')) {
+    if (
+      order.createdBy === user.userId ||
+      user.roles.includes('system_admin')
+    ) {
       return;
     }
 
     throw new ForbiddenException('forbidden');
   }
 
-  private assertCanSubmitDraft(order: ProcurementOrderEntity, user: CurrentUser, isResubmit: boolean) {
+  private assertCanSubmitDraft(
+    order: ProcurementOrderEntity,
+    user: CurrentUser,
+    isResubmit: boolean,
+  ) {
     if (order.status !== 'draft') {
       throw new ConflictException('only draft order can be submitted');
     }
 
-    if (order.createdBy !== user.userId && !user.roles.includes('system_admin')) {
+    if (
+      order.createdBy !== user.userId &&
+      !user.roles.includes('system_admin')
+    ) {
       throw new ForbiddenException('forbidden');
     }
 
@@ -1140,12 +1736,18 @@ export class ProcurementService {
     }
   }
 
-  private assertCanSubmitReportDraft(report: ProcurementReportEntity, user: CurrentUser) {
+  private assertCanSubmitReportDraft(
+    report: ProcurementReportEntity,
+    user: CurrentUser,
+  ) {
     if (report.status !== 'draft') {
       throw new ConflictException('only draft report request can be submitted');
     }
 
-    if (report.createdBy === user.userId || user.roles.includes('system_admin')) {
+    if (
+      report.createdBy === user.userId ||
+      user.roles.includes('system_admin')
+    ) {
       return;
     }
 
@@ -1153,12 +1755,18 @@ export class ProcurementService {
   }
 
   private assertApprovalChannel(channel: string) {
-    if (!PROCUREMENT_APPROVAL_CHANNELS.includes(channel as (typeof PROCUREMENT_APPROVAL_CHANNELS)[number])) {
+    if (
+      !PROCUREMENT_APPROVAL_CHANNELS.includes(
+        channel as (typeof PROCUREMENT_APPROVAL_CHANNELS)[number],
+      )
+    ) {
       throw new BadRequestException('invalid approval channel');
     }
 
     if (channel !== 'internal') {
-      throw new UnprocessableEntityException('approval channel is not enabled in current milestone');
+      throw new UnprocessableEntityException(
+        'approval channel is not enabled in current milestone',
+      );
     }
   }
 
@@ -1168,11 +1776,17 @@ export class ProcurementService {
     }
 
     if (source !== 'internal') {
-      throw new UnprocessableEntityException('external approval source is not enabled in current milestone');
+      throw new UnprocessableEntityException(
+        'external approval source is not enabled in current milestone',
+      );
     }
   }
 
-  private resolveNextStatus(currentStatus: ProcurementOrderStatus, approvalLevel: ProcurementApprovalLevel, action: 'approve' | 'reject' | 'return'): ProcurementOrderStatus {
+  private resolveNextStatus(
+    currentStatus: ProcurementOrderStatus,
+    approvalLevel: ProcurementApprovalLevel,
+    action: 'approve' | 'reject' | 'return',
+  ): ProcurementOrderStatus {
     if (action === 'reject') {
       return 'rejected';
     }
@@ -1238,26 +1852,38 @@ export class ProcurementService {
 
     if (departmentCode === 'shipping_dept') {
       if (normalizedType !== 'vessel' || !normalizedKey) {
-        throw new BadRequestException('shipping department requires vessel dimension');
+        throw new BadRequestException(
+          'shipping department requires vessel dimension',
+        );
       }
       return { dimensionType: 'vessel', dimensionKey: normalizedKey };
     }
 
     if (departmentCode === 'logistics_dept') {
       if (normalizedType !== 'logistics_category' || !normalizedKey) {
-        throw new BadRequestException('logistics department requires logistics_category dimension');
+        throw new BadRequestException(
+          'logistics department requires logistics_category dimension',
+        );
       }
-      return { dimensionType: 'logistics_category', dimensionKey: normalizedKey };
+      return {
+        dimensionType: 'logistics_category',
+        dimensionKey: normalizedKey,
+      };
     }
 
     if (normalizedType !== 'none' || normalizedKey) {
-      throw new BadRequestException('current department does not support extra dimension');
+      throw new BadRequestException(
+        'current department does not support extra dimension',
+      );
     }
 
     return { dimensionType: 'none', dimensionKey: null };
   }
 
-  private assertReportRequestPeriod(reportType: ProcurementReportType, periodMonth?: number | null) {
+  private assertReportRequestPeriod(
+    reportType: ProcurementReportType,
+    periodMonth?: number | null,
+  ) {
     if (!PROCUREMENT_REPORT_TYPES.includes(reportType)) {
       throw new BadRequestException('invalid report type');
     }
@@ -1267,7 +1893,9 @@ export class ProcurementService {
     }
 
     if (reportType === 'yearly' && periodMonth) {
-      throw new BadRequestException('yearly report should not provide periodMonth');
+      throw new BadRequestException(
+        'yearly report should not provide periodMonth',
+      );
     }
   }
 
@@ -1278,7 +1906,10 @@ export class ProcurementService {
     }
   }
 
-  private normalizeDateRange(startDate: string, endDate: string): NormalizedDateRange {
+  private normalizeDateRange(
+    startDate: string,
+    endDate: string,
+  ): NormalizedDateRange {
     const startAt = new Date(`${startDate}T00:00:00.000+08:00`);
     const endAt = new Date(`${endDate}T23:59:59.999+08:00`);
 
@@ -1287,7 +1918,9 @@ export class ProcurementService {
     }
 
     if (startAt > endAt) {
-      throw new BadRequestException('startDate must be less than or equal to endDate');
+      throw new BadRequestException(
+        'startDate must be less than or equal to endDate',
+      );
     }
 
     const { minDate, now } = this.buildThreeYearWindow();
@@ -1298,7 +1931,10 @@ export class ProcurementService {
     return { startAt, endAt };
   }
 
-  private normalizeSubmittedDateRange(submittedFrom?: string, submittedTo?: string): NormalizedSubmittedDateRange {
+  private normalizeSubmittedDateRange(
+    submittedFrom?: string,
+    submittedTo?: string,
+  ): NormalizedSubmittedDateRange {
     const result: NormalizedSubmittedDateRange = {};
     const { minDate, now } = this.buildThreeYearWindow();
 
@@ -1308,7 +1944,9 @@ export class ProcurementService {
         throw new BadRequestException('invalid submittedFrom');
       }
       if (startAt < minDate || startAt > now) {
-        throw new BadRequestException('submitted date range must be in last three years');
+        throw new BadRequestException(
+          'submitted date range must be in last three years',
+        );
       }
       result.submittedFrom = startAt;
     }
@@ -1319,13 +1957,21 @@ export class ProcurementService {
         throw new BadRequestException('invalid submittedTo');
       }
       if (endAt < minDate || endAt > now) {
-        throw new BadRequestException('submitted date range must be in last three years');
+        throw new BadRequestException(
+          'submitted date range must be in last three years',
+        );
       }
       result.submittedTo = endAt;
     }
 
-    if (result.submittedFrom && result.submittedTo && result.submittedFrom > result.submittedTo) {
-      throw new BadRequestException('submittedFrom must be less than or equal to submittedTo');
+    if (
+      result.submittedFrom &&
+      result.submittedTo &&
+      result.submittedFrom > result.submittedTo
+    ) {
+      throw new BadRequestException(
+        'submittedFrom must be less than or equal to submittedTo',
+      );
     }
 
     return result;
@@ -1338,13 +1984,23 @@ export class ProcurementService {
     return { minDate, now };
   }
 
-  private assertDimensionDetailsScope(departmentCode: string, dimensionType: string) {
+  private assertDimensionDetailsScope(
+    departmentCode: string,
+    dimensionType: string,
+  ) {
     if (departmentCode === 'shipping_dept' && dimensionType !== 'vessel') {
-      throw new BadRequestException('shipping_dept only supports vessel dimensionType');
+      throw new BadRequestException(
+        'shipping_dept only supports vessel dimensionType',
+      );
     }
 
-    if (departmentCode === 'logistics_dept' && dimensionType !== 'logistics_category') {
-      throw new BadRequestException('logistics_dept only supports logistics_category dimensionType');
+    if (
+      departmentCode === 'logistics_dept' &&
+      dimensionType !== 'logistics_category'
+    ) {
+      throw new BadRequestException(
+        'logistics_dept only supports logistics_category dimensionType',
+      );
     }
   }
 
@@ -1356,9 +2012,22 @@ export class ProcurementService {
   ) {
     if (reportType === 'monthly') {
       const month = periodMonth ?? 1;
-      const monthly = await this.getMonthlyReport({ year: periodYear, month, departmentCode: departmentCode ?? undefined }, { roles: ['all_authenticated'] } as CurrentUser);
-      const totalAmount = monthly.items.reduce((sum, item) => sum + item.amount, 0);
-      const totalOrderCount = monthly.items.reduce((sum, item) => sum + item.orderCount, 0);
+      const monthly = await this.getMonthlyReport(
+        {
+          year: periodYear,
+          month,
+          departmentCode: departmentCode ?? undefined,
+        },
+        { roles: ['all_authenticated'] } as CurrentUser,
+      );
+      const totalAmount = monthly.items.reduce(
+        (sum, item) => sum + item.amount,
+        0,
+      );
+      const totalOrderCount = monthly.items.reduce(
+        (sum, item) => sum + item.orderCount,
+        0,
+      );
 
       return {
         reportType,
@@ -1371,9 +2040,18 @@ export class ProcurementService {
       };
     }
 
-    const yearly = await this.getYearlyReport({ year: periodYear, departmentCode: departmentCode ?? undefined }, { roles: ['all_authenticated'] } as CurrentUser);
-    const totalAmount = yearly.items.reduce((sum, item) => sum + item.amount, 0);
-    const totalOrderCount = yearly.items.reduce((sum, item) => sum + item.orderCount, 0);
+    const yearly = await this.getYearlyReport(
+      { year: periodYear, departmentCode: departmentCode ?? undefined },
+      { roles: ['all_authenticated'] } as CurrentUser,
+    );
+    const totalAmount = yearly.items.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
+    const totalOrderCount = yearly.items.reduce(
+      (sum, item) => sum + item.orderCount,
+      0,
+    );
 
     return {
       reportType,
@@ -1385,8 +2063,14 @@ export class ProcurementService {
     };
   }
 
-  private async notifyOrderPendingApproval(order: ProcurementOrderEntity, approvalLevel: 'dept' | 'final') {
-    const approverUserIds = await this.resolveOrderApproverUserIds(order.departmentCode, approvalLevel);
+  private async notifyOrderPendingApproval(
+    order: ProcurementOrderEntity,
+    approvalLevel: 'dept' | 'final',
+  ) {
+    const approverUserIds = await this.resolveOrderApproverUserIds(
+      order.departmentCode,
+      approvalLevel,
+    );
     if (approverUserIds.length === 0) {
       return;
     }
@@ -1400,7 +2084,10 @@ export class ProcurementService {
     );
   }
 
-  private async notifyOrderApprovalResult(order: ProcurementOrderEntity, action: 'approve' | 'reject' | 'return') {
+  private async notifyOrderApprovalResult(
+    order: ProcurementOrderEntity,
+    action: 'approve' | 'reject' | 'return',
+  ) {
     if (action === 'approve' && order.status === 'dept_approved') {
       await this.notifyOrderPendingApproval(order, 'final');
       return;
@@ -1429,8 +2116,14 @@ export class ProcurementService {
     }
   }
 
-  private async notifyReportPendingApproval(report: ProcurementReportEntity, approvalLevel: ProcurementReportApprovalLevel) {
-    const approverUserIds = await this.resolveReportApproverUserIds(report, approvalLevel);
+  private async notifyReportPendingApproval(
+    report: ProcurementReportEntity,
+    approvalLevel: ProcurementReportApprovalLevel,
+  ) {
+    const approverUserIds = await this.resolveReportApproverUserIds(
+      report,
+      approvalLevel,
+    );
     if (approverUserIds.length === 0) {
       return;
     }
@@ -1444,7 +2137,10 @@ export class ProcurementService {
     );
   }
 
-  private async notifyReportApprovalResult(report: ProcurementReportEntity, action: 'approve' | 'reject' | 'return') {
+  private async notifyReportApprovalResult(
+    report: ProcurementReportEntity,
+    action: 'approve' | 'reject' | 'return',
+  ) {
     if (action === 'approve' && report.status === 'dept_approved') {
       await this.notifyReportPendingApproval(report, 'finance');
       return;
@@ -1508,10 +2204,15 @@ export class ProcurementService {
     return this.listGeneralOfficeApproverUserIds();
   }
 
-  private async listWecomUserIdsByDepartmentCode(departmentCode: ProcurementDepartmentCode): Promise<string[]> {
+  private async listWecomUserIdsByDepartmentCode(
+    departmentCode: ProcurementDepartmentCode,
+  ): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter((row) => row.departmentCodes.includes(departmentCode) || row.isSystemAdmin)
+      .filter(
+        (row) =>
+          row.departmentCodes.includes(departmentCode) || row.isSystemAdmin,
+      )
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
@@ -1520,7 +2221,10 @@ export class ProcurementService {
   private async listFinanceApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter((row) => row.departmentCodes.includes('finance_dept') || row.isSystemAdmin)
+      .filter(
+        (row) =>
+          row.departmentCodes.includes('finance_dept') || row.isSystemAdmin,
+      )
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
@@ -1529,7 +2233,10 @@ export class ProcurementService {
   private async listGeneralOfficeApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter((row) => row.departmentCodes.includes('general_office') || row.isSystemAdmin)
+      .filter(
+        (row) =>
+          row.departmentCodes.includes('general_office') || row.isSystemAdmin,
+      )
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
@@ -1542,13 +2249,19 @@ export class ProcurementService {
     url: string,
     btnText = '查看详情',
   ): Promise<void> {
-    const uniqueUserIds = [...new Set(userIds.map((item) => item.trim()).filter(Boolean))];
+    const uniqueUserIds = [
+      ...new Set(userIds.map((item) => item.trim()).filter(Boolean)),
+    ];
     if (uniqueUserIds.length === 0) {
       return;
     }
 
-    const resolvedUsers = await this.wecomUserRepository.find({ where: { userId: In(uniqueUserIds) } });
-    const resolvedUserIds = [...new Set(resolvedUsers.map((item) => item.userId))];
+    const resolvedUsers = await this.wecomUserRepository.find({
+      where: { userId: In(uniqueUserIds) },
+    });
+    const resolvedUserIds = [
+      ...new Set(resolvedUsers.map((item) => item.userId)),
+    ];
     if (resolvedUserIds.length === 0) {
       return;
     }
@@ -1582,7 +2295,12 @@ export class ProcurementService {
     const ossKey = this.buildExportOssKey(params.category);
 
     try {
-      await this.ossService.uploadBuffer(ossKey, params.buffer, 'application/pdf', params.fileName);
+      await this.ossService.uploadBuffer(
+        ossKey,
+        params.buffer,
+        'application/pdf',
+        params.fileName,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
       this.logger.warn(`oss upload failed for ${ossKey}: ${message}`);
@@ -1619,7 +2337,11 @@ export class ProcurementService {
     rightAlignedLineIndexes: number[];
   }): Buffer {
     const pages: string[][] = [];
-    for (let index = 0; index < input.lines.length; index += PDF_MAX_LINES_PER_PAGE) {
+    for (
+      let index = 0;
+      index < input.lines.length;
+      index += PDF_MAX_LINES_PER_PAGE
+    ) {
       pages.push(input.lines.slice(index, index + PDF_MAX_LINES_PER_PAGE));
     }
 
@@ -1627,17 +2349,28 @@ export class ProcurementService {
       const commands: string[] = ['BT', '/F1 12 Tf'];
 
       const pageTitle = `${input.title}  Page ${pageIndex + 1}/${pages.length}`;
-      commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`);
+      commands.push(
+        `1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`,
+      );
 
       pageLines.forEach((line, lineIndex) => {
         const globalLineIndex = pageIndex * PDF_MAX_LINES_PER_PAGE + lineIndex;
-        const isRightAligned = input.rightAlignedLineIndexes.includes(globalLineIndex);
-        const y = PDF_PAGE_HEIGHT - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
+        const isRightAligned =
+          input.rightAlignedLineIndexes.includes(globalLineIndex);
+        const y =
+          PDF_PAGE_HEIGHT - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
         const x = isRightAligned
-          ? Math.max(PDF_MARGIN_LEFT, PDF_PAGE_WIDTH - PDF_MARGIN_LEFT - this.estimatePdfTextWidth(line, 12))
+          ? Math.max(
+              PDF_MARGIN_LEFT,
+              PDF_PAGE_WIDTH -
+                PDF_MARGIN_LEFT -
+                this.estimatePdfTextWidth(line, 12),
+            )
           : PDF_MARGIN_LEFT;
 
-        commands.push(`1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`);
+        commands.push(
+          `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`,
+        );
       });
 
       commands.push('ET');
@@ -1662,7 +2395,8 @@ export class ProcurementService {
       pageObjectIds.push(pageObjectId);
       objects[pageObjectId] =
         `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
-      objects[contentObjectId] = `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
+      objects[contentObjectId] =
+        `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
 
       nextObjectId += 2;
     });
@@ -1725,7 +2459,10 @@ export class ProcurementService {
   }
 
   private estimatePdfTextWidth(text: string, fontSize: number): number {
-    const units = Array.from(text).reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
+    const units = Array.from(text).reduce(
+      (sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1),
+      0,
+    );
     return units * fontSize * 0.48;
   }
 
@@ -1743,7 +2480,7 @@ export class ProcurementService {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/\"/g, '&quot;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
 
@@ -1770,8 +2507,208 @@ export class ProcurementService {
     return labels[code];
   }
 
-  private async mustFindDimensionItem(id: string): Promise<ProcurementDimensionItemEntity> {
-    const item = await this.dimensionItemRepository.findOne({ where: { id, deletedAt: IsNull() } });
+  private async normalizeBudgetDimension(
+    departmentCode: ProcurementDepartmentCode,
+    dimensionType: ProcurementDimensionType,
+    dimensionKey?: string | null,
+  ): Promise<NormalizedBudgetDimension> {
+    const expectedDimensionType: ProcurementDimensionType =
+      departmentCode === 'shipping_dept'
+        ? 'vessel'
+        : departmentCode === 'logistics_dept'
+          ? 'logistics_category'
+          : 'none';
+
+    if (dimensionType !== expectedDimensionType) {
+      throw new UnprocessableEntityException(
+        'budget dimension does not match department',
+      );
+    }
+
+    if (expectedDimensionType === 'none') {
+      if (dimensionKey?.trim()) {
+        throw new UnprocessableEntityException(
+          'dimensionKey is not allowed for this department',
+        );
+      }
+      return {
+        dimensionType: 'none',
+        dimensionKey: null,
+        dimensionNameSnapshot: '未细分',
+      };
+    }
+
+    const normalizedKey = dimensionKey?.trim();
+    if (!normalizedKey) {
+      throw new UnprocessableEntityException('dimensionKey is required');
+    }
+
+    const item = await this.dimensionItemRepository.findOne({
+      where: {
+        departmentCode: departmentCode as 'shipping_dept' | 'logistics_dept',
+        dimensionType: expectedDimensionType,
+        dimensionKey: normalizedKey,
+        isEnabled: true,
+        deletedAt: IsNull(),
+      },
+    });
+    if (!item) {
+      throw new UnprocessableEntityException(
+        'budget dimension item is not enabled or does not exist',
+      );
+    }
+
+    return {
+      dimensionType: expectedDimensionType,
+      dimensionKey: normalizedKey,
+      dimensionNameSnapshot: item.dimensionName,
+    };
+  }
+
+  private async getBudgetExecutedAmounts(
+    year: number,
+  ): Promise<Map<string, number>> {
+    const startDate = `${year}-01-01`;
+    const endDate = `${year + 1}-01-01`;
+    const rows = await this.orderRepository
+      .createQueryBuilder('order')
+      .select('order.departmentCode', 'departmentCode')
+      .addSelect('order.dimensionType', 'dimensionType')
+      .addSelect('order.dimensionKey', 'dimensionKey')
+      .addSelect('SUM(order.amount)', 'executedAmount')
+      .where('order.deletedAt IS NULL')
+      .andWhere('order.status = :status', { status: 'final_approved' })
+      .andWhere('order.expenseDate IS NOT NULL')
+      .andWhere('order.expenseDate >= :startDate', { startDate })
+      .andWhere('order.expenseDate < :endDate', { endDate })
+      .groupBy('order.departmentCode')
+      .addGroupBy('order.dimensionType')
+      .addGroupBy('order.dimensionKey')
+      .getRawMany<BudgetExecutionRow>();
+
+    return new Map(
+      rows.map((row) => [
+        this.toBudgetScopeKey(row),
+        this.roundMoney(Number(row.executedAmount)),
+      ]),
+    );
+  }
+
+  private async getBudgetDimensionNames(): Promise<Map<string, string>> {
+    const items = await this.dimensionItemRepository.find({
+      where: { deletedAt: IsNull() },
+    });
+    return new Map(
+      items.map((item) => [this.toBudgetScopeKey(item), item.dimensionName]),
+    );
+  }
+
+  private toBudgetScopeKey(scope: {
+    departmentCode: ProcurementDepartmentCode;
+    dimensionType: ProcurementDimensionType;
+    dimensionKey: string | null;
+  }): string {
+    return JSON.stringify([
+      scope.departmentCode,
+      scope.dimensionType,
+      scope.dimensionKey ?? null,
+    ]);
+  }
+
+  private parseBudgetScopeKey(scopeKey: string): {
+    departmentCode: ProcurementDepartmentCode;
+    dimensionType: ProcurementDimensionType;
+    dimensionKey: string | null;
+  } {
+    const [departmentCode, dimensionType, dimensionKey] = JSON.parse(
+      scopeKey,
+    ) as [ProcurementDepartmentCode, ProcurementDimensionType, string | null];
+    return { departmentCode, dimensionType, dimensionKey };
+  }
+
+  private calculateExecutionRate(
+    budgetAmount: number,
+    executedAmount: number,
+  ): number {
+    return budgetAmount > 0
+      ? Math.round((executedAmount / budgetAmount) * 10000) / 100
+      : 0;
+  }
+
+  private roundMoney(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private toBudgetDto(
+    budget: ProcurementBudgetEntity,
+    executedAmountValue: number,
+  ) {
+    const budgetAmount = this.roundMoney(budget.budgetAmount);
+    const executedAmount = this.roundMoney(executedAmountValue);
+    const overBudgetAmount = this.roundMoney(
+      Math.max(executedAmount - budgetAmount, 0),
+    );
+    return {
+      id: budget.id,
+      budgetYear: budget.budgetYear,
+      departmentCode: budget.departmentCode,
+      dimensionType: budget.dimensionType,
+      dimensionKey: budget.dimensionKey,
+      dimensionName: budget.dimensionNameSnapshot,
+      dimensionNameSnapshot: budget.dimensionNameSnapshot,
+      budgetAmount,
+      executedAmount,
+      executionRate: this.calculateExecutionRate(budgetAmount, executedAmount),
+      overBudgetAmount,
+      isOverBudget: budget.isEnabled && executedAmount > budgetAmount,
+      isConfigured: true,
+      isEnabled: budget.isEnabled,
+      createdBy: budget.createdBy,
+      updatedBy: budget.updatedBy,
+      createdAt: budget.createdAt.toISOString(),
+      updatedAt: budget.updatedAt.toISOString(),
+    };
+  }
+
+  private toBudgetAuditSnapshot(
+    budget: ProcurementBudgetEntity,
+  ): Record<string, unknown> {
+    return {
+      budgetYear: budget.budgetYear,
+      departmentCode: budget.departmentCode,
+      dimensionType: budget.dimensionType,
+      dimensionKey: budget.dimensionKey,
+      dimensionNameSnapshot: budget.dimensionNameSnapshot,
+      budgetAmount: budget.budgetAmount,
+      isEnabled: budget.isEnabled,
+    };
+  }
+
+  private isUniqueViolation(error: unknown): boolean {
+    return Boolean(
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: string }).code === '23505',
+    );
+  }
+
+  private async mustFindBudget(id: string): Promise<ProcurementBudgetEntity> {
+    const budget = await this.budgetRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    if (!budget) {
+      throw new NotFoundException('procurement budget not found');
+    }
+    return budget;
+  }
+
+  private async mustFindDimensionItem(
+    id: string,
+  ): Promise<ProcurementDimensionItemEntity> {
+    const item = await this.dimensionItemRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
     if (!item) {
       throw new NotFoundException('procurement dimension item not found');
     }
@@ -1779,7 +2716,9 @@ export class ProcurementService {
   }
 
   private async mustFindOrder(id: string) {
-    const order = await this.orderRepository.findOne({ where: { id, deletedAt: IsNull() } });
+    const order = await this.orderRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
     if (!order) {
       throw new NotFoundException('procurement order not found');
     }
@@ -1787,7 +2726,9 @@ export class ProcurementService {
   }
 
   private async mustFindReport(id: string) {
-    const report = await this.reportRepository.findOne({ where: { id, deletedAt: IsNull() } });
+    const report = await this.reportRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
     if (!report) {
       throw new NotFoundException('procurement report request not found');
     }
@@ -1795,9 +2736,14 @@ export class ProcurementService {
   }
 
   private async toOrderDetail(order: ProcurementOrderEntity) {
-    const fileRelations = await this.orderFileRepository.find({ where: { orderId: order.id }, order: { createdAt: 'ASC' } });
+    const fileRelations = await this.orderFileRepository.find({
+      where: { orderId: order.id },
+      order: { createdAt: 'ASC' },
+    });
     const fileIds = fileRelations.map((item) => item.fileId);
-    const files = fileIds.length ? await this.fileRepository.find({ where: { id: In(fileIds) } }) : [];
+    const files = fileIds.length
+      ? await this.fileRepository.find({ where: { id: In(fileIds) } })
+      : [];
     const fileMap = new Map(files.map((file) => [file.id, file]));
 
     return {
@@ -1909,11 +2855,15 @@ export class ProcurementService {
       title: row.title,
       amount: Number(row.amount),
       status: row.status,
-      submittedAt: row.submitted_at ? new Date(row.submitted_at).toISOString() : null,
+      submittedAt: row.submitted_at
+        ? new Date(row.submitted_at).toISOString()
+        : null,
     };
   }
 
-  private toDimensionItemDto(item: ProcurementDimensionItemEntity): DimensionItemDto {
+  private toDimensionItemDto(
+    item: ProcurementDimensionItemEntity,
+  ): DimensionItemDto {
     return {
       id: item.id,
       departmentCode: item.departmentCode,
@@ -1934,9 +2884,14 @@ export class ProcurementService {
     const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const suffix = String(Math.floor(Math.random() * 10_000)).padStart(4, '0');
+      const suffix = String(Math.floor(Math.random() * 10_000)).padStart(
+        4,
+        '0',
+      );
       const candidate = `CG${datePart}${suffix}`;
-      const existed = await this.orderRepository.exist({ where: { orderNo: candidate } });
+      const existed = await this.orderRepository.exist({
+        where: { orderNo: candidate },
+      });
       if (!existed) {
         return candidate;
       }
@@ -1950,9 +2905,14 @@ export class ProcurementService {
     const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const suffix = String(Math.floor(Math.random() * 10_000)).padStart(4, '0');
+      const suffix = String(Math.floor(Math.random() * 10_000)).padStart(
+        4,
+        '0',
+      );
       const candidate = `RB${datePart}${suffix}`;
-      const existed = await this.reportRepository.exist({ where: { reportNo: candidate } });
+      const existed = await this.reportRepository.exist({
+        where: { reportNo: candidate },
+      });
       if (!existed) {
         return candidate;
       }

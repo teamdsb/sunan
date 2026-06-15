@@ -1,11 +1,11 @@
 import { Alert, Button, Card, Form, Input, List, Pagination, Select, Space, Typography } from 'antd';
 import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
-import { buildDetailHref, resolveBackHref, updateSearchParams } from '../../router/myRouteState';
+import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
 import {
   type EnterprisePolicy,
   useBindEnterprisePolicyFilesMutation,
@@ -64,6 +64,9 @@ export function EnterprisePolicyPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>企业制度</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        创建、发布和查询企业制度，统一维护版本与附件。
+      </Typography.Paragraph>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Card>
           <Form
@@ -181,8 +184,6 @@ export function EnterprisePolicyPage() {
 
 export function EnterprisePolicyDetailPage() {
   const { id = '' } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterprisePolicyByIdQuery(id, { skip: !id });
   const { data: versions } = useGetEnterprisePolicyVersionsQuery(id, { skip: !id });
   const [updatePolicy, { isLoading: saving }] = useUpdateEnterprisePolicyMutation();
@@ -195,7 +196,6 @@ export function EnterprisePolicyDetailPage() {
     status: EnterprisePolicy['status'];
   }>();
   const policy = data?.data;
-  const backHref = resolveBackHref(myRouteConfig.enterprisePolicy.path, location.search);
 
   useEffect(() => {
     if (policy) {
@@ -210,6 +210,9 @@ export function EnterprisePolicyDetailPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>企业制度详情</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        查看并维护制度内容、状态、版本和附件。
+      </Typography.Paragraph>
       <Card loading={isLoading}>
         {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
         <Form
@@ -250,7 +253,6 @@ export function EnterprisePolicyDetailPage() {
             <Button htmlType="submit" type="primary" loading={saving}>
               保存
             </Button>
-            <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
           </Space>
         </Form>
 

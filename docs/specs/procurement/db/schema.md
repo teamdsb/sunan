@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: procurement
-updated: 2026-05-04
+updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
@@ -17,6 +17,8 @@ replaced_by: []
 | `procurement_reports` | 报表审批单主表 |
 | `procurement_report_approvals` | 报表审批记录 |
 | `procurement_dimension_items` | 船舶/后勤细分字典 |
+| `procurement_budgets` | 年度采购预算 |
+| `procurement_budget_audits` | 预算调整审计 |
 
 ## 关系
 
@@ -24,6 +26,7 @@ replaced_by: []
 - `procurement_order_files.order_id -> procurement_orders.id`
 - `procurement_order_files.file_id -> files.id`
 - `procurement_report_approvals.report_id -> procurement_reports.id`
+- `procurement_budget_audits.budget_id -> procurement_budgets.id`
 
 ## 核心约束
 
@@ -36,6 +39,7 @@ replaced_by: []
    - `external_process_instance_id`
    - `external_status`
    - `external_synced_at`
+6. 预算按年度、部门和分类唯一，执行金额仅统计终审通过且费用日期属于目标年度的采购单。
 
 ## 部门编码兼容说明
 

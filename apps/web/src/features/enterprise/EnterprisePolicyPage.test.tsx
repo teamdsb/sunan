@@ -7,7 +7,6 @@ import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from './EnterprisePo
 const mockList = vi.fn();
 const mockCreate = vi.fn();
 const mockPublish = vi.fn();
-const mockNavigate = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
@@ -24,15 +23,6 @@ vi.mock('./enterpriseApi', () => ({
   useUpdateEnterprisePolicyMutation: () => [vi.fn(), { isLoading: false }],
   useBindEnterprisePolicyFilesMutation: () => [vi.fn()],
 }));
-
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 function LocationDisplay() {
   const location = useLocation();
@@ -93,7 +83,7 @@ describe('EnterprisePolicyPage', () => {
     );
   });
 
-  it('replaces history when returning from the detail page', () => {
+  it('does not add a redundant return button to the detail page', () => {
     render(
       <MemoryRouter initialEntries={['/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar']}>
         <Routes>
@@ -102,12 +92,9 @@ describe('EnterprisePolicyPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '返回列表' }));
-
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=bar',
-      { replace: true },
-    );
+    expect(
+      screen.queryByRole('button', { name: '返回列表' }),
+    ).not.toBeInTheDocument();
   });
 
   it('uses a vertical creation form for narrow screens', () => {

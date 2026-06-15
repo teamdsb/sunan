@@ -1,7 +1,17 @@
-import { Alert, Button, Card, Select, Space, Table, Tag, Typography, message } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Select,
+  Space,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ResponsiveTable } from '../../components/ResponsiveTable';
 import {
   ProcurementDepartmentCode,
   ProcurementPendingTask,
@@ -32,7 +42,10 @@ const actionLabelMap: Record<'approve' | 'reject' | 'return', string> = {
 };
 
 function formatDepartment(value: string | null) {
-  return value ? departmentOptions.find((item) => item.value === value)?.label ?? '未配置部门' : '-';
+  return value
+    ? (departmentOptions.find((item) => item.value === value)?.label ??
+        '未配置部门')
+    : '-';
 }
 
 function formatStatus(value: string) {
@@ -42,20 +55,38 @@ function formatStatus(value: string) {
 export function ProcurementApprovalPage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-  const [departmentCode, setDepartmentCode] = useState<ProcurementDepartmentCode | undefined>(undefined);
-  const { data: response, isLoading, refetch } = useGetProcurementPendingApprovalsQuery({ entityType: 'order', departmentCode });
-  const [actionApproval, { isLoading: isActing }] = useActionProcurementOrderApprovalMutation();
+  const [departmentCode, setDepartmentCode] = useState<
+    ProcurementDepartmentCode | undefined
+  >(undefined);
+  const {
+    data: response,
+    isLoading,
+    refetch,
+  } = useGetProcurementPendingApprovalsQuery({
+    entityType: 'order',
+    departmentCode,
+  });
+  const [actionApproval, { isLoading: isActing }] =
+    useActionProcurementOrderApprovalMutation();
 
   const rows = response?.data ?? [];
 
-  const handleAction = async (task: ProcurementPendingTask, action: 'approve' | 'reject' | 'return') => {
-    const comment = window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
+  const handleAction = async (
+    task: ProcurementPendingTask,
+    action: 'approve' | 'reject' | 'return',
+  ) => {
+    const comment =
+      window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
     if (action !== 'approve' && !comment.trim()) {
       messageApi.warning('退回和驳回需要审批意见');
       return;
     }
 
-    await actionApproval({ id: task.entityId, action, comment: comment.trim() || undefined }).unwrap();
+    await actionApproval({
+      id: task.entityId,
+      action,
+      comment: comment.trim() || undefined,
+    }).unwrap();
     messageApi.success('审批操作已提交');
     await refetch();
   };
@@ -70,13 +101,22 @@ export function ProcurementApprovalPage() {
         width: 140,
         render: (value: string | null) => formatDepartment(value),
       },
-      { title: '审批节点', dataIndex: 'approvalLevel', key: 'approvalLevel', width: 120 },
+      {
+        title: '审批节点',
+        dataIndex: 'approvalLevel',
+        key: 'approvalLevel',
+        width: 120,
+      },
       {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
         width: 140,
-        render: (value: string) => <Tag color={value === 'submitted' ? 'gold' : 'blue'}>{formatStatus(value)}</Tag>,
+        render: (value: string) => (
+          <Tag color={value === 'submitted' ? 'gold' : 'blue'}>
+            {formatStatus(value)}
+          </Tag>
+        ),
       },
       {
         title: '提交时间',
@@ -91,16 +131,32 @@ export function ProcurementApprovalPage() {
         width: 280,
         render: (_, record) => (
           <Space wrap>
-            <Button type="link" onClick={() => navigate(`/procurement/orders/${record.entityId}`)}>
+            <Button
+              type="link"
+              onClick={() => navigate(`/procurement/orders/${record.entityId}`)}
+            >
               查看详情
             </Button>
-            <Button type="primary" ghost loading={isActing} onClick={() => void handleAction(record, 'approve')}>
+            <Button
+              type="primary"
+              ghost
+              loading={isActing}
+              onClick={() => void handleAction(record, 'approve')}
+            >
               通过
             </Button>
-            <Button loading={isActing} onClick={() => void handleAction(record, 'return')}>
+            <Button
+              loading={isActing}
+              onClick={() => void handleAction(record, 'return')}
+            >
               退回
             </Button>
-            <Button danger ghost loading={isActing} onClick={() => void handleAction(record, 'reject')}>
+            <Button
+              danger
+              ghost
+              loading={isActing}
+              onClick={() => void handleAction(record, 'reject')}
+            >
               驳回
             </Button>
           </Space>
@@ -115,23 +171,32 @@ export function ProcurementApprovalPage() {
       {contextHolder}
       <section className="page-hero">
         <Typography.Title level={2}>采购审批</Typography.Title>
-        <Typography.Paragraph type="secondary">处理待审批采购单，支持通过、退回、驳回。</Typography.Paragraph>
-        <Space wrap>
+        <Typography.Paragraph type="secondary">
+          处理待审批采购单，支持通过、退回、驳回。
+        </Typography.Paragraph>
+        <div className="sunan-query-grid">
           <Select
             allowClear
             placeholder="按部门过滤"
-            style={{ width: 180 }}
             options={departmentOptions}
             value={departmentCode}
             onChange={(value) => setDepartmentCode(value)}
           />
-          <Button onClick={() => navigate('/procurement')}>返回列表</Button>
-        </Space>
+        </div>
       </section>
 
       <section className="page-card-grid">
-        <Card variant="borderless" className="placeholder-card office-admin-card">
-          <Table rowKey="entityId" loading={isLoading} columns={columns} dataSource={rows} pagination={false} />
+        <Card
+          variant="borderless"
+          className="placeholder-card office-admin-card"
+        >
+          <ResponsiveTable
+            rowKey="entityId"
+            loading={isLoading}
+            columns={columns}
+            dataSource={rows}
+            pagination={false}
+          />
         </Card>
       </section>
 

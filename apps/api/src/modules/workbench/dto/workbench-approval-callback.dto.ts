@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Transform, type TransformFnParams } from 'class-transformer';
 import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, Min } from 'class-validator';
 
 const CALLBACK_STATUSES = ['pending', 'approved', 'rejected', 'canceled', 'terminated'] as const;
@@ -13,23 +13,39 @@ export class WorkbenchApprovalCallbackDto {
   @IsIn(CALLBACK_STATUSES)
   status!: (typeof CALLBACK_STATUSES)[number];
 
-  @Transform(({ value }) => Number(value))
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
+    return Number(value);
+  })
   @IsInt()
   @Min(1)
   callbackVersion!: number;
 
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' || value === true ? true : value === 'false' || value === false ? false : value))
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   encrypted?: boolean;
 
   @IsOptional()
-  @Transform(({ value, obj }) => {
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
+    const objectValue: unknown = params.obj;
     if (typeof value === 'string' && value.trim()) {
       return value.trim();
     }
-    if (typeof obj?.Encrypt === 'string' && obj.Encrypt.trim()) {
-      return obj.Encrypt.trim();
+    const encryptedValue =
+      typeof objectValue === 'object' &&
+      objectValue !== null &&
+      'Encrypt' in objectValue
+        ? objectValue.Encrypt
+        : undefined;
+    if (typeof encryptedValue === 'string' && encryptedValue.trim()) {
+      return encryptedValue.trim();
     }
     return undefined;
   })

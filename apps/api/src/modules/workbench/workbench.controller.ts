@@ -38,8 +38,8 @@ export class WorkbenchController {
 
   @Get('statistics/attendance/export')
   @HttpCode(202)
-  async exportAttendanceStatistics(@Query() query: WorkbenchAttendanceExportQueryDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: await this.service.exportAttendanceStatistics(query, user) };
+  exportAttendanceStatistics(@Query() query: WorkbenchAttendanceExportQueryDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: this.service.exportAttendanceStatistics(query, user) };
   }
 
   @Post('statistics/attendance/reconcile')

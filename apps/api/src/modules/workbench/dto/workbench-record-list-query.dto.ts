@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Transform, type TransformFnParams } from 'class-transformer';
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 const TEMPLATE_TYPES = [
@@ -20,7 +20,8 @@ export class WorkbenchRecordListQueryDto {
   templateType?: (typeof TEMPLATE_TYPES)[number];
 
   @IsOptional()
-  @Transform(({ value }) => {
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -41,13 +42,19 @@ export class WorkbenchRecordListQueryDto {
   keyword?: string;
 
   @IsOptional()
-  @Transform(({ value }) => Number(value))
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
+    return Number(value);
+  })
   @IsInt()
   @Min(1)
   page?: number;
 
   @IsOptional()
-  @Transform(({ value }) => Number(value))
+  @Transform((params: TransformFnParams) => {
+    const value: unknown = params.value;
+    return Number(value);
+  })
   @IsInt()
   @Min(1)
   @Max(100)

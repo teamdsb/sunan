@@ -1,0 +1,83 @@
+---
+status: current-index
+owner: safety
+updated: 2026-06-13
+replaces: []
+replaced_by: []
+---
+# 安全管理领域规格索引
+
+> 本目录是 M7/M8 新增的专业安全领域入口。当前仅冻结规划清单；具体 API、DB、state 和 UI 规格必须在对应 Wave 实施前创建、评审并通过校验。
+
+## 领域定位
+
+安全领域不是第五个一级产品板块。用户仍从企业微信工作台和“工作平台”进入，安全领域负责提供跨现有模块复用的专业数据与闭环。
+
+## M7 计划规格
+
+| Wave | 层次 | 计划文件 | 当前状态 |
+|---|---|---|---|
+| 1 | Architecture | `domain-boundaries.md` | 待编写 |
+| 1 | Common | `terminology-and-status.md` | 待编写 |
+| 2 | API | `api/workflow-and-permission-api.yaml` | 待编写 |
+| 2 | DB | `db/workflow-and-permission-schema.md` | 待编写 |
+| 2 | State | `state/workflow-lifecycle.md` | 待编写 |
+| 2 | UI | `ui/permission-and-action-rules.md` | 待编写 |
+| 3 | API | `api/evidence-and-export-api.yaml` | 待编写 |
+| 3 | DB | `db/evidence-and-export-schema.md` | 待编写 |
+| 3 | State | `state/evidence-jobs.md` | 待编写 |
+| 3 | UI | `ui/mobile-evidence-components.md` | 待编写 |
+| 4 | API | `api/master-data-api.yaml` | 待编写 |
+| 4 | DB | `db/master-data-schema.md` | 待编写 |
+| 4 | UI | `ui/master-data-pages.md` | 待编写 |
+| 5 | API | `api/plan-task-api.yaml` | 待编写 |
+| 5 | DB | `db/plan-task-schema.md` | 待编写 |
+| 5 | State | `state/task-lifecycle.md` | 待编写 |
+| 5 | UI | `ui/task-center-and-calendar.md` | 待编写 |
+| 6 | API | `api/inspection-capa-api.yaml` | 待编写 |
+| 6 | DB | `db/inspection-capa-schema.md` | 待编写 |
+| 6 | State | `state/inspection-capa-lifecycle.md` | 待编写 |
+| 6 | UI | `ui/inspection-and-capa-pages.md` | 待编写 |
+
+## M8 计划规格
+
+| Wave | 领域 | 计划规格组 | 当前状态 |
+|---|---|---|---|
+| 2 | 人员安全 | `personnel-safety-*` | 待编写 |
+| 3 | 船舶作业 | `ship-operation-*` | 待编写 |
+| 4 | 应急事故防台 | `emergency-incident-*` | 待编写 |
+| 5 | 设备维修备件 | `equipment-maintenance-*` | 待编写 |
+| 6 | 安全治理 | `safety-governance-*` | 待编写 |
+| 7 | 文件内审档案 | `document-audit-archive-*` | 待编写 |
+
+每组至少包含：
+
+- `api/*.yaml`
+- `db/*.md`
+- `state/*.md`
+- `ui/*.md`
+
+## 固定复用规则
+
+- API：`docs/specs/common/api-conventions.md`
+- DB：`docs/specs/common/db-conventions.md`
+- 权限：`docs/specs/common/auth-spec.md`
+- 文件：`docs/specs/common/file-upload-spec.md`
+- 通知：`docs/specs/common/notification-spec.md`
+- 前端体验：`docs/specs/common/frontend-experience-guidelines.md`
+- 企业微信：`docs/specs/wecom/README.md`
+- 工作平台运行时：`docs/specs/workbench/README.md`
+- 采购联动：`docs/specs/procurement/README.md`
+
+## 规格评审门禁
+
+1. OpenAPI YAML 必须通过 `swagger-cli validate`。
+2. DB 规格必须说明外键、索引、唯一约束、软删除和迁移回滚。
+3. 状态规格必须给出合法状态、动作、执行角色和非法转换。
+4. UI 规格必须覆盖直达、移动端、加载、空态、错误、权限和弱网。
+5. 自动生成任务或问题必须说明幂等键、失败补偿和审计。
+6. 未评审规格不得进入实现。
+
+## 外部集成边界
+
+M7/M8 不创建海事监管、AIS、CCTV 等外部 API 规格。人工监管登记属于内部安全业务规格，不得命名为外部同步或接口回调。

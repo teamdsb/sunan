@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { ProcurementBudgetAuditEntity } from 'src/database/entities/procurement-budget-audit.entity';
+import { ProcurementBudgetEntity } from 'src/database/entities/procurement-budget.entity';
 import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
 import { ProcurementOrderApprovalEntity } from 'src/database/entities/procurement-order-approval.entity';
 import { ProcurementOrderFileEntity } from 'src/database/entities/procurement-order-file.entity';
@@ -18,6 +20,8 @@ import { ProcurementService } from './procurement.service';
     FilesModule,
     WecomModule,
     TypeOrmModule.forFeature([
+      ProcurementBudgetEntity,
+      ProcurementBudgetAuditEntity,
       ProcurementDimensionItemEntity,
       ProcurementOrderEntity,
       ProcurementOrderApprovalEntity,

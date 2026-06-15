@@ -1,4 +1,8 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+} from 'axios';
 import {
   BaseQueryApi,
   type QueryReturnValue,
@@ -267,6 +271,7 @@ export const baseApi = createApi({
     'ProcurementApproval',
     'ProcurementReport',
     'ProcurementReportApproval',
+    'ProcurementBudget',
     'Workbench',
     'WorkbenchRecord',
     'Reminder',

@@ -115,18 +115,6 @@ interface WorkbenchRecord {
   actionLogs: WorkbenchActionLog[];
 }
 
-interface ApprovalInstance {
-  processInstanceId: string;
-  businessRecordId: string;
-  moduleCode: string;
-  externalStatus: 'pending' | 'approved' | 'rejected' | 'canceled' | 'terminated';
-  mirrorStatus: ApprovalMirrorStatus;
-  startedAt: string;
-  lastCallbackAt: string | null;
-  lastReconciledAt: string | null;
-  callbackVersion: number;
-}
-
 interface WecomApprovalLaunchConfig {
   oaType: '10001';
   templateId: string;
@@ -1653,7 +1641,7 @@ export class WorkbenchService implements OnModuleInit {
     };
   }
 
-  async exportAttendanceStatistics(query: WorkbenchAttendanceExportQueryDto, user: CurrentUser) {
+  exportAttendanceStatistics(query: WorkbenchAttendanceExportQueryDto, user: CurrentUser) {
     this.assertAttendanceAdmin(user);
 
     const month = this.normalizeMonth(query.month);
@@ -1772,7 +1760,6 @@ export class WorkbenchService implements OnModuleInit {
     this.assertPayloadMatchesSchema(normalizedPayload, schemaDefinition);
 
     const now = new Date();
-    const nowIso = now.toISOString();
     const steps = this.buildInitialSteps(schemaDefinition);
     const initialStatus =
       moduleItem.templateType === 'ledger_form'
@@ -1893,7 +1880,7 @@ export class WorkbenchService implements OnModuleInit {
       }
       record.status = 'in_progress';
     } else if (dto.actionType === 'complete_step') {
-      const stepCode = String(dto.payload?.stepCode ?? '').trim();
+      const stepCode = this.toScalarString(dto.payload?.stepCode).trim();
       if (!stepCode) {
         throw new BadRequestException('payload.stepCode is required for complete_step');
       }
@@ -2398,7 +2385,7 @@ export class WorkbenchService implements OnModuleInit {
     const payload = dto.payload ?? record.payload ?? {};
     for (const field of schemaDefinition.sections.flatMap((section) => section.fields)) {
       const raw = payload[field.key];
-      if (raw === undefined || raw === null || String(raw).trim() === '') {
+      if (this.toApprovalDisplayValue(raw).trim() === '') {
         continue;
       }
       fieldList.push({
@@ -2418,14 +2405,17 @@ export class WorkbenchService implements OnModuleInit {
     };
   }
 
-  private toApprovalDisplayValue(value: unknown) {
+  private toApprovalDisplayValue(value: unknown): string {
+    if (value === undefined || value === null) {
+      return '';
+    }
     if (value instanceof Date) {
       return value.toISOString();
     }
     if (typeof value === 'object') {
-      return JSON.stringify(value);
+      return JSON.stringify(value) ?? '';
     }
-    return String(value);
+    return this.toScalarString(value);
   }
 
   async handleApprovalCallback(dto: WorkbenchApprovalCallbackDto | string | Record<string, unknown>, meta: ApprovalCallbackRequestMeta) {
@@ -3317,14 +3307,19 @@ export class WorkbenchService implements OnModuleInit {
       return new Map<string, number>();
     }
 
-    const rows = (await this.recordRepository
+    const rows = await this.recordRepository
       .createQueryBuilder('record')
       .select('record.module_code', 'moduleCode')
       .addSelect('COUNT(*)', 'pendingCount')
       .where('record.module_code IN (:...moduleCodes)', { moduleCodes })
       .andWhere('record.status IN (:...statuses)', { statuses: [...PENDING_STATUSES] })
       .groupBy('record.module_code')
-      .getRawMany()) as Array<{ modulecode?: string; moduleCode?: string; pendingcount?: string; pendingCount?: string }>;
+      .getRawMany<{
+        modulecode?: string;
+        moduleCode?: string;
+        pendingcount?: string;
+        pendingCount?: string;
+      }>();
 
     const result = new Map<string, number>();
     for (const row of rows) {
@@ -3371,7 +3366,29 @@ export class WorkbenchService implements OnModuleInit {
   }
 
   private toLowerString(value: unknown) {
-    return String(value ?? '').trim().toLowerCase();
+    return this.toScalarString(value).trim().toLowerCase();
+  }
+
+  private toScalarString(value: unknown): string {
+    if (value === undefined || value === null || typeof value === 'object') {
+      return '';
+    }
+    if (typeof value === 'symbol') {
+      return value.description ?? '';
+    }
+    if (typeof value === 'function') {
+      return value.name;
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (typeof value === 'boolean') {
+      return value ? 'true' : 'false';
+    }
+    if (typeof value === 'number' || typeof value === 'bigint') {
+      return `${value}`;
+    }
+    return '';
   }
 
   private toBoolean(value: unknown) {
@@ -3708,7 +3725,7 @@ export class WorkbenchService implements OnModuleInit {
       }
 
       if (field.inputType === 'date') {
-        const dateString = String(raw).trim();
+        const dateString = this.toScalarString(raw).trim();
         if (!dateString) {
           throw new BadRequestException(`payload.${field.key} is required`);
         }
@@ -3718,7 +3735,7 @@ export class WorkbenchService implements OnModuleInit {
         continue;
       }
 
-      const text = String(raw).trim();
+      const text = this.toScalarString(raw).trim();
       if (!text) {
         throw new BadRequestException(`payload.${field.key} is required`);
       }
@@ -3728,15 +3745,18 @@ export class WorkbenchService implements OnModuleInit {
   private normalizeCreatePayload(moduleCode: string, payload: Record<string, unknown> | undefined): Record<string, unknown> {
     const normalized = { ...(payload ?? {}) };
     if (moduleCode === 'goa_meeting') {
-      if (!normalized.retentionUntil || String(normalized.retentionUntil).trim() === '') {
+      if (!this.toScalarString(normalized.retentionUntil).trim()) {
         const retention = new Date();
         retention.setUTCFullYear(retention.getUTCFullYear() + 3);
         normalized.retentionUntil = retention.toISOString().slice(0, 10);
       }
     }
     if (moduleCode === 'goa_training') {
-      const learningStatus = String(normalized.learningStatus ?? '').trim();
-      if (learningStatus === 'completed' && (!normalized.completedAt || String(normalized.completedAt).trim() === '')) {
+      const learningStatus = this.toScalarString(normalized.learningStatus).trim();
+      if (
+        learningStatus === 'completed' &&
+        !this.toScalarString(normalized.completedAt).trim()
+      ) {
         normalized.completedAt = new Date().toISOString().slice(0, 10);
       }
     }
@@ -3758,7 +3778,7 @@ export class WorkbenchService implements OnModuleInit {
 
     const payload = record.payload ?? {};
     const learningStatus = this.toLowerString(payload.learningStatus);
-    const completedAt = String(payload.completedAt ?? '').trim();
+    const completedAt = this.toScalarString(payload.completedAt).trim();
     const progressRaw = payload.learningProgressPercent;
     const progress = typeof progressRaw === 'number' ? progressRaw : Number(progressRaw);
 

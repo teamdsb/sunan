@@ -16,7 +16,7 @@ function createRepo<T>(rows: T[] = []): AnyRepo<T> {
     findOne: jest.fn(async () => rows[0] ?? null),
     save: jest.fn(async (value) => {
       const list = Array.isArray(value) ? value : [value];
-      for (const item of list as T[]) {
+      for (const item of list) {
         const record = item as Record<string, unknown>;
         const index = rows.findIndex((row) => (row as Record<string, unknown>).id === record.id);
         if (index >= 0) {

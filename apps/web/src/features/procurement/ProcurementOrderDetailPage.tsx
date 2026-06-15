@@ -1,8 +1,9 @@
-import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Space, Table, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Space, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
+import { ResponsiveTable } from '../../components/ResponsiveTable';
 import {
   ProcurementApprovalRecord,
   ProcurementDepartmentCode,
@@ -203,8 +204,10 @@ export function ProcurementOrderDetailPage() {
       {contextHolder}
       <section className="page-hero">
         <Typography.Title level={2}>采购单详情</Typography.Title>
+        <Typography.Paragraph type="secondary">
+          查看采购单、审批进度和执行信息，并按需导出 PDF。
+        </Typography.Paragraph>
         <Space wrap>
-          <Button onClick={() => navigate('/procurement')}>返回列表</Button>
           <Button onClick={() => navigate('/procurement/approvals')}>进入审批页</Button>
           <Button loading={isPrinting} onClick={() => void handlePrint()}>
             导出 PDF
@@ -293,7 +296,7 @@ export function ProcurementOrderDetailPage() {
 
       <section className="page-card-grid">
         <Card variant="borderless" className="placeholder-card" title="审批轨迹">
-          <Table rowKey="id" columns={approvalColumns} dataSource={approvals} pagination={false} />
+          <ResponsiveTable rowKey="id" columns={approvalColumns} dataSource={approvals} pagination={false} />
         </Card>
       </section>
     </>

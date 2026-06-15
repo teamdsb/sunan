@@ -1,8 +1,6 @@
 ﻿import { Alert, Button, Card, Form, Input, Select, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { myRouteConfig } from '../../router/myRouteConfig';
-import { resolveBackHref } from '../../router/myRouteState';
+import { useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import {
@@ -25,8 +23,6 @@ const statusOptions = [
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, { skip: !id });
   const [updateProfile, { isLoading: saving }] = useUpdateEnterpriseProfileMutation();
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
@@ -53,11 +49,13 @@ export function EnterpriseProfileDetailPage() {
   }, [profile, form]);
 
   const currentUpload = useMemo(() => uploaded, [uploaded]);
-  const backHref = resolveBackHref(myRouteConfig.enterpriseProfile.path, location.search);
 
   return (
     <section className="page-hero">
       <Typography.Title level={2}>企业资料详情</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        查看并维护企业资料内容、状态和附件。
+      </Typography.Paragraph>
       <Card loading={isLoading}>
         {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
         <Form
@@ -85,7 +83,6 @@ export function EnterpriseProfileDetailPage() {
           </Form.Item>
           <Space wrap className="detail-action-bar">
             <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
-            <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
           </Space>
         </Form>
       </Card>

@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { appEnv } from 'src/config/env';
 
 const timestampColumnType = 'timestamptz';
 

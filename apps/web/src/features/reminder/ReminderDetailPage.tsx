@@ -1,9 +1,7 @@
 import { Alert, Button, Card, Descriptions, Space, Tag, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
-import { myRouteConfig } from '../../router/myRouteConfig';
-import { resolveBackHref } from '../../router/myRouteState';
 import {
   useAcknowledgeReminderMutation,
   useGetReminderByIdQuery,
@@ -25,14 +23,11 @@ function describeAckStatus(reminder: ReminderItem): string {
 
 export function ReminderDetailPage() {
   const { id = '' } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data, isLoading, refetch } = useGetReminderByIdQuery(id, { skip: !id });
   const [acknowledgeReminder, { isLoading: acknowledging }] = useAcknowledgeReminderMutation();
   const [localReminder, setLocalReminder] = useState<ReminderItem | null>(null);
   const [acknowledgeError, setAcknowledgeError] = useState<string | null>(null);
-  const backHref = resolveBackHref(myRouteConfig.reminders.path, location.search);
 
   useEffect(() => {
     if (data?.data) {
@@ -86,8 +81,10 @@ export function ReminderDetailPage() {
           <Typography.Title level={2} style={{ marginBottom: 0 }}>
             提醒详情
           </Typography.Title>
-          <Button onClick={() => navigate(backHref, { replace: true })}>返回看板</Button>
         </Space>
+        <Typography.Paragraph type="secondary">
+          查看提醒状态、关联证照与处理记录。
+        </Typography.Paragraph>
 
         <Card loading={isLoading}>
           {acknowledgeError ? <Alert type="error" showIcon message={acknowledgeError} style={{ marginBottom: 12 }} /> : null}
@@ -129,16 +126,11 @@ export function ReminderDetailPage() {
               </Card>
 
               <Space wrap className="detail-action-bar">
-                {canShowAction ? (
-                  isAcknowledged ? (
-                    <Button disabled>已确认</Button>
-                  ) : canAcknowledge ? (
-                    <Button type="primary" loading={acknowledging} onClick={handleAcknowledge}>
-                      确认提醒
-                    </Button>
-                  ) : null
+                {canShowAction && canAcknowledge ? (
+                  <Button type="primary" loading={acknowledging} onClick={handleAcknowledge}>
+                    确认提醒
+                  </Button>
                 ) : null}
-                <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
               </Space>
             </Space>
           ) : null}

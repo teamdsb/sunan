@@ -31,25 +31,31 @@ describe('MyHomePage', () => {
     expect(screen.getAllByRole('link')).toHaveLength(6);
   });
 
-  it('keeps the home page copy unchanged for the pilot', () => {
+  it('renders the refreshed command dashboard copy', () => {
     render(
       <MemoryRouter>
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: '我的模块首页' })).toBeInTheDocument();
-    expect(screen.getByText('快捷进入常用业务模块。')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '常用业务一屏触达，船务状态集中提醒' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '围绕证照、制度、船舶监控和个人待办重新组织入口，适配桌面与企业微信移动端。',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('今日待办')).toBeInTheDocument();
   });
 
-  it('keeps hero artwork out of inline svg so it can be served as a compressed asset', () => {
+  it('serves the ship artwork as the command card background instead of a separate image block', () => {
     const { container } = render(
       <MemoryRouter>
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(container.querySelector('.my-home-hero svg')).toBeNull();
+    expect(container.querySelector('.my-home-command-hero svg')).toBeNull();
+    expect(container.querySelector('.my-home-ship-visual')).toBeNull();
   });
 
   it('renders enterprise shortcut cards with stable labels', () => {
@@ -72,5 +78,16 @@ describe('MyHomePage', () => {
 
     expect(screen.getAllByTestId('my-home-shortcut-icon')).toHaveLength(6);
     expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass('my-home-shortcut-icon', 'my-home-shortcut-icon-blue');
+  });
+
+  it('uses the whole shortcut card as the action without rendering redundant view labels', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelectorAll('.my-home-shortcut-action')).toHaveLength(0);
+    expect(screen.queryByText('查看')).not.toBeInTheDocument();
   });
 });

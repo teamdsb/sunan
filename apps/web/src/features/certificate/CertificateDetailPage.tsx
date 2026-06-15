@@ -1,8 +1,6 @@
 import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { myRouteConfig } from '../../router/myRouteConfig';
-import { resolveBackHref } from '../../router/myRouteState';
+import { useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import {
@@ -14,8 +12,6 @@ import {
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
   const [updateCertificate, { isLoading: saving }] = useUpdateCertificateMutation();
   const [bindFiles] = useBindCertificateFilesMutation();
@@ -27,7 +23,6 @@ export function CertificateDetailPage() {
     status: CertificateItem['status'];
   }>();
   const item = data?.data;
-  const backHref = resolveBackHref(myRouteConfig.certificates.path, location.search);
 
   useEffect(() => {
     if (item) {
@@ -42,6 +37,9 @@ export function CertificateDetailPage() {
   return (
     <section className="page-hero">
       <Typography.Title level={2}>证照详情</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        查看并维护证照基础信息、有效期与附件。
+      </Typography.Paragraph>
       <Card loading={isLoading}>
         {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
         {item ? (
@@ -79,7 +77,6 @@ export function CertificateDetailPage() {
                 <Button htmlType="submit" type="primary" loading={saving}>
                   保存
                 </Button>
-                <Button onClick={() => navigate(backHref, { replace: true })}>返回列表</Button>
               </Space>
             </Form>
             <Typography.Title level={5} style={{ marginTop: 16 }}>
