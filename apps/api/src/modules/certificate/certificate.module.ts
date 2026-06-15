@@ -8,6 +8,7 @@ import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateController } from './certificate.controller';
+import { CertificateReferenceController } from './certificate-reference.controller';
 import { CertificateService } from './certificate.service';
 
 @Module({
@@ -22,9 +23,8 @@ import { CertificateService } from './certificate.service';
       PersonnelEntity,
     ]),
   ],
-  controllers: [CertificateController],
+  controllers: [CertificateController, CertificateReferenceController],
   providers: [CertificateService],
   exports: [CertificateService],
 })
 export class CertificateModule {}
-

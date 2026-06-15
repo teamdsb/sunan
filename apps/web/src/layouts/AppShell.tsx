@@ -18,7 +18,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { env } from '../app/env';
-import { logout } from '../features/auth/authSlice';
+import { useGetCurrentUserQuery } from '../features/auth/authApi';
+import { logout, setCurrentUser } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
 import { moduleNavGroups, moduleNavItems, resolveActiveNavGroupKey, resolveActiveNavItemKey } from '../router/moduleNav';
 
@@ -53,9 +54,13 @@ function formatRoleLabels(roles: string[]) {
 
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
+  const token = useAppSelector((state) => state.auth.token);
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+  const currentUserQuery = useGetCurrentUserQuery(undefined, {
+    skip: env.mockMode || !token || Boolean(user),
+  });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const activeNavGroupKey = useMemo(() => resolveActiveNavGroupKey(location.pathname), [location.pathname]);
@@ -71,6 +76,12 @@ export function AppShell() {
   useEffect(() => {
     setOpenGroupKey(activeNavGroupKey);
   }, [activeNavGroupKey]);
+
+  useEffect(() => {
+    if (currentUserQuery.data?.data) {
+      dispatch(setCurrentUser(currentUserQuery.data.data));
+    }
+  }, [currentUserQuery.data, dispatch]);
 
   const reauthorize = () => {
     if (env.mockMode) {

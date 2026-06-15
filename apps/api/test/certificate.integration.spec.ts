@@ -131,6 +131,46 @@ describe('CertificateController integration', () => {
     await shutdownPgTestDatabase();
   });
 
+  it('exposes certificate reference data for create forms', async () => {
+    const types = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificate-types?ownerType=vessel')
+      .set('Authorization', 'Bearer token');
+    expect(types.status).toBe(200);
+    expect((types.body as { data: Array<{ id: string; name: string }> }).data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: typeId, name: '国籍证书-证书测试' }),
+      ]),
+    );
+
+    const owners = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificate-owners?ownerType=vessel')
+      .set('Authorization', 'Bearer token');
+    expect(owners.status).toBe(200);
+    expect((owners.body as { data: Array<{ id: string; name: string }> }).data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: vesselId, name: '苏南012-证书测试' }),
+      ]),
+    );
+
+    const missingOwnerType = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificate-owners')
+      .set('Authorization', 'Bearer token');
+    expect(missingOwnerType.status).toBe(400);
+
+    const invalidOwnerType = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificate-types?ownerType=unknown')
+      .set('Authorization', 'Bearer token');
+    expect(invalidOwnerType.status).toBe(400);
+  });
+
   it('supports create/filter/grouped/update/delete and file bind', async () => {
     const createVessel = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

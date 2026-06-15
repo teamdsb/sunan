@@ -1,9 +1,126 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { MyHomePage } from './MyHomePage';
 
+const mockSelector = vi.fn();
+const mockCertificates = vi.fn();
+const mockMonitors = vi.fn();
+const mockReminderDashboard = vi.fn();
+const mockReminderList = vi.fn();
+const mockWorkbenchDashboard = vi.fn();
+
+vi.mock('../../app/hooks', () => ({
+  useAppSelector: () => mockSelector(),
+}));
+
+vi.mock('../certificate/certificateApi', () => ({
+  useGetCertificatesQuery: (params: unknown) => mockCertificates(params),
+}));
+
+vi.mock('../monitor/monitorApi', () => ({
+  useGetShipMonitorsQuery: (params: unknown) => mockMonitors(params),
+}));
+
+vi.mock('../reminder/reminderApi', () => ({
+  useGetReminderDashboardQuery: () => mockReminderDashboard(),
+  useGetReminderListQuery: (params: unknown) => mockReminderList(params),
+}));
+
+vi.mock('../workbench/workbenchApi', () => ({
+  useGetWorkbenchDashboardQuery: () => mockWorkbenchDashboard(),
+}));
+
 describe('MyHomePage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSelector.mockReturnValue({
+      name: '王工',
+      department: ['船务部'],
+      position: '经理',
+    });
+    mockCertificates.mockReturnValue({
+      data: {
+        data: [
+          { id: 'c1', title: '国籍证书' },
+          { id: 'c2', title: '船检证书' },
+        ],
+        meta: { total: 2 },
+      },
+      isLoading: false,
+    });
+    mockMonitors.mockReturnValue({
+      data: {
+        data: [
+          { id: 'm1', vesselId: 'vessel-1', isActive: true },
+          { id: 'm2', vesselId: 'vessel-1', isActive: true },
+          { id: 'm3', vesselId: 'vessel-2', isActive: true },
+        ],
+      },
+      isLoading: false,
+    });
+    mockReminderDashboard.mockReturnValue({
+      data: {
+        data: {
+          totalPending: 4,
+          totalOverdue: 1,
+          totalAcknowledged: 8,
+          byOwnerType: [],
+          byCertificateType: [],
+        },
+      },
+      isLoading: false,
+    });
+    mockReminderList.mockImplementation((params: { reminderType?: string }) => {
+      if (params?.reminderType === 'overdue') {
+        return {
+          data: {
+            data: [
+              {
+                id: 'r-overdue',
+                certificateTitle: '消防证书',
+                ownerName: '苏南018',
+                scheduledDate: '2026-06-16',
+                reminderType: 'overdue',
+                status: 'pending',
+                daysBeforeExpiry: -2,
+              },
+            ],
+          },
+          isLoading: false,
+        };
+      }
+
+      return {
+        data: {
+          data: [
+            {
+              id: 'r-pending',
+              certificateTitle: '船检证书',
+              ownerName: '苏南012',
+              scheduledDate: '2026-06-16',
+              reminderType: 'upcoming',
+              status: 'pending',
+              daysBeforeExpiry: 12,
+            },
+          ],
+        },
+        isLoading: false,
+      };
+    });
+    mockWorkbenchDashboard.mockReturnValue({
+      data: {
+        data: {
+          pendingTotal: 3,
+          approvalPendingTotal: 2,
+          alerts: [{ code: 'approval_pending', message: '当前有 2 条审批待处理。' }],
+          modules: [],
+        },
+      },
+      isLoading: false,
+    });
+  });
+
   it('renders six grid entries including reminders', () => {
     render(
       <MemoryRouter>
@@ -44,7 +161,27 @@ describe('MyHomePage', () => {
         '围绕证照、制度、船舶监控和个人待办重新组织入口，适配桌面与企业微信移动端。',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText('今日待办')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '今日待办' })).toBeInTheDocument();
+  });
+
+  it('renders dashboard values from real API hooks instead of hardcoded demo data', () => {
+    render(
+      <MemoryRouter>
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(mockCertificates).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'active' }),
+    );
+    expect(mockMonitors).toHaveBeenCalledWith({ activeOnly: true });
+    expect(screen.getByRole('heading', { name: '王工' })).toBeInTheDocument();
+    expect(screen.getByText('船务部 · 经理')).toBeInTheDocument();
+    expect(screen.getByText('消防证书')).toBeInTheDocument();
+    expect(screen.getAllByText('船检证书').length).toBeGreaterThan(0);
+    expect(screen.queryByText('苏南 16 号船检证书复核')).not.toBeInTheDocument();
+    expect(screen.queryByText('284')).not.toBeInTheDocument();
+    expect(screen.queryByText('92%')).not.toBeInTheDocument();
   });
 
   it('serves the ship artwork as the command card background instead of a separate image block', () => {

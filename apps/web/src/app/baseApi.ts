@@ -216,13 +216,6 @@ export function createAxiosBaseQuery(
   };
 }
 
-function createDefaultMockRuntimeLoader(): MockRuntimeLoader {
-  return async () => {
-    const { getMockRuntime } = await import('../mocks/store/mockRuntime');
-    return getMockRuntime();
-  };
-}
-
 export function createBaseQuery(): BaseQueryFn<
   AxiosBaseQueryArgs,
   unknown,
@@ -239,7 +232,12 @@ export function createBaseQuery(
     | undefined;
   const mockRuntimeLoader =
     options.mockRuntimeLoader === undefined
-      ? createDefaultMockRuntimeLoader()
+      ? import.meta.env.VITE_MOCK_MODE === 'true'
+        ? async () => {
+            const { getMockRuntime } = await import('../mocks/store/mockRuntime');
+            return getMockRuntime();
+          }
+        : null
       : options.mockRuntimeLoader;
 
   return async (args, api, extraOptions) => {
@@ -263,6 +261,7 @@ export const baseApi = createApi({
     'PolicyVersion',
     'Certificate',
     'CertificateType',
+    'CertificateOwner',
     'OfficeCategory',
     'OfficeEntry',
     'OfficeAdminEntry',

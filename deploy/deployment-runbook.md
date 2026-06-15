@@ -64,7 +64,13 @@ COPYFILE_DISABLE=1 tar --no-xattrs \
   --exclude='./node_modules' \
   --exclude='./*/node_modules' \
   --exclude='./apps/api/dist' \
+  --exclude='./apps/api/.env' \
+  --exclude='./apps/api/.env.local' \
+  --exclude='./apps/api/.env.*.local' \
   --exclude='./apps/web/dist' \
+  --exclude='./apps/web/.env' \
+  --exclude='./apps/web/.env.local' \
+  --exclude='./apps/web/.env.*.local' \
   --exclude='./deploy/.env' \
   --exclude='./.DS_Store' \
   -czf - -C /Users/yuan/项目/sunan/sunan . | \

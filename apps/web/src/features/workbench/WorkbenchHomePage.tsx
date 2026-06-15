@@ -120,18 +120,6 @@ const attachmentCategoryLabelMap: Record<string, string> = {
   attachment: '附件',
 };
 
-const workbenchSchedule = [
-  { time: '09:30', title: '总经办例会', note: '会议室 A · 需打印纪要' },
-  { time: '14:00', title: '船舶安全检查', note: '苏南 16 号 · 船务部' },
-  { time: '16:30', title: '采购评审', note: '雷达维保服务合同' },
-] as const;
-
-const workbenchPriority = [
-  { title: '证书到期确认', note: '剩余 4 小时', risk: '高' },
-  { title: '年度培训计划', note: '剩余 1 天', risk: '中' },
-  { title: '台账表单复核', note: '剩余 3 天', risk: '低' },
-] as const;
-
 function labelFrom(
   map: Record<string, string>,
   value: string | null | undefined,
@@ -142,6 +130,18 @@ function labelFrom(
   }
 
   return map[value] ?? fallback;
+}
+
+function formatRecordTime(occurredAt: string) {
+  const date = new Date(occurredAt);
+  return Number.isNaN(date.getTime())
+    ? occurredAt
+    : date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 }
 
 const WECOM_APPROVAL_AGENT_JS_API_LIST = ['thirdPartyOpenPage'];
@@ -330,6 +330,48 @@ export function WorkbenchHomePage({
     activeModule?.templateType === 'attendance_statistics' ||
     activeModule?.templateType === 'service_asset' ||
     activeModule?.templateType === 'wecom_approval';
+  const pendingRecords = useMemo(
+    () =>
+      records.filter((record) =>
+        [
+          'submitted',
+          'assigned',
+          'in_progress',
+          'pending_review',
+          'approval_pending',
+          'rework_required',
+        ].includes(record.status),
+      ),
+    [records],
+  );
+  const recentRecords = useMemo(
+    () =>
+      [...records]
+        .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
+        .slice(0, 5),
+    [records],
+  );
+  const priorityRecords = useMemo(
+    () =>
+      pendingRecords
+        .filter(
+          (record) =>
+            record.status === 'approval_pending' ||
+            approvalModuleCodes.has(record.moduleCode),
+        )
+        .slice(0, 5),
+    [approvalModuleCodes, pendingRecords],
+  );
+  const recentRecordRows = useMemo(
+    () =>
+      recentRecords.map((record) => ({
+        ...record,
+        moduleName:
+          moduleCards.find((item) => item.moduleCode === record.moduleCode)
+            ?.moduleName ?? record.moduleCode,
+      })),
+    [moduleCards, recentRecords],
+  );
 
   useEffect(() => {
     setActiveModuleCode(initialModuleCode);
@@ -654,7 +696,7 @@ export function WorkbenchHomePage({
             value={dashboard?.pendingTotal ?? 0}
             loading={dashboardLoading}
           />
-          <span>+4 今日</span>
+          <span>{pendingRecords.length > 0 ? `最近 ${pendingRecords.length} 条进行中` : '暂无进行中记录'}</span>
         </article>
         <article className="workbench-stat-card">
           <Statistic
@@ -662,7 +704,11 @@ export function WorkbenchHomePage({
             value={dashboard?.approvalPendingTotal ?? 0}
             loading={dashboardLoading}
           />
-          <span>2 紧急</span>
+          <span>
+            {dashboard?.approvalPendingTotal
+              ? `${dashboard.approvalPendingTotal} 条需审批`
+              : '当前无待审批'}
+          </span>
         </article>
         <article className="workbench-stat-card">
           <Statistic
@@ -670,7 +716,7 @@ export function WorkbenchHomePage({
             value={visibleModuleCards.length}
             loading={dashboardLoading}
           />
-          <span>按流程阶段管理</span>
+          <span>{visibleModuleCards.length > 0 ? '实时模块入口' : '暂无模块可见'}</span>
         </article>
         <article className="workbench-stat-card">
           <Statistic
@@ -678,7 +724,7 @@ export function WorkbenchHomePage({
             value={records.length}
             loading={recordsLoading}
           />
-          <span>低于 SLA</span>
+          <span>{records.length > 0 ? '当前筛选结果' : '暂无记录'}</span>
         </article>
       </section>
 
@@ -778,20 +824,24 @@ export function WorkbenchHomePage({
             >
               <div className="sunan-panel-heading">
                 <Typography.Title level={2} id="workbench-schedule-title">
-                  今日排程
+                  最近记录
                 </Typography.Title>
-                <Typography.Text>3 项</Typography.Text>
+                <Typography.Text>{recentRecordRows.length} 项</Typography.Text>
               </div>
               <div className="workbench-schedule-list">
-                {workbenchSchedule.map((item) => (
-                  <article className="workbench-schedule-item" key={item.time}>
-                    <span>{item.time}</span>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <small>{item.note}</small>
-                    </div>
-                  </article>
-                ))}
+                {recentRecordRows.length > 0 ? (
+                  recentRecordRows.map((item) => (
+                    <article className="workbench-schedule-item" key={item.id}>
+                      <span>{formatRecordTime(item.occurredAt)}</span>
+                      <div>
+                        <strong>{item.title}</strong>
+                        <small>{item.moduleName}</small>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无最近记录" />
+                )}
               </div>
             </section>
 
@@ -801,20 +851,26 @@ export function WorkbenchHomePage({
             >
               <div className="sunan-panel-heading">
                 <Typography.Title level={2} id="workbench-priority-title">
-                  审批优先级
+                  待优先处理
                 </Typography.Title>
-                <Typography.Text>SLA</Typography.Text>
+                <Typography.Text>{priorityRecords.length} 项</Typography.Text>
               </div>
               <div className="workbench-priority-list">
-                {workbenchPriority.map((item) => (
-                  <article className="workbench-priority-item" key={item.title}>
-                    <span>
-                      <strong>{item.title}</strong>
-                      <small>{item.note}</small>
-                    </span>
-                    <Tag>{item.risk}</Tag>
-                  </article>
-                ))}
+                {priorityRecords.length > 0 ? (
+                  priorityRecords.map((item) => (
+                    <article className="workbench-priority-item" key={item.id}>
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{labelFrom(recordStatusLabelMap, item.status, '未知状态')}</small>
+                      </span>
+                      <Tag color={item.status === 'approval_pending' ? 'red' : 'gold'}>
+                        {item.status === 'approval_pending' ? '审批中' : '待处理'}
+                      </Tag>
+                    </article>
+                  ))
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无待优先处理项" />
+                )}
               </div>
             </section>
           </aside>

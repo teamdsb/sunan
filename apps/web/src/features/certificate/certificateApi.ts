@@ -26,14 +26,35 @@ export interface CertificateGroup {
   items: CertificateItem[];
 }
 
+export interface CertificateTypeItem {
+  id: string;
+  code: string;
+  name: string;
+  ownerScope: string;
+  reminderCategory: string;
+  defaultAdvanceDays: number;
+  requiresAttachment: boolean;
+}
+
+export interface CertificateOwnerItem {
+  id: string;
+  name: string;
+  code: string;
+  status: string;
+}
+
 export interface CreateCertificateInput {
   certificateTypeId: string;
   ownerType: CertificateItem['ownerType'];
   ownerId: string;
   title: string;
+  certificateNo?: string;
+  issueDate?: string;
   expiryDate: string;
   advanceDays?: number;
+  issuer?: string;
   status?: CertificateItem['status'];
+  remarks?: string;
   fileIds?: string[];
 }
 
@@ -59,6 +80,14 @@ export const certificateApi = baseApi.injectEndpoints({
       query: (params) => ({ url: '/certificates/grouped', params }),
       providesTags: ['Certificate'],
     }),
+    getCertificateTypes: builder.query<ApiEnvelope<CertificateTypeItem[]>, { ownerType?: CertificateItem['ownerType'] } | void>({
+      query: (params) => ({ url: '/certificate-types', params }),
+      providesTags: ['CertificateType'],
+    }),
+    getCertificateOwners: builder.query<ApiEnvelope<CertificateOwnerItem[]>, { ownerType: CertificateItem['ownerType'] }>({
+      query: (params) => ({ url: '/certificate-owners', params }),
+      providesTags: ['CertificateOwner'],
+    }),
     getCertificateById: builder.query<ApiEnvelope<CertificateItem>, string>({
       query: (id) => ({ url: `/certificates/${id}` }),
       providesTags: (_r, _e, id) => [{ type: 'Certificate', id }],
@@ -81,6 +110,8 @@ export const certificateApi = baseApi.injectEndpoints({
 export const {
   useGetCertificatesQuery,
   useGetGroupedCertificatesQuery,
+  useGetCertificateTypesQuery,
+  useGetCertificateOwnersQuery,
   useGetCertificateByIdQuery,
   useCreateCertificateMutation,
   useUpdateCertificateMutation,

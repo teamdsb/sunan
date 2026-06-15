@@ -3,6 +3,7 @@ import { z } from 'zod';
 const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
+  SUNAN_VERSION: z.string().default('0.0.2'),
   DB_HOST: z.string().default('127.0.0.1'),
   DB_PORT: z.coerce.number().default(5432),
   DB_NAME: z.string().default('sunan'),

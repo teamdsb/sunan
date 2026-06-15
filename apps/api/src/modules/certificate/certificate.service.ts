@@ -53,6 +53,64 @@ export class CertificateService {
     return { data, meta: { page, pageSize, total } };
   }
 
+  async listTypes(ownerType?: 'vessel' | 'vehicle' | 'personnel') {
+    const rows = await this.certificateTypeRepository.find({
+      where: { isActive: true },
+      order: { sortOrder: 'ASC', name: 'ASC' },
+    });
+
+    return rows
+      .filter((row) => this.matchesOwnerScope(row.ownerScope, ownerType))
+      .map((row) => ({
+        id: row.id,
+        code: row.code,
+        name: row.name,
+        ownerScope: row.ownerScope,
+        reminderCategory: row.reminderCategory,
+        defaultAdvanceDays: row.defaultAdvanceDays,
+        requiresAttachment: row.requiresAttachment,
+      }));
+  }
+
+  async listOwners(ownerType: 'vessel' | 'vehicle' | 'personnel') {
+    if (ownerType === 'vessel') {
+      const rows = await this.vesselRepository.find({
+        where: { deletedAt: IsNull() },
+        order: { name: 'ASC' },
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        status: row.status,
+      }));
+    }
+
+    if (ownerType === 'vehicle') {
+      const rows = await this.vehicleRepository.find({
+        where: { deletedAt: IsNull() },
+        order: { plateNumber: 'ASC' },
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        name: row.plateNumber,
+        code: row.plateNumber,
+        status: row.status,
+      }));
+    }
+
+    const rows = await this.personnelRepository.find({
+      where: { deletedAt: IsNull() },
+      order: { name: 'ASC' },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      code: row.wecomUserId ?? row.id,
+      status: row.employmentStatus,
+    }));
+  }
+
   async grouped(query: CertificateGroupQueryDto) {
     const rows = await this.repository.find({ where: { deletedAt: IsNull() }, order: { expiryDate: 'ASC' } });
     const details = await Promise.all(rows.map((row) => this.toDetail(row)));
@@ -164,6 +222,14 @@ export class CertificateService {
     throw new ForbiddenException('forbidden');
   }
 
+  private matchesOwnerScope(ownerScope: string, ownerType?: 'vessel' | 'vehicle' | 'personnel') {
+    if (!ownerType || ownerScope === 'mixed' || ownerScope === 'all') {
+      return true;
+    }
+
+    return ownerScope === ownerType;
+  }
+
   private async assertOwnerExists(ownerType: 'vessel' | 'vehicle' | 'personnel', ownerId: string) {
     if (ownerType === 'vessel') {
       const row = await this.vesselRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
@@ -239,4 +305,3 @@ export class CertificateService {
     };
   }
 }
-

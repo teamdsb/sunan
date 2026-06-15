@@ -1,4 +1,8 @@
-import type { CertificateItem } from '../../features/certificate/certificateApi';
+import type {
+  CertificateItem,
+  CertificateOwnerItem,
+  CertificateTypeItem,
+} from '../../features/certificate/certificateApi';
 import type { FileRecord } from '../../features/files/types';
 
 const BASE_TIMESTAMP = Date.parse('2026-03-01T00:00:00.000Z');
@@ -50,6 +54,61 @@ const CERTIFICATE_TYPE_NAMES: Record<string, string> = {
   annual_inspection: '年度检验',
   insurance: '保险',
   personnel_cert: '人员证书',
+};
+
+export const certificateTypeFixtures: CertificateTypeItem[] = [
+  {
+    id: 'nationality_cert',
+    code: 'nationality_cert',
+    name: '国籍证书',
+    ownerScope: 'vessel',
+    reminderCategory: 'certificate',
+    defaultAdvanceDays: 30,
+    requiresAttachment: true,
+  },
+  {
+    id: 'inspection_cert',
+    code: 'inspection_cert',
+    name: '船检证书',
+    ownerScope: 'vessel',
+    reminderCategory: 'certificate',
+    defaultAdvanceDays: 45,
+    requiresAttachment: true,
+  },
+  {
+    id: 'insurance',
+    code: 'insurance',
+    name: '保险',
+    ownerScope: 'mixed',
+    reminderCategory: 'certificate',
+    defaultAdvanceDays: 30,
+    requiresAttachment: true,
+  },
+  {
+    id: 'personnel_cert',
+    code: 'personnel_cert',
+    name: '人员证书',
+    ownerScope: 'personnel',
+    reminderCategory: 'certificate',
+    defaultAdvanceDays: 30,
+    requiresAttachment: true,
+  },
+];
+
+export const certificateOwnerFixtures: Record<
+  CertificateItem['ownerType'],
+  CertificateOwnerItem[]
+> = {
+  vessel: [
+    { id: 'vessel-012', name: '苏南012', code: 'SN012', status: 'active' },
+    { id: 'vessel-018', name: '苏南018', code: 'SN018', status: 'active' },
+  ],
+  vehicle: [
+    { id: 'vehicle-001', name: '桂A1001', code: '桂A1001', status: 'active' },
+  ],
+  personnel: [
+    { id: 'personnel-001', name: '张三', code: 'zhangsan', status: 'active' },
+  ],
 };
 
 function timestamp(offsetMinutes: number): string {

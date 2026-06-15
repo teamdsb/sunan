@@ -10,6 +10,51 @@ tags:
 security:
   - bearerAuth: []
 paths:
+  /certificate-types:
+    get:
+      tags: [Certificates]
+      summary: 获取可用证照类型列表
+      parameters:
+        - name: ownerType
+          in: query
+          schema:
+            type: string
+            enum: [vessel, vehicle, personnel]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CertificateType'
+  /certificate-owners:
+    get:
+      tags: [Certificates]
+      summary: 获取证照持有对象列表
+      parameters:
+        - name: ownerType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [vessel, vehicle, personnel]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CertificateOwner'
   /certificates:
     get:
       tags: [Certificates]
@@ -251,6 +296,38 @@ components:
         fileSize:
           type: integer
         fileRole:
+          type: string
+    CertificateType:
+      type: object
+      required: [id, code, name, ownerScope, reminderCategory, defaultAdvanceDays, requiresAttachment]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        ownerScope:
+          type: string
+        reminderCategory:
+          type: string
+        defaultAdvanceDays:
+          type: integer
+        requiresAttachment:
+          type: boolean
+    CertificateOwner:
+      type: object
+      required: [id, name, code, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        status:
           type: string
     CertificateGroup:
       type: object

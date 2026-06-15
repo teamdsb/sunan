@@ -7,7 +7,7 @@ replaced_by: []
 ---
 # 生产服务器资源清单
 
-更新时间：2026-06-08
+更新时间：2026-06-15
 
 ## 基本信息
 
@@ -37,9 +37,9 @@ replaced_by: []
 | `sunan-redis` | `sunan-redis` | `sunan-redis:7.4-stable` | Redis ACL + AOF |
 | `sunan-oss` | `sunan-oss` | `sunan-oss:2025-09-07-stable` | MinIO 对象存储 |
 | `sunan-oss-init` | `sunan-oss-init` | `sunan-oss-mc:2025-08-13-stable` | 初始化 bucket |
-| `sunan-api` | `sunan-api` | `sunan-api:stable` | NestJS API |
-| `sunan-web` | `sunan-web` | `sunan-web:stable` | Vite 静态前端 |
-| `sunan-nginx` | `sunan-nginx` | `sunan-nginx:stable` | 反向代理和 TLS |
+| `sunan-api` | `sunan-api` | `sunan-api:0.0.2` | NestJS API |
+| `sunan-web` | `sunan-web` | `sunan-web:0.0.2` | Vite 静态前端 |
+| `sunan-nginx` | `sunan-nginx` | `sunan-nginx:0.0.2` | 反向代理和 TLS |
 
 所有容器在 Docker 网络 `sunan` 内通信。
 

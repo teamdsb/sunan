@@ -6,14 +6,24 @@ import { CertificateListPage } from './CertificateListPage';
 const mockGet = vi.fn();
 const mockGrouped = vi.fn();
 const mockSettings = vi.fn();
+const mockTypes = vi.fn();
+const mockOwners = vi.fn();
+const mockCreate = vi.fn();
 
 vi.mock('./certificateApi', () => ({
   useGetCertificatesQuery: (params: unknown) => mockGet(params),
   useGetGroupedCertificatesQuery: (params: unknown) => mockGrouped(params),
+  useGetCertificateTypesQuery: (params: unknown) => mockTypes(params),
+  useGetCertificateOwnersQuery: (params: unknown) => mockOwners(params),
+  useCreateCertificateMutation: () => [mockCreate, { isLoading: false }],
 }));
 
 vi.mock('../settings/settingsApi', () => ({
   useGetSettingsQuery: () => mockSettings(),
+}));
+
+vi.mock('../files/FileUploadField', () => ({
+  FileUploadField: () => <div data-testid="certificate-file-upload" />,
 }));
 
 function LocationDisplay() {
@@ -36,6 +46,36 @@ describe('CertificateListPage', () => {
       data: { data: { reminderViewMode: 'dashboard', certificateGroupBy: 'owner', enablePushNotifications: true } },
       isLoading: false,
     });
+    mockTypes.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 'nationality_cert',
+            code: 'nationality_cert',
+            name: '国籍证书',
+            ownerScope: 'vessel',
+            reminderCategory: 'certificate',
+            defaultAdvanceDays: 30,
+            requiresAttachment: true,
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    mockOwners.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 'vessel-1',
+            name: '苏南012',
+            code: 'SN012',
+            status: 'active',
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    mockCreate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
   it('syncs the route query to list filters and preserves it in detail links', async () => {
@@ -148,5 +188,22 @@ describe('CertificateListPage', () => {
 
     expect(screen.getByRole('button', { name: /展开筛选/ })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('状态')).not.toBeInTheDocument();
+  });
+
+  it('opens a create drawer backed by real certificate reference data', () => {
+    render(
+      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+        <CertificateListPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '新增证照' }));
+
+    expect(screen.getByRole('dialog', { name: '新增电子证照' })).toBeInTheDocument();
+    expect(mockTypes).toHaveBeenCalledWith({ ownerType: 'vessel' });
+    expect(mockOwners).toHaveBeenCalledWith({ ownerType: 'vessel' });
+    expect(screen.getByRole('combobox', { name: '持有对象' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '证照类型' })).toBeInTheDocument();
+    expect(screen.getByTestId('certificate-file-upload')).toBeInTheDocument();
   });
 });

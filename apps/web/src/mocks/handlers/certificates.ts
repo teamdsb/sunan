@@ -2,6 +2,8 @@ import type { CertificateItem } from '../../features/certificate/certificateApi'
 import {
   createCertificateAttachment,
   createMockCertificateRecord,
+  certificateOwnerFixtures,
+  certificateTypeFixtures,
   resolveCertificateTypeName,
   resolveOwnerName,
   type CertificateFileAttachment,
@@ -179,6 +181,27 @@ function listCertificates(context: MockHandlerContext) {
     data: result.data,
     meta: result.meta,
   });
+}
+
+function listCertificateTypes(context: MockHandlerContext) {
+  const ownerType = toText(asObject(context.request.params).ownerType);
+  const data = certificateTypeFixtures.filter((item) => {
+    if (!ownerType) {
+      return true;
+    }
+
+    return item.ownerScope === 'mixed' || item.ownerScope === 'all' || item.ownerScope === ownerType;
+  });
+
+  return createMockResponse({ data });
+}
+
+function listCertificateOwners(context: MockHandlerContext) {
+  const params = asObject(context.request.params);
+  const ownerType = toText(params.ownerType, 'vessel') as CertificateItem['ownerType'];
+  const data = certificateOwnerFixtures[ownerType] ?? [];
+
+  return createMockResponse({ data });
 }
 
 function groupByOwner(certificates: CertificateMockRecord[]) {
@@ -437,6 +460,16 @@ function bindCertificateFiles(context: MockHandlerContext) {
 }
 
 export const certificateHandlers: MockRouteDefinition[] = [
+  {
+    method: 'GET',
+    path: '/certificate-types',
+    handler: listCertificateTypes,
+  },
+  {
+    method: 'GET',
+    path: '/certificate-owners',
+    handler: listCertificateOwners,
+  },
   {
     method: 'GET',
     path: '/certificates',

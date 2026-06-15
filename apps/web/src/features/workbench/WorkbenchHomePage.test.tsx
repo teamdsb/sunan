@@ -174,6 +174,18 @@ describe('WorkbenchHomePage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/records/record-1');
   });
 
+  it('renders workbench side rail from real records without static schedule samples', () => {
+    render(<WorkbenchHomePage routeAware />);
+
+    expect(screen.getByText('最近记录')).toBeInTheDocument();
+    expect(screen.getByText('待优先处理')).toBeInTheDocument();
+    expect(screen.getAllByText('海图批次 2026-04').length).toBeGreaterThan(0);
+    expect(screen.queryByText('总经办例会')).not.toBeInTheDocument();
+    expect(screen.queryByText('证书到期确认')).not.toBeInTheDocument();
+    expect(screen.queryByText('+4 今日')).not.toBeInTheDocument();
+    expect(screen.queryByText('低于 SLA')).not.toBeInTheDocument();
+  });
+
   it('shows print actions in record detail and triggers print endpoint', async () => {
     mockGetWorkbenchRecordQuery.mockReturnValue({
       data: {
@@ -243,7 +255,7 @@ describe('WorkbenchHomePage', () => {
 
     expect(screen.queryByText('海图更新')).toBeNull();
     expect(screen.getByText('签到台')).toBeInTheDocument();
-    expect(screen.getByText('燃油加注审批')).toBeInTheDocument();
+    expect(screen.getAllByText('燃油加注审批').length).toBeGreaterThan(0);
     expect(screen.getByText('审批相关记录')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '燃油加注 2026-04' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '海图批次 2026-04' })).toBeNull();

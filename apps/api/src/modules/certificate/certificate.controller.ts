@@ -50,4 +50,3 @@ export class CertificateController {
     return { data: await this.service.bindFiles(id, dto, user) };
   }
 }
-

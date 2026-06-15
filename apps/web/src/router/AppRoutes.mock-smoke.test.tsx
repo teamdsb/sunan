@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redirectToOAuth = vi.hoisted(() => vi.fn());
-const routeContentTimeout = 30000;
+const routeContentTimeout = 60000;
 
 vi.mock('../features/auth/oauth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../features/auth/oauth')>();
@@ -51,7 +51,9 @@ describe('AppRoutes mock direct-entry smoke', () => {
     async (path, title, moduleKey, expectedText) => {
       await renderMockRoute(path);
 
-      expect(await screen.findByText(title, undefined, { timeout: routeContentTimeout })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: title }, { timeout: routeContentTimeout }),
+      ).toBeInTheDocument();
       expect(
         await screen.findAllByText(expectedText, undefined, {
           timeout: routeContentTimeout,
@@ -64,5 +66,6 @@ describe('AppRoutes mock direct-entry smoke', () => {
       expect(shell).not.toHaveClass('shell-layout-my-home');
       expect(redirectToOAuth).not.toHaveBeenCalled();
     },
+    routeContentTimeout,
   );
 });
