@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: planning
-updated: 2026-06-13
+updated: 2026-07-04
 replaces: []
 replaced_by: []
 ---
@@ -13,17 +13,22 @@ replaced_by: []
 
 | 文档 | 状态 | 用途 |
 |---|---|---|
-| `M7-M8-upgrade-roadmap.md` | 当前规格 | M7/M8 总体边界、依赖、能力地图和交付顺序 |
-| `M7-execplans.md` | 待实施 | M7 七个 Wave 的任务、产出和验收 |
-| `M7-wave-backlog.md` | 待实施 | M7 API/DB/UI/state/测试级工作清单 |
-| `M8-execplans.md` | 待实施 | M8 八个 Wave 的任务、产出和验收 |
-| `M8-wave-backlog.md` | 待实施 | M8 API/DB/UI/state/测试级工作清单 |
+| `M7-execplans.md` | 当前待实施 | M7 上线体验、文件上传、返回路径、模块导航和最终收口计划 |
+| `M7-wave-backlog.md` | 当前待实施 | M7 修复的工程级分 Wave 清单 |
+| `M8-M9-upgrade-roadmap.md` | 后移规格 | M8/M9 总体边界、依赖、能力地图和交付顺序 |
+| `M8-execplans.md` | 后移待排期 | M8 七个 Wave 的任务、产出和验收 |
+| `M8-wave-backlog.md` | 后移待排期 | M8 API/DB/UI/state/测试级工作清单 |
+| `M9-execplans.md` | 后移待排期 | M9 八个 Wave 的任务、产出和验收 |
+| `M9-wave-backlog.md` | 后移待排期 | M9 API/DB/UI/state/测试级工作清单 |
 | `wave-acceptance-template.md` | 模板 | 每个 Wave 的统一验收记录格式 |
 
 ## 配套入口
 
-- M7 需求：`docs/requirements/M7-安全管理底座与核心闭环.md`
-- M8 需求：`docs/requirements/M8-专业安全业务深化与体系完善.md`
+- 当前 M7 修复计划：`docs/plans/M7-execplans.md`
+- 当前 M7 修复提示词：`docs/prompts/m7/`
+- M7 需求：`docs/requirements/M7-上线体验与导航修复.md`
+- M8 需求：`docs/requirements/M8-安全管理底座与核心闭环.md`
+- M9 需求：`docs/requirements/M9-专业安全业务深化与体系完善.md`
 - 安全领域规格索引：`docs/specs/safety/README.md`
 - Wave 提示词索引：`docs/prompts/README.md`
 - 功能差距基线：`docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md`
@@ -33,6 +38,7 @@ replaced_by: []
 1. 每个 Wave 必须先冻结规格，再写测试，最后实现。
 2. 未通过当前 Wave 验收，不得将其任务标记为完成。
 3. 跨 Wave 变更必须更新需求、执行计划和 backlog 的依赖关系。
-4. 外部海事、AIS、CCTV 等真实接口不在 M7/M8 范围。
+4. 外部海事、AIS、CCTV 等真实接口不在 M8/M9 范围。
 5. 不得用通用文本字段替代已经冻结的专业结构化数据。
 6. 完成后将计划状态改为历史归档，并建立独立验收证据。
+7. M7 Wave 6 未验收前，不得启动 M8/M9 业务实现。

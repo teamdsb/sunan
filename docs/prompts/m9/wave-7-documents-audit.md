@@ -5,20 +5,20 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 7 提示词：受控文件、内审、统计与档案
+# M9 Wave 7 提示词：受控文件、内审、统计与档案
 
 ```text
-执行 M8 Wave 7，建设受控文件、外来文件、分发回执、内部审核、全域统计、人工监管上报和档案中心。
+执行 M9 Wave 7，建设受控文件、外来文件、分发回执、内部审核、全域统计、人工监管上报和档案中心。
 
 前置：Wave 6 通过。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - document-audit-archive 规格组
-- M7 任务、证据、CAPA、导出和审计规格
+- M8 任务、证据、CAPA、导出和审计规格
 - docs/specs/my 中企业制度规格
 - docs/specs/common/file-upload-spec.md
 - docs/specs/common/frontend-experience-guidelines.md

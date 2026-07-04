@@ -5,20 +5,20 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 5 提示词：设备维护、修理、备件与采购
+# M9 Wave 5 提示词：设备维护、修理、备件与采购
 
 ```text
-执行 M8 Wave 5，建设设备树、周期维护、缺陷修理、备件库存，并与现有采购管理建立来源和回写关系。
+执行 M9 Wave 5，建设设备树、周期维护、缺陷修理、备件库存，并与现有采购管理建立来源和回写关系。
 
 前置：Wave 4 通过。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - equipment-maintenance 规格组
-- M7 主数据、计划任务、问题 CAPA 规格
+- M8 主数据、计划任务、问题 CAPA 规格
 - docs/specs/procurement/README.md 及相关 API/DB/state/UI
 - 现有设备维护、设备检验、仓库和车辆维修实现
 

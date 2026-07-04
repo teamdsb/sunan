@@ -5,18 +5,18 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 2 提示词：数据权限与流程状态链
+# M8 Wave 2 提示词：数据权限与流程状态链
 
 ```text
-执行 M7 Wave 2，目标是完成 ABAC 数据范围、步骤参与人、多人规则、动作授权和完整流程审计。
+执行 M8 Wave 2，目标是完成 ABAC 数据范围、步骤参与人、多人规则、动作授权和完整流程审计。
 
-前置：M7 Wave 1 已通过。若验收证据不存在，先报告 blocker，不直接实现。
+前置：M8 Wave 1 已通过。若验收证据不存在，先报告 blocker，不直接实现。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md 的 Wave 2
-- docs/plans/M7-wave-backlog.md 的 Wave 2
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md 的 Wave 2
+- docs/plans/M8-wave-backlog.md 的 Wave 2
 - docs/specs/common/auth-spec.md
 - docs/specs/common/api-conventions.md
 - docs/specs/common/db-conventions.md

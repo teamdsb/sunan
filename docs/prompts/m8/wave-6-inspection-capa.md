@@ -5,18 +5,18 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 6 提示词：检查、问题与 CAPA
+# M8 Wave 6 提示词：检查、问题与 CAPA
 
 ```text
-执行 M7 Wave 6，建设检查模板、多人检查、统一问题、不符合项、根因、纠正预防措施和验证关闭。
+执行 M8 Wave 6，建设检查模板、多人检查、统一问题、不符合项、根因、纠正预防措施和验证关闭。
 
 前置：Wave 5 计划任务中心已验收。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md
+- docs/plans/M8-wave-backlog.md
 - docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md
 - Wave 2 权限、Wave 3 证据、Wave 5 任务规格
 - docs/specs/workbench 中检查整改相关规格

@@ -5,20 +5,20 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 2 提示词：人员安全与培训资格
+# M9 Wave 2 提示词：人员安全与培训资格
 
 ```text
-执行 M8 Wave 2，建设船员任职、调配、交接、健康、资格、培训、考试、熟悉职责和开航资格快照。
+执行 M9 Wave 2，建设船员任职、调配、交接、健康、资格、培训、考试、熟悉职责和开航资格快照。
 
-前置：M8 Wave 1 通过。
+前置：M9 Wave 1 通过。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - personnel-safety 规格组
-- M7 主数据、任务、证据、权限和 CAPA 规格
+- M8 主数据、任务、证据、权限和 CAPA 规格
 - docs/specs/my/db/personnel.md
 - docs/specs/my/db/certificates.md
 - docs/specs/common/auth-spec.md

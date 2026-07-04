@@ -5,18 +5,18 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 4 提示词：安全主数据中心
+# M8 Wave 4 提示词：安全主数据中心
 
 ```text
-执行 M7 Wave 4，建设船舶、人员任职、设备和证书关联的安全主数据中心，并治理现有表单中的手工文本引用。
+执行 M8 Wave 4，建设船舶、人员任职、设备和证书关联的安全主数据中心，并治理现有表单中的手工文本引用。
 
 前置：Wave 2 权限和 Wave 3 证据服务均已验收。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md
+- docs/plans/M8-wave-backlog.md
 - docs/specs/common/api-conventions.md
 - docs/specs/common/db-conventions.md
 - docs/specs/common/auth-spec.md
