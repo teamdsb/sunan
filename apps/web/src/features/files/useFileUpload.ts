@@ -30,6 +30,14 @@ const INITIAL_STATE: FileUploadState = {
 };
 
 function toErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 403) {
+      return '文件直传 OSS 被拒绝，请重新选择文件后重试。';
+    }
+
+    return '文件直传 OSS 失败，请检查网络后重试。';
+  }
+
   if (
     typeof error === 'object' &&
     error !== null &&

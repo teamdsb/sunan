@@ -6,14 +6,24 @@ import { FileUploadField } from './FileUploadField';
 const uploadFile = vi.fn();
 const uploadFromWecom = vi.fn();
 const previewFile = vi.fn();
+const reset = vi.fn();
+type MockUploadState = {
+  status: 'idle' | 'uploading' | 'success' | 'error';
+  progress: number;
+  file: null;
+  error: string | null;
+};
+let uploadState: MockUploadState = {
+  status: 'idle',
+  progress: 0,
+  file: null,
+  error: null,
+};
 
 vi.mock('./useFileUpload', () => ({
   useFileUpload: () => ({
-    status: 'idle',
-    progress: 0,
-    file: null,
-    error: null,
-    reset: vi.fn(),
+    ...uploadState,
+    reset,
     uploadFile,
     uploadFromWecom,
     previewFile,
@@ -23,6 +33,12 @@ vi.mock('./useFileUpload', () => ({
 describe('FileUploadField', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    uploadState = {
+      status: 'idle',
+      progress: 0,
+      file: null,
+      error: null,
+    };
   });
 
   it('invokes uploadFile when a file is selected', async () => {
@@ -101,6 +117,35 @@ describe('FileUploadField', () => {
 
     await waitFor(() => {
       expect(previewFile).toHaveBeenCalled();
+    });
+  });
+
+  it('keeps a retry path after native upload fails', async () => {
+    uploadState = {
+      status: 'error',
+      progress: 0,
+      file: null,
+      error: '文件直传 OSS 失败，请检查网络后重试。',
+    };
+    uploadFile.mockResolvedValue(null);
+
+    render(<FileUploadField category="certificates" />);
+
+    const input = screen.getByTestId('file-input') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [new File(['pdf'], '证书.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(uploadFile).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /重\s*试/ }));
+
+    await waitFor(() => {
+      expect(uploadFile).toHaveBeenCalledTimes(2);
     });
   });
 });

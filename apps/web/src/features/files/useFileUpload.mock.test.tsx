@@ -12,6 +12,7 @@ vi.mock('axios', () => ({
       post: vi.fn(),
     })),
     put: axiosPut,
+    isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean }).isAxiosError),
   },
 }));
 

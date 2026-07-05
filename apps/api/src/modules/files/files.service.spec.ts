@@ -58,6 +58,24 @@ describe('FilesService', () => {
     expect(ossService.createUploadSignature.mock.calls.length).toBe(1);
   });
 
+  it('uses domain storage prefixes for procurement and workbench attachments', async () => {
+    const procurement = await service.createPresign({
+      category: 'procurement-attachments',
+      fileName: '采购附件.pdf',
+      mimeType: 'application/pdf',
+      fileSize: 1024,
+    });
+    const workbench = await service.createPresign({
+      category: 'workbench-attachments',
+      fileName: '会议记录.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      fileSize: 1024,
+    });
+
+    expect(procurement.ossKey).toMatch(/^procurement\/attachments\/\d{4}\/\d{2}\//);
+    expect(workbench.ossKey).toMatch(/^workbench\/attachments\/\d{4}\/\d{2}\//);
+  });
+
   it('rejects unsupported categories', async () => {
     await expect(
       service.createPresign({

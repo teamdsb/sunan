@@ -188,6 +188,41 @@ describe('FilesController integration', () => {
     expect(response.status).toBe(400);
   });
 
+  it('presigns procurement and workbench attachment categories', async () => {
+    const procurement = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/files/presign')
+      .set('Authorization', 'Bearer token')
+      .send({
+        fileName: 'receipt.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 1024,
+        category: 'procurement-attachments',
+      });
+
+    const workbench = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/files/presign')
+      .set('Authorization', 'Bearer token')
+      .send({
+        fileName: 'meeting.docx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        fileSize: 1024,
+        category: 'workbench-attachments',
+      });
+
+    expect(procurement.status).toBe(201);
+    expect((procurement.body as PresignResponseBody).data.ossKey).toMatch(
+      /^procurement\/attachments\//,
+    );
+    expect(workbench.status).toBe(201);
+    expect((workbench.body as PresignResponseBody).data.ossKey).toMatch(
+      /^workbench\/attachments\//,
+    );
+  });
+
   it('returns download url for saved file', async () => {
     const callback = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

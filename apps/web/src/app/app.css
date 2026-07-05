@@ -2822,9 +2822,9 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 720px) minmax(220px, 1fr);
   gap: 24px;
-  min-height: 230px;
+  min-height: 206px;
   margin: 0 0 18px;
-  padding: 28px 30px;
+  padding: 24px 26px;
   overflow: hidden;
   border: 1px solid var(--sunan-line);
   border-radius: 10px;
@@ -2885,14 +2885,14 @@ body {
   margin: 0;
   max-width: 720px;
   color: var(--sunan-ink);
-  font-size: 31px;
+  font-size: 29px;
   line-height: 1.24;
   font-weight: 860;
 }
 
 .my-home-subtitle.ant-typography {
   max-width: 650px;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   color: var(--sunan-ink-soft);
   font-size: 15px;
   font-weight: 650;
@@ -2903,12 +2903,12 @@ body {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 18px;
 }
 
 .my-home-stat {
   min-width: 0;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--sunan-line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.78);
@@ -2925,14 +2925,14 @@ body {
   display: block;
   margin-top: 4px;
   color: var(--sunan-ink);
-  font-size: 23px;
+  font-size: 21px;
   line-height: 1.1;
 }
 
 .my-home-dashboard {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 320px;
-  gap: 18px;
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  gap: 14px;
 }
 
 .my-home-side-panel,
@@ -2946,14 +2946,14 @@ body {
 }
 
 .my-home-side-panel {
-  padding: 18px;
+  padding: 14px;
 }
 
 .my-home-profile {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding-bottom: 18px;
+  gap: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(18, 104, 221, 0.12);
 }
 
@@ -2961,8 +2961,8 @@ body {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 50px;
+  height: 50px;
   color: #ffffff;
   font-weight: 820;
   border-radius: 8px;
@@ -2972,7 +2972,7 @@ body {
 .my-home-profile h3.ant-typography {
   margin: 0 0 4px;
   color: var(--sunan-ink);
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .my-home-status-list,
@@ -2981,11 +2981,11 @@ body {
 .workbench-priority-list,
 .office-approval-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .my-home-status-list {
-  margin-top: 20px;
+  margin-top: 14px;
 }
 
 .my-home-status-item,
@@ -2996,7 +2996,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   min-width: 0;
-  padding: 13px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--sunan-line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.72);
@@ -3058,13 +3058,13 @@ body {
 }
 
 .my-home-main-panel {
-  padding: 18px;
+  padding: 14px;
 }
 
 .my-home-page .my-home-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
   padding: 0;
 }
 
@@ -3079,8 +3079,8 @@ body {
   align-content: center;
   justify-items: center;
   gap: 12px;
-  min-height: 174px;
-  padding: 18px;
+  min-height: 146px;
+  padding: 14px;
   text-align: center;
   border-radius: 8px;
   box-shadow: none;
@@ -3092,9 +3092,9 @@ body {
 }
 
 .my-home-page .my-home-shortcut-icon {
-  width: 44px;
-  height: 44px;
-  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
   border-radius: 8px;
 }
 
@@ -3105,7 +3105,7 @@ body {
 }
 
 .my-home-page .my-home-shortcut-label.ant-typography {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 820;
 }
 
@@ -3118,11 +3118,11 @@ body {
 .my-home-right-rail {
   display: grid;
   align-content: start;
-  gap: 18px;
+  gap: 14px;
 }
 
 .my-home-right-rail > section {
-  padding: 18px;
+  padding: 14px;
 }
 
 .my-home-warning-table {
@@ -3139,7 +3139,7 @@ body {
   gap: 12px;
   align-items: center;
   min-width: 0;
-  padding: 13px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid rgba(18, 104, 221, 0.08);
 }
 
@@ -4134,7 +4134,7 @@ body {
 
 @media (min-width: 1281px) and (max-width: 1440px) {
   .my-home-dashboard {
-    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-columns: 280px minmax(0, 1fr);
     grid-template-areas:
       'side main'
       'right right';
@@ -4390,7 +4390,7 @@ body {
   .my-home-command-hero {
     grid-template-columns: 1fr;
     min-height: 0;
-    padding: 22px 18px 18px;
+    padding: 18px 16px 16px;
   }
 
   .my-home-command-hero::before {
@@ -4411,7 +4411,7 @@ body {
   }
 
   .my-home-title.ant-typography {
-    font-size: 27px;
+    font-size: 25px;
   }
 
   .my-home-stat-strip {
@@ -4439,8 +4439,8 @@ body {
   }
 
   .my-home-page .my-home-shortcut {
-    min-height: 124px;
-    padding: 14px;
+    min-height: 108px;
+    padding: 12px;
   }
 
   .my-home-page .my-home-shortcut-description.ant-typography {

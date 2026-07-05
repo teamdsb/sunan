@@ -52,6 +52,15 @@ describe('dashboard layout CSS', () => {
     );
   });
 
+  it('keeps my-home shortcuts compact enough for H5 scanning', () => {
+    expect(css).toMatch(
+      /\.my-home-page\s+\.my-home-shortcut\s*\{[^}]*min-height:\s*146px;[^}]*padding:\s*14px;/s,
+    );
+    expect(css).toMatch(
+      /@media\s*\(max-width:\s*768px\)\s*\{[\s\S]*\.my-home-page\s+\.my-home-shortcut\s*\{[^}]*min-height:\s*108px;[^}]*padding:\s*12px;/s,
+    );
+  });
+
   it('stacks dashboard rails below their main panel on medium desktops', () => {
     const start = css.indexOf(
       '@media (min-width: 1281px) and (max-width: 1440px)',
@@ -61,7 +70,7 @@ describe('dashboard layout CSS', () => {
 
     expect(start).toBeGreaterThan(-1);
     expect(mediumDesktopRules).toContain(
-      'grid-template-columns: 300px minmax(0, 1fr);',
+      'grid-template-columns: 280px minmax(0, 1fr);',
     );
     expect(mediumDesktopRules).toContain("'side main'");
     expect(mediumDesktopRules).toContain("'right right'");

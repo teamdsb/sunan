@@ -61,10 +61,16 @@ export class OssService {
     mimeType: string,
     originalName: string,
   ): Promise<PresignedUploadPayload> {
+    const headers = {
+      'Content-Type': mimeType,
+      'x-oss-meta-original-name': originalName,
+    };
+
     if (this.aliyunClient) {
       const uploadUrl = this.aliyunClient.signatureUrl(ossKey, {
         method: 'PUT',
         expires: appEnv.OSS_PRESIGN_EXPIRE,
+        headers,
       });
       const expiresAt = new Date(
         Date.now() + appEnv.OSS_PRESIGN_EXPIRE * 1000,
@@ -73,10 +79,7 @@ export class OssService {
       return {
         uploadUrl,
         expiresAt,
-        headers: {
-          'Content-Type': mimeType,
-          'x-oss-meta-original-name': originalName,
-        },
+        headers,
       };
     }
 

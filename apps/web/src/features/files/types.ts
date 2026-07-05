@@ -3,7 +3,9 @@ export type FileCategory =
   | 'enterprise-profiles'
   | 'enterprise-policies'
   | 'inspection-photos'
-  | 'meeting-records';
+  | 'meeting-records'
+  | 'procurement-attachments'
+  | 'workbench-attachments';
 
 export interface FileRecord {
   id: string;
