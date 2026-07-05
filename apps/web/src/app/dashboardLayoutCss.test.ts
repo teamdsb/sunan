@@ -61,6 +61,25 @@ describe('dashboard layout CSS', () => {
     );
   });
 
+  it('lets office categories wrap without horizontal overflow', () => {
+    expect(css).toMatch(
+      /\.office-filter-panel\s+\.ant-segmented-group\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*wrap;[^}]*gap:\s*6px;/s,
+    );
+    expect(css).toMatch(
+      /\.office-filter-panel\s+\.ant-segmented-item\s*\{[^}]*flex:\s*1\s+1\s+90px;[^}]*min-width:\s*0;/s,
+    );
+    expect(css).not.toContain('flex: 1 1 86px !important;');
+  });
+
+  it('keeps the office search control lightweight instead of card-like', () => {
+    expect(css).toMatch(
+      /\.office-search-panel\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto\s+auto;[^}]*gap:\s*8px;/s,
+    );
+    expect(css).toMatch(
+      /\.office-search-panel\s+\.ant-input-affix-wrapper\s*\{[^}]*min-height:\s*44px;[^}]*box-shadow:\s*none;/s,
+    );
+  });
+
   it('stacks dashboard rails below their main panel on medium desktops', () => {
     const start = css.indexOf(
       '@media (min-width: 1281px) and (max-width: 1440px)',

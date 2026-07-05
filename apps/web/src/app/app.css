@@ -267,8 +267,8 @@ body {
 
 .office-filter-panel .ant-segmented.ant-segmented-block .ant-segmented-item,
 .office-filter-panel .ant-segmented-item {
-  flex: 1 1 86px !important;
-  min-width: 86px;
+  flex: 1 1 90px;
+  min-width: 0;
 }
 
 .office-filter-panel .ant-segmented-item-label {
@@ -3168,30 +3168,45 @@ body {
 .office-search-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
 }
 
 .office-search-panel .ant-input-affix-wrapper {
-  min-height: 48px;
+  min-height: 44px;
   border-radius: 8px !important;
+  box-shadow: none;
 }
 
 .office-search-panel .ant-btn {
-  min-height: 48px;
+  min-height: 44px;
   min-width: 82px;
+  box-shadow: none;
 }
 
 .office-filter-panel .ant-segmented {
   width: 100%;
+  padding: 4px;
+  overflow: visible;
+  border: 1px solid rgba(29, 99, 214, 0.1);
   border-radius: 8px;
-  background: rgba(225, 241, 252, 0.82);
+  background: rgba(248, 251, 255, 0.92);
+}
+
+.office-filter-panel .ant-segmented-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .office-filter-panel .ant-segmented-item {
   display: flex;
+  flex: 1 1 90px;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-width: 0;
+  min-height: 38px;
+  border-radius: 7px;
 }
 
 .office-filter-panel .ant-segmented-item-label {
@@ -3199,9 +3214,13 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 42px;
+  min-height: 38px;
   padding-block: 0;
+  padding-inline: 8px;
   line-height: 1.2;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .office-dashboard {

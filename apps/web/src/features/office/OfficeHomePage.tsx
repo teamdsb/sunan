@@ -7,8 +7,8 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { Alert, Button, Card, Empty, Input, Segmented, Space, Tag, Typography } from 'antd';
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { officeRouteConfig } from '../../router/officeRouteConfig';
 import { launchOfficeEntry } from './launchOfficeEntry';
 import { canManageOffice } from './officePermissions';
@@ -37,8 +37,9 @@ function formatCategoryName(categories: Array<{ code: string; name: string }>, c
 
 export function OfficeHomePage() {
   const navigate = useNavigate();
-  const [keyword, setKeyword] = useState('');
-  const [categoryCode, setCategoryCode] = useState<string>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const keyword = searchParams.get('keyword') ?? '';
+  const categoryCode = searchParams.get('categoryCode') ?? 'all';
   const { data: categoryResponse } = useGetOfficeCategoriesQuery();
   const { data: entryResponse, isLoading } = useGetOfficeEntriesQuery(categoryCode === 'all' ? undefined : { categoryCode });
   const [openEntry, { isLoading: isOpening }] = useOpenOfficeEntryMutation();
@@ -57,6 +58,20 @@ export function OfficeHomePage() {
     { label: '全部', value: 'all' },
     ...categories.map((category) => ({ label: category.name, value: category.code })),
   ];
+
+  const updateParams = (nextValues: { keyword?: string; categoryCode?: string }) => {
+    const next = new URLSearchParams(searchParams);
+    if (nextValues.keyword !== undefined) {
+      const nextKeyword = nextValues.keyword.trim();
+      if (nextKeyword) next.set('keyword', nextKeyword);
+      else next.delete('keyword');
+    }
+    if (nextValues.categoryCode !== undefined) {
+      if (nextValues.categoryCode === 'all') next.delete('categoryCode');
+      else next.set('categoryCode', nextValues.categoryCode);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   const handleSearch = () => {
     const search = new URLSearchParams();
@@ -89,7 +104,7 @@ export function OfficeHomePage() {
       <section className="office-search-panel">
         <Input
           value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
+          onChange={(event) => updateParams({ keyword: event.target.value })}
           onPressEnter={handleSearch}
           placeholder="搜索办事入口、表单或审批事项"
           prefix={<SearchOutlined />}
@@ -101,7 +116,7 @@ export function OfficeHomePage() {
       </section>
 
       <section className="office-filter-panel">
-        <Segmented block options={categoryOptions} value={categoryCode} onChange={(value) => setCategoryCode(String(value))} />
+        <Segmented options={categoryOptions} value={categoryCode} onChange={(value) => updateParams({ categoryCode: String(value) })} />
       </section>
 
       <section className="office-dashboard">
