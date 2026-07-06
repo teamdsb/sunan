@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-07-04
+updated: 2026-07-06
 replaces: []
 replaced_by: []
 ---
@@ -17,13 +17,13 @@ replaced_by: []
 | 2 | M8 安全管理底座与核心闭环（后移） | [requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) | [plans/M8-execplans.md](plans/M8-execplans.md) | [plans/M8-wave-backlog.md](plans/M8-wave-backlog.md) | [prompts/README.md](prompts/README.md) |
 | 3 | M9 专业安全业务深化与体系完善（后移） | [requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) | [plans/M9-execplans.md](plans/M9-execplans.md) | [plans/M9-wave-backlog.md](plans/M9-wave-backlog.md) | [prompts/README.md](prompts/README.md) |
 
-M8/M9 总体边界和依赖见 [plans/M8-M9-upgrade-roadmap.md](plans/M8-M9-upgrade-roadmap.md)，但不得在 M7 Wave 6 验收通过前启动。
+M8/M9 总体边界和依赖见 [plans/M8-M9-upgrade-roadmap.md](plans/M8-M9-upgrade-roadmap.md)；M8 重启门禁见 `docs/archive/acceptance/common/acceptance-m7-wave6.md`。
 
 ## 当前状态
 
-- M7：当前待实施，Wave 1-6 对应上传、我的、办事、采购、工作台、企业微信直达和最终收口。
-- M8：由原 M7 后移而来，规划已建立；等待 M7 总体验收后重新排期。
-- M9：由原 M8 后移而来，规划已建立；等待 M8 总体验收。
+- M7：Wave 1-6 已完成本地最终门禁；验收证据见 `docs/archive/acceptance/common/acceptance-m7-wave6.md`。
+- M8：由原 M7 后移而来，规划已建立；M7 无未关闭 P0/P1，可从 M8 Wave 1 重新排期。
+- M9：由原 M8 后移而来，规划已建立；仍等待 M8 总体验收。
 - 外部海事监管、AIS、CCTV 等系统集成不在 M8/M9 范围。
 
 ## 归档位置

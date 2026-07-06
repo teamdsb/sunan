@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: delivery
-updated: 2026-07-04
+updated: 2026-07-06
 replaces: []
 replaced_by: []
 ---
@@ -11,12 +11,12 @@ replaced_by: []
 
 ## 使用方法
 
-1. 当前从 M7 Wave 1 开始，按 Wave 1 -> Wave 6 顺序使用。
+1. M7 Wave 1 -> Wave 6 已完成本地最终门禁；后续从 M8 Wave 1 重新排期。
 2. 将对应提示词全文交给 Coding Agent。
 3. Agent 必须在当前仓库工作，不新建平行示例项目。
 4. 每个 Wave 完成后使用 `docs/plans/wave-acceptance-template.md` 形成验收记录。
 5. 未取得命令输出和证据前，不得勾选执行计划。
-6. M8/M9 提示词只能在 `docs/plans/M7-execplans.md` 的重启门禁通过后使用。
+6. M8/M9 提示词只能在 `docs/archive/acceptance/common/acceptance-m7-wave6.md` 记录的 P0/P1 门禁通过后使用。
 
 ## 当前修复：M7
 
