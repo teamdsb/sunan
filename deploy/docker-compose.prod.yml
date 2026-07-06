@@ -95,12 +95,12 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: apps/api/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
     image: sunan-api:${SUNAN_VERSION:-stable}
     container_name: sunan-api
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
     env_file:
       - /dev/sunan/deploy/.env
     environment:
@@ -143,7 +143,7 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: apps/web/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
       args:
         VITE_API_BASE_URL: https://api.qzssncb.com/api/v1
         VITE_WECOM_CORP_ID: ${WECOM_CORP_ID}
@@ -155,7 +155,7 @@ services:
     container_name: sunan-web
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
     depends_on:
       sunan-api:
         condition: service_healthy
@@ -167,12 +167,12 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: docker/nginx/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
     image: sunan-nginx:${SUNAN_VERSION:-stable}
     container_name: sunan-nginx
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.2}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.3}
     depends_on:
       sunan-web:
         condition: service_started

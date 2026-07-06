@@ -30,7 +30,7 @@ describe('parseAppEnv', () => {
   it('accepts a complete production configuration', () => {
     expect(parseAppEnv(productionEnv)).toMatchObject({
       NODE_ENV: 'production',
-      SUNAN_VERSION: '0.0.2',
+      SUNAN_VERSION: '0.0.3',
       WEB_PUBLIC_URL: 'https://app.qzssncb.com',
       OSS_DRIVER: 's3',
     });
