@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：225 个 Markdown 文件。
+总数：226 个 Markdown 文件。
 
 ## repository-root
 
@@ -297,6 +297,7 @@ replaced_by: []
 | [docs/archive/acceptance/common/acceptance-m7-wave2.md](archive/acceptance/common/acceptance-m7-wave2.md) | `acceptance-archive` | `delivery` | M7 Wave 2 验收记录：办事分类 CSS 与搜索体验 |
 | [docs/archive/acceptance/common/acceptance-m7-wave3.md](archive/acceptance/common/acceptance-m7-wave3.md) | `acceptance-archive` | `delivery` | M7 Wave 3 验收记录：采购 PDF、返回与附件体验 |
 | [docs/archive/acceptance/common/acceptance-m7-wave4.md](archive/acceptance/common/acceptance-m7-wave4.md) | `acceptance-archive` | `delivery` | M7 Wave 4 验收记录：工作台返回、密度与导航锚点 |
+| [docs/archive/acceptance/common/acceptance-m7-wave5.md](archive/acceptance/common/acceptance-m7-wave5.md) | `acceptance-archive` | `delivery` | M7 Wave 5 验收记录：企业微信直达与跨模块回归 |
 | [docs/archive/acceptance/common/m6-wave5-quality-gates.md](archive/acceptance/common/m6-wave5-quality-gates.md) | `acceptance-archive` | `archive` | M6 Wave 5 质量门禁与证据 |
 | [docs/archive/acceptance/common/m6-wave6-go-live-package.md](archive/acceptance/common/m6-wave6-go-live-package.md) | `acceptance-archive` | `archive` | M6 Wave 6 上线包索引（可审计） |
 | [docs/archive/acceptance/common/m6-wave6-test-and-smoke-report.md](archive/acceptance/common/m6-wave6-test-and-smoke-report.md) | `acceptance-archive` | `archive` | M6 Wave 6 全量测试与冒烟测试报告 |
