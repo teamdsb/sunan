@@ -15,6 +15,7 @@ const allowedReturnButtonPages = new Set([
   '../features/procurement/ProcurementOrderDetailPage.tsx',
   '../features/procurement/ProcurementReportApprovalPage.tsx',
   '../features/procurement/ProcurementReportRequestDetailPage.tsx',
+  '../features/workbench/WorkbenchHomePage.tsx',
 ]);
 
 describe('page navigation UI policy', () => {

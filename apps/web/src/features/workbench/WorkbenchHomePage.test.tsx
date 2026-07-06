@@ -14,6 +14,8 @@ const mockPerformWorkbenchRecordAction = vi.fn();
 const mockLaunchWorkbenchApproval = vi.fn();
 const mockUploadWorkbenchRecordAttachment = vi.fn();
 const mockWxInvoke = vi.fn();
+const mockScrollTo = vi.fn();
+const mockScrollIntoView = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -45,6 +47,12 @@ vi.mock('../../hooks/useWecomJsSdk', () => ({
 describe('WorkbenchHomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.scrollTo = mockScrollTo;
+    window.requestAnimationFrame = (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    };
+    Element.prototype.scrollIntoView = mockScrollIntoView;
     mockWxInvoke.mockImplementation((_api, _config, callback) => callback({ err_msg: 'thirdPartyOpenPage:ok' }));
     window.wx = {
       config: vi.fn(),
@@ -172,6 +180,35 @@ describe('WorkbenchHomePage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/approvals');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/modules/shipping_chart_update');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/records/record-1');
+  });
+
+  it('keeps the home entry at the top instead of a stale module scroll position', () => {
+    render(<WorkbenchHomePage routeAware />);
+
+    expect(mockScrollTo).toHaveBeenCalledWith({ top: 0, left: 0 });
+    expect(mockScrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('anchors direct module entries to their selected module card', () => {
+    render(<WorkbenchHomePage routeAware initialModuleCode="business_signin_desk" />);
+
+    expect(screen.getByText('签到台').closest('.workbench-module-card')).toHaveClass('is-selected');
+    expect(mockScrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+  });
+
+  it('adds return actions for direct module, approval and attendance entries', () => {
+    const { rerender } = render(<WorkbenchHomePage routeAware initialModuleCode="shipping_chart_update" />);
+
+    fireEvent.click(screen.getByRole('button', { name: '返回工作台首页' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/workbench');
+
+    rerender(<WorkbenchHomePage routeAware moduleFilter="requiresApproval" />);
+    fireEvent.click(screen.getByRole('button', { name: '返回工作台首页' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/workbench');
+
+    rerender(<WorkbenchHomePage routeAware statisticsOnly />);
+    fireEvent.click(screen.getByRole('button', { name: '返回工作台首页' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/workbench');
   });
 
   it('renders workbench side rail from real records without static schedule samples', () => {

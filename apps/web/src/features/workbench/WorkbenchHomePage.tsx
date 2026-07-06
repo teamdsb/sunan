@@ -330,6 +330,12 @@ export function WorkbenchHomePage({
     activeModule?.templateType === 'attendance_statistics' ||
     activeModule?.templateType === 'service_asset' ||
     activeModule?.templateType === 'wecom_approval';
+  const showHomeReturn =
+    routeAware &&
+    (Boolean(initialModuleCode) ||
+      Boolean(initialRecordId) ||
+      statisticsOnly ||
+      moduleFilter !== 'all');
   const pendingRecords = useMemo(
     () =>
       records.filter((record) =>
@@ -380,6 +386,23 @@ export function WorkbenchHomePage({
   useEffect(() => {
     setActiveRecordId(initialRecordId);
   }, [initialRecordId]);
+
+  useEffect(() => {
+    if (!routeAware) {
+      return;
+    }
+
+    if (!initialModuleCode) {
+      window.scrollTo({ top: 0, left: 0 });
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`workbench-module-${initialModuleCode}`)
+        ?.scrollIntoView({ block: 'center' });
+    });
+  }, [initialModuleCode, routeAware, visibleModuleCards.length]);
 
   useEffect(() => {
     if (!detailResponse?.data?.moduleCode) {
@@ -677,6 +700,9 @@ export function WorkbenchHomePage({
         </div>
         {routeAware ? (
           <Space wrap className="sunan-hero-actions">
+            {showHomeReturn ? (
+              <Button onClick={goHome}>返回工作台首页</Button>
+            ) : null}
             <Button
               onClick={() => navigate('/workbench/statistics/attendance')}
             >
@@ -767,6 +793,8 @@ export function WorkbenchHomePage({
                   const selected = activeModuleCode === item.moduleCode;
                   return (
                     <article
+                      id={`workbench-module-${item.moduleCode}`}
+                      data-module-code={item.moduleCode}
                       key={item.moduleCode}
                       className={[
                         'workbench-module-card',

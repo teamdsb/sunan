@@ -113,6 +113,21 @@ describe('dashboard layout CSS', () => {
     );
   });
 
+  it('keeps workbench cards compact while preserving 44px touch targets', () => {
+    expect(css).toMatch(
+      /\.workbench-stat-card\s*\{[^}]*min-height:\s*96px;[^}]*padding:\s*14px;/s,
+    );
+    expect(css).toMatch(
+      /\.workbench-module-card\s*\{[^}]*min-height:\s*118px;[^}]*padding:\s*12px;/s,
+    );
+    expect(css).toMatch(
+      /\.workbench-attendance-stat-card\s*\{[^}]*min-height:\s*96px;[^}]*padding:\s*12px\s+14px;/s,
+    );
+    expect(css).toMatch(
+      /\.workbench-module-card\s+\.ant-btn\s*\{[^}]*min-height:\s*44px;/s,
+    );
+  });
+
   it('keeps responsive table actions readable and separated', () => {
     expect(css).toMatch(
       /\.responsive-table-mobile\s+\.responsive-table-actions-cell\s+\.ant-space\s*\{[^}]*column-gap:\s*10px\s*!important;[^}]*row-gap:\s*10px\s*!important;/s,

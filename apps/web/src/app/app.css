@@ -3620,12 +3620,13 @@ body {
 .workbench-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .workbench-stat-card {
   min-width: 0;
-  padding: 18px;
+  min-height: 96px;
+  padding: 14px;
   border: 1px solid var(--sunan-line);
   border-radius: 8px;
   background: var(--sunan-surface);
@@ -3639,13 +3640,13 @@ body {
 
 .workbench-stat-card .ant-statistic-content {
   color: var(--sunan-ink);
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 860;
 }
 
 .workbench-stat-card > span {
   float: right;
-  margin-top: -34px;
+  margin-top: -30px;
   color: #079262;
   font-size: 13px;
   font-weight: 800;
@@ -3654,14 +3655,14 @@ body {
 .workbench-attendance-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
   width: 100%;
 }
 
 .workbench-attendance-stat-card {
   min-width: 0;
-  min-height: 112px;
-  padding: 16px 18px;
+  min-height: 96px;
+  padding: 12px 14px;
   border: 1px solid var(--sunan-line);
   border-radius: 10px;
   background:
@@ -3681,9 +3682,9 @@ body {
 }
 
 .workbench-attendance-stat-card .ant-statistic-content {
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--sunan-blue-deep);
-  font-size: 30px;
+  font-size: 26px;
   line-height: 1;
   font-weight: 860;
 }
@@ -3691,13 +3692,13 @@ body {
 .workbench-board-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 18px;
+  gap: 14px;
 }
 
 .workbench-board-main,
 .workbench-side-rail > section {
   min-width: 0;
-  padding: 18px;
+  padding: 14px;
   border: 1px solid var(--sunan-line);
   border-radius: 10px;
   background: var(--sunan-surface);
@@ -3707,7 +3708,7 @@ body {
 .workbench-module-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .workbench-module-grid > .placeholder-card {
@@ -3717,10 +3718,10 @@ body {
 .workbench-module-card {
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
-  min-height: 138px;
-  padding: 14px;
+  min-height: 118px;
+  padding: 12px;
   border: 1px solid var(--sunan-line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.74);
@@ -3740,20 +3741,21 @@ body {
 .workbench-module-card .ant-btn {
   justify-self: start;
   margin-top: auto;
+  min-height: 44px;
 }
 
 .workbench-side-rail {
   display: grid;
   align-content: start;
-  gap: 18px;
+  gap: 14px;
 }
 
 .workbench-schedule-item {
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
-  padding: 13px;
+  padding: 10px;
   border: 1px solid var(--sunan-line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.74);
