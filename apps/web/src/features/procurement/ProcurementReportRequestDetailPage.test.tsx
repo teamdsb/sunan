@@ -98,4 +98,12 @@ describe('ProcurementReportRequestDetailPage', () => {
       expect(openSpy).toHaveBeenCalledWith('https://oss.example.com/report-1.pdf', '_blank', 'noopener,noreferrer');
     });
   });
+
+  it('can return to procurement home from a direct entry', () => {
+    render(<ProcurementReportRequestDetailPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '返回采购首页' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/procurement');
+  });
 });

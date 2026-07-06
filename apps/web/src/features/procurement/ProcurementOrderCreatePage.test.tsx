@@ -60,6 +60,14 @@ describe('ProcurementOrderCreatePage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/procurement/orders/order-1');
   });
 
+  it('can return to procurement home from a direct entry', () => {
+    render(<ProcurementOrderCreatePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '返回采购首页' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/procurement');
+  });
+
   it('creates and submits an order in one action', async () => {
     render(<ProcurementOrderCreatePage />);
 

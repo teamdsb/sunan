@@ -812,6 +812,29 @@ export class ProcurementService {
     return this.getOrderDetail(id, user);
   }
 
+  async getOrderAttachmentDownloadUrl(
+    id: string,
+    fileId: string,
+    user: CurrentUser,
+  ) {
+    const order = await this.mustFindOrder(id);
+    this.assertCanViewOrder(order, user);
+
+    const relation = await this.orderFileRepository.findOne({
+      where: { orderId: id, fileId },
+    });
+    if (!relation) {
+      throw new NotFoundException('attachment not found');
+    }
+
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    if (!file) {
+      throw new NotFoundException('file not found');
+    }
+
+    return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
   async printOrder(id: string, user: CurrentUser): Promise<PrintResultDto> {
     const order = await this.mustFindOrder(id);
     this.assertCanViewOrder(order, user);
@@ -819,37 +842,37 @@ export class ProcurementService {
     const detail = await this.toOrderDetail(order);
     const generatedAt = new Date();
     const lines = [
-      `Order No: ${order.orderNo}`,
-      `Generated At: ${this.formatDateTime(generatedAt)}`,
+      `单号：${order.orderNo}`,
+      `生成时间：${this.formatDateTime(generatedAt)}`,
       '',
-      'Procurement Order',
-      `Title: ${order.title}`,
-      `Department: ${order.departmentCode}`,
-      `Dimension: ${order.dimensionType}${order.dimensionKey ? ` / ${order.dimensionKey}` : ''}`,
-      `Applicant: ${order.createdBy}`,
-      `Status: ${order.status}`,
-      `Submitted At: ${order.submittedAt ? this.formatDateTime(order.submittedAt) : '-'}`,
-      `Final Approved At: ${order.finalApprovedAt ? this.formatDateTime(order.finalApprovedAt) : '-'}`,
+      '采购单',
+      `标题：${order.title}`,
+      `部门：${this.toDepartmentLabel(order.departmentCode)}`,
+      `细分：${this.toDimensionText(order.dimensionType, order.dimensionKey)}`,
+      `申请人：${order.createdBy}`,
+      `状态：${this.toOrderStatusLabel(order.status)}`,
+      `提交时间：${order.submittedAt ? this.formatDateTime(order.submittedAt) : '-'}`,
+      `终审时间：${order.finalApprovedAt ? this.formatDateTime(order.finalApprovedAt) : '-'}`,
       '',
-      'Summary:',
+      '摘要：',
       ...this.wrapTextLines(order.summary, 72),
       '',
-      `Amount (CNY): ${order.amount.toFixed(2)}`,
+      `金额：¥${order.amount.toFixed(2)}`,
       '',
-      'Attachments:',
+      '附件：',
       ...(detail.files?.length
         ? detail.files.map(
             (file, index) =>
-              `${index + 1}. ${file.fileName} (${file.mimeType}, ${file.fileSize} bytes)`,
+              `${index + 1}. ${file.fileName}（${file.mimeType}，${file.fileSize} 字节）`,
           )
         : ['-']),
     ];
 
     const amountLineIndex = lines.findIndex((line) =>
-      line.startsWith('Amount (CNY):'),
+      line.startsWith('金额：'),
     );
     const pdfBuffer = this.buildA4Pdf({
-      title: 'Procurement Order',
+      title: '采购单',
       lines,
       rightAlignedLineIndexes: amountLineIndex >= 0 ? [amountLineIndex] : [],
     });
@@ -870,26 +893,25 @@ export class ProcurementService {
     this.assertCanViewReport(report, user);
 
     const generatedAt = new Date();
-    const snapshotSummary = JSON.stringify(report.snapshotSummary, null, 2);
     const lines = [
-      `Report No: ${report.reportNo}`,
-      `Generated At: ${this.formatDateTime(generatedAt)}`,
+      `报表编号：${report.reportNo}`,
+      `生成时间：${this.formatDateTime(generatedAt)}`,
       '',
-      'Procurement Report Request',
-      `Report Type: ${report.reportType}`,
-      `Period: ${report.periodMonth ? `${report.periodYear}-${String(report.periodMonth).padStart(2, '0')}` : report.periodYear}`,
-      `Department: ${report.departmentCode ?? '-'}`,
-      `Applicant: ${report.createdBy}`,
-      `Status: ${report.status}`,
-      `Submitted At: ${report.submittedAt ? this.formatDateTime(report.submittedAt) : '-'}`,
-      `Final Approved At: ${report.finalApprovedAt ? this.formatDateTime(report.finalApprovedAt) : '-'}`,
+      '采购报表审批单',
+      `报表类型：${report.reportType === 'monthly' ? '月报' : '年报'}`,
+      `周期：${report.periodMonth ? `${report.periodYear}-${String(report.periodMonth).padStart(2, '0')}` : report.periodYear}`,
+      `部门：${report.departmentCode ? this.toDepartmentLabel(report.departmentCode) : '-'}`,
+      `申请人：${report.createdBy}`,
+      `状态：${this.toReportStatusLabel(report.status)}`,
+      `提交时间：${report.submittedAt ? this.formatDateTime(report.submittedAt) : '-'}`,
+      `终审时间：${report.finalApprovedAt ? this.formatDateTime(report.finalApprovedAt) : '-'}`,
       '',
-      'Snapshot Summary:',
-      ...this.wrapTextLines(snapshotSummary, 72),
+      '汇总快照：',
+      ...this.formatSnapshotLines(report.snapshotSummary),
     ];
 
     const pdfBuffer = this.buildA4Pdf({
-      title: 'Procurement Report Request',
+      title: '采购报表审批单',
       lines,
       rightAlignedLineIndexes: [],
     });
@@ -2328,7 +2350,9 @@ export class ProcurementService {
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-    return `${category}/${year}/${month}/${randomUUID()}.pdf`;
+    const prefix =
+      category === 'procurement_exports' ? 'procurement/exports' : category;
+    return `${prefix}/${year}/${month}/${randomUUID()}.pdf`;
   }
 
   private buildA4Pdf(input: {
@@ -2348,9 +2372,9 @@ export class ProcurementService {
     const pageStreams = pages.map((pageLines, pageIndex) => {
       const commands: string[] = ['BT', '/F1 12 Tf'];
 
-      const pageTitle = `${input.title}  Page ${pageIndex + 1}/${pages.length}`;
+      const pageTitle = `${input.title} 第 ${pageIndex + 1}/${pages.length} 页`;
       commands.push(
-        `1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`,
+        `1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm ${this.toPdfText(pageTitle)} Tj`,
       );
 
       pageLines.forEach((line, lineIndex) => {
@@ -2369,7 +2393,7 @@ export class ProcurementService {
           : PDF_MARGIN_LEFT;
 
         commands.push(
-          `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`,
+          `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm ${this.toPdfText(line)} Tj`,
         );
       });
 
@@ -2385,9 +2409,12 @@ export class ProcurementService {
     const pageObjectIds: number[] = [];
 
     objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
-    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    objects[3] =
+      '<< /Type /Font /Subtype /Type0 /BaseFont /STSong-Light /Encoding /UniGB-UCS2-H /DescendantFonts [4 0 R] >>';
+    objects[4] =
+      '<< /Type /Font /Subtype /CIDFontType0 /BaseFont /STSong-Light /CIDSystemInfo << /Registry (Adobe) /Ordering (GB1) /Supplement 5 >> >>';
 
-    let nextObjectId = 4;
+    let nextObjectId = 5;
     pageStreams.forEach((stream) => {
       const pageObjectId = nextObjectId;
       const contentObjectId = nextObjectId + 1;
@@ -2466,13 +2493,8 @@ export class ProcurementService {
     return units * fontSize * 0.48;
   }
 
-  private escapePdfText(text: string): string {
-    return text
-      .replace(/\\/g, '\\\\')
-      .replace(/\(/g, '\\(')
-      .replace(/\)/g, '\\)')
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '');
+  private toPdfText(text: string): string {
+    return `<${Buffer.from(`\uFEFF${text}`, 'utf16le').swap16().toString('hex')}>`;
   }
 
   private escapeHtml(text: string): string {
@@ -2494,6 +2516,66 @@ export class ProcurementService {
     }
 
     return `${report.periodYear}年采购年报`;
+  }
+
+  private toDimensionText(
+    dimensionType: ProcurementDimensionType,
+    dimensionKey: string | null,
+  ): string {
+    const labels: Record<ProcurementDimensionType, string> = {
+      none: '未细分',
+      vessel: '船舶',
+      logistics_category: '后勤类别',
+    };
+    return dimensionKey
+      ? `${labels[dimensionType]} / ${dimensionKey}`
+      : labels[dimensionType];
+  }
+
+  private toOrderStatusLabel(status: ProcurementOrderStatus): string {
+    const labels: Record<ProcurementOrderStatus, string> = {
+      draft: '草稿',
+      submitted: '已提交',
+      dept_approved: '部门通过',
+      final_approved: '终审通过',
+      rejected: '已驳回',
+    };
+    return labels[status];
+  }
+
+  private toReportStatusLabel(status: ProcurementReportRequestStatus): string {
+    const labels: Record<ProcurementReportRequestStatus, string> = {
+      draft: '草稿',
+      submitted: '已提交',
+      dept_approved: '部门通过',
+      finance_approved: '财务通过',
+      final_approved: '终审通过',
+      rejected: '已驳回',
+    };
+    return labels[status];
+  }
+
+  private formatSnapshotLines(snapshot: Record<string, unknown>): string[] {
+    const entries = Object.entries(snapshot);
+    if (entries.length === 0) {
+      return ['-'];
+    }
+
+    return entries.flatMap(([key, value]) =>
+      this.wrapTextLines(`${key}：${this.formatSnapshotValue(value)}`, 72),
+    );
+  }
+
+  private formatSnapshotValue(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
   }
 
   private toDepartmentLabel(code: ProcurementDepartmentCode): string {

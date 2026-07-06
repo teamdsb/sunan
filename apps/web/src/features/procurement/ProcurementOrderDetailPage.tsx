@@ -1,16 +1,20 @@
 import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Space, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { FileUploadField } from '../files/FileUploadField';
+import type { FileRecord } from '../files/types';
 import {
   ProcurementApprovalRecord,
   ProcurementDepartmentCode,
+  ProcurementFile,
   ProcurementOrderStatus,
   useBindProcurementOrderAttachmentsMutation,
   useGetProcurementOrderApprovalsQuery,
   useGetProcurementOrderQuery,
+  useLazyGetProcurementOrderAttachmentDownloadUrlQuery,
   usePrintProcurementOrderMutation,
   useResubmitProcurementOrderMutation,
   useSubmitProcurementOrderMutation,
@@ -79,7 +83,6 @@ export function ProcurementOrderDetailPage() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<ProcurementDraftFormValues>();
-  const [attachmentInput, setAttachmentInput] = useState('');
 
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data: orderResponse, isLoading, refetch } = useGetProcurementOrderQuery(id ?? '', { skip: !id });
@@ -88,6 +91,8 @@ export function ProcurementOrderDetailPage() {
   const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
   const [resubmitOrder, { isLoading: isResubmitting }] = useResubmitProcurementOrderMutation();
   const [bindAttachments, { isLoading: isBinding }] = useBindProcurementOrderAttachmentsMutation();
+  const [getAttachmentDownloadUrl, { isFetching: isPreparingAttachment }] =
+    useLazyGetProcurementOrderAttachmentDownloadUrlQuery();
   const [printOrder, { isLoading: isPrinting }] = usePrintProcurementOrderMutation();
 
   const order = orderResponse?.data;
@@ -164,25 +169,38 @@ export function ProcurementOrderDetailPage() {
     await refetch();
   };
 
-  const handleBindAttachments = async () => {
+  const handleUploadedAttachment = async (file: FileRecord | null) => {
+    if (!id || !file) {
+      return;
+    }
+
+    await bindAttachments({ id, fileIds: [file.id] }).unwrap();
+    messageApi.success('附件已上传并绑定');
+    await refetch();
+  };
+
+  const handleOpenAttachment = async (
+    file: ProcurementFile,
+    mode: 'preview' | 'download',
+  ) => {
     if (!id) {
       return;
     }
 
-    const fileIds = attachmentInput
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const response = await getAttachmentDownloadUrl({
+      id,
+      fileId: file.id,
+    }).unwrap();
 
-    if (fileIds.length === 0) {
-      messageApi.warning('请先输入 fileId');
+    if (mode === 'preview' && window.wx) {
+      window.wx.previewFile({
+        url: response.data.downloadUrl,
+        name: file.fileName,
+      });
       return;
     }
 
-    await bindAttachments({ id, fileIds }).unwrap();
-    messageApi.success('附件已绑定');
-    setAttachmentInput('');
-    await refetch();
+    window.open(response.data.downloadUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handlePrint = async () => {
@@ -208,6 +226,7 @@ export function ProcurementOrderDetailPage() {
           查看采购单、审批进度和执行信息，并按需导出 PDF。
         </Typography.Paragraph>
         <Space wrap>
+          <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
           <Button onClick={() => navigate('/procurement/approvals')}>进入审批页</Button>
           <Button loading={isPrinting} onClick={() => void handlePrint()}>
             导出 PDF
@@ -267,13 +286,14 @@ export function ProcurementOrderDetailPage() {
 
       {order && canEditDraft ? (
         <section className="page-card-grid">
-          <Card variant="borderless" className="placeholder-card" title="附件绑定（输入 fileId，逗号分隔）">
-            <Space.Compact style={{ width: '100%' }}>
-              <Input value={attachmentInput} onChange={(event) => setAttachmentInput(event.target.value)} placeholder="uuid-1,uuid-2" />
-              <Button loading={isBinding} onClick={() => void handleBindAttachments()}>
-                绑定附件
-              </Button>
-            </Space.Compact>
+          <Card variant="borderless" className="placeholder-card" title="附件上传">
+            <FileUploadField
+              category="procurement-attachments"
+              onChange={(file) => void handleUploadedAttachment(file)}
+            />
+            {isBinding ? (
+              <Typography.Text type="secondary">正在绑定附件…</Typography.Text>
+            ) : null}
           </Card>
         </section>
       ) : null}
@@ -284,7 +304,26 @@ export function ProcurementOrderDetailPage() {
             <List
               dataSource={order.files ?? []}
               renderItem={(item) => (
-                <List.Item>
+                <List.Item
+                  actions={[
+                    <Button
+                      key="preview"
+                      type="link"
+                      loading={isPreparingAttachment}
+                      onClick={() => void handleOpenAttachment(item, 'preview')}
+                    >
+                      预览
+                    </Button>,
+                    <Button
+                      key="download"
+                      type="link"
+                      loading={isPreparingAttachment}
+                      onClick={() => void handleOpenAttachment(item, 'download')}
+                    >
+                      下载
+                    </Button>,
+                  ]}
+                >
                   <List.Item.Meta title={item.fileName} description={`${item.mimeType} · ${item.fileSize} bytes`} />
                 </List.Item>
               )}

@@ -172,6 +172,17 @@ export class ProcurementController {
     return { data: await this.service.bindOrderAttachments(id, dto, user) };
   }
 
+  @Get('orders/:id/attachments/:fileId/download-url')
+  async getOrderAttachmentDownloadUrl(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return {
+      data: await this.service.getOrderAttachmentDownloadUrl(id, fileId, user),
+    };
+  }
+
   @Post('orders/:id/print')
   async printOrder(
     @Param('id') id: string,

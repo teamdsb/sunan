@@ -133,6 +133,7 @@ export function ProcurementReportRequestDetailPage() {
           查看报表审批单、审批进度和汇总明细，并按需导出 PDF。
         </Typography.Paragraph>
         <Space wrap>
+          <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
           <Button onClick={() => navigate('/procurement/report-approvals')}>进入报表审批页</Button>
           <Button loading={isPrinting} onClick={() => void handlePrint()}>
             导出 PDF
