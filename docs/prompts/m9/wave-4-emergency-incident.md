@@ -5,20 +5,20 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 4 提示词：应急、事故险情与防台
+# M9 Wave 4 提示词：应急、事故险情与防台
 
 ```text
-执行 M8 Wave 4，建设应急计划、训练演习、应急事件、事故险情调查和防台全过程。
+执行 M9 Wave 4，建设应急计划、训练演习、应急事件、事故险情调查和防台全过程。
 
 前置：Wave 3 通过。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - emergency-incident 规格组
-- M7 计划任务、证据和 CAPA 规格
+- M8 计划任务、证据和 CAPA 规格
 - 现有演练、培训、会议和检查模块规格
 
 按 SDD/TDD 完成：

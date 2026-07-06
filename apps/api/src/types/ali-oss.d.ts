@@ -2,6 +2,7 @@ declare module 'ali-oss' {
   interface SignatureUrlOptions {
     method?: 'GET' | 'PUT';
     expires?: number;
+    headers?: Record<string, string>;
   }
 
   interface PutOptions {

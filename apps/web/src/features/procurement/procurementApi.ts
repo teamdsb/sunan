@@ -435,6 +435,14 @@ export const procurementApi = baseApi.injectEndpoints({
         { type: 'ProcurementOrder', id },
       ],
     }),
+    getProcurementOrderAttachmentDownloadUrl: builder.query<
+      { data: { downloadUrl: string; expiresAt: string } },
+      { id: string; fileId: string }
+    >({
+      query: ({ id, fileId }) => ({
+        url: `/procurement/orders/${id}/attachments/${fileId}/download-url`,
+      }),
+    }),
     printProcurementOrder: builder.mutation<
       { data: { fileId: string; downloadUrl: string } },
       string
@@ -650,6 +658,7 @@ export const {
   useSubmitProcurementOrderMutation,
   useResubmitProcurementOrderMutation,
   useBindProcurementOrderAttachmentsMutation,
+  useLazyGetProcurementOrderAttachmentDownloadUrlQuery,
   usePrintProcurementOrderMutation,
   useGetProcurementPendingApprovalsQuery,
   useGetProcurementOrderApprovalsQuery,

@@ -151,6 +151,7 @@ export function ProcurementOrderCreatePage() {
         <Typography.Paragraph type="secondary">
           支持先保存草稿，再提交审批。
         </Typography.Paragraph>
+        <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
       </section>
 
       <section className="page-card-grid">

@@ -5,23 +5,23 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 8 提示词：全域联调、上线与验收
+# M9 Wave 8 提示词：全域联调、上线与验收
 
 ```text
-执行 M8 Wave 8，完成 M7/M8 全域联调、数据迁移、质量门禁、企业微信真机验收、上线切换、操作手册更新和最终能力复评。
+执行 M9 Wave 8，完成 M8/M9 全域联调、数据迁移、质量门禁、企业微信真机验收、上线切换、操作手册更新和最终能力复评。
 
-前置：M8 Wave 1-7 均通过，且无未关闭 P0。
+前置：M9 Wave 1-7 均通过，且无未关闭 P0。
 
 必须阅读：
 - AGENTS.md
-- docs/plans/M7-M8-upgrade-roadmap.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M7-execplans.md
+- docs/plans/M8-M9-upgrade-roadmap.md
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
 - docs/plans/M8-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/plans/M9-execplans.md
 - docs/plans/M8-wave-backlog.md
-- M7/M8 已完成 Wave 的实际验收文档
+- docs/plans/M9-wave-backlog.md
+- M8/M9 已完成 Wave 的实际验收文档
 - docs/plans/wave-acceptance-template.md
 - docs/specs/safety/README.md 及全部现行 safety 规格
 - 企业微信真机、切换和运维文档
@@ -43,7 +43,7 @@ replaced_by: []
 - iOS、Android、桌面企业微信真机回归。
 - 更新操作手册中的实际步骤和截图占位。
 - 重新审计平台对比文档，将每项状态附代码、页面和测试证据。
-- 创建 Wave 8 验收、M8 总验收、上线包和 Hypercare。
+- 创建 Wave 8 验收、M9 总验收、上线包和 Hypercare。
 
 必须完整运行并报告：
 - node scripts/generate-doc-inventory.mjs

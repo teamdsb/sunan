@@ -166,15 +166,19 @@ export class FilesService {
   }
 
   private buildOssKey(category: string, extension: string): string {
+    const rule = FILE_CATEGORY_RULES[category];
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
 
-    return `${category}/${year}/${month}/${randomUUID()}.${extension}`;
+    return `${rule?.storagePrefix ?? category}/${year}/${month}/${randomUUID()}.${extension}`;
   }
 
   private validateOssKeyBelongsToCategory(ossKey: string, category: string): void {
-    if (!ossKey.startsWith(`${category}/`)) {
+    const rule = FILE_CATEGORY_RULES[category];
+    const prefixes = [category, rule?.storagePrefix].filter(Boolean);
+
+    if (!prefixes.some((prefix) => ossKey.startsWith(`${prefix}/`))) {
       throw new BadRequestException('文件路径与分类不匹配');
     }
   }

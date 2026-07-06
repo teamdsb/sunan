@@ -5,21 +5,21 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 3 提示词：航次与船舶高风险作业
+# M9 Wave 3 提示词：航次与船舶高风险作业
 
 ```text
-执行 M8 Wave 3，将航次、燃油和主要高风险作业从通用记录升级为专用许可与检查闭环。
+执行 M9 Wave 3，将航次、燃油和主要高风险作业从通用记录升级为专用许可与检查闭环。
 
 前置：Wave 2 人员资格已验收。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - ship-operation 规格组
-- M7 任务、证据、检查和 CAPA 规格
-- M8 personnel-safety 资格快照规格
+- M8 任务、证据、检查和 CAPA 规格
+- M9 personnel-safety 资格快照规格
 - 现有航次、燃油、有限空间、油污水、海图和作业流程规格与代码
 
 按 SDD/TDD 完成：

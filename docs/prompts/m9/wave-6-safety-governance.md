@@ -5,20 +5,20 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M8 Wave 6 提示词：安全责任、费用与管理复查
+# M9 Wave 6 提示词：安全责任、费用与管理复查
 
 ```text
-执行 M8 Wave 6，建设安全责任制、安全费用、指定人员监督、船长复查和管理评审。
+执行 M9 Wave 6，建设安全责任制、安全费用、指定人员监督、船长复查和管理评审。
 
 前置：Wave 5 通过。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M8-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/requirements/M9-专业安全业务深化与体系完善.md
+- docs/plans/M9-execplans.md
+- docs/plans/M9-wave-backlog.md
 - safety-governance 规格组
-- M7 计划任务、检查、证据和 CAPA 规格
+- M8 计划任务、检查、证据和 CAPA 规格
 - 采购管理规格
 - 现有企业制度、会议、年度计划和财务业务实现
 

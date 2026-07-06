@@ -7,6 +7,7 @@ import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { OssService } from 'src/modules/files/oss.service';
 import { ProcurementModule } from 'src/modules/procurement/procurement.module';
 import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase } from 'test/pg-test-container';
 
@@ -52,6 +53,7 @@ function toDateText(date: Date) {
 describe('ProcurementController integration', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let ossService: OssService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
@@ -64,6 +66,7 @@ describe('ProcurementController integration', () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
+    ossService = moduleRef.get(OssService);
   });
 
   afterAll(async () => {
@@ -218,6 +221,30 @@ describe('ProcurementController integration', () => {
       expect.objectContaining({ id: file.id }),
     ]);
 
+    const downloadResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/procurement/orders/${orderId}/attachments/${file.id}/download-url`)
+      .set('Authorization', 'Bearer token');
+    expect(downloadResponse.status).toBe(200);
+    expect((downloadResponse.body as { data: { downloadUrl: string } }).data.downloadUrl).toContain('receipt.pdf');
+
+    currentUser = {
+      ...currentUser,
+      userId: 'unrelated-viewer',
+      departments: ['财务部'],
+      roles: ['all_authenticated', 'finance'],
+    };
+    const forbiddenDownloadResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/procurement/orders/${orderId}/attachments/${file.id}/download-url`)
+      .set('Authorization', 'Bearer token');
+    expect(forbiddenDownloadResponse.status).toBe(404);
+
+    currentUser = {
+      ...currentUser,
+      userId: 'business-applicant',
+      departments: ['业务部'],
+      roles: ['all_authenticated', 'business'],
+    };
+
     const submitResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post(`/api/v1/procurement/orders/${orderId}/submit`)
       .set('Authorization', 'Bearer token');
@@ -231,6 +258,47 @@ describe('ProcurementController integration', () => {
     expect((pendingResponse.body as { data: Array<{ entityId: string; approvalLevel: string }> }).data).toEqual(
       expect.arrayContaining([expect.objectContaining({ entityId: orderId, approvalLevel: 'dept' })]),
     );
+  });
+
+  it('prints procurement order PDF with readable Chinese text and A4 export path', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'pdf-applicant',
+      departments: ['总经办'],
+      roles: ['all_authenticated', 'general_office'],
+    };
+    const uploadSpy = jest
+      .spyOn(ossService, 'uploadBuffer')
+      .mockResolvedValueOnce(undefined);
+
+    const createResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/procurement/orders')
+      .set('Authorization', 'Bearer token')
+      .send({
+        departmentCode: 'general_office',
+        title: '中文 PDF 采购',
+        summary: '采购金额和审批状态需要中文可读',
+        amount: 1688.5,
+      });
+    const orderId = (createResponse.body as { data: { id: string } }).data.id;
+
+    const printResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/procurement/orders/${orderId}/print`)
+      .set('Authorization', 'Bearer token');
+
+    expect(printResponse.status).toBe(201);
+    expect(uploadSpy).toHaveBeenCalledTimes(1);
+    const uploadCall = uploadSpy.mock.calls[0];
+    expect(uploadCall).toBeDefined();
+    const [ossKey, pdfBuffer] = uploadCall!;
+    const pdfText = (pdfBuffer as Buffer).toString('utf8');
+    const chineseTitleHex = Buffer.from('\uFEFF采购单', 'utf16le').swap16().toString('hex');
+    const amountHex = Buffer.from('\uFEFF金额', 'utf16le').swap16().toString('hex');
+    expect(String(ossKey)).toMatch(/^procurement\/exports\//);
+    expect(pdfText).toContain('/MediaBox [0 0 595 842]');
+    expect(pdfText).toContain('/STSong-Light');
+    expect(pdfText).toContain(chineseTitleHex);
+    expect(pdfText).toContain(amountHex);
   });
 
   it('enforces last-three-years window for procurement order list submitted range', async () => {

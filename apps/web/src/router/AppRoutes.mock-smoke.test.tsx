@@ -36,6 +36,7 @@ async function renderMockRoute(path: string) {
 describe('AppRoutes mock direct-entry smoke', () => {
   beforeEach(() => {
     redirectToOAuth.mockReset();
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
@@ -43,8 +44,12 @@ describe('AppRoutes mock direct-entry smoke', () => {
   });
 
   it.each([
+    ['/my', '常用业务一屏触达，船务状态集中提醒', 'my', '常用模块'],
     ['/office', '统一办事入口，按部门与主题快速办理', 'office', '海事申报入口'],
+    ['/procurement', '从采购申请到供应商履约的闭环管理', 'procurement', '采购执行清单'],
     ['/procurement/orders/new', '新建采购单', 'procurement', '摘要/事由'],
+    ['/procurement/orders/procurement-order-1', '采购单详情', 'procurement', '苏南012甲板备件采购'],
+    ['/workbench', '工作平台', 'workbench', '任务看板'],
     ['/workbench/modules/shipping_chart_update', '模块工作台', 'workbench', '审批看板'],
   ] as const)(
     'renders %s through the real mock runtime without oauth redirect',
@@ -63,7 +68,11 @@ describe('AppRoutes mock direct-entry smoke', () => {
       const shell = document.querySelector('.shell-layout-enterprise');
       expect(shell).toBeInTheDocument();
       expect(shell).toHaveClass(`shell-layout-module-${moduleKey}`);
-      expect(shell).not.toHaveClass('shell-layout-my-home');
+      if (path === '/my') {
+        expect(shell).toHaveClass('shell-layout-my-home');
+      } else {
+        expect(shell).not.toHaveClass('shell-layout-my-home');
+      }
       expect(redirectToOAuth).not.toHaveBeenCalled();
     },
     routeContentTimeout,

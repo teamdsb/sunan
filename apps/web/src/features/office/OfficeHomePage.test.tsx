@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OfficeHomePage } from './OfficeHomePage';
@@ -8,6 +8,16 @@ const mockCategories = vi.fn();
 const mockEntries = vi.fn();
 const mockOpen = vi.fn();
 const mockLaunch = vi.fn();
+
+const officeCategories = [
+  { code: 'maritime', name: '海事', sortOrder: 10, isEnabled: true, canManage: true },
+  { code: 'customs', name: '海关', sortOrder: 20, isEnabled: true, canManage: false },
+  { code: 'border_inspection', name: '边检', sortOrder: 30, isEnabled: true, canManage: false },
+  { code: 'vessel_inspection', name: '船检', sortOrder: 40, isEnabled: true, canManage: false },
+  { code: 'environment', name: '环保', sortOrder: 50, isEnabled: true, canManage: false },
+  { code: 'other', name: '其他', sortOrder: 60, isEnabled: true, canManage: false },
+  { code: 'petrochemical_park', name: '石化园区', sortOrder: 70, isEnabled: true, canManage: false },
+];
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -19,7 +29,7 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('./officeApi', () => ({
   useGetOfficeCategoriesQuery: () => mockCategories(),
-  useGetOfficeEntriesQuery: () => mockEntries(),
+  useGetOfficeEntriesQuery: (params: unknown) => mockEntries(params),
   useOpenOfficeEntryMutation: () => [mockOpen, { isLoading: false }],
 }));
 
@@ -31,7 +41,7 @@ describe('OfficeHomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCategories.mockReturnValue({
-      data: { data: [{ code: 'maritime', name: '海事', sortOrder: 10, isEnabled: true, canManage: true }] },
+      data: { data: officeCategories },
     });
     mockEntries.mockReturnValue({
       data: {
@@ -90,5 +100,33 @@ describe('OfficeHomePage', () => {
 
     await waitFor(() => expect(mockOpen).toHaveBeenCalledWith('office-1'));
     expect(mockLaunch).toHaveBeenCalled();
+  });
+
+  it('restores category and keyword from the URL', () => {
+    render(
+      <MemoryRouter initialEntries={['/office?categoryCode=customs&keyword=港口']}>
+        <OfficeHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByPlaceholderText('搜索办事入口、表单或审批事项')).toHaveValue('港口');
+    expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' });
+  });
+
+  it('renders all office categories and keeps category switches in the URL state', async () => {
+    render(
+      <MemoryRouter>
+        <OfficeHomePage />
+      </MemoryRouter>,
+    );
+
+    const categoryFilter = screen.getByRole('radiogroup', { name: 'segmented control' });
+    ['全部', '海事', '海关', '边检', '船检', '环保', '其他', '石化园区'].forEach((label) => {
+      expect(within(categoryFilter).getByText(label)).toBeInTheDocument();
+    });
+
+    fireEvent.click(within(categoryFilter).getByText('海关'));
+
+    await waitFor(() => expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' }));
   });
 });

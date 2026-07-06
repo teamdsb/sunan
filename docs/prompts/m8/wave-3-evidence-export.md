@@ -5,18 +5,18 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 3 提示词：证据、打印、导出与移动能力
+# M8 Wave 3 提示词：证据、打印、导出与移动能力
 
 ```text
-执行 M7 Wave 3，目标是让所有工作平台业务具备统一附件、企业微信拍照、签名、定位、PDF 下载和真实异步导出。
+执行 M8 Wave 3，目标是让所有工作平台业务具备统一附件、企业微信拍照、签名、定位、PDF 下载和真实异步导出。
 
 前置：Wave 2 权限与动作授权已验收。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md
+- docs/plans/M8-wave-backlog.md
 - docs/specs/common/file-upload-spec.md
 - docs/specs/common/frontend-experience-guidelines.md
 - docs/specs/wecom/jssdk-spec.md

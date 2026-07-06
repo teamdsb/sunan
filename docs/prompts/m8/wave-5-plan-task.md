@@ -5,18 +5,18 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 5 提示词：计划任务、统一待办与日历
+# M8 Wave 5 提示词：计划任务、统一待办与日历
 
 ```text
-执行 M7 Wave 5，建设可被后续所有安全领域复用的计划任务中心、统一待办、真实日历和企业微信任务消息。
+执行 M8 Wave 5，建设可被后续所有安全领域复用的计划任务中心、统一待办、真实日历和企业微信任务消息。
 
 前置：Wave 4 主数据已验收。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md
+- docs/plans/M8-wave-backlog.md
 - docs/specs/common/notification-spec.md
 - docs/specs/wecom/message-push-spec.md
 - docs/specs/common/frontend-experience-guidelines.md

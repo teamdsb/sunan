@@ -19,6 +19,7 @@ vi.mock('axios', () => ({
       post: vi.fn(),
     })),
     put: vi.fn(),
+    isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean }).isAxiosError),
   },
 }));
 
@@ -84,6 +85,43 @@ describe('useFileUpload', () => {
     expect(createPresign).toHaveBeenCalled();
     expect(axios.put).toHaveBeenCalled();
     expect(createCallback).toHaveBeenCalled();
+  });
+
+  it('maps OSS put failures to a retryable business message', async () => {
+    const file = new File(['pdf'], '证书.pdf', {
+      type: 'application/pdf',
+    });
+
+    createPresign.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            uploadUrl: 'https://oss.example.com/upload',
+            ossKey: 'certificates/2026/03/file.pdf',
+            expiresAt: '2026-03-01T00:00:00.000Z',
+            headers: { 'Content-Type': 'application/pdf' },
+          },
+        }),
+    });
+    vi.mocked(axios.put).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 403 },
+    });
+
+    const { result } = renderHook(
+      () => useFileUpload({ category: 'certificates' }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      const uploaded = await result.current.uploadFile(file);
+      expect(uploaded).toBeNull();
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('error');
+      expect(result.current.error).toBe('文件直传 OSS 被拒绝，请重新选择文件后重试。');
+    });
   });
 
   it('uploads through wecom media relay when sdk is ready', async () => {

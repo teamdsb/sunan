@@ -1,5 +1,5 @@
 import { Alert, Button, Progress, Space, Typography } from 'antd';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import type { FileCategory, FileRecord } from './types';
 import { useFileUpload } from './useFileUpload';
@@ -20,6 +20,7 @@ export function FileUploadField({
   wecomReady = false,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [lastSelectedFile, setLastSelectedFile] = useState<File | null>(null);
   const { file, status, progress, error, uploadFile, uploadFromWecom, previewFile } =
     useFileUpload({ category, wecomReady });
   const currentFile = value ?? file;
@@ -29,6 +30,7 @@ export function FileUploadField({
       return;
     }
 
+    setLastSelectedFile(selectedFile);
     const uploaded = await uploadFile(selectedFile);
     if (uploaded) {
       onChange?.(uploaded);
@@ -75,7 +77,20 @@ export function FileUploadField({
 
       {status === 'uploading' ? <Progress percent={progress} size="small" /> : null}
       {currentFile ? <Typography.Text>{currentFile.fileName}</Typography.Text> : null}
-      {error ? <Alert type="error" message={error} showIcon /> : null}
+      {error ? (
+        <Alert
+          type="error"
+          message={error}
+          showIcon
+          action={
+            lastSelectedFile ? (
+              <Button size="small" onClick={() => void handleNativeUpload(lastSelectedFile)}>
+                重试
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : null}
     </Space>
   );
 }

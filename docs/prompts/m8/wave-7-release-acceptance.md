@@ -5,19 +5,19 @@ updated: 2026-06-13
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 7 提示词：迁移、联调、上线与验收
+# M8 Wave 7 提示词：迁移、联调、上线与验收
 
 ```text
-执行 M7 Wave 7，完成存量迁移、全链路联调、质量门禁、企业微信真机验收、上线材料和操作手册更新。
+执行 M8 Wave 7，完成存量迁移、全链路联调、质量门禁、企业微信真机验收、上线材料和操作手册更新。
 
 前置：Wave 1-6 均有通过的验收文档，且无未关闭 P0 缺陷。
 
 必须阅读：
 - AGENTS.md
-- docs/requirements/M7-安全管理底座与核心闭环.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
-- M7 Wave 1-6 的实际验收文档
+- docs/requirements/M8-安全管理底座与核心闭环.md
+- docs/plans/M8-execplans.md
+- docs/plans/M8-wave-backlog.md
+- M8 Wave 1-6 的实际验收文档
 - docs/plans/wave-acceptance-template.md
 - docs/guides/testing-strategy.md
 - docs/specs/wecom/real-device-regression-matrix.md
@@ -34,7 +34,7 @@ replaced_by: []
 6. 完成性能、弱网、重复点击、并发和失败恢复测试。
 7. 完成企业微信 iOS、Android、桌面真机回归。
 8. 更新操作手册、截图占位、上线 runbook、监控项和培训材料。
-9. 创建 Wave 7 验收、M7 总验收、上线包和 Hypercare 模板。
+9. 创建 Wave 7 验收、M8 总验收、上线包和 Hypercare 模板。
 
 必须完整运行并报告：
 - node scripts/generate-doc-inventory.mjs
@@ -54,5 +54,5 @@ replaced_by: []
 - 带未关闭 P0 缺陷上线。
 - 把已有仓库失败混写成本 Wave 通过。
 
-最终报告必须给出测试总数、失败数、迁移核对数据、真机矩阵、缺陷清单、回滚结果、文档入口和验收结论。通过后才允许启动 M8 Wave 1。
+最终报告必须给出测试总数、失败数、迁移核对数据、真机矩阵、缺陷清单、回滚结果、文档入口和验收结论。通过后才允许启动 M9 Wave 1。
 ```

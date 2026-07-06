@@ -174,6 +174,7 @@ export function ProcurementApprovalPage() {
         <Typography.Paragraph type="secondary">
           处理待审批采购单，支持通过、退回、驳回。
         </Typography.Paragraph>
+        <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
         <div className="sunan-query-grid">
           <Select
             allowClear

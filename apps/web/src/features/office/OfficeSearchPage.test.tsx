@@ -21,7 +21,7 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('./officeApi', () => ({
   useGetOfficeCategoriesQuery: () => mockCategories(),
-  useGetOfficeEntriesQuery: () => mockEntries(),
+  useGetOfficeEntriesQuery: (params: unknown) => mockEntries(params),
   useOpenOfficeEntryMutation: () => [mockOpen, { isLoading: false }],
 }));
 
@@ -100,5 +100,19 @@ describe('OfficeSearchPage', () => {
 
     await waitFor(() => expect(mockOpen).toHaveBeenCalledWith('office-1'));
     expect(mockLaunch).toHaveBeenCalled();
+  });
+
+  it('uses URL keyword and category as the search source of truth', () => {
+    render(
+      <MemoryRouter initialEntries={['/office/search?keyword=海事&categoryCode=maritime']}>
+        <OfficeSearchPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByPlaceholderText('搜索标题或摘要')).toHaveValue('海事');
+    expect(mockEntries).toHaveBeenLastCalledWith({
+      keyword: '海事',
+      categoryCode: 'maritime',
+    });
   });
 });

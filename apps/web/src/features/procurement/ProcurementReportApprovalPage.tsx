@@ -178,6 +178,7 @@ export function ProcurementReportApprovalPage() {
         <Typography.Paragraph type="secondary">
           {'处理报表审批单待办，审批链：部门主管 → 财务部 → 总经办。'}
         </Typography.Paragraph>
+        <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
         <div className="sunan-query-grid">
           <Select
             allowClear
