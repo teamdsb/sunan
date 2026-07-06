@@ -2,6 +2,7 @@ import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/co
 import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PDFDocument } from 'pdf-lib';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
@@ -291,14 +292,14 @@ describe('ProcurementController integration', () => {
     const uploadCall = uploadSpy.mock.calls[0];
     expect(uploadCall).toBeDefined();
     const [ossKey, pdfBuffer] = uploadCall!;
-    const pdfText = (pdfBuffer as Buffer).toString('utf8');
-    const chineseTitleHex = Buffer.from('\uFEFF采购单', 'utf16le').swap16().toString('hex');
-    const amountHex = Buffer.from('\uFEFF金额', 'utf16le').swap16().toString('hex');
+    const generatedPdf = await PDFDocument.load(pdfBuffer as Buffer);
+    const firstPageSize = generatedPdf.getPage(0).getSize();
     expect(String(ossKey)).toMatch(/^procurement\/exports\//);
-    expect(pdfText).toContain('/MediaBox [0 0 595 842]');
-    expect(pdfText).toContain('/STSong-Light');
-    expect(pdfText).toContain(chineseTitleHex);
-    expect(pdfText).toContain(amountHex);
+    expect((pdfBuffer as Buffer).subarray(0, 5).toString('utf8')).toBe('%PDF-');
+    expect((pdfBuffer as Buffer).length).toBeGreaterThan(1024 * 1024);
+    expect(generatedPdf.getPageCount()).toBeGreaterThanOrEqual(1);
+    expect(firstPageSize.width).toBe(595);
+    expect(firstPageSize.height).toBe(842);
   });
 
   it('enforces last-three-years window for procurement order list submitted range', async () => {

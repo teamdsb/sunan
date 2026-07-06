@@ -10,6 +10,17 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import fontkit from '@pdf-lib/fontkit';
+import {
+  PDFDocument,
+  type PDFFont,
+  type PDFPage,
+  StandardFonts,
+  rgb,
+} from 'pdf-lib';
 import { Brackets, DataSource, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { appEnv } from 'src/config/env';
@@ -50,6 +61,8 @@ import {
   PROCUREMENT_DEPARTMENT_CODES,
   PROCUREMENT_DIMENSION_TYPES,
   PROCUREMENT_REPORT_TYPES,
+  type ProcurementApprovalAction,
+  type ProcurementApprovalChannel,
   type ProcurementApprovalLevel,
   type ProcurementApprovalSource,
   type ProcurementBudgetAuditAction,
@@ -83,6 +96,32 @@ const PDF_MARGIN_LEFT = 56;
 const PDF_MARGIN_TOP = 48;
 const PDF_LINE_HEIGHT = 20;
 const PDF_MAX_LINES_PER_PAGE = 35;
+const PDF_MARGIN_BOTTOM = 56;
+const PDF_CONTENT_RIGHT = PDF_PAGE_WIDTH - PDF_MARGIN_LEFT;
+const PDF_CONTENT_WIDTH = PDF_CONTENT_RIGHT - PDF_MARGIN_LEFT;
+const requireFromHere = createRequire(__filename);
+const NOTO_SANS_SC_ENTRY = requireFromHere.resolve(
+  '@expo-google-fonts/noto-sans-sc',
+);
+const NOTO_SANS_SC_DIR = dirname(NOTO_SANS_SC_ENTRY);
+const PROCUREMENT_PDF_REGULAR_FONT_PATH = join(
+  NOTO_SANS_SC_DIR,
+  '400Regular',
+  'NotoSansSC_400Regular.ttf',
+);
+
+let procurementPdfFontBytes:
+  | {
+      regular: Uint8Array;
+    }
+  | undefined;
+
+function loadProcurementPdfFontBytes() {
+  procurementPdfFontBytes ??= {
+    regular: readFileSync(PROCUREMENT_PDF_REGULAR_FONT_PATH),
+  };
+  return procurementPdfFontBytes;
+}
 
 interface NormalizedDimension {
   dimensionType: ProcurementDimensionType;
@@ -128,6 +167,14 @@ interface DimensionItemDto {
 interface PrintResultDto {
   fileId: string;
   downloadUrl: string;
+}
+
+interface ProcurementOrderPrintFile {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  relationType: string;
+  createdAt: string;
 }
 
 interface BudgetExecutionRow {
@@ -840,41 +887,17 @@ export class ProcurementService {
     this.assertCanViewOrder(order, user);
 
     const detail = await this.toOrderDetail(order);
+    const approvals = await this.orderApprovalRepository.find({
+      where: { orderId: id },
+      order: { approvedAt: 'ASC' },
+    });
     const generatedAt = new Date();
-    const lines = [
-      `单号：${order.orderNo}`,
-      `生成时间：${this.formatDateTime(generatedAt)}`,
-      '',
-      '采购单',
-      `标题：${order.title}`,
-      `部门：${this.toDepartmentLabel(order.departmentCode)}`,
-      `细分：${this.toDimensionText(order.dimensionType, order.dimensionKey)}`,
-      `申请人：${order.createdBy}`,
-      `状态：${this.toOrderStatusLabel(order.status)}`,
-      `提交时间：${order.submittedAt ? this.formatDateTime(order.submittedAt) : '-'}`,
-      `终审时间：${order.finalApprovedAt ? this.formatDateTime(order.finalApprovedAt) : '-'}`,
-      '',
-      '摘要：',
-      ...this.wrapTextLines(order.summary, 72),
-      '',
-      `金额：¥${order.amount.toFixed(2)}`,
-      '',
-      '附件：',
-      ...(detail.files?.length
-        ? detail.files.map(
-            (file, index) =>
-              `${index + 1}. ${file.fileName}（${file.mimeType}，${file.fileSize} 字节）`,
-          )
-        : ['-']),
-    ];
 
-    const amountLineIndex = lines.findIndex((line) =>
-      line.startsWith('金额：'),
-    );
-    const pdfBuffer = this.buildA4Pdf({
-      title: '采购单',
-      lines,
-      rightAlignedLineIndexes: amountLineIndex >= 0 ? [amountLineIndex] : [],
+    const pdfBuffer = await this.buildProcurementOrderPdf({
+      order,
+      files: detail.files,
+      approvals,
+      generatedAt,
     });
 
     return this.persistExportPdf({
@@ -2355,6 +2378,446 @@ export class ProcurementService {
     return `${prefix}/${year}/${month}/${randomUUID()}.pdf`;
   }
 
+  private async buildProcurementOrderPdf(input: {
+    order: ProcurementOrderEntity;
+    files: ProcurementOrderPrintFile[];
+    approvals: ProcurementOrderApprovalEntity[];
+    generatedAt: Date;
+  }): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+    const fontBytes = loadProcurementPdfFontBytes();
+    const regularFont = await pdfDoc.embedFont(fontBytes.regular);
+    const latinFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const latinBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const mediumFont = regularFont;
+    const dark = rgb(0.08, 0.08, 0.08);
+    const muted = rgb(0.38, 0.38, 0.38);
+    const hairline = rgb(0.78, 0.78, 0.78);
+    const strongLine = rgb(0.35, 0.35, 0.35);
+    const softFill = rgb(0.96, 0.96, 0.96);
+    const paleFill = rgb(0.98, 0.98, 0.98);
+    let page: PDFPage | null = null;
+    let pageNumber = 0;
+    let cursorY = 0;
+
+    const currentPage = () => {
+      if (!page) {
+        throw new InternalServerErrorException('PDF page is not initialized');
+      }
+      return page;
+    };
+    const text = (
+      value: string,
+      x: number,
+      y: number,
+      fontSize = 10,
+      color: ReturnType<typeof rgb> = dark,
+      font: PDFFont = regularFont,
+    ) => {
+      currentPage().drawText(value, {
+        x,
+        y,
+        size: fontSize,
+        font,
+        color,
+      });
+    };
+    const isAscii = (value: string) => /^[\x00-\x7F]+$/.test(value);
+    const valueFont = (value: string) =>
+      isAscii(value) ? latinFont : regularFont;
+    const inlineText = (
+      segments: Array<{ value: string; font: PDFFont }>,
+      x: number,
+      y: number,
+      fontSize = 10,
+      color: ReturnType<typeof rgb> = dark,
+    ) => {
+      let offsetX = x;
+      segments.forEach((segment) => {
+        text(segment.value, offsetX, y, fontSize, color, segment.font);
+        offsetX += this.measurePdfTextWidth(
+          segment.value,
+          segment.font,
+          fontSize,
+        );
+      });
+    };
+    const line = (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      color: ReturnType<typeof rgb> = hairline,
+      width = 0.6,
+    ) => {
+      currentPage().drawLine({
+        start: { x: x1, y: y1 },
+        end: { x: x2, y: y2 },
+        thickness: width,
+        color,
+      });
+    };
+    const rect = (
+      x: number,
+      top: number,
+      width: number,
+      height: number,
+      fill?: ReturnType<typeof rgb>,
+      stroke: ReturnType<typeof rgb> = hairline,
+    ) => {
+      currentPage().drawRectangle({
+        x,
+        y: top - height,
+        width,
+        height,
+        color: fill,
+        borderColor: stroke,
+        borderWidth: 0.6,
+      });
+    };
+    const finishPage = () => {
+      line(PDF_MARGIN_LEFT, 48, PDF_CONTENT_RIGHT, 48, hairline, 0.5);
+      inlineText(
+        [
+          { value: '生成时间 ', font: regularFont },
+          { value: this.formatDateTime(input.generatedAt), font: latinFont },
+          { value: '   第 ', font: regularFont },
+          { value: String(pageNumber), font: latinFont },
+          { value: ' 页', font: regularFont },
+        ],
+        PDF_MARGIN_LEFT,
+        32,
+        7.5,
+        muted,
+      );
+    };
+    const startPage = () => {
+      pageNumber += 1;
+      page = pdfDoc.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT]);
+      text(
+        '采购单',
+        PDF_MARGIN_LEFT,
+        PDF_PAGE_HEIGHT - 54,
+        22,
+        dark,
+        mediumFont,
+      );
+      text(
+        input.order.orderNo,
+        PDF_CONTENT_RIGHT -
+          this.measurePdfTextWidth(input.order.orderNo, latinFont, 11),
+        PDF_PAGE_HEIGHT - 48,
+        11,
+        muted,
+        latinFont,
+      );
+      text(
+        'PROCUREMENT ORDER',
+        PDF_MARGIN_LEFT,
+        PDF_PAGE_HEIGHT - 73,
+        8,
+        muted,
+        latinFont,
+      );
+      line(
+        PDF_MARGIN_LEFT,
+        PDF_PAGE_HEIGHT - 88,
+        PDF_CONTENT_RIGHT,
+        PDF_PAGE_HEIGHT - 88,
+        strongLine,
+        1,
+      );
+      cursorY = PDF_PAGE_HEIGHT - 112;
+    };
+    const ensureSpace = (height: number) => {
+      if (cursorY - height < PDF_MARGIN_BOTTOM) {
+        finishPage();
+        startPage();
+      }
+    };
+    const sectionTitle = (title: string) => {
+      ensureSpace(30);
+      rect(PDF_MARGIN_LEFT, cursorY, PDF_CONTENT_WIDTH, 24, softFill, hairline);
+      text(title, PDF_MARGIN_LEFT + 12, cursorY - 16, 11, dark, mediumFont);
+      cursorY -= 32;
+    };
+    const drawInfoRow = (
+      labelLeft: string,
+      valueLeft: string,
+      labelRight: string,
+      valueRight: string,
+    ) => {
+      const labelWidth = 62;
+      const groupWidth = PDF_CONTENT_WIDTH / 2;
+      const valueWidth = groupWidth - labelWidth;
+      ensureSpace(30);
+      rect(
+        PDF_MARGIN_LEFT,
+        cursorY,
+        PDF_CONTENT_WIDTH,
+        28,
+        undefined,
+        hairline,
+      );
+      rect(PDF_MARGIN_LEFT, cursorY, labelWidth, 28, softFill, hairline);
+      rect(
+        PDF_MARGIN_LEFT + groupWidth,
+        cursorY,
+        labelWidth,
+        28,
+        softFill,
+        hairline,
+      );
+      line(
+        PDF_MARGIN_LEFT + groupWidth,
+        cursorY,
+        PDF_MARGIN_LEFT + groupWidth,
+        cursorY - 28,
+      );
+      line(
+        PDF_MARGIN_LEFT + labelWidth,
+        cursorY,
+        PDF_MARGIN_LEFT + labelWidth,
+        cursorY - 28,
+      );
+      line(
+        PDF_MARGIN_LEFT + groupWidth + labelWidth,
+        cursorY,
+        PDF_MARGIN_LEFT + groupWidth + labelWidth,
+        cursorY - 28,
+      );
+      const leftValueFont = valueFont(valueLeft);
+      const rightValueFont = valueFont(valueRight);
+      text(labelLeft, PDF_MARGIN_LEFT + 10, cursorY - 18, 9, muted);
+      text(
+        this.fitPdfTextToFont(valueLeft, valueWidth - 18, 10, leftValueFont),
+        PDF_MARGIN_LEFT + labelWidth + 9,
+        cursorY - 18,
+        10,
+        dark,
+        leftValueFont,
+      );
+      text(
+        labelRight,
+        PDF_MARGIN_LEFT + groupWidth + 10,
+        cursorY - 18,
+        9,
+        muted,
+      );
+      text(
+        this.fitPdfTextToFont(valueRight, valueWidth - 18, 10, rightValueFont),
+        PDF_MARGIN_LEFT + groupWidth + labelWidth + 9,
+        cursorY - 18,
+        10,
+        dark,
+        rightValueFont,
+      );
+      cursorY -= 28;
+    };
+    const drawAmountPanel = () => {
+      ensureSpace(46);
+      rect(
+        PDF_MARGIN_LEFT,
+        cursorY,
+        PDF_CONTENT_WIDTH,
+        38,
+        paleFill,
+        strongLine,
+      );
+      text('申请金额', PDF_MARGIN_LEFT + 14, cursorY - 24, 11, muted);
+      const amountPrefix = '¥';
+      const amountValue = input.order.amount.toFixed(2);
+      const amountWidth =
+        this.measurePdfTextWidth(amountPrefix, regularFont, 18) +
+        this.measurePdfTextWidth(amountValue, latinBoldFont, 18);
+      inlineText(
+        [
+          { value: amountPrefix, font: regularFont },
+          { value: amountValue, font: latinBoldFont },
+        ],
+        PDF_CONTENT_RIGHT - 16 - amountWidth,
+        cursorY - 25,
+        18,
+      );
+      cursorY -= 50;
+    };
+    const drawSummary = () => {
+      sectionTitle('采购事项');
+      const summaryLines = this.wrapTextToFontWidth(
+        input.order.summary || '-',
+        PDF_CONTENT_WIDTH - 32,
+        10,
+        regularFont,
+      );
+      const titleLines = this.wrapTextToFontWidth(
+        input.order.title || '-',
+        PDF_CONTENT_WIDTH - 86,
+        11,
+        mediumFont,
+      );
+      const height = 54 + titleLines.length * 16 + summaryLines.length * 16;
+      ensureSpace(height);
+      rect(
+        PDF_MARGIN_LEFT,
+        cursorY,
+        PDF_CONTENT_WIDTH,
+        height,
+        undefined,
+        hairline,
+      );
+      text('标题', PDF_MARGIN_LEFT + 14, cursorY - 20, 9, muted);
+      titleLines.forEach((item, index) => {
+        text(
+          item,
+          PDF_MARGIN_LEFT + 54,
+          cursorY - 20 - index * 16,
+          11,
+          dark,
+          mediumFont,
+        );
+      });
+      const summaryTop = cursorY - 30 - titleLines.length * 16;
+      line(PDF_MARGIN_LEFT, summaryTop, PDF_CONTENT_RIGHT, summaryTop);
+      text('摘要', PDF_MARGIN_LEFT + 14, summaryTop - 18, 9, muted);
+      summaryLines.forEach((item, index) => {
+        text(item, PDF_MARGIN_LEFT + 54, summaryTop - 18 - index * 16, 10);
+      });
+      cursorY -= height + 14;
+    };
+    const drawTable = (
+      title: string,
+      columns: Array<{
+        label: string;
+        width: number;
+        align?: 'right' | 'center';
+      }>,
+      rows: string[][],
+    ) => {
+      sectionTitle(title);
+      const drawHeader = () => {
+        ensureSpace(26);
+        let x = PDF_MARGIN_LEFT;
+        columns.forEach((column) => {
+          rect(x, cursorY, column.width, 24, softFill, hairline);
+          text(column.label, x + 8, cursorY - 16, 9, muted, mediumFont);
+          x += column.width;
+        });
+        cursorY -= 24;
+      };
+      drawHeader();
+      const tableRows = rows.length
+        ? rows
+        : [columns.map((_, index) => (index === 1 ? '无' : '-'))];
+      tableRows.forEach((row) => {
+        if (cursorY - 25 < PDF_MARGIN_BOTTOM) {
+          finishPage();
+          startPage();
+          drawHeader();
+        }
+        let x = PDF_MARGIN_LEFT;
+        columns.forEach((column, columnIndex) => {
+          const rawValue = row[columnIndex] ?? '-';
+          const cellFont = valueFont(rawValue);
+          const value = this.fitPdfTextToFont(
+            rawValue,
+            column.width - 16,
+            9,
+            cellFont,
+          );
+          rect(x, cursorY, column.width, 24, undefined, hairline);
+          const estimatedWidth = this.measurePdfTextWidth(value, cellFont, 9);
+          const textX =
+            column.align === 'right'
+              ? x + column.width - 8 - estimatedWidth
+              : column.align === 'center'
+                ? x + (column.width - estimatedWidth) / 2
+                : x + 8;
+          text(value, Math.max(x + 8, textX), cursorY - 16, 9, dark, cellFont);
+          x += column.width;
+        });
+        cursorY -= 24;
+      });
+      cursorY -= 14;
+    };
+
+    startPage();
+    sectionTitle('基本信息');
+    drawInfoRow(
+      '单号',
+      input.order.orderNo,
+      '部门',
+      this.toDepartmentLabel(input.order.departmentCode),
+    );
+    drawInfoRow(
+      '申请人',
+      input.order.createdBy,
+      '状态',
+      this.toOrderStatusLabel(input.order.status),
+    );
+    drawInfoRow(
+      '细分',
+      this.toDimensionText(input.order.dimensionType, input.order.dimensionKey),
+      '审批方式',
+      this.toApprovalChannelLabel(input.order.approvalChannel),
+    );
+    drawInfoRow(
+      '费用日期',
+      input.order.expenseDate ?? '-',
+      '生成时间',
+      this.formatDateTime(input.generatedAt),
+    );
+    drawInfoRow(
+      '提交时间',
+      input.order.submittedAt
+        ? this.formatDateTime(input.order.submittedAt)
+        : '-',
+      '终审时间',
+      input.order.finalApprovedAt
+        ? this.formatDateTime(input.order.finalApprovedAt)
+        : '-',
+    );
+    cursorY -= 12;
+    drawSummary();
+    drawAmountPanel();
+    drawTable(
+      '附件清单',
+      [
+        { label: '序号', width: 42, align: 'center' },
+        { label: '文件名', width: 228 },
+        { label: '类型', width: 126 },
+        { label: '大小', width: 87, align: 'right' },
+      ],
+      input.files.map((file, index) => [
+        String(index + 1),
+        file.fileName,
+        this.formatFileType(file.mimeType),
+        this.formatFileSize(file.fileSize),
+      ]),
+    );
+    drawTable(
+      '审批记录',
+      [
+        { label: '层级', width: 72 },
+        { label: '动作', width: 62 },
+        { label: '审批人', width: 92 },
+        { label: '时间', width: 132 },
+        { label: '意见', width: 125 },
+      ],
+      input.approvals.map((approval) => [
+        this.toApprovalLevelLabel(approval.approvalLevel),
+        this.toApprovalActionLabel(approval.action),
+        approval.approvedBy,
+        this.formatDateTime(approval.approvedAt),
+        approval.comment ?? '-',
+      ]),
+    );
+    finishPage();
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+  }
+
   private buildA4Pdf(input: {
     title: string;
     lines: string[];
@@ -2493,6 +2956,99 @@ export class ProcurementService {
     return units * fontSize * 0.48;
   }
 
+  private measurePdfTextWidth(
+    text: string,
+    font: PDFFont,
+    fontSize: number,
+  ): number {
+    return font.widthOfTextAtSize(text, fontSize);
+  }
+
+  private fitPdfTextToFont(
+    text: string,
+    maxWidth: number,
+    fontSize: number,
+    font: PDFFont,
+  ): string {
+    if (this.measurePdfTextWidth(text, font, fontSize) <= maxWidth) {
+      return text;
+    }
+
+    let result = '';
+    for (const char of text) {
+      const next = `${result}${char}`;
+      if (this.measurePdfTextWidth(`${next}...`, font, fontSize) > maxWidth) {
+        return `${result}...`;
+      }
+      result = next;
+    }
+
+    return result;
+  }
+
+  private wrapTextToFontWidth(
+    text: string,
+    maxWidth: number,
+    fontSize: number,
+    font: PDFFont,
+  ): string[] {
+    const rawLines = text.replace(/\r\n/g, '\n').split('\n');
+    const lines: string[] = [];
+
+    rawLines.forEach((rawLine) => {
+      if (!rawLine) {
+        lines.push('');
+        return;
+      }
+
+      let currentLine = '';
+      for (const char of rawLine) {
+        const next = `${currentLine}${char}`;
+        if (
+          currentLine &&
+          this.measurePdfTextWidth(next, font, fontSize) > maxWidth
+        ) {
+          lines.push(currentLine);
+          currentLine = char;
+          continue;
+        }
+        currentLine = next;
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    });
+
+    return lines.length ? lines : ['-'];
+  }
+
+  private fitPdfText(text: string, maxWidth: number, fontSize: number): string {
+    if (this.estimatePdfTextWidth(text, fontSize) <= maxWidth) {
+      return text;
+    }
+
+    let result = '';
+    for (const char of text) {
+      const next = `${result}${char}`;
+      if (this.estimatePdfTextWidth(`${next}...`, fontSize) > maxWidth) {
+        return `${result}...`;
+      }
+      result = next;
+    }
+
+    return result;
+  }
+
+  private wrapTextToPdfWidth(
+    text: string,
+    maxWidth: number,
+    fontSize: number,
+  ): string[] {
+    const maxUnits = Math.max(8, Math.floor(maxWidth / (fontSize * 0.48)));
+    return this.wrapTextLines(text, maxUnits);
+  }
+
   private toPdfText(text: string): string {
     return `<${Buffer.from(`\uFEFF${text}`, 'utf16le').swap16().toString('hex')}>`;
   }
@@ -2541,6 +3097,59 @@ export class ProcurementService {
       rejected: '已驳回',
     };
     return labels[status];
+  }
+
+  private toApprovalChannelLabel(channel: ProcurementApprovalChannel): string {
+    const labels: Record<ProcurementApprovalChannel, string> = {
+      internal: '系统内审批',
+      wecom_native: '企业微信审批',
+    };
+    return labels[channel];
+  }
+
+  private toApprovalLevelLabel(level: ProcurementApprovalLevel): string {
+    const labels: Record<ProcurementApprovalLevel, string> = {
+      dept: '部门审批',
+      final: '终审',
+    };
+    return labels[level];
+  }
+
+  private toApprovalActionLabel(action: ProcurementApprovalAction): string {
+    const labels: Record<ProcurementApprovalAction, string> = {
+      approve: '通过',
+      reject: '驳回',
+      return: '退回',
+    };
+    return labels[action];
+  }
+
+  private formatFileSize(size: number): string {
+    if (size >= 1024 * 1024) {
+      return `${(size / 1024 / 1024).toFixed(1)} MB`;
+    }
+    if (size >= 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    }
+    return `${size} B`;
+  }
+
+  private formatFileType(mimeType: string): string {
+    const normalized = mimeType.toLowerCase();
+    const labels: Record<string, string> = {
+      'application/pdf': 'PDF',
+      'application/vnd.ms-excel': 'Excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        'Excel',
+      'application/msword': 'Word',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'Word',
+      'text/plain': '文本',
+      'image/jpeg': '图片',
+      'image/png': '图片',
+      'image/webp': '图片',
+    };
+    return labels[normalized] ?? mimeType;
   }
 
   private toReportStatusLabel(status: ProcurementReportRequestStatus): string {

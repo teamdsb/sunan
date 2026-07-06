@@ -16,6 +16,10 @@ export interface PresignedUploadPayload {
   expiresAt: string;
 }
 
+export function encodeOssMetadataValue(value: string): string {
+  return encodeURIComponent(value);
+}
+
 @Injectable()
 export class OssService {
   private readonly aliyunClient?: OSS;
@@ -37,12 +41,14 @@ export class OssService {
         region: appEnv.OSS_REGION,
         endpoint: appEnv.OSS_ENDPOINT,
         forcePathStyle: appEnv.OSS_FORCE_PATH_STYLE,
+        requestChecksumCalculation: 'WHEN_REQUIRED',
         credentials,
       });
       this.s3PresignClient = new S3Client({
         region: appEnv.OSS_REGION,
         endpoint: appEnv.OSS_PUBLIC_ENDPOINT ?? appEnv.OSS_ENDPOINT,
         forcePathStyle: appEnv.OSS_FORCE_PATH_STYLE,
+        requestChecksumCalculation: 'WHEN_REQUIRED',
         credentials,
       });
       return;
@@ -61,9 +67,10 @@ export class OssService {
     mimeType: string,
     originalName: string,
   ): Promise<PresignedUploadPayload> {
+    const encodedOriginalName = encodeOssMetadataValue(originalName);
     const headers = {
       'Content-Type': mimeType,
-      'x-oss-meta-original-name': originalName,
+      'x-oss-meta-original-name': encodedOriginalName,
     };
 
     if (this.aliyunClient) {
@@ -88,11 +95,12 @@ export class OssService {
       Key: ossKey,
       ContentType: mimeType,
       Metadata: {
-        'original-name': originalName,
+        'original-name': encodedOriginalName,
       },
     });
     const uploadUrl = await getSignedUrl(this.getS3PresignClient(), command, {
       expiresIn: appEnv.OSS_PRESIGN_EXPIRE,
+      unhoistableHeaders: new Set(['x-amz-meta-original-name']),
     });
     const expiresAt = new Date(
       Date.now() + appEnv.OSS_PRESIGN_EXPIRE * 1000,
@@ -103,7 +111,7 @@ export class OssService {
       expiresAt,
       headers: {
         'Content-Type': mimeType,
-        'x-amz-meta-original-name': originalName,
+        'x-amz-meta-original-name': encodedOriginalName,
       },
     };
   }
@@ -148,7 +156,7 @@ export class OssService {
       await this.aliyunClient.put(ossKey, body, {
         headers: {
           'Content-Type': mimeType,
-          'x-oss-meta-original-name': originalName,
+          'x-oss-meta-original-name': encodeOssMetadataValue(originalName),
         },
       });
       return;
@@ -161,7 +169,7 @@ export class OssService {
         Body: body,
         ContentType: mimeType,
         Metadata: {
-          'original-name': originalName,
+          'original-name': encodeOssMetadataValue(originalName),
         },
       }),
     );

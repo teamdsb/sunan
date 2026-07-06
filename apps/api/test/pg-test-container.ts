@@ -1,5 +1,6 @@
 ﻿import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import type { ImagePullPolicy } from 'testcontainers';
 import { DataSource } from 'typeorm';
 
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
@@ -115,6 +116,10 @@ type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;
 
 let container: StartedPgContainer | null = null;
 
+const neverPullPolicy: ImagePullPolicy = {
+  shouldPull: () => false,
+};
+
 const buildDataSourceOptions = () => {
   if (!container) {
     throw new Error('PostgreSQL test container has not been started.');
@@ -139,7 +144,13 @@ export const bootstrapPgTestDatabase = async (): Promise<void> => {
     return;
   }
 
-  container = await new PostgreSqlContainer('postgres:16-alpine').start();
+  const pgContainer = new PostgreSqlContainer(
+    process.env.TEST_POSTGRES_IMAGE ?? 'postgres:16-alpine',
+  );
+  if (process.env.TEST_POSTGRES_PULL !== 'true') {
+    pgContainer.withPullPolicy(neverPullPolicy);
+  }
+  container = await pgContainer.start();
 
   const migrationDataSource = new DataSource(buildDataSourceOptions());
   await migrationDataSource.initialize();
