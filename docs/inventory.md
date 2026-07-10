@@ -31,7 +31,7 @@ replaced_by: []
 | [deploy/wecom-operations.md](../deploy/wecom-operations.md) | `operations` | `operations` | 企业微信运维手册 |
 | [findings.md](../findings.md) | `operations` | `planning` | 发现与决策 |
 | [progress.md](../progress.md) | `operations` | `planning` | 进度日志 |
-| [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：新 M7 修复与 M8/M9 顺延文档规划 |
+| [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：M7 实现审计与 M8/M9 修复规划 |
 
 ## docs-root
 
@@ -83,7 +83,7 @@ replaced_by: []
 | [docs/requirements/M4-工作平台.md](requirements/M4-工作平台.md) | `current-spec` | `requirements` | 里程碑 4 需求文档：工作平台全量业务实现 |
 | [docs/requirements/M5-上线强化与遗留收口.md](requirements/M5-上线强化与遗留收口.md) | `historical-archive` | `requirements` | 里程碑 5 需求文档：上线强化与遗留收口 |
 | [docs/requirements/M6-全量兑现与完美上线.md](requirements/M6-全量兑现与完美上线.md) | `current-spec` | `requirements` | 里程碑 6 需求文档：全量兑现与完美上线 |
-| [docs/requirements/M7-上线体验与导航修复.md](requirements/M7-上线体验与导航修复.md) | `current-spec` | `requirements` | 里程碑 7 需求文档：上线体验与导航修复 |
+| [docs/requirements/M7-上线体验与导航修复.md](requirements/M7-上线体验与导航修复.md) | `historical-archive` | `requirements` | 里程碑 7 需求文档：上线体验与导航修复（历史归档） |
 | [docs/requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) | `current-spec` | `requirements` | 里程碑 8 需求文档：安全管理底座与核心闭环 |
 | [docs/requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) | `current-spec` | `requirements` | 里程碑 9 需求文档：专业安全业务深化与体系完善 |
 | [docs/requirements/非功能需求.md](requirements/非功能需求.md) | `current-source` | `requirements` | 非功能需求 |
@@ -92,8 +92,6 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/plans/M7-execplans.md](plans/M7-execplans.md) | `current-spec` | `planning` | M7 执行计划：上线体验与导航修复 |
-| [docs/plans/M7-wave-backlog.md](plans/M7-wave-backlog.md) | `current-spec` | `planning` | M7 分 Wave 实施清单：上线体验与导航修复 |
 | [docs/plans/M8-M9-upgrade-roadmap.md](plans/M8-M9-upgrade-roadmap.md) | `current-spec` | `planning` | M8-M9 升级总路线图：安全管理数字化闭环 |
 | [docs/plans/M8-execplans.md](plans/M8-execplans.md) | `current-spec` | `planning` | M8 执行计划：安全管理底座与核心闭环 |
 | [docs/plans/M8-wave-backlog.md](plans/M8-wave-backlog.md) | `current-spec` | `planning` | M8 分 Wave 实施清单 |
@@ -106,13 +104,7 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/prompts/README.md](prompts/README.md) | `current-index` | `delivery` | 当前修复与后续升级 Wave 提示词索引 |
-| [docs/prompts/m7/wave-1-upload-and-my-polish.md](prompts/m7/wave-1-upload-and-my-polish.md) | `operations` | `delivery` | M7 Wave 1 提示词：文件上传与我的板块视觉收口 |
-| [docs/prompts/m7/wave-2-office-css-search.md](prompts/m7/wave-2-office-css-search.md) | `operations` | `delivery` | M7 Wave 2 提示词：办事分类 CSS 与搜索体验 |
-| [docs/prompts/m7/wave-3-procurement-navigation-pdf.md](prompts/m7/wave-3-procurement-navigation-pdf.md) | `operations` | `delivery` | M7 Wave 3 提示词：采购返回、附件与中文 PDF |
-| [docs/prompts/m7/wave-4-workbench-navigation-density.md](prompts/m7/wave-4-workbench-navigation-density.md) | `operations` | `delivery` | M7 Wave 4 提示词：工作台返回、组件密度与导航锚点 |
-| [docs/prompts/m7/wave-5-wecom-direct-regression.md](prompts/m7/wave-5-wecom-direct-regression.md) | `operations` | `delivery` | M7 Wave 5 提示词：企业微信直达与跨模块回归 |
-| [docs/prompts/m7/wave-6-final-acceptance-gate.md](prompts/m7/wave-6-final-acceptance-gate.md) | `operations` | `delivery` | M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁 |
+| [docs/prompts/README.md](prompts/README.md) | `current-index` | `delivery` | 当前升级 Wave 提示词索引 |
 | [docs/prompts/m8/wave-1-spec-baseline.md](prompts/m8/wave-1-spec-baseline.md) | `operations` | `delivery` | M8 Wave 1 提示词：文档、架构与规格基线 |
 | [docs/prompts/m8/wave-2-permission-workflow.md](prompts/m8/wave-2-permission-workflow.md) | `operations` | `delivery` | M8 Wave 2 提示词：数据权限与流程状态链 |
 | [docs/prompts/m8/wave-3-evidence-export.md](prompts/m8/wave-3-evidence-export.md) | `operations` | `delivery` | M8 Wave 3 提示词：证据、打印、导出与移动能力 |
@@ -281,6 +273,7 @@ replaced_by: []
 | [docs/archive/execplans/M4-execplans.md](archive/execplans/M4-execplans.md) | `historical-archive` | `archive` | M4 执行计划：工作平台全量业务实现（企业微信审批为主）（历史归档） |
 | [docs/archive/execplans/M5-execplans.md](archive/execplans/M5-execplans.md) | `historical-archive` | `archive` | M5 执行计划：上线强化、工作平台正式化、遗留规格收口（历史归档） |
 | [docs/archive/execplans/M6-execplans.md](archive/execplans/M6-execplans.md) | `historical-archive` | `archive` | M6 执行计划：全量兑现、企业微信正式上线、生产交付闭环（历史归档） |
+| [docs/archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) | `historical-archive` | `archive` | M7 执行计划：上线体验与导航修复（历史归档） |
 | [docs/archive/execplans/execplans-m6-completed-snapshot.md](archive/execplans/execplans-m6-completed-snapshot.md) | `historical-archive` | `archive` | M6 执行计划：全量兑现、企业微信正式上线、生产交付闭环 |
 
 ## archive/acceptance/common
@@ -346,6 +339,7 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/archive/backlogs/common/M6-优先级修复清单（分wave）.md](archive/backlogs/common/M6-优先级修复清单（分wave）.md) | `historical-archive` | `archive` | M6 优先级修复清单（分 Wave，含 API/DB/UI 改动点） |
+| [docs/archive/backlogs/common/M7-wave-backlog.md](archive/backlogs/common/M7-wave-backlog.md) | `historical-archive` | `archive` | M7 分 Wave 实施清单：上线体验与导航修复（历史归档） |
 
 ## archive/backlogs/workbench
 
@@ -370,6 +364,17 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/archive/templates/common/m6-wave6-hypercare-daily-template.md](archive/templates/common/m6-wave6-hypercare-daily-template.md) | `template` | `archive` | M6 Wave 6 Hypercare 每日日志模板 |
+
+## archive/prompts
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/archive/prompts/m7/wave-1-upload-and-my-polish.md](archive/prompts/m7/wave-1-upload-and-my-polish.md) | `historical-archive` | `archive` | M7 Wave 1 提示词：文件上传与我的板块视觉收口（历史归档） |
+| [docs/archive/prompts/m7/wave-2-office-css-search.md](archive/prompts/m7/wave-2-office-css-search.md) | `historical-archive` | `archive` | M7 Wave 2 提示词：办事分类 CSS 与搜索体验（历史归档） |
+| [docs/archive/prompts/m7/wave-3-procurement-navigation-pdf.md](archive/prompts/m7/wave-3-procurement-navigation-pdf.md) | `historical-archive` | `archive` | M7 Wave 3 提示词：采购返回、附件与中文 PDF（历史归档） |
+| [docs/archive/prompts/m7/wave-4-workbench-navigation-density.md](archive/prompts/m7/wave-4-workbench-navigation-density.md) | `historical-archive` | `archive` | M7 Wave 4 提示词：工作台返回、组件密度与导航锚点（历史归档） |
+| [docs/archive/prompts/m7/wave-5-wecom-direct-regression.md](archive/prompts/m7/wave-5-wecom-direct-regression.md) | `historical-archive` | `archive` | M7 Wave 5 提示词：企业微信直达与跨模块回归（历史归档） |
+| [docs/archive/prompts/m7/wave-6-final-acceptance-gate.md](archive/prompts/m7/wave-6-final-acceptance-gate.md) | `historical-archive` | `archive` | M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁（历史归档） |
 
 ## handbook
 

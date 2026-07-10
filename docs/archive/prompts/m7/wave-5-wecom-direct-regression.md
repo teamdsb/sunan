@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 5 提示词：企业微信直达与跨模块回归
+# M7 Wave 5 提示词：企业微信直达与跨模块回归（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 5。目标是在企业微信 H5 运行边界下回归 Wave 1-4 的修复，确认直达入口、返回路径、上传、PDF、模块导航和弱网反馈可用。本 Wave 以验证和必要的小修为主。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/requirements/M5-上线强化与遗留收口.md
 - docs/requirements/M6-全量兑现与完美上线.md
 - docs/specs/common/frontend-experience-guidelines.md

@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 4 提示词：工作台返回、组件密度与导航锚点
+# M7 Wave 4 提示词：工作台返回、组件密度与导航锚点（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 4。目标是修复工作台跳转页缺少返回按钮、组件高度偏高、模块导航目标重复或失效的问题。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/requirements/M4-工作平台.md
 - docs/requirements/M6-全量兑现与完美上线.md
 - docs/specs/common/frontend-experience-guidelines.md

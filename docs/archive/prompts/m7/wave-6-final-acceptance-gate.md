@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁
+# M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 6。目标是完成最终收口、验收证据、文档索引校验，并判断 M8/M9 是否可以重新进入当前执行队列。本 Wave 不新增业务功能，除非发现阻断验收的 P0/P1 缺陷。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/plans/wave-acceptance-template.md
 - docs/prompts/README.md
 - docs/requirements/M6-全量兑现与完美上线.md

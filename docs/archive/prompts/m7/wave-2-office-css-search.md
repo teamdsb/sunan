@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 2 提示词：办事分类 CSS 与搜索体验
+# M7 Wave 2 提示词：办事分类 CSS 与搜索体验（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 2。目标是修复办事板块分类切换 CSS 空白问题，并收敛搜索框外层视觉。本 Wave 不新增办事业务能力。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/requirements/M2-办事.md
 - docs/specs/common/frontend-experience-guidelines.md
 - docs/specs/office/README.md

@@ -1,24 +1,24 @@
 ---
-status: current-spec
-owner: planning
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 执行计划：上线体验与导航修复
+# M7 执行计划：上线体验与导航修复（历史归档）
 
 ## 1. 文档定位
 
-本文是当前优先执行计划，承接 M1-M6 已上线能力的缺陷修复、体验收口和企业微信 H5 直达回归。
+M7 已于 2026-07-10 完成并归档。本文保留 M1-M6 已上线能力的缺陷修复、体验收口和企业微信 H5 直达回归过程，不能再作为当前开发入口。
 
-本计划只处理已发现的上线问题，不新增 M8/M9 安全管理业务，不重写 M1-M6 历史归档结论。历史执行计划仍在 `docs/archive/execplans/`，当前修复以本文和 `M7-wave-backlog.md` 为准。
+本计划只处理当时已发现的上线问题，不新增 M8/M9 安全管理业务，不重写 M1-M6 历史归档结论。历史执行计划均在 `docs/archive/execplans/`，后续开发应以 M8/M9 当前计划为准。
 
 ## 2. 调度决策
 
-- 当前优先级：先完成新 M7 的 Wave 1-6。
+- 完成状态：M7 Wave 1-6 已完成，并由 `docs/archive/acceptance/common/acceptance-m7-wave6.md` 记录最终门禁。
 - 原 M7/M8：整体后移为 M8/M9，并顺延到本计划 Wave 6 验收通过后再重新排期。
 - M8/M9 文档保留为未来升级规格，不删除、不归档、不作为当前开发入口。
-- 任何 Agent 不得在本计划未验收前启动 M8/M9 业务实现。
+- 本段为历史调度决策；当前调度以 `docs/execplans.md` 为准。
 
 M8/M9 可重启的最小门禁：
 
@@ -191,8 +191,8 @@ npx swagger-cli validate <openapi-file>
 ## 7. 交付物关系
 
 - 需求：`docs/requirements/M7-上线体验与导航修复.md`
-- Backlog：`docs/plans/M7-wave-backlog.md`
-- 提示词：`docs/prompts/README.md`
+- Backlog：`docs/archive/backlogs/common/M7-wave-backlog.md`
+- 提示词：`docs/archive/prompts/m7/`
 - 通用体验：`docs/specs/common/frontend-experience-guidelines.md`
 - 通用上传：`docs/specs/common/file-upload-spec.md`
 - 当前延后升级：`docs/plans/M8-M9-upgrade-roadmap.md`

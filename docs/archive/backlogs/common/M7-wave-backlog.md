@@ -1,15 +1,15 @@
 ---
-status: current-spec
-owner: planning
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 分 Wave 实施清单：上线体验与导航修复
+# M7 分 Wave 实施清单：上线体验与导航修复（历史归档）
 
 ## 1. 使用说明
 
-本清单是 `docs/plans/M7-execplans.md` 的工程展开。实施者必须先读取 `docs/prompts/m7/` 下对应 Wave 提示词，再按 SDD/TDD 顺序完成复现、规格核对、测试、实现和验收。
+M7 已于 2026-07-10 完成并归档。本文保留 `M7-execplans.md` 的工程展开和完成时的工作项，不再作为实施清单。
 
 优先级：
 

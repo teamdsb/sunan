@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: archive
-updated: 2026-05-04
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
@@ -13,13 +13,14 @@ replaced_by: []
 
 | 目录 | 状态 | 内容 |
 |---|---|---|
-| `execplans/` | 历史归档 | M1-M6 执行计划与 M6 完成快照 |
+| `execplans/` | 历史归档 | M1-M7 执行计划与 M6 完成快照 |
 | `acceptance/common/` | 验收归档 | M6 通用验收、质量门禁、上线包、测试报告 |
 | `acceptance/procurement/` | 验收归档 | 采购模块验收 |
 | `acceptance/wecom/` | 验收归档 | 企业微信验收与 preflight |
 | `acceptance/workbench/` | 验收归档 | 工作平台 M4/M5/M6 验收 |
 | `audits/` | 审计快照 | 特定日期代码或需求审计记录 |
-| `backlogs/common/` | 历史归档 | M6 修复清单 |
+| `backlogs/common/` | 历史归档 | M6-M7 修复清单 |
+| `prompts/m7/` | 历史归档 | M7 已完成 Wave 提示词 |
 | `backlogs/workbench/` | 历史归档 | M5 工作平台 backlog |
 | `superseded/wecom/` | 已取代 | 被后续企业微信文档替代的模板 |
 | `superseded/workbench/` | 已取代 | 被后续工作平台文档替代的记录 |

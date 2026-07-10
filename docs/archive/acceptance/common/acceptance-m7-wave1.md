@@ -89,8 +89,8 @@ replaced_by: []
 ### 规格
 
 - `docs/requirements/M7-上线体验与导航修复.md`
-- `docs/plans/M7-execplans.md`
-- `docs/plans/M7-wave-backlog.md`
+- `docs/archive/execplans/M7-execplans.md`
+- `docs/archive/backlogs/common/M7-wave-backlog.md`
 - `docs/specs/common/file-upload-spec.md`
 - `docs/specs/common/frontend-experience-guidelines.md`
 

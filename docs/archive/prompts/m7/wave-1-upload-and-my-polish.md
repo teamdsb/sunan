@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 1 提示词：文件上传与我的板块视觉收口
+# M7 Wave 1 提示词：文件上传与我的板块视觉收口（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 1。目标是修复文件上传不可用问题，并收敛“我的”板块组件尺寸和视觉密度。本 Wave 允许修改代码、测试和必要规格，但不启动 M8/M9 安全管理业务。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/requirements/M1-我的.md
 - docs/specs/common/file-upload-spec.md
 - docs/specs/common/frontend-experience-guidelines.md

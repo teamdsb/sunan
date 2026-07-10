@@ -1,11 +1,11 @@
 ---
-status: operations
-owner: delivery
-updated: 2026-07-04
+status: historical-archive
+owner: archive
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M7 Wave 3 提示词：采购返回、附件与中文 PDF
+# M7 Wave 3 提示词：采购返回、附件与中文 PDF（历史归档）
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 3。目标是修复采购详情 PDF 英文问题，补齐采购二级页面返回按钮，并美化详情页附件绑定区域。
@@ -15,8 +15,8 @@ replaced_by: []
 - docs/README.md
 - docs/execplans.md
 - docs/requirements/M7-上线体验与导航修复.md
-- docs/plans/M7-execplans.md
-- docs/plans/M7-wave-backlog.md
+- docs/archive/execplans/M7-execplans.md
+- docs/archive/backlogs/common/M7-wave-backlog.md
 - docs/requirements/M3-采购管理.md
 - docs/specs/common/file-upload-spec.md
 - docs/specs/common/frontend-experience-guidelines.md

@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: safety
-updated: 2026-07-04
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
@@ -38,6 +38,12 @@ replaced_by: []
 | 6 | DB | `db/inspection-capa-schema.md` | 待编写 |
 | 6 | State | `state/inspection-capa-lifecycle.md` | 待编写 |
 | 6 | UI | `ui/inspection-and-capa-pages.md` | 待编写 |
+
+### 已登记的 M8 Wave 3 跨模块修复
+
+- 采购执行清单详情必须在 Wave 3 接入通用附件的受审计解除关联能力。
+- 实施前先冻结 `evidence-and-export` 规格，并同步更新采购 API、DB、state、UI 规格；删除只解除采购单—文件关联，绝不直接删除 OSS 对象或可被其他业务引用的全局文件记录。
+- M9 Wave 1 必须把该采购附件增删链路作为 M8 基线回归项。
 
 ## M9 计划规格
 

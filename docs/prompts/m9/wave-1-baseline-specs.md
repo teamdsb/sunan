@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: delivery
-updated: 2026-06-13
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
@@ -27,7 +27,7 @@ replaced_by: []
 - docs/specs/procurement/README.md
 
 完成：
-1. 回归 M8 权限、流程、证据、主数据、任务、消息、导出和 CAPA。
+1. 回归 M8 权限、流程、证据、主数据、任务、消息、导出和 CAPA；必须覆盖采购执行清单详情的附件上传、预览、下载和受审计解除关联，确认无权或非草稿状态不能删除，解除关联不删除全局文件或其他业务关联。
 2. 形成 M8 P0/P1 缺陷清单；存在 P0 时停止 M9 实现。
 3. 检查船舶、人员、任职、设备和证书主数据质量。
 4. 冻结 personnel-safety、ship-operation、emergency-incident、equipment-maintenance、safety-governance、document-audit-archive 六组 API/DB/state/UI 规格目录。

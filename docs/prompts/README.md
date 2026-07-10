@@ -1,35 +1,24 @@
 ---
 status: current-index
 owner: delivery
-updated: 2026-07-06
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# 当前修复与后续升级 Wave 提示词索引
+# 当前升级 Wave 提示词索引
 
-> 2026-07-04 调度更新：M1-M6 修复正式作为新 M7。原 M7/M8 安全管理计划整体后移为 M8/M9。
+> M7 上线体验与导航修复已于 2026-07-10 完成并归档；当前从 M8 Wave 1 启动，M9 必须等待 M8 总体验收。
 
 ## 使用方法
 
-1. M7 Wave 1 -> Wave 6 已完成本地最终门禁；后续从 M8 Wave 1 重新排期。
+1. 从 M8 Wave 1 开始实施；M7 历史提示词见 `docs/archive/prompts/m7/`。
 2. 将对应提示词全文交给 Coding Agent。
 3. Agent 必须在当前仓库工作，不新建平行示例项目。
 4. 每个 Wave 完成后使用 `docs/plans/wave-acceptance-template.md` 形成验收记录。
 5. 未取得命令输出和证据前，不得勾选执行计划。
-6. M8/M9 提示词只能在 `docs/archive/acceptance/common/acceptance-m7-wave6.md` 记录的 P0/P1 门禁通过后使用。
+6. M9 提示词只能在 M8 总验收通过后使用。
 
-## 当前修复：M7
-
-| Wave | 提示词 |
-|---|---|---|
-| 1 | `m7/wave-1-upload-and-my-polish.md` |
-| 2 | `m7/wave-2-office-css-search.md` |
-| 3 | `m7/wave-3-procurement-navigation-pdf.md` |
-| 4 | `m7/wave-4-workbench-navigation-density.md` |
-| 5 | `m7/wave-5-wecom-direct-regression.md` |
-| 6 | `m7/wave-6-final-acceptance-gate.md` |
-
-## 后续升级：M8（后移）
+## 当前升级：M8
 
 | Wave | 提示词 |
 |---|---|
@@ -41,7 +30,7 @@ replaced_by: []
 | 6 | `m8/wave-6-inspection-capa.md` |
 | 7 | `m8/wave-7-release-acceptance.md` |
 
-## 后续升级：M9（后移）
+## 后续升级：M9
 
 | Wave | 提示词 |
 |---|---|
