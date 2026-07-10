@@ -12,7 +12,7 @@ replaced_by: []
 | Wave | 预期文件 | 范围 |
 |---|---|---|
 | 2 | `workflow-lifecycle.md` | 流程步骤、参与人、退回、终止、作废、代理与转移 |
-| 3 | `evidence-jobs.md` | 证据替换/解除关联与导出任务状态 |
+| 3 | `evidence-jobs.md` | 已冻结：证据替换/解除关联与导出任务状态 |
 | 5 | `task-lifecycle.md` | 计划、任务、提醒和日历状态 |
 | 6 | `inspection-capa-lifecycle.md` | 检查、问题、CAPA、措施与验证状态 |
 

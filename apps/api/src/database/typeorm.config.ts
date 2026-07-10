@@ -10,6 +10,9 @@ import { EnterprisePolicyFileEntity } from './entities/enterprise-policy-file.en
 import { EnterpriseProfileEntity } from './entities/enterprise-profile.entity';
 import { EnterpriseProfileFileEntity } from './entities/enterprise-profile-file.entity';
 import { FileEntity } from './entities/file.entity';
+import { EvidenceAuditEntity } from './entities/evidence-audit.entity';
+import { EvidenceRecordEntity } from './entities/evidence-record.entity';
+import { ExportJobEntity } from './entities/export-job.entity';
 import { OfficeCategoryEntity } from './entities/office-category.entity';
 import { OfficeEntryAuditEntity } from './entities/office-entry-audit.entity';
 import { OfficeEntryEntity } from './entities/office-entry.entity';
@@ -56,6 +59,8 @@ import { Wave51710000012000 } from './migrations/1710000012000-wave5-workbench-a
 import { Wave61710000013000 } from './migrations/1710000013000-wave6-workbench-module-split';
 import { ProcurementBudgets1710000014000 } from './migrations/1710000014000-procurement-budgets';
 import { Wave8WorkflowPermission1710000015000 } from './migrations/1710000015000-wave8-workflow-permission';
+import { Wave3EvidenceAudits1710000016000 } from './migrations/1710000016000-wave3-evidence-audits';
+import { Wave3EvidenceExport1710000017000 } from './migrations/1710000017000-wave3-evidence-export';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -68,6 +73,8 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   entities: [
     WecomUserEntity,
     FileEntity,
+    EvidenceAuditEntity,
+    EvidenceRecordEntity, ExportJobEntity,
     VesselEntity,
     VehicleEntity,
     PersonnelEntity,
@@ -123,6 +130,8 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave61710000013000,
     ProcurementBudgets1710000014000,
     Wave8WorkflowPermission1710000015000,
+    Wave3EvidenceAudits1710000016000,
+    Wave3EvidenceExport1710000017000,
   ],
   synchronize: false,
 });

@@ -12,6 +12,9 @@ import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.
 import { EnterpriseProfileFileEntity } from 'src/database/entities/enterprise-profile-file.entity';
 import { EnterpriseProfileEntity } from 'src/database/entities/enterprise-profile.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
+import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
+import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { OfficeCategoryEntity } from 'src/database/entities/office-category.entity';
 import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit.entity';
 import { OfficeEntryEntity } from 'src/database/entities/office-entry.entity';
@@ -58,10 +61,14 @@ import { Wave51710000012000 } from 'src/database/migrations/1710000012000-wave5-
 import { Wave61710000013000 } from 'src/database/migrations/1710000013000-wave6-workbench-module-split';
 import { ProcurementBudgets1710000014000 } from 'src/database/migrations/1710000014000-procurement-budgets';
 import { Wave8WorkflowPermission1710000015000 } from 'src/database/migrations/1710000015000-wave8-workflow-permission';
+import { Wave3EvidenceAudits1710000016000 } from 'src/database/migrations/1710000016000-wave3-evidence-audits';
+import { Wave3EvidenceExport1710000017000 } from 'src/database/migrations/1710000017000-wave3-evidence-export';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
   FileEntity,
+  EvidenceAuditEntity,
+  EvidenceRecordEntity, ExportJobEntity,
   VesselEntity,
   VehicleEntity,
   PersonnelEntity,
@@ -118,6 +125,8 @@ const ALL_TEST_MIGRATIONS = [
   Wave61710000013000,
   ProcurementBudgets1710000014000,
   Wave8WorkflowPermission1710000015000,
+  Wave3EvidenceAudits1710000016000,
+  Wave3EvidenceExport1710000017000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

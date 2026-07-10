@@ -190,6 +190,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProcurementOrderDetailResponse'
+  /api/v1/procurement/orders/{id}/attachments/{fileId}:
+    delete:
+      summary: 解除采购单附件关联（不删除 OSS 对象或 files 元数据）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcurementOrderAttachmentUnlinkRequest'
+      responses:
+        '204':
+          description: 关联已解除并已审计
+        '403':
+          description: 无采购单查看或草稿编辑权限
+        '404':
+          description: 采购单或订单—文件关联不存在
+        '422':
+          description: 采购单不是草稿或解除原因无效
   /api/v1/procurement/orders/{id}/print:
     post:
       summary: 生成采购单 A4 PDF
@@ -329,6 +362,15 @@ components:
           items:
             type: string
             format: uuid
+    ProcurementOrderAttachmentUnlinkRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 解除当前采购单关联的原因；不会删除 OSS 对象或全局文件元数据
     ProcurementOrderPrintResponse:
       type: object
       required: [data]

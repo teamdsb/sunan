@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: Safety Evidence and Export API
+  version: 1.0.0
+  description: M8 Wave 3 evidence, protected download, print and durable export-job contract.
+servers:
+  - url: /api/v1
+paths:
+  /workbench/records/{recordId}/attachments:
+    post:
+      tags: [Evidence]
+      summary: Bind an uploaded file to an authorized workbench record
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttachmentBindRequest'}
+      responses:
+        '201': {$ref: '#/components/responses/EvidenceCreated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    get:
+      tags: [Evidence]
+      summary: List evidence visible under record ABAC
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      responses:
+        '200': {$ref: '#/components/responses/EvidenceList'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /workbench/records/{recordId}/attachments/{evidenceId}:
+    delete:
+      tags: [Evidence]
+      summary: Unlink an attachment without deleting the OSS object or global file metadata
+      parameters: [{$ref: '#/components/parameters/RecordId'}, {$ref: '#/components/parameters/EvidenceId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UnlinkEvidenceRequest'}
+      responses:
+        '204': {description: "Unlinked and audited"}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /workbench/records/{recordId}/attachments/{evidenceId}/download-url:
+    get:
+      tags: [Evidence]
+      summary: Obtain a short-lived URL only after record ABAC and attachment-link checks
+      parameters: [{$ref: '#/components/parameters/RecordId'}, {$ref: '#/components/parameters/EvidenceId'}]
+      responses:
+        '200': {$ref: '#/components/responses/DownloadUrl'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /workbench/records/{recordId}/signature-evidence:
+    post:
+      tags: [Evidence]
+      summary: Create an H5 signature evidence item for an authorized record action
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SignatureEvidenceRequest'}
+      responses:
+        '201': {$ref: '#/components/responses/EvidenceCreated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /workbench/records/{recordId}/location-evidence:
+    post:
+      tags: [Evidence]
+      summary: Create a location evidence item or an explicitly non-coordinate failure record
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/LocationEvidenceRequest'}
+      responses:
+        '201': {$ref: '#/components/responses/EvidenceCreated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /workbench/records/{recordId}/print:
+    get:
+      tags: [Export]
+      summary: Generate or retrieve a protected PDF record snapshot
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+        - in: query
+          name: paperSize
+          schema: {type: string, enum: [A4, A3], default: A4}
+      responses:
+        '200': {$ref: '#/components/responses/PrintSnapshot'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /workbench/statistics/attendance/export:
+    post:
+      tags: [Export]
+      summary: Queue a durable attendance export job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttendanceExportRequest'}
+      responses:
+        '202': {$ref: '#/components/responses/ExportJob'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /workbench/export-jobs/{jobId}:
+    get:
+      tags: [Export]
+      summary: Read an export job under the source-record permission context
+      parameters: [{$ref: '#/components/parameters/JobId'}]
+      responses:
+        '200': {$ref: '#/components/responses/ExportJob'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /workbench/export-jobs/{jobId}/retry:
+    post:
+      tags: [Export]
+      summary: Retry a failed export job after source-record authorization
+      parameters: [{$ref: '#/components/parameters/JobId'}]
+      responses:
+        '202': {$ref: '#/components/responses/ExportJob'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {description: "Only failed jobs can be retried"}
+  /workbench/export-jobs/{jobId}/download-url:
+    get:
+      tags: [Export]
+      summary: Obtain a protected result URL for a succeeded export job
+      parameters: [{$ref: '#/components/parameters/JobId'}]
+      responses:
+        '200': {$ref: '#/components/responses/DownloadUrl'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  parameters:
+    RecordId: {in: path, name: recordId, required: true, schema: {type: string, format: uuid}}
+    EvidenceId: {in: path, name: evidenceId, required: true, schema: {type: string, format: uuid}}
+    JobId: {in: path, name: jobId, required: true, schema: {type: string, format: uuid}}
+  responses:
+    EvidenceCreated:
+      description: Created
+      content: {application/json: {schema: {$ref: '#/components/schemas/EvidenceResponse'}}}
+    EvidenceList:
+      description: OK
+      content: {application/json: {schema: {$ref: '#/components/schemas/EvidenceListResponse'}}}
+    DownloadUrl:
+      description: OK
+      content: {application/json: {schema: {$ref: '#/components/schemas/DownloadUrlResponse'}}}
+    PrintSnapshot:
+      description: OK
+      content: {application/json: {schema: {$ref: '#/components/schemas/PrintSnapshotResponse'}}}
+    ExportJob:
+      description: Accepted or OK
+      content: {application/json: {schema: {$ref: '#/components/schemas/ExportJobResponse'}}}
+    Forbidden: {description: "Record, file, or export result is not visible to the caller"}
+    NotFound: {description: "The authorized resource or relation does not exist"}
+    Unprocessable: {description: "Evidence data or required audit reason is invalid"}
+  schemas:
+    AttachmentBindRequest:
+      type: object
+      required: [fileId, category]
+      properties:
+        fileId: {type: string, format: uuid, description: Selected by the upload component; never manually entered}
+        category: {type: string, enum: [before_rectification, after_rectification, meeting_photo, evidence, document]}
+        stepCode: {type: string}
+        remark: {type: string, maxLength: 500}
+    UnlinkEvidenceRequest:
+      type: object
+      required: [reason]
+      properties: {reason: {type: string, minLength: 1, maxLength: 500}}
+    SignatureEvidenceRequest:
+      type: object
+      required: [signatureFileId, businessSummaryHash]
+      properties:
+        signatureFileId: {type: string, format: uuid}
+        businessSummaryHash: {type: string, pattern: '^[a-f0-9]{64}$'}
+        remark: {type: string, maxLength: 500}
+    LocationEvidenceRequest:
+      type: object
+      required: [captureStatus]
+      properties:
+        captureStatus: {type: string, enum: [captured, manual, denied, sdk_failed]}
+        latitude: {type: number, format: double}
+        longitude: {type: number, format: double}
+        accuracyMeters: {type: number, format: double, minimum: 0}
+        failureReason: {type: string, maxLength: 500}
+        addressText: {type: string, maxLength: 500, description: Manual address or map link; never converted into coordinates}
+      description: For captureStatus=captured, latitude, longitude and accuracyMeters are required; failure statuses require failureReason and never contain coordinates.
+    AttendanceExportRequest:
+      type: object
+      required: [month, exportFormat]
+      properties:
+        month: {type: string, pattern: '^\\d{4}-(0[1-9]|1[0-2])$'}
+        departmentCode: {type: string}
+        vesselId: {type: string, format: uuid}
+        exportFormat: {type: string, enum: [xlsx, pdf]}
+    Evidence:
+      type: object
+      required: [id, evidenceType, source, status, capturedBy, capturedAt]
+      properties:
+        id: {type: string, format: uuid}
+        evidenceType: {type: string, enum: [attachment, signature, location]}
+        source: {type: string, enum: [file_upload, wecom_capture, signature_pad, device_location]}
+        status: {type: string, enum: [active, replaced, archived, unlinked]}
+        fileId: {type: string, format: uuid, nullable: true}
+        fileName: {type: string, nullable: true}
+        businessSummaryHash: {type: string, nullable: true}
+        latitude: {type: number, nullable: true}
+        longitude: {type: number, nullable: true}
+        accuracyMeters: {type: number, nullable: true}
+        captureStatus: {type: string, enum: [captured, denied, sdk_failed]}
+        capturedBy: {type: string}
+        capturedAt: {type: string, format: date-time}
+    EvidenceResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Evidence'}}}
+    EvidenceListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Evidence'}}}}
+    DownloadUrlResponse:
+      type: object
+      required: [data]
+      properties: {data: {type: object, required: [downloadUrl, expiresAt], properties: {downloadUrl: {type: string, format: uri}, expiresAt: {type: string, format: date-time}}}}
+    PrintSnapshotResponse:
+      type: object
+      required: [data]
+      properties: {data: {type: object, required: [fileId, downloadUrl, businessNo, templateVersion, watermark, generatedAt], properties: {fileId: {type: string, format: uuid}, downloadUrl: {type: string, format: uri}, businessNo: {type: string}, templateVersion: {type: string}, watermark: {type: string}, generatedAt: {type: string, format: date-time}}}}
+    ExportJob:
+      type: object
+      required: [id, status, exportFormat, requestedAt]
+      properties:
+        id: {type: string, format: uuid}
+        status: {type: string, enum: [queued, running, succeeded, failed]}
+        exportFormat: {type: string, enum: [xlsx, pdf]}
+        resultFileId: {type: string, format: uuid, nullable: true}
+        failureCode: {type: string, nullable: true}
+        failureMessage: {type: string, nullable: true}
+        retryCount: {type: integer, minimum: 0}
+        requestedAt: {type: string, format: date-time}
+        startedAt: {type: string, format: date-time, nullable: true}
+        finishedAt: {type: string, format: date-time, nullable: true}
+    ExportJobResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/ExportJob'}}}

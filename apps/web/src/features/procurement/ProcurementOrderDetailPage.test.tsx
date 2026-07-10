@@ -10,6 +10,7 @@ const mockUpdateOrder = vi.fn();
 const mockSubmitOrder = vi.fn();
 const mockResubmitOrder = vi.fn();
 const mockBindAttachments = vi.fn();
+const mockUnlinkAttachment = vi.fn();
 const mockGetAttachmentDownloadUrl = vi.fn();
 const mockPrintOrder = vi.fn();
 const mockRefetch = vi.fn();
@@ -58,6 +59,7 @@ vi.mock('./procurementApi', () => ({
   useSubmitProcurementOrderMutation: () => [mockSubmitOrder, { isLoading: false }],
   useResubmitProcurementOrderMutation: () => [mockResubmitOrder, { isLoading: false }],
   useBindProcurementOrderAttachmentsMutation: () => [mockBindAttachments, { isLoading: false }],
+  useUnlinkProcurementOrderAttachmentMutation: () => [mockUnlinkAttachment, { isLoading: false }],
   useLazyGetProcurementOrderAttachmentDownloadUrlQuery: () => [mockGetAttachmentDownloadUrl, { isFetching: false }],
   usePrintProcurementOrderMutation: () => [mockPrintOrder, { isLoading: false }],
 }));
@@ -104,6 +106,7 @@ describe('ProcurementOrderDetailPage', () => {
     mockSubmitOrder.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockResubmitOrder.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockBindAttachments.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    mockUnlinkAttachment.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockGetAttachmentDownloadUrl.mockReturnValue({
       unwrap: () =>
         Promise.resolve({

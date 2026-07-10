@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
+import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
@@ -39,6 +41,8 @@ import { WorkbenchService } from './workbench.service';
       WecomApprovalInstanceSyncEntity,
       WecomApprovalCallbackEventEntity,
       FileEntity,
+      EvidenceRecordEntity,
+      ExportJobEntity,
     ]),
   ],
   controllers: [WorkbenchController, WorkbenchApprovalController],

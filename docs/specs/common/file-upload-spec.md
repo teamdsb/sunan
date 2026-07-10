@@ -153,6 +153,12 @@ POST /api/v1/files/from-wecom
 
 后端处理：调用企业微信 `GET /cgi-bin/media/get?media_id=` 下载图片，再上传至 OSS。
 
+### Wave 3 幂等、权限与重试
+
+- `mediaId` 转存必须持久化状态 `queued|running|succeeded|failed`，以 `mediaId` 唯一；重复请求成功时返回同一 `files` 记录，失败时返回可重试的既有转存记录。
+- 文件元数据创建不等同于业务访问授权。附件、PDF 与导出下载 URL 必须由对应业务记录的受权接口签发；不得用全局 `ossKey` 下载接口绕过记录权限。
+- 上传或转存失败必须保留可重试反馈，不能把失败的 mediaId 或预签名上传占位值绑定到业务记录。
+
 ## 文件限制
 
 | 类别 | 允许格式 | 大小限制 |

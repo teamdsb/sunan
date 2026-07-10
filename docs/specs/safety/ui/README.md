@@ -12,7 +12,7 @@ replaced_by: []
 | Wave | 预期文件 | 范围 |
 |---|---|---|
 | 2 | `permission-and-action-rules.md` | 受权数据、可执行动作和拒绝反馈 |
-| 3 | `mobile-evidence-components.md` | 附件、拍照、签名、定位、解除关联和导出反馈 |
+| 3 | `mobile-evidence-components.md` | 已冻结：附件、拍照、签名、定位、解除关联和导出反馈 |
 | 4 | `master-data-pages.md` | 主数据列表、详情、选择器、导入和停用提示 |
 | 5 | `task-center-and-calendar.md` | 待办、我发起、我参与、任务详情与日历 |
 | 6 | `inspection-and-capa-pages.md` | 检查执行、问题、措施、验证与关闭 |

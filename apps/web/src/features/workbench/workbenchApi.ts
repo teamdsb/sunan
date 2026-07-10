@@ -207,6 +207,9 @@ export interface WorkbenchPrintSnapshot {
   renderedFormat: string;
   paperSize: 'A4' | 'A3';
   renderedAt: string;
+  downloadUrl?: string;
+  businessNo?: string;
+  watermark?: string;
   snapshotData: Record<string, unknown>;
 }
 
@@ -261,6 +264,14 @@ export const workbenchApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
     }),
+    createWorkbenchSignatureEvidence: builder.mutation<{ data: unknown }, { recordId: string; signatureFileId: string; businessSummaryHash: string }>({
+      query: ({ recordId, ...data }) => ({ url: `/workbench/records/${recordId}/signature-evidence`, method: 'POST', data }),
+      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+    }),
+    createWorkbenchLocationEvidence: builder.mutation<{ data: unknown }, { recordId: string; captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }>({
+      query: ({ recordId, ...data }) => ({ url: `/workbench/records/${recordId}/location-evidence`, method: 'POST', data }),
+      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+    }),
     createWorkbenchRecord: builder.mutation<{ data: WorkbenchRecordDetail }, WorkbenchRecordCreatePayload>({
       query: (data) => ({ url: '/workbench/records', method: 'POST', data }),
       invalidatesTags: ['Workbench', 'WorkbenchRecord'],
@@ -296,6 +307,8 @@ export const {
   useLazyGetWorkbenchPrintSnapshotQuery,
   useGetWorkbenchPrintSnapshotQuery,
   useUploadWorkbenchRecordAttachmentMutation,
+  useCreateWorkbenchSignatureEvidenceMutation,
+  useCreateWorkbenchLocationEvidenceMutation,
   useCreateWorkbenchRecordMutation,
   usePerformWorkbenchRecordActionMutation,
   useLaunchWorkbenchApprovalMutation,

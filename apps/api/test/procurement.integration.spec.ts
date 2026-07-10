@@ -261,6 +261,41 @@ describe('ProcurementController integration', () => {
     );
   });
 
+  it('unlinks only an authorized draft attachment and retains the global file metadata', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'wave3-owner',
+      departments: ['业务部'],
+      roles: ['all_authenticated', 'business'],
+    };
+    const createResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post('/api/v1/procurement/orders')
+      .set('Authorization', 'Bearer token')
+      .send({ departmentCode: 'business_dept', title: 'Wave 3 附件', summary: '解除关联回归', amount: 100 });
+    const orderId = (createResponse.body as { data: { id: string } }).data.id;
+    const fileRepository = dataSource.getRepository(FileEntity);
+    const file = await fileRepository.save(fileRepository.create({
+      ossKey: `procurement/${orderId}/wave3.pdf`, fileName: 'wave3.pdf', mimeType: 'application/pdf', fileSize: 12,
+      category: 'procurement_attachment', uploadedBy: currentUser.userId,
+    }));
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/procurement/orders/${orderId}/attachments`).set('Authorization', 'Bearer token').send({ fileIds: [file.id] });
+
+    const unlinkResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .delete(`/api/v1/procurement/orders/${orderId}/attachments/${file.id}`)
+      .set('Authorization', 'Bearer token').send({ reason: '已重复上传' });
+    expect(unlinkResponse.status).toBe(204);
+    expect(await fileRepository.findOne({ where: { id: file.id } })).toEqual(expect.objectContaining({ id: file.id }));
+    const detailResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/procurement/orders/${orderId}`).set('Authorization', 'Bearer token');
+    expect((detailResponse.body as { data: { files: Array<{ id: string }> } }).data.files).not.toEqual(expect.arrayContaining([expect.objectContaining({ id: file.id })]));
+
+    const missingRelationResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .delete(`/api/v1/procurement/orders/${orderId}/attachments/${file.id}`)
+      .set('Authorization', 'Bearer token').send({ reason: '再次解除' });
+    expect(missingRelationResponse.status).toBe(404);
+  });
+
   it('prints procurement order PDF with readable Chinese text and A4 export path', async () => {
     currentUser = {
       ...currentUser,

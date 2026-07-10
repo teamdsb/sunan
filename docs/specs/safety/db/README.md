@@ -12,7 +12,7 @@ replaced_by: []
 | Wave | 预期文件 | 范围 |
 |---|---|---|
 | 2 | `workflow-and-permission-schema.md` | 数据范围、参与人、代理与动作审计 |
-| 3 | `evidence-and-export-schema.md` | 证据关系、签名、定位、快照和导出任务 |
+| 3 | `evidence-and-export-schema.md` | 已冻结：证据关系、签名、定位、快照和导出任务 |
 | 4 | `master-data-schema.md` | 船舶、人员任职、设备和证书关系 |
 | 5 | `plan-task-schema.md` | 计划、计划项、任务、日程、提醒和转移 |
 | 6 | `inspection-capa-schema.md` | 检查、结果、问题、CAPA、措施和验证 |

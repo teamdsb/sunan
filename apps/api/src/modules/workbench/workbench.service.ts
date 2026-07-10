@@ -4,6 +4,8 @@ import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
+import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
@@ -23,6 +25,7 @@ import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 import type { WecomApprovalTemplateCreateRequest } from 'src/modules/wecom/wecom.types';
 import { In, IsNull, Repository } from 'typeorm';
+import * as XLSX from 'xlsx';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
@@ -1484,6 +1487,7 @@ const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
 @Injectable()
 export class WorkbenchService implements OnModuleInit {
   private readonly logger = new Logger(WorkbenchService.name);
+  private exportWorkerTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     @InjectRepository(WorkbenchModuleEntity)
@@ -1514,6 +1518,10 @@ export class WorkbenchService implements OnModuleInit {
     private readonly callbackEventRepository: Repository<WecomApprovalCallbackEventEntity>,
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    @InjectRepository(EvidenceRecordEntity)
+    private readonly evidenceRepository: Repository<EvidenceRecordEntity>,
+    @InjectRepository(ExportJobEntity)
+    private readonly exportJobRepository: Repository<ExportJobEntity>,
     private readonly ossService: OssService,
     private readonly wecomTokenService: WecomTokenService,
     private readonly wecomHttpGateway: WecomHttpGateway,
@@ -1521,6 +1529,9 @@ export class WorkbenchService implements OnModuleInit {
 
   async onModuleInit() {
     await this.syncRuntimeCatalog();
+    await this.recoverExportJobs();
+    this.exportWorkerTimer = setInterval(() => void this.recoverExportJobs(), 10_000);
+    this.exportWorkerTimer.unref?.();
   }
 
   async listModules(user: CurrentUser) {
@@ -1651,25 +1662,88 @@ export class WorkbenchService implements OnModuleInit {
     };
   }
 
-  exportAttendanceStatistics(query: WorkbenchAttendanceExportQueryDto, user: CurrentUser) {
+  async exportAttendanceStatistics(query: WorkbenchAttendanceExportQueryDto, user: CurrentUser) {
     this.assertAttendanceAdmin(user);
 
     const month = this.normalizeMonth(query.month);
     const exportFormat = query.exportFormat ?? 'xlsx';
-    const exportJobId = `att-export-${Date.now()}-${randomUUID().slice(0, 8)}`;
-    const downloadFileId = `${exportFormat}-attendance-${month}-${randomUUID().slice(0, 8)}`;
+    const job = await this.exportJobRepository.save(this.exportJobRepository.create({ sourceType: 'attendance', sourceId: month, querySnapshot: { month, departmentCode: query.departmentCode ?? null }, exportFormat, status: 'queued', resultFileId: null, failureMessage: null, retryCount: 0, requestedBy: user.userId, startedAt: null, finishedAt: null }));
+    void this.runAttendanceExport(job.id);
 
     this.logger.log(
-      `attendance export queued: month=${month}, format=${exportFormat}, department=${query.departmentCode ?? 'all'}, job=${exportJobId}`,
+      `attendance export queued: month=${month}, format=${exportFormat}, department=${query.departmentCode ?? 'all'}, job=${job.id}`,
     );
 
     return {
-      exportJobId,
+      exportJobId: job.id,
       status: 'queued' as const,
       month,
-      downloadFileId,
+      downloadFileId: null,
     };
   }
+
+  async getExportJob(jobId: string, user: CurrentUser) {
+    this.assertAttendanceAdmin(user);
+    const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
+    if (!job) throw new NotFoundException('export job not found');
+    return this.toExportJob(job);
+  }
+
+  async retryExportJob(jobId: string, user: CurrentUser) {
+    this.assertAttendanceAdmin(user);
+    const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
+    if (!job) throw new NotFoundException('export job not found');
+    if (job.status !== 'failed') throw new ConflictException('only failed export job can be retried');
+    Object.assign(job, { status: 'queued', resultFileId: null, failureMessage: null, retryCount: job.retryCount + 1, startedAt: null, finishedAt: null });
+    await this.exportJobRepository.save(job); void this.runAttendanceExport(job.id);
+    return this.toExportJob(job);
+  }
+
+  async getExportDownloadUrl(jobId: string, user: CurrentUser) {
+    const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
+    this.assertAttendanceAdmin(user);
+    if (!job || job.status !== 'succeeded' || !job.resultFileId) throw new NotFoundException('export result not found');
+    const file = await this.fileRepository.findOne({ where: { id: job.resultFileId } });
+    if (!file) throw new NotFoundException('export file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
+  private async runAttendanceExport(jobId: string): Promise<void> {
+    const job = await this.exportJobRepository.findOne({ where: { id: jobId, status: 'queued' } });
+    if (!job) return;
+    job.status = 'running'; job.startedAt = new Date(); await this.exportJobRepository.save(job);
+    try {
+      const month = String(job.querySnapshot.month ?? '');
+      const content = `month,departmentCode,generatedAt\n${month},${String(job.querySnapshot.departmentCode ?? '')},${new Date().toISOString()}\n`;
+      const isPdf = job.exportFormat === 'pdf';
+      const extension = isPdf ? 'pdf' : 'xlsx';
+      const mimeType = isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const buffer = isPdf ? this.buildPdf({ title: 'Attendance Export', lines: content.trim().split('\n'), paperSize: 'A4' }) : this.buildAttendanceWorkbook(month, String(job.querySnapshot.departmentCode ?? ''));
+      const ossKey = `workbench/exports/${new Date().getUTCFullYear()}/${String(new Date().getUTCMonth() + 1).padStart(2, '0')}/${randomUUID()}.${extension}`;
+      await this.ossService.uploadBuffer(ossKey, buffer, mimeType, `attendance-${month}.${extension}`);
+      const file = await this.fileRepository.save(this.fileRepository.create({ ossKey, fileName: `attendance-${month}.${extension}`, mimeType, fileSize: buffer.length, category: 'workbench_export', uploadedBy: job.requestedBy }));
+      Object.assign(job, { status: 'succeeded', resultFileId: file.id, finishedAt: new Date(), failureMessage: null }); await this.exportJobRepository.save(job);
+    } catch (error) { Object.assign(job, { status: 'failed', finishedAt: new Date(), failureMessage: error instanceof Error ? error.message : 'export failed' }); await this.exportJobRepository.save(job); }
+  }
+
+  private buildAttendanceWorkbook(month: string, departmentCode: string): Buffer {
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet([{ month, departmentCode, generatedAt: new Date().toISOString() }]);
+    XLSX.utils.book_append_sheet(workbook, sheet, '考勤导出');
+    return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  private async recoverExportJobs(): Promise<void> {
+    const running = await this.exportJobRepository.find({ where: { status: 'running', sourceType: 'attendance' } });
+    for (const job of running) {
+      job.status = 'failed'; job.finishedAt = new Date(); job.failureMessage = 'worker interrupted; retry export';
+      await this.exportJobRepository.save(job);
+    }
+    const queued = await this.exportJobRepository.find({ where: { status: 'queued', sourceType: 'attendance' }, order: { requestedAt: 'ASC' }, take: 10 });
+    for (const job of queued) void this.runAttendanceExport(job.id);
+  }
+
+  private toExportJob(job: ExportJobEntity) { return { id: job.id, status: job.status, exportFormat: job.exportFormat, resultFileId: job.resultFileId, failureMessage: job.failureMessage, retryCount: job.retryCount, requestedAt: job.requestedAt.toISOString(), startedAt: job.startedAt?.toISOString() ?? null, finishedAt: job.finishedAt?.toISOString() ?? null }; }
 
   async reconcileAttendanceStatistics(dto: WorkbenchAttendanceReconcileDto, user: CurrentUser) {
     this.assertAttendanceAdmin(user);
@@ -2128,6 +2202,7 @@ export class WorkbenchService implements OnModuleInit {
     );
 
     this.logger.log(`print snapshot generated: record=${hydrated.id}, snapshot=${snapshot.id}`);
+    const protectedDownload = await this.ossService.createDownloadSignature(printFile.ossKey);
 
     return {
       recordId: hydrated.id,
@@ -2137,14 +2212,32 @@ export class WorkbenchService implements OnModuleInit {
       renderedFormat: snapshot.renderedFormat,
       paperSize,
       renderedAt: snapshot.renderedAt.toISOString(),
+      downloadUrl: protectedDownload.downloadUrl,
+      businessNo: hydrated.id,
+      watermark: '苏南船舶 OA · 受控副本',
       snapshotData,
     };
+  }
+
+  async createSignatureEvidence(recordId: string, signatureFileId: string, hash: string, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
+    if (!/^[a-f0-9]{64}$/.test(hash)) throw new BadRequestException('invalid summary hash');
+    if (!(await this.fileRepository.exist({ where: { id: signatureFileId } }))) throw new NotFoundException('signature file not found');
+    return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'signature', fileId: signatureFileId, summaryHash: hash, captureStatus: 'captured', capturedBy: user.userId, status: 'active', latitude: null, longitude: null, accuracyMeters: null, failureReason: null, addressText: null }));
+  }
+
+  async createLocationEvidence(recordId: string, body: { captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
+    const captured = body.captureStatus === 'captured';
+    if (!['captured', 'manual', 'denied', 'sdk_failed'].includes(body.captureStatus) || (captured && (body.latitude === undefined || body.longitude === undefined || body.accuracyMeters === undefined)) || (!captured && body.captureStatus !== 'manual' && !body.failureReason?.trim())) throw new BadRequestException('invalid location evidence');
+    return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'location', fileId: null, summaryHash: null, captureStatus: body.captureStatus, capturedBy: user.userId, status: 'active', latitude: captured ? body.latitude! : null, longitude: captured ? body.longitude! : null, accuracyMeters: captured ? body.accuracyMeters! : null, failureReason: captured ? null : body.failureReason?.trim() ?? null, addressText: body.addressText?.trim() || null }));
   }
 
   private buildWorkbenchPrintPdf(record: WorkbenchRecord, snapshotData: Record<string, unknown>, renderedAt: Date, paperSize: PrintPaperSize): Buffer {
     const payloadJson = JSON.stringify(snapshotData.payload ?? {}, null, 2);
     const lines = [
       `Record ID: ${record.id}`,
+      'Watermark: 苏南船舶 OA · 受控副本',
       `Generated At: ${renderedAt.toISOString()}`,
       `Paper Size: ${paperSize}`,
       '',

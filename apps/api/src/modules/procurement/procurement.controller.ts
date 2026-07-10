@@ -23,6 +23,7 @@ import { ProcurementDimensionCreateDto } from './dto/procurement-dimension-creat
 import { ProcurementDimensionListQueryDto } from './dto/procurement-dimension-list-query.dto';
 import { ProcurementDimensionUpdateDto } from './dto/procurement-dimension-update.dto';
 import { ProcurementOrderBindFilesDto } from './dto/procurement-order-bind-files.dto';
+import { ProcurementOrderAttachmentUnlinkDto } from './dto/procurement-order-attachment-unlink.dto';
 import { ProcurementOrderCreateDto } from './dto/procurement-order-create.dto';
 import { ProcurementOrderListQueryDto } from './dto/procurement-order-list-query.dto';
 import { ProcurementOrderUpdateDto } from './dto/procurement-order-update.dto';
@@ -170,6 +171,17 @@ export class ProcurementController {
     @CurrentUserDecorator() user: CurrentUser,
   ) {
     return { data: await this.service.bindOrderAttachments(id, dto, user) };
+  }
+
+  @Delete('orders/:id/attachments/:fileId')
+  @HttpCode(204)
+  async unlinkOrderAttachment(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @Body() dto: ProcurementOrderAttachmentUnlinkDto,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    await this.service.unlinkOrderAttachment(id, fileId, dto.reason, user);
   }
 
   @Get('orders/:id/attachments/:fileId/download-url')

@@ -12,7 +12,7 @@ replaced_by: []
 | Wave | 预期文件 | 范围 |
 |---|---|---|
 | 2 | `workflow-and-permission-api.yaml` | 数据范围、参与人、动作授权与审计查询 |
-| 3 | `evidence-and-export-api.yaml` | 证据关系、受审计解除关联、签名、定位、快照与导出任务 |
+| 3 | `evidence-and-export-api.yaml` | 已冻结：证据关系、受审计解除关联、签名、定位、快照与导出任务 |
 | 4 | `master-data-api.yaml` | 船舶、人员任职、设备和证书安全关系 |
 | 5 | `plan-task-api.yaml` | 计划、计划项、任务、待办、日历、提醒与转移 |
 | 6 | `inspection-capa-api.yaml` | 检查、问题、不符合、CAPA、措施与验证 |

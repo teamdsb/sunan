@@ -81,6 +81,7 @@ const CORP_JSAPI_LIST = [
   'uploadImage',
   'previewFile',
   'getLocalImgData',
+  'getLocation',
 ];
 ```
 
@@ -169,6 +170,10 @@ wx.previewFile({
 | `config:fail` | wx.config 失败 | 重新获取签名后重试一次，失败则提示用户刷新 |
 | `agentConfig:fail` | wx.agentConfig 失败 | 同上 |
 | `-1` (通用错误) | 当前客户端版本不支持 | 提示用户升级企业微信 |
+
+## Wave 3 定位证据
+
+定位使用 `wx.getLocation`（优先）或浏览器定位降级，但只有成功回调中的经纬度和精度可提交为定位证据。用户拒绝授权、JS-SDK 配置失败或客户端不支持时，页面必须提供重新授权/重试初始化和人工异常说明；不得构造默认坐标或复用旧坐标。
 
 ## 初始化 React Hook 规格
 

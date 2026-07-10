@@ -29,10 +29,10 @@ replaced_by: []
 | 2 | DB | `db/workflow-and-permission-schema.md` | 已编写，待环境验收 |
 | 2 | State | `state/workflow-lifecycle.md` | 已编写，待环境验收 |
 | 2 | UI | `ui/permission-and-action-rules.md` | 已编写，待环境验收 |
-| 3 | API | `api/evidence-and-export-api.yaml` | 待编写 |
-| 3 | DB | `db/evidence-and-export-schema.md` | 待编写 |
-| 3 | State | `state/evidence-jobs.md` | 待编写 |
-| 3 | UI | `ui/mobile-evidence-components.md` | 待编写 |
+| 3 | API | `api/evidence-and-export-api.yaml` | 已冻结，待实现与验收 |
+| 3 | DB | `db/evidence-and-export-schema.md` | 已冻结，待迁移与验收 |
+| 3 | State | `state/evidence-jobs.md` | 已冻结，待实现与验收 |
+| 3 | UI | `ui/mobile-evidence-components.md` | 已冻结，待实现与验收 |
 | 4 | API | `api/master-data-api.yaml` | 待编写 |
 | 4 | DB | `db/master-data-schema.md` | 待编写 |
 | 4 | UI | `ui/master-data-pages.md` | 待编写 |

@@ -1,5 +1,5 @@
 ---
-status: proposed-design
+status: current-spec
 owner: safety
 updated: 2026-07-10
 replaces: []

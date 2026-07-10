@@ -34,7 +34,10 @@ import {
   useLaunchWorkbenchApprovalMutation,
   usePerformWorkbenchRecordActionMutation,
   useUploadWorkbenchRecordAttachmentMutation,
+  useCreateWorkbenchSignatureEvidenceMutation,
+  useCreateWorkbenchLocationEvidenceMutation,
 } from './workbenchApi';
+import { EvidencePanel } from './EvidencePanel';
 
 const departmentLabelMap: Record<string, string> = {
   general_office: '总经办',
@@ -113,11 +116,6 @@ const externalStatusLabelMap: Record<string, string> = {
   rejected: '审批驳回',
   canceled: '审批撤销',
   terminated: '审批终止',
-};
-
-const attachmentCategoryLabelMap: Record<string, string> = {
-  meeting_photo: '会议照片',
-  attachment: '附件',
 };
 
 function labelFrom(
@@ -213,7 +211,6 @@ export function WorkbenchHomePage({
   const [trainingProgressStatus, setTrainingProgressStatus] = useState<
     'not_started' | 'in_progress' | 'completed'
   >('not_started');
-  const [meetingPhotoFileId, setMeetingPhotoFileId] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -272,8 +269,10 @@ export function WorkbenchHomePage({
     useCreateWorkbenchRecordMutation();
   const [performWorkbenchRecordAction, { isLoading: actionSubmitting }] =
     usePerformWorkbenchRecordActionMutation();
-  const [uploadWorkbenchRecordAttachment, { isLoading: uploadingAttachment }] =
+  const [uploadWorkbenchRecordAttachment] =
     useUploadWorkbenchRecordAttachmentMutation();
+  const [createSignatureEvidence] = useCreateWorkbenchSignatureEvidenceMutation();
+  const [createLocationEvidence] = useCreateWorkbenchLocationEvidenceMutation();
   const [launchWorkbenchApproval, { isLoading: launchingApproval }] =
     useLaunchWorkbenchApprovalMutation();
   const [triggerPrintSnapshot, { isFetching: printingSnapshot }] =
@@ -418,7 +417,6 @@ export function WorkbenchHomePage({
     if (!detailResponse?.data) {
       setTrainingProgressPercent('0');
       setTrainingProgressStatus('not_started');
-      setMeetingPhotoFileId('');
       return;
     }
     if (detailResponse.data.moduleCode === 'goa_training') {
@@ -446,7 +444,6 @@ export function WorkbenchHomePage({
       setTrainingProgressPercent('0');
       setTrainingProgressStatus('not_started');
     }
-    setMeetingPhotoFileId('');
   }, [detailResponse?.data]);
 
   const goHome = () => navigate('/workbench');
@@ -649,44 +646,6 @@ export function WorkbenchHomePage({
         ? { completedAt: new Date().toISOString().slice(0, 10) }
         : {}),
     });
-  };
-
-  const triggerUploadMeetingPhoto = async () => {
-    if (
-      !detailResponse?.data ||
-      detailResponse.data.moduleCode !== 'goa_meeting'
-    )
-      return;
-    const fileId = meetingPhotoFileId.trim();
-    if (!fileId) {
-      messageApi.warning('请先输入会议照片 fileId');
-      return;
-    }
-
-    await uploadWorkbenchRecordAttachment({
-      recordId: detailResponse.data.id,
-      data: {
-        category: 'meeting_photo',
-        fileId,
-        remark: 'WaveB 会议照片上传',
-      },
-    }).unwrap();
-
-    const existingRaw = String(
-      detailResponse.data.payload.photoAttachmentIds ?? '',
-    ).trim();
-    const existing = existingRaw
-      ? existingRaw
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-      : [];
-    const nextIds = Array.from(new Set([...existing, fileId]));
-    await triggerRecordAction(detailResponse.data.id, 'update_payload', {
-      photoAttachmentIds: nextIds.join(','),
-    });
-    setMeetingPhotoFileId('');
-    messageApi.success('会议照片已上传并写入会议字段');
   };
 
   return (
@@ -1421,45 +1380,10 @@ export function WorkbenchHomePage({
               />
             </div>
 
-            <div>
-              <Typography.Title level={5}>附件</Typography.Title>
-              {detailResponse.data.moduleCode === 'goa_meeting' ? (
-                <div className="sunan-query-grid" style={{ marginBottom: 12 }}>
-                  <Input
-                    placeholder="输入会议照片 fileId"
-                    value={meetingPhotoFileId}
-                    onChange={(event) =>
-                      setMeetingPhotoFileId(event.target.value)
-                    }
-                  />
-                  <Button
-                    loading={uploadingAttachment || actionSubmitting}
-                    onClick={() => void triggerUploadMeetingPhoto()}
-                  >
-                    上传会议照片
-                  </Button>
-                </div>
-              ) : null}
-              <List
-                bordered
-                dataSource={detailResponse.data.attachments}
-                locale={{ emptyText: '暂无附件' }}
-                renderItem={(attachment) => (
-                  <List.Item>
-                    <Space>
-                      <Tag>
-                        {labelFrom(
-                          attachmentCategoryLabelMap,
-                          attachment.category,
-                          '附件',
-                        )}
-                      </Tag>
-                      <Typography.Text>{attachment.fileName}</Typography.Text>
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            </div>
+            <EvidencePanel recordId={detailResponse.data.id} summary={detailResponse.data.summary} attachments={detailResponse.data.attachments}
+              onUpload={async (file) => { await uploadWorkbenchRecordAttachment({ recordId: detailResponse.data.id, data: { category: 'evidence', fileId: file.id } }).unwrap(); }}
+              onSignature={async (signatureFileId, businessSummaryHash) => { await createSignatureEvidence({ recordId: detailResponse.data.id, signatureFileId, businessSummaryHash }).unwrap(); messageApi.success('签名证据已保存'); }}
+              onLocation={async (body) => { await createLocationEvidence({ recordId: detailResponse.data.id, ...body }).unwrap(); messageApi.success(body.captureStatus === 'captured' ? '定位证据已保存' : '定位异常说明已保存'); }} />
 
             <div>
               <Typography.Title level={5}>操作日志</Typography.Title>
