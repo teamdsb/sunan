@@ -37,7 +37,10 @@ import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-pr
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordParticipantEntity } from 'src/database/entities/workbench-record-participant.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchRecordTransferEntity } from 'src/database/entities/workbench-record-transfer.entity';
+import { WorkbenchDelegationEntity } from 'src/database/entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { BootstrapAuth1710000000000 } from 'src/database/migrations/1710000000000-bootstrap-auth';
 import { Wave21710000001000 } from 'src/database/migrations/1710000001000-wave2-files-reference-data';
@@ -54,6 +57,7 @@ import { Wave51710000011000 } from 'src/database/migrations/1710000011000-wave5-
 import { Wave51710000012000 } from 'src/database/migrations/1710000012000-wave5-workbench-approval-ops';
 import { Wave61710000013000 } from 'src/database/migrations/1710000013000-wave6-workbench-module-split';
 import { ProcurementBudgets1710000014000 } from 'src/database/migrations/1710000014000-procurement-budgets';
+import { Wave8WorkflowPermission1710000015000 } from 'src/database/migrations/1710000015000-wave8-workflow-permission';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -85,7 +89,10 @@ const ALL_TEST_ENTITIES = [
   WorkbenchModuleEntity,
   WorkbenchTemplateEntity,
   WorkbenchRecordEntity,
+  WorkbenchRecordParticipantEntity,
   WorkbenchRecordStepEntity,
+  WorkbenchRecordTransferEntity,
+  WorkbenchDelegationEntity,
   WorkbenchRecordAttachmentEntity,
   WorkbenchRecordActionLogEntity,
   WorkbenchPrintSnapshotEntity,
@@ -110,6 +117,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave51710000012000,
   Wave61710000013000,
   ProcurementBudgets1710000014000,
+  Wave8WorkflowPermission1710000015000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

@@ -9,6 +9,7 @@ import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
 import { WorkbenchRecordPrintQueryDto } from './dto/workbench-record-print-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
+import { WorkbenchRecordParticipantDto } from './dto/workbench-record-participant.dto';
 import { WorkbenchService } from './workbench.service';
 
 @Controller('/api/v1/workbench')
@@ -66,6 +67,11 @@ export class WorkbenchController {
   @Post('records/:recordId/actions')
   async performAction(@Param('recordId') recordId: string, @Body() dto: WorkbenchRecordActionDto, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.performRecordAction(recordId, dto, user) };
+  }
+
+  @Post('records/:recordId/participants')
+  async assignParticipant(@Param('recordId') recordId: string, @Body() dto: WorkbenchRecordParticipantDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.assignParticipant(recordId, dto, user) };
   }
 
   @Post('records/:recordId/attachments')

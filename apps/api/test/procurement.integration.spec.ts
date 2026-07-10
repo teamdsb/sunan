@@ -292,11 +292,11 @@ describe('ProcurementController integration', () => {
     const uploadCall = uploadSpy.mock.calls[0];
     expect(uploadCall).toBeDefined();
     const [ossKey, pdfBuffer] = uploadCall!;
-    const generatedPdf = await PDFDocument.load(pdfBuffer as Buffer);
+    const generatedPdf = await PDFDocument.load(pdfBuffer);
     const firstPageSize = generatedPdf.getPage(0).getSize();
     expect(String(ossKey)).toMatch(/^procurement\/exports\//);
-    expect((pdfBuffer as Buffer).subarray(0, 5).toString('utf8')).toBe('%PDF-');
-    expect((pdfBuffer as Buffer).length).toBeGreaterThan(1024 * 1024);
+    expect(pdfBuffer.subarray(0, 5).toString('utf8')).toBe('%PDF-');
+    expect(pdfBuffer.length).toBeGreaterThan(1024 * 1024);
     expect(generatedPdf.getPageCount()).toBeGreaterThanOrEqual(1);
     expect(firstPageSize.width).toBe(595);
     expect(firstPageSize.height).toBe(842);

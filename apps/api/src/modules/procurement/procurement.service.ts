@@ -2423,7 +2423,7 @@ export class ProcurementService {
         color,
       });
     };
-    const isAscii = (value: string) => /^[\x00-\x7F]+$/.test(value);
+    const isAscii = (value: string) => [...value].every((char) => char.codePointAt(0)! <= 0x7f);
     const valueFont = (value: string) =>
       isAscii(value) ? latinFont : regularFont;
     const inlineText = (
@@ -3184,7 +3184,11 @@ export class ProcurementService {
       return JSON.stringify(value);
     }
 
-    return String(value);
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+      return `${value}`;
+    }
+
+    return '-';
   }
 
   private toDepartmentLabel(code: ProcurementDepartmentCode): string {

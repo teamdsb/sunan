@@ -9,7 +9,10 @@ import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-pr
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordParticipantEntity } from 'src/database/entities/workbench-record-participant.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchRecordTransferEntity } from 'src/database/entities/workbench-record-transfer.entity';
+import { WorkbenchDelegationEntity } from 'src/database/entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { FilesModule } from 'src/modules/files/files.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
@@ -25,7 +28,10 @@ import { WorkbenchService } from './workbench.service';
       WorkbenchModuleEntity,
       WorkbenchTemplateEntity,
       WorkbenchRecordEntity,
+      WorkbenchRecordParticipantEntity,
       WorkbenchRecordStepEntity,
+      WorkbenchRecordTransferEntity,
+      WorkbenchDelegationEntity,
       WorkbenchRecordAttachmentEntity,
       WorkbenchRecordActionLogEntity,
       WorkbenchPrintSnapshotEntity,

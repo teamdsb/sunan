@@ -1,4 +1,4 @@
-import { BadGatewayException, BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
@@ -12,14 +12,17 @@ import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-pr
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordParticipantEntity } from 'src/database/entities/workbench-record-participant.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchRecordTransferEntity } from 'src/database/entities/workbench-record-transfer.entity';
+import { WorkbenchDelegationEntity } from 'src/database/entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OssService } from 'src/modules/files/oss.service';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 import type { WecomApprovalTemplateCreateRequest } from 'src/modules/wecom/wecom.types';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
@@ -31,6 +34,7 @@ import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
+import { WorkbenchRecordParticipantDto } from './dto/workbench-record-participant.dto';
 
 type TemplateType =
   | 'ledger_form'
@@ -1490,6 +1494,12 @@ export class WorkbenchService implements OnModuleInit {
     private readonly recordRepository: Repository<WorkbenchRecordEntity>,
     @InjectRepository(WorkbenchRecordStepEntity)
     private readonly stepRepository: Repository<WorkbenchRecordStepEntity>,
+    @InjectRepository(WorkbenchRecordParticipantEntity)
+    private readonly participantRepository: Repository<WorkbenchRecordParticipantEntity>,
+    @InjectRepository(WorkbenchDelegationEntity)
+    private readonly delegationRepository: Repository<WorkbenchDelegationEntity>,
+    @InjectRepository(WorkbenchRecordTransferEntity)
+    private readonly transferRepository: Repository<WorkbenchRecordTransferEntity>,
     @InjectRepository(WorkbenchRecordAttachmentEntity)
     private readonly attachmentRepository: Repository<WorkbenchRecordAttachmentEntity>,
     @InjectRepository(WorkbenchRecordActionLogEntity)
@@ -1841,8 +1851,37 @@ export class WorkbenchService implements OnModuleInit {
   async getRecordDetail(recordId: string, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
     await this.assertRecordVisible(record, user);
+    if (user.roles.includes('system_admin')) {
+      await this.appendActionLog(record.id, { actionType: 'sensitive_view', source: 'manual', operatorUserId: user.userId, fromStatus: record.status, toStatus: record.status, comment: 'administrator record access', payloadDigest: null });
+    }
     const hydrated = await this.hydrateRecord(record);
-    return this.toRecordDetail(hydrated);
+    return { ...this.toRecordDetail(hydrated), availableActions: await this.getAvailableActions(record, user) };
+  }
+
+  async assignParticipant(recordId: string, dto: WorkbenchRecordParticipantDto, user: CurrentUser) {
+    const record = await this.mustGetRecord(recordId);
+    await this.assertRecordVisible(record, user);
+    if (!user.roles.includes('system_admin') && record.ownerUserId !== user.userId && record.reviewerUserId !== user.userId) {
+      throw new ForbiddenException('forbidden');
+    }
+    let stepId: string | null = null;
+    if (dto.stepCode) {
+      const step = await this.stepRepository.findOne({ where: { businessRecordId: recordId, stepCode: dto.stepCode } });
+      if (!step) throw new NotFoundException('step not found');
+      stepId = step.id;
+      if (dto.completionRule) step.completionRule = dto.completionRule;
+      if (dto.completionRule === 'quorum') step.quorumCount = dto.quorumCount ?? null;
+      await this.stepRepository.save(step);
+    }
+    if (dto.role === 'verifier' && (dto.userId === record.assigneeUserId || dto.userId === record.ownerUserId)) {
+      throw new BadRequestException('verifier cannot be the rectification owner');
+    }
+    const existing = await this.participantRepository.findOne({ where: { businessRecordId: recordId, stepId: stepId ?? IsNull(), userId: dto.userId, role: dto.role, deletedAt: IsNull() } });
+    if (!existing) {
+      await this.participantRepository.save(this.participantRepository.create({ businessRecordId: recordId, stepId, userId: dto.userId, role: dto.role, status: 'active', completedAt: null, createdBy: user.userId, updatedBy: user.userId }));
+    }
+    await this.appendActionLog(recordId, { actionType: 'assign_participant', source: 'manual', operatorUserId: user.userId, fromStatus: record.status, toStatus: record.status, comment: null, payloadDigest: JSON.stringify(dto) });
+    return this.getRecordDetail(recordId, user);
   }
 
   async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
@@ -1855,6 +1894,9 @@ export class WorkbenchService implements OnModuleInit {
     });
 
     const fromStatus = record.status;
+
+    await this.assertActionAuthorized(record, dto.actionType, dto.payload, user);
+    this.assertLegalTransition(fromStatus, dto.actionType);
 
     const moduleItem = await this.mustGetModule(record.moduleCode);
     const isInspectionRectification = moduleItem.templateType === 'inspection_rectification';
@@ -1924,6 +1966,31 @@ export class WorkbenchService implements OnModuleInit {
         inProgressStep.rectificationStatus = 'rework_required';
       }
       record.status = 'rework_required';
+    } else if (dto.actionType === 'return_step') {
+      const stepCode = this.toScalarString(dto.payload?.stepCode).trim();
+      const step = steps.find((item) => item.stepCode === stepCode);
+      if (!step) throw new NotFoundException('step not found');
+      step.status = 'in_progress';
+      step.completedBy = null;
+      step.completedAt = null;
+      record.status = 'in_progress';
+    } else if (dto.actionType === 'terminate') {
+      record.status = 'terminated';
+    } else if (dto.actionType === 'void') {
+      record.status = 'voided';
+    } else if (dto.actionType === 'reopen') {
+      record.status = 'assigned';
+      record.closedAt = null;
+    } else if (dto.actionType === 'delegate') {
+      const delegateeUserId = this.toScalarString(dto.payload?.delegateeUserId).trim();
+      const effectiveTo = this.toScalarString(dto.payload?.effectiveTo).trim();
+      if (!delegateeUserId || !effectiveTo) throw new BadRequestException('delegateeUserId and effectiveTo are required');
+      await this.delegationRepository.save(this.delegationRepository.create({ businessRecordId: record.id, stepId: null, delegatorUserId: user.userId, delegateeUserId, effectiveFrom: new Date(), effectiveTo: new Date(effectiveTo), status: 'active', reason: dto.comment ?? null, createdBy: user.userId, updatedBy: user.userId }));
+    } else if (dto.actionType === 'transfer') {
+      const toUserId = this.toScalarString(dto.payload?.toUserId).trim();
+      if (!toUserId || toUserId === record.assigneeUserId) throw new BadRequestException('a different toUserId is required');
+      await this.transferRepository.save(this.transferRepository.create({ businessRecordId: record.id, fromUserId: record.assigneeUserId ?? record.ownerUserId, toUserId, reason: dto.comment ?? '', transferredBy: user.userId }));
+      record.assigneeUserId = toUserId;
     } else {
       record.status = this.resolveNextStatus(fromStatus, dto.actionType);
     }
@@ -3298,7 +3365,8 @@ export class WorkbenchService implements OnModuleInit {
       },
     });
 
-    return records.map((record) => this.toRecordModel(record));
+    const allowed = await Promise.all(records.map(async (record) => ({ record, readable: await this.canReadRecord(record, user) })));
+    return allowed.filter((item) => item.readable).map((item) => this.toRecordModel(item.record));
   }
 
   private async computePendingCounts(user: CurrentUser) {
@@ -3549,9 +3617,51 @@ export class WorkbenchService implements OnModuleInit {
   }
 
   private async assertRecordVisible(record: WorkbenchRecordEntity, user: CurrentUser) {
-    const moduleItem = await this.mustGetModule(record.moduleCode);
-    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
+    if (!(await this.canReadRecord(record, user))) {
       throw new ForbiddenException('forbidden');
+    }
+  }
+
+  private async canReadRecord(record: WorkbenchRecordEntity, user: CurrentUser) {
+    const moduleItem = await this.mustGetModule(record.moduleCode);
+    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) return false;
+    if (user.roles.includes('system_admin')) return true;
+    const participant = await this.participantRepository.exist({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
+    if (participant || [record.ownerUserId, record.applicantUserId, record.assigneeUserId, record.reviewerUserId].includes(user.userId)) return true;
+    if (!user.roles.includes('crew')) return true;
+    return Boolean(record.vesselId && (user.departments.includes(record.vesselId) || user.departments.includes(`vessel:${record.vesselId}`)));
+  }
+
+  private async assertActionAuthorized(record: WorkbenchRecordEntity, actionType: WorkbenchRecordActionDto['actionType'], payload: Record<string, unknown> | undefined, user: CurrentUser) {
+    await this.assertRecordVisible(record, user);
+    if (user.roles.includes('system_admin')) return;
+    if (!['start', 'complete_step', 'submit_review', 'request_rework', 'close_record'].includes(actionType)) return;
+    const stepCode = typeof payload?.stepCode === 'string' ? payload.stepCode : undefined;
+    const step = stepCode ? await this.stepRepository.findOne({ where: { businessRecordId: record.id, stepCode } }) : null;
+    const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, status: 'active', deletedAt: IsNull() } });
+    const isStepParticipant = participants.some((item) => item.userId === user.userId && (!step || item.stepId === null || item.stepId === step.id) && (item.role === 'executor' || item.role === 'collaborator' || item.role === 'reviewer'));
+    const legacyOwner = participants.length === 0 && [record.ownerUserId, record.assigneeUserId, record.reviewerUserId].includes(user.userId);
+    if (!isStepParticipant && !legacyOwner) throw new ForbiddenException('forbidden');
+  }
+
+  private async getAvailableActions(record: WorkbenchRecordEntity, user: CurrentUser) {
+    if (!(await this.canReadRecord(record, user))) return [];
+    if (user.roles.includes('system_admin')) return ['start', 'complete_step', 'submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'void', 'reopen', 'delegate', 'transfer'];
+    const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
+    const roles = new Set(participants.map((item) => item.role));
+    const legacyOwner = participants.length === 0 && [record.ownerUserId, record.assigneeUserId, record.reviewerUserId].includes(user.userId);
+    const actions: string[] = [];
+    if (legacyOwner || roles.has('executor') || roles.has('collaborator')) actions.push('start', 'complete_step', 'delegate');
+    if (legacyOwner || roles.has('reviewer')) actions.push('submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'reopen', 'transfer');
+    return actions;
+  }
+
+  private assertLegalTransition(status: string, actionType: WorkbenchRecordActionDto['actionType']) {
+    if (actionType === 'close_record' && !['pending_review', 'rework_required'].includes(status)) {
+      throw new ConflictException('illegal state transition');
+    }
+    if (actionType === 'complete_step' && !['in_progress', 'assigned'].includes(status)) {
+      throw new ConflictException('illegal state transition');
     }
   }
 
@@ -3647,6 +3757,14 @@ export class WorkbenchService implements OnModuleInit {
         return 'closed';
       case 'archive':
         return 'archived';
+      case 'return_step':
+        return 'in_progress';
+      case 'terminate':
+        return 'terminated';
+      case 'void':
+        return 'voided';
+      case 'reopen':
+        return 'assigned';
       default:
         return currentStatus;
     }

@@ -305,6 +305,7 @@ export function WorkbenchHomePage({
         (item) => item.moduleCode === detailResponse.data.moduleCode,
       ) ?? null)
     : null;
+  const availableActions = new Set(detailResponse?.data?.availableActions ?? []);
   const schemaFieldLabelMap = useMemo(() => {
     const labels = new Map<string, string>();
     moduleSchemaResponse?.data.sections.forEach((section) => {
@@ -1227,7 +1228,7 @@ export function WorkbenchHomePage({
               />
               {detailResponse.data.steps.length > 0 ? (
                 <Space wrap style={{ marginTop: 12 }}>
-                  {detailResponse.data.status === 'assigned' ? (
+                  {detailResponse.data.status === 'assigned' && availableActions.has('start') ? (
                     <Button
                       type="primary"
                       loading={actionSubmitting}
@@ -1241,7 +1242,7 @@ export function WorkbenchHomePage({
                       开始作业
                     </Button>
                   ) : null}
-                  {detailResponse.data.status === 'in_progress' ? (
+                  {detailResponse.data.status === 'in_progress' && availableActions.has('complete_step') ? (
                     <>
                       <Button
                         loading={actionSubmitting}
@@ -1293,7 +1294,7 @@ export function WorkbenchHomePage({
                       ) : null}
                     </>
                   ) : null}
-                  {detailResponse.data.status === 'rework_required' ? (
+                  {detailResponse.data.status === 'rework_required' && availableActions.has('complete_step') ? (
                     <Button
                       loading={actionSubmitting}
                       onClick={() => {
@@ -1316,7 +1317,7 @@ export function WorkbenchHomePage({
                       整改完成并继续
                     </Button>
                   ) : null}
-                  {detailResponse.data.status === 'pending_review' ? (
+                  {detailResponse.data.status === 'pending_review' && availableActions.has('submit_review') ? (
                     <>
                       <Button
                         type="primary"
@@ -1330,7 +1331,7 @@ export function WorkbenchHomePage({
                       >
                         提交审核
                       </Button>
-                      {detailModule?.templateType ===
+                      {availableActions.has('request_rework') && detailModule?.templateType ===
                       'inspection_rectification' ? (
                         <Button
                           loading={actionSubmitting}
@@ -1346,7 +1347,7 @@ export function WorkbenchHomePage({
                       ) : null}
                     </>
                   ) : null}
-                  {detailResponse.data.status !== 'closed' &&
+                  {availableActions.has('close_record') && detailResponse.data.status !== 'closed' &&
                   detailResponse.data.status !== 'archived' ? (
                     <Button
                       danger

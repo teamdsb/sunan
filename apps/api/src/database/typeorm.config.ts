@@ -34,7 +34,10 @@ import { WorkbenchPrintSnapshotEntity } from './entities/workbench-print-snapsho
 import { WorkbenchRecordActionLogEntity } from './entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from './entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from './entities/workbench-record.entity';
+import { WorkbenchRecordParticipantEntity } from './entities/workbench-record-participant.entity';
 import { WorkbenchRecordStepEntity } from './entities/workbench-record-step.entity';
+import { WorkbenchRecordTransferEntity } from './entities/workbench-record-transfer.entity';
+import { WorkbenchDelegationEntity } from './entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from './entities/workbench-template.entity';
 import { WecomUserEntity } from './entities/wecom-user.entity';
 import { BootstrapAuth1710000000000 } from './migrations/1710000000000-bootstrap-auth';
@@ -52,6 +55,7 @@ import { Wave51710000011000 } from './migrations/1710000011000-wave5-workbench-r
 import { Wave51710000012000 } from './migrations/1710000012000-wave5-workbench-approval-ops';
 import { Wave61710000013000 } from './migrations/1710000013000-wave6-workbench-module-split';
 import { ProcurementBudgets1710000014000 } from './migrations/1710000014000-procurement-budgets';
+import { Wave8WorkflowPermission1710000015000 } from './migrations/1710000015000-wave8-workflow-permission';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -91,7 +95,10 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     WorkbenchModuleEntity,
     WorkbenchTemplateEntity,
     WorkbenchRecordEntity,
+    WorkbenchRecordParticipantEntity,
     WorkbenchRecordStepEntity,
+    WorkbenchRecordTransferEntity,
+    WorkbenchDelegationEntity,
     WorkbenchRecordAttachmentEntity,
     WorkbenchRecordActionLogEntity,
     WorkbenchPrintSnapshotEntity,
@@ -115,6 +122,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave51710000012000,
     Wave61710000013000,
     ProcurementBudgets1710000014000,
+    Wave8WorkflowPermission1710000015000,
   ],
   synchronize: false,
 });

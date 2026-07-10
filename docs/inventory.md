@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：236 个 Markdown 文件。
+总数：240 个 Markdown 文件。
 
 ## repository-root
 
@@ -217,12 +217,15 @@ replaced_by: []
 | [docs/specs/safety/README.md](specs/safety/README.md) | `current-index` | `safety` | 安全管理领域规格索引 |
 | [docs/specs/safety/api/README.md](specs/safety/api/README.md) | `current-spec` | `safety` | 安全领域 API 规格目录 |
 | [docs/specs/safety/db/README.md](specs/safety/db/README.md) | `current-spec` | `safety` | 安全领域 DB 规格目录 |
+| [docs/specs/safety/db/workflow-and-permission-schema.md](specs/safety/db/workflow-and-permission-schema.md) | `current-spec` | `safety` | Wave 2 工作流权限数据库规格 |
 | [docs/specs/safety/domain-boundaries.md](specs/safety/domain-boundaries.md) | `current-spec` | `safety` | 安全领域边界与 M8 差距基线 |
 | [docs/specs/safety/migration-principles.md](specs/safety/migration-principles.md) | `current-spec` | `safety` | M8 数据迁移与兼容原则 |
 | [docs/specs/safety/state/README.md](specs/safety/state/README.md) | `current-spec` | `safety` | 安全领域状态规格目录 |
+| [docs/specs/safety/state/workflow-lifecycle.md](specs/safety/state/workflow-lifecycle.md) | `current-spec` | `safety` | Wave 2 工作流生命周期 |
 | [docs/specs/safety/terminology-and-status.md](specs/safety/terminology-and-status.md) | `current-spec` | `safety` | 安全领域唯一术语与状态 |
 | [docs/specs/safety/testing-matrix.md](specs/safety/testing-matrix.md) | `current-spec` | `safety` | M8 测试与验收矩阵 |
 | [docs/specs/safety/ui/README.md](specs/safety/ui/README.md) | `current-spec` | `safety` | 安全领域 UI 规格目录 |
+| [docs/specs/safety/ui/permission-and-action-rules.md](specs/safety/ui/permission-and-action-rules.md) | `current-spec` | `safety` | Wave 2 权限与动作 UI 规格 |
 
 ## specs/wecom
 
@@ -378,6 +381,7 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/archive/acceptance/safety/acceptance-m8-wave1.md](archive/acceptance/safety/acceptance-m8-wave1.md) | `acceptance-archive` | `safety` | M8 Wave 1 验收记录：安全管理底座文档冻结 |
+| [docs/archive/acceptance/safety/acceptance-m8-wave2.md](archive/acceptance/safety/acceptance-m8-wave2.md) | `acceptance-archive` | `safety` | M8 Wave 2 验收记录：权限与流程状态链 |
 
 ## archive/prompts
 

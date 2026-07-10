@@ -25,10 +25,10 @@ replaced_by: []
 | 1 | DB directory | `db/README.md` | 已冻结；规格待编写 |
 | 1 | State directory | `state/README.md` | 已冻结；规格待编写 |
 | 1 | UI directory | `ui/README.md` | 已冻结；规格待编写 |
-| 2 | API | `api/workflow-and-permission-api.yaml` | 待编写 |
-| 2 | DB | `db/workflow-and-permission-schema.md` | 待编写 |
-| 2 | State | `state/workflow-lifecycle.md` | 待编写 |
-| 2 | UI | `ui/permission-and-action-rules.md` | 待编写 |
+| 2 | API | `api/workflow-and-permission-api.yaml` | 已编写，待环境验收 |
+| 2 | DB | `db/workflow-and-permission-schema.md` | 已编写，待环境验收 |
+| 2 | State | `state/workflow-lifecycle.md` | 已编写，待环境验收 |
+| 2 | UI | `ui/permission-and-action-rules.md` | 已编写，待环境验收 |
 | 3 | API | `api/evidence-and-export-api.yaml` | 待编写 |
 | 3 | DB | `db/evidence-and-export-schema.md` | 待编写 |
 | 3 | State | `state/evidence-jobs.md` | 待编写 |

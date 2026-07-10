@@ -76,6 +76,7 @@ export interface WorkbenchRecordDetail extends WorkbenchRecordSummary {
   attachments: WorkbenchAttachment[];
   actionLogs: WorkbenchActionLog[];
   payload: Record<string, unknown>;
+  availableActions?: string[];
 }
 
 export interface WorkbenchRecordQuery {

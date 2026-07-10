@@ -149,6 +149,19 @@ replaced_by: []
   - `findings.md`
   - `progress.md`
 
+### 阶段 9：M8 Wave 2 权限与流程状态链
+- **状态：** in_progress
+- **开始时间：** 2026-07-10
+- 执行的操作：
+  - 已核验 `docs/archive/acceptance/safety/acceptance-m8-wave1.md`：Wave 1 状态为通过、无 P0/P1 blocker。
+  - 开始读取 Wave 2 需求、既有 RBAC/工作平台权限和状态规格，后续先完成具体规格与红灯测试。
+  - 已新增两项 PostgreSQL 集成测试作为预期红灯；运行被 Node 20.x 与 bundled Node v24 的依赖不匹配拦截，未重装或删除现有 `node_modules`。
+  - 已建立 Wave 2 API/DB/state/UI 规格，新增参与人、代理、转移实体与 migration，并在工作平台服务接入记录级 ABAC、动作授权和非法关闭转换拦截。
+  - `tsc --noEmit -p apps/api/tsconfig.json` 已通过；集成测试随后因没有可用 Docker/testcontainers runtime 在测试启动前终止，未产生业务断言结果。
+- 创建/修改的文件：
+  - `task_plan.md`
+  - `progress.md`
+
 ## 五问重启检查
 | 问题 | 答案 |
 |------|------|
