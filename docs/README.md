@@ -53,6 +53,8 @@ replaced_by: []
 | 采购模块规格 | [specs/procurement/README.md](specs/procurement/README.md) |
 | 工作平台规格 | [specs/workbench/README.md](specs/workbench/README.md) |
 | 安全管理规格 | [specs/safety/README.md](specs/safety/README.md) |
+| M8 Wave 1 安全底座基线 | [specs/safety/domain-boundaries.md](specs/safety/domain-boundaries.md)、[specs/safety/terminology-and-status.md](specs/safety/terminology-and-status.md)、[specs/safety/testing-matrix.md](specs/safety/testing-matrix.md)、[specs/safety/migration-principles.md](specs/safety/migration-principles.md) |
+| M8 Wave 1 验收证据 | [archive/acceptance/safety/acceptance-m8-wave1.md](archive/acceptance/safety/acceptance-m8-wave1.md) |
 
 ## 过期、已取代或易误用文档
 

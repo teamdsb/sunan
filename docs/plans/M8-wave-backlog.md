@@ -127,7 +127,7 @@ replaced_by: []
 |---|---|---|---|---|
 | `M8-W5A-1` | P0 | DB/API | 计划和计划项 | 年/月/周期/单次 |
 | `M8-W5A-2` | P0 | Job | 任务生成器 | 幂等键、重试、补偿 |
-| `M8-W5A-3` | P0 | State | 任务生命周期 | pending/in_progress/blocked/done/cancelled |
+| `M8-W5A-3` | P0 | State | 任务生命周期 | pending/in_progress/blocked/completed/cancelled |
 | `M8-W5B-1` | P0 | API/UI | 统一待办 | 本人下一步可执行项 |
 | `M8-W5B-2` | P0 | API/UI | 我发起、我参与、已完成 | 数据范围正确 |
 | `M8-W5B-3` | P0 | UI | 真实任务日历 | 状态颜色与筛选 |

@@ -7,7 +7,7 @@ replaced_by: []
 ---
 # 安全管理领域规格索引
 
-> 本目录是 M8/M9 新增的专业安全领域入口。当前仅冻结规划清单；具体 API、DB、state 和 UI 规格必须在对应 Wave 实施前创建、评审并通过校验。
+> 本目录是 M8/M9 新增的专业安全领域入口。Wave 1 已冻结领域边界、术语、测试、迁移与规格目录；具体 API、DB、state 和 UI 规格仍须在对应 Wave 实施前创建、评审并通过校验。
 
 ## 领域定位
 
@@ -17,8 +17,14 @@ replaced_by: []
 
 | Wave | 层次 | 计划文件 | 当前状态 |
 |---|---|---|---|
-| 1 | Architecture | `domain-boundaries.md` | 待编写 |
-| 1 | Common | `terminology-and-status.md` | 待编写 |
+| 1 | Architecture | `domain-boundaries.md` | 已冻结 |
+| 1 | Common | `terminology-and-status.md` | 已冻结 |
+| 1 | Test | `testing-matrix.md` | 已冻结 |
+| 1 | Migration | `migration-principles.md` | 已冻结 |
+| 1 | API directory | `api/README.md` | 已冻结；规格待编写 |
+| 1 | DB directory | `db/README.md` | 已冻结；规格待编写 |
+| 1 | State directory | `state/README.md` | 已冻结；规格待编写 |
+| 1 | UI directory | `ui/README.md` | 已冻结；规格待编写 |
 | 2 | API | `api/workflow-and-permission-api.yaml` | 待编写 |
 | 2 | DB | `db/workflow-and-permission-schema.md` | 待编写 |
 | 2 | State | `state/workflow-lifecycle.md` | 待编写 |
@@ -38,6 +44,8 @@ replaced_by: []
 | 6 | DB | `db/inspection-capa-schema.md` | 待编写 |
 | 6 | State | `state/inspection-capa-lifecycle.md` | 待编写 |
 | 6 | UI | `ui/inspection-and-capa-pages.md` | 待编写 |
+
+“待编写”表示该 Wave 的具体合约尚未评审，不能据此新增生产表、Controller、页面或占位接口；“已冻结”只表示入口、边界和门禁已经确定。
 
 ### 已登记的 M8 Wave 3 跨模块修复
 
@@ -83,6 +91,14 @@ replaced_by: []
 4. UI 规格必须覆盖直达、移动端、加载、空态、错误、权限和弱网。
 5. 自动生成任务或问题必须说明幂等键、失败补偿和审计。
 6. 未评审规格不得进入实现。
+
+## Wave 1 冻结的辅助门禁
+
+- 测试与验收矩阵：`testing-matrix.md`
+- 数据迁移与兼容：`migration-principles.md`
+- Wave 验收模板：`docs/plans/wave-acceptance-template.md`
+- M8 Wave 提示词入口：`docs/prompts/README.md`
+- Wave 1 提示词：`docs/prompts/m8/wave-1-spec-baseline.md`
 
 ## 外部集成边界
 

@@ -41,7 +41,7 @@ replaced_by: []
 - node scripts/generate-doc-inventory.mjs
 - node scripts/check-doc-index.mjs
 - git diff --check
-- 扫描新增文档是否存在 TODO、TBD、断链和无效状态头
+- 扫描新增文档是否存在未完成占位标记、断链和无效状态头
 
 最终报告必须包含：
 - 已完成的工作包
@@ -53,3 +53,10 @@ replaced_by: []
 
 只有在全部 P0 文档门禁通过后，才能建议进入 Wave 2。
 ```
+
+## 冻结输出入口
+
+- 领域边界与现状证据：`docs/specs/safety/domain-boundaries.md`
+- 唯一术语与状态：`docs/specs/safety/terminology-and-status.md`
+- 测试与迁移门禁：`docs/specs/safety/testing-matrix.md`、`docs/specs/safety/migration-principles.md`
+- API、DB、state、UI 规格目录：`docs/specs/safety/api/`、`docs/specs/safety/db/`、`docs/specs/safety/state/`、`docs/specs/safety/ui/`

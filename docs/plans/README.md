@@ -20,6 +20,14 @@ replaced_by: []
 | `M9-wave-backlog.md` | 待排期 | M9 API/DB/UI/state/测试级工作清单 |
 | `wave-acceptance-template.md` | 模板 | 每个 Wave 的统一验收记录格式 |
 
+## M8 Wave 1 已冻结基线
+
+- 安全领域边界与代码差距：`docs/specs/safety/domain-boundaries.md`
+- 唯一术语与状态：`docs/specs/safety/terminology-and-status.md`
+- 测试矩阵与迁移原则：`docs/specs/safety/testing-matrix.md`、`docs/specs/safety/migration-principles.md`
+- 后续 API/DB/state/UI 规格目录：`docs/specs/safety/api/`、`docs/specs/safety/db/`、`docs/specs/safety/state/`、`docs/specs/safety/ui/`
+- Wave 1 验收证据：`docs/archive/acceptance/safety/acceptance-m8-wave1.md`
+
 ## 配套入口
 
 - 已归档 M7 计划：`docs/archive/execplans/M7-execplans.md`
@@ -40,3 +48,4 @@ replaced_by: []
 5. 不得用通用文本字段替代已经冻结的专业结构化数据。
 6. 完成后将计划状态改为历史归档，并建立独立验收证据。
 7. M9 必须在 M8 总体验收通过后才能启动业务实现。
+8. M8 Wave 2 只能在 Wave 1 的全部 P0 文档门禁与验收记录通过后启动。
