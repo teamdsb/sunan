@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：249 个 Markdown 文件。
+总数：250 个 Markdown 文件。
 
 ## repository-root
 
@@ -415,3 +415,4 @@ replaced_by: []
 |---|---|---|---|
 | [docs/superpowers/specs/2026-07-10-m8-wave3-evidence-and-export-design.md](superpowers/specs/2026-07-10-m8-wave3-evidence-and-export-design.md) | `current-spec` | `safety` | M8 Wave 3：证据、打印与异步导出设计 |
 | [docs/superpowers/specs/2026-07-10-m8-wave4-master-data-design.md](superpowers/specs/2026-07-10-m8-wave4-master-data-design.md) | `current-spec` | `safety` | M8 Wave 4 安全主数据中心设计 |
+| [docs/superpowers/specs/2026-07-11-m8-wave5-plan-task-design.md](superpowers/specs/2026-07-11-m8-wave5-plan-task-design.md) | `current-spec` | `safety` | M8 Wave 5 计划任务中心设计 |
