@@ -299,6 +299,11 @@ export class CertificateReminderEngineService {
       return [...recipients];
     }
 
+    if (ownerType === 'equipment') {
+      this.collectByRoles(recipients, params.users, ['shipping', 'general_office']);
+      return [...recipients];
+    }
+
     const personnel = params.personnelById.get(params.certificate.ownerId);
     if (!personnel) {
       return [...recipients];
@@ -343,6 +348,10 @@ export class CertificateReminderEngineService {
 
     if (ownerType === 'vehicle') {
       return vehicles.get(ownerId)?.plateNumber ?? ownerId;
+    }
+
+    if (ownerType === 'equipment') {
+      return ownerId;
     }
 
     return personnel.get(ownerId)?.name ?? ownerId;

@@ -33,9 +33,9 @@ replaced_by: []
 | 3 | DB | `db/evidence-and-export-schema.md` | 已冻结，待迁移与验收 |
 | 3 | State | `state/evidence-jobs.md` | 已冻结，待实现与验收 |
 | 3 | UI | `ui/mobile-evidence-components.md` | 已冻结，待实现与验收 |
-| 4 | API | `api/master-data-api.yaml` | 待编写 |
-| 4 | DB | `db/master-data-schema.md` | 待编写 |
-| 4 | UI | `ui/master-data-pages.md` | 待编写 |
+| 4 | API | `api/master-data-api.yaml` | 已实现并通过 Wave 4 验收 |
+| 4 | DB | `db/master-data-schema.md` | 已迁移并通过 Wave 4 验收 |
+| 4 | UI | `ui/master-data-pages.md` | 已实现并通过 Wave 4 验收 |
 | 5 | API | `api/plan-task-api.yaml` | 待编写 |
 | 5 | DB | `db/plan-task-schema.md` | 待编写 |
 | 5 | State | `state/task-lifecycle.md` | 待编写 |

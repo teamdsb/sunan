@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: M8 Safety Master Data API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /master-data/vessels:
+    get:
+      summary: List vessels in the caller's data scope
+      parameters: [{$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/IncludeInactive'}]
+      responses: {'200': {$ref: '#/components/responses/List'}}
+    post:
+      summary: Create a vessel safety profile
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VesselInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Item'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/vessels/{id}:
+    get:
+      summary: Get vessel 360 profile, certificates, assignments and equipment
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      summary: Update or deactivate a vessel
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VesselInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Invalid'}}
+  /master-data/personnel:
+    get:
+      summary: List personnel with field-level redaction
+      parameters: [{$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/IncludeInactive'}]
+      responses: {'200': {$ref: '#/components/responses/List'}}
+    post:
+      summary: Create personnel or bind a WeCom identity
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PersonnelInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/personnel/{id}:
+    get:
+      summary: Get personnel profile and assignment history
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      summary: Update personnel or change employment status
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PersonnelInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/assignments:
+    post:
+      summary: Assign active personnel to an active vessel for an effective period
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/AssignmentInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Invalid'}}
+  /master-data/equipment:
+    get:
+      summary: List equipment
+      parameters: [{$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/IncludeInactive'}]
+      responses: {'200': {$ref: '#/components/responses/List'}}
+    post:
+      summary: Create equipment
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/EquipmentInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Invalid'}}
+  /master-data/equipment/{id}:
+    get:
+      summary: Get equipment and certificate profile
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      summary: Update or deactivate equipment
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/EquipmentInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Invalid'}}
+  /master-data/selectors/{type}:
+    get:
+      summary: Search active, authorized selectable objects; UUID entry is never required
+      parameters: [{$ref: '#/components/parameters/Type'}, {$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/IncludeInactive'}]
+      responses: {'200': {$ref: '#/components/responses/List'}, '403': {$ref: '#/components/responses/Forbidden'}}
+  /master-data/imports:
+    post:
+      summary: Idempotently import normalized CSV or JSON rows
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ImportInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '201': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/imports/{id}:
+    get:
+      summary: Get import reconciliation and row-level errors
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+components:
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+    Type: {name: type, in: path, required: true, schema: {type: string, enum: [vessels, personnel, equipment]}}
+    Keyword: {name: keyword, in: query, schema: {type: string, maxLength: 128}}
+    IncludeInactive: {name: includeInactive, in: query, schema: {type: boolean, default: false}}
+  schemas:
+    VesselInput: {type: object, required: [code, name, category], properties: {code: {type: string}, name: {type: string}, category: {type: string}, status: {type: string, enum: [active, inactive]}, mmsi: {type: string}, remarks: {type: string}}}
+    PersonnelInput: {type: object, required: [name, departmentCode], properties: {name: {type: string}, departmentCode: {type: string}, wecomUserId: {type: string}, position: {type: string}, mobile: {type: string}, employmentStatus: {type: string, enum: [active, inactive, left]}, remarks: {type: string}}}
+    AssignmentInput: {type: object, required: [personnelId, vesselId, roleCode, effectiveFrom], properties: {personnelId: {type: string, format: uuid}, vesselId: {type: string, format: uuid}, roleCode: {type: string}, effectiveFrom: {type: string, format: date}, effectiveTo: {type: string, format: date}}}
+    EquipmentInput: {type: object, required: [code, name, categoryCode, vesselId], properties: {code: {type: string}, name: {type: string}, categoryCode: {type: string}, vesselId: {type: string, format: uuid}, status: {type: string, enum: [active, inactive, retired]}, serialNo: {type: string}, remarks: {type: string}}}
+    ImportInput: {type: object, required: [importType, content], properties: {importType: {type: string, enum: [vessels, personnel, equipment, assignments]}, content: {type: string, description: Canonical CSV or JSON payload}}}
+    Envelope: {type: object, required: [data], properties: {data: {oneOf: [{type: object}, {type: array}]}}}
+  responses:
+    Item: {description: Success, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+    List: {description: Success, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+    Forbidden: {description: Forbidden}
+    NotFound: {description: Not found}
+    Conflict: {description: Duplicate natural key or import conflict}
+    Invalid: {description: Inactive reference or invalid effective period}

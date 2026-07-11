@@ -6,8 +6,8 @@ export class CertificateUpdateDto {
   certificateTypeId?: string;
 
   @IsOptional()
-  @IsEnum(['vessel', 'vehicle', 'personnel'])
-  ownerType?: 'vessel' | 'vehicle' | 'personnel';
+  @IsEnum(['vessel', 'vehicle', 'personnel', 'equipment'])
+  ownerType?: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 
   @IsOptional()
   @IsUUID()
@@ -54,4 +54,3 @@ export class CertificateUpdateDto {
   @IsUUID('4', { each: true })
   fileIds?: string[];
 }
-

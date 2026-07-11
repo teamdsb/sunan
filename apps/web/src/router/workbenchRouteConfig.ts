@@ -4,6 +4,11 @@ export const workbenchRouteConfig = {
     label: '工作平台首页',
     description: '查看部门模块入口、待办聚合和通用记录列表。',
   },
+  masterData: {
+    path: '/workbench/master-data',
+    label: '安全主数据中心',
+    description: '管理船舶、人员任职、设备与受控选择器。',
+  },
   module: {
     path: '/workbench/modules/:moduleCode',
     label: '模块工作台',

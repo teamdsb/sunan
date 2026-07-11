@@ -102,6 +102,10 @@ vi.mock('../features/workbench/WorkbenchHomeRoutePage', () => ({
   WorkbenchHomeRoutePage: () => <div>WORKBENCH_HOME</div>,
 }));
 
+vi.mock('../features/workbench/MasterDataPage', () => ({
+  MasterDataPage: () => <div>MASTER_DATA</div>,
+}));
+
 vi.mock('../features/workbench/WorkbenchModulePage', () => ({
   WorkbenchModulePage: () => <div>WORKBENCH_MODULE</div>,
 }));
@@ -218,6 +222,7 @@ describe('AppRoutes', () => {
     [procurementRouteConfig.reportApprovals.path, 'PROCUREMENT_REPORT_APPROVAL'],
     [procurementRouteConfig.dictionaries.path, 'PROCUREMENT_DICTIONARY_ADMIN'],
     [workbenchRouteConfig.home.path, 'WORKBENCH_HOME'],
+    [workbenchRouteConfig.masterData.path, 'MASTER_DATA'],
     [workbenchRouteConfig.module.buildPath('shipping_chart_update'), 'WORKBENCH_MODULE'],
     [workbenchRouteConfig.recordDetail.buildPath('record-1'), 'WORKBENCH_RECORD_DETAIL'],
     [workbenchRouteConfig.attendanceStatistics.path, 'WORKBENCH_ATTENDANCE'],

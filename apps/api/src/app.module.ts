@@ -18,6 +18,7 @@ import { OfficeModule } from 'src/modules/office/office.module';
 import { ProcurementModule } from 'src/modules/procurement/procurement.module';
 import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
+import { MasterDataModule } from 'src/modules/master-data/master-data.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { buildTypeOrmOptions } from 'src/database/typeorm.config';
 
@@ -47,6 +48,7 @@ import { buildTypeOrmOptions } from 'src/database/typeorm.config';
     OfficeModule,
     ProcurementModule,
     WorkbenchModule,
+    MasterDataModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -45,3 +45,5 @@ replaced_by: []
 1. 人员证书通过 `certificates.owner_type = personnel` 关联。
 2. 未绑定企业微信的人员不能作为消息推送接收人，但可保留证照。
 3. `department_code` 采用英文编码，展示时由前端映射中文名称。
+4. Wave 4 的船舶任职关系独立存储有效期、岗位和历史快照；`inactive`、`left` 人员不得用于新任职、设备责任人或证书新建，但历史引用可读。
+5. `mobile` 与 `wecom_user_id` 是敏感字段，展示受 `docs/specs/safety/ui/master-data-pages.md` 的本人、角色和数据范围规则约束。

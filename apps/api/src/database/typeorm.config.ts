@@ -12,6 +12,8 @@ import { EnterpriseProfileFileEntity } from './entities/enterprise-profile-file.
 import { FileEntity } from './entities/file.entity';
 import { EvidenceAuditEntity } from './entities/evidence-audit.entity';
 import { EvidenceRecordEntity } from './entities/evidence-record.entity';
+import { MasterDataImportBatchEntity } from './entities/master-data-import-batch.entity';
+import { MasterDataImportRowEntity } from './entities/master-data-import-row.entity';
 import { ExportJobEntity } from './entities/export-job.entity';
 import { OfficeCategoryEntity } from './entities/office-category.entity';
 import { OfficeEntryAuditEntity } from './entities/office-entry-audit.entity';
@@ -26,8 +28,12 @@ import { ProcurementOrderEntity } from './entities/procurement-order.entity';
 import { ProcurementReportApprovalEntity } from './entities/procurement-report-approval.entity';
 import { ProcurementReportEntity } from './entities/procurement-report.entity';
 import { ShipMonitorEntity } from './entities/ship-monitor.entity';
+import { SafetyEquipmentCategoryEntity } from './entities/safety-equipment-category.entity';
+import { SafetyEquipmentEntity } from './entities/safety-equipment.entity';
 import { UserSettingsEntity } from './entities/user-settings.entity';
 import { VesselEntity } from './entities/vessel.entity';
+import { VesselPersonnelAssignmentEntity } from './entities/vessel-personnel-assignment.entity';
+import { WorkbenchMasterDataReferenceEntity } from './entities/workbench-master-data-reference.entity';
 import { VehicleEntity } from './entities/vehicle.entity';
 import { WecomApprovalCallbackEventEntity } from './entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from './entities/wecom-approval-instance-sync.entity';
@@ -61,6 +67,7 @@ import { ProcurementBudgets1710000014000 } from './migrations/1710000014000-proc
 import { Wave8WorkflowPermission1710000015000 } from './migrations/1710000015000-wave8-workflow-permission';
 import { Wave3EvidenceAudits1710000016000 } from './migrations/1710000016000-wave3-evidence-audits';
 import { Wave3EvidenceExport1710000017000 } from './migrations/1710000017000-wave3-evidence-export';
+import { Wave4MasterData1710000018000 } from './migrations/1710000018000-wave4-master-data';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -75,7 +82,11 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     FileEntity,
     EvidenceAuditEntity,
     EvidenceRecordEntity, ExportJobEntity,
+    MasterDataImportBatchEntity, MasterDataImportRowEntity,
     VesselEntity,
+    VesselPersonnelAssignmentEntity,
+    SafetyEquipmentCategoryEntity,
+    SafetyEquipmentEntity,
     VehicleEntity,
     PersonnelEntity,
     CertificateTypeEntity,
@@ -102,6 +113,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     WorkbenchModuleEntity,
     WorkbenchTemplateEntity,
     WorkbenchRecordEntity,
+    WorkbenchMasterDataReferenceEntity,
     WorkbenchRecordParticipantEntity,
     WorkbenchRecordStepEntity,
     WorkbenchRecordTransferEntity,
@@ -132,6 +144,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave8WorkflowPermission1710000015000,
     Wave3EvidenceAudits1710000016000,
     Wave3EvidenceExport1710000017000,
+    Wave4MasterData1710000018000,
   ],
   synchronize: false,
 });

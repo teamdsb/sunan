@@ -16,8 +16,8 @@ export class CertificateListQueryDto {
   pageSize?: number = 20;
 
   @IsOptional()
-  @IsEnum(['vessel', 'vehicle', 'personnel'])
-  ownerType?: 'vessel' | 'vehicle' | 'personnel';
+  @IsEnum(['vessel', 'vehicle', 'personnel', 'equipment'])
+  ownerType?: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 
   @IsOptional()
   @IsUUID()
@@ -35,4 +35,3 @@ export class CertificateListQueryDto {
   @IsString()
   keyword?: string;
 }
-

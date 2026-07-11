@@ -10,6 +10,12 @@ describe('FilesService', () => {
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    createQueryBuilder: jest.fn(),
+  };
+  const queryBuilder = {
+    where: jest.fn(),
+    andWhere: jest.fn(),
+    getOne: jest.fn(),
   };
 
   const ossService = {
@@ -35,6 +41,10 @@ describe('FilesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    queryBuilder.where.mockReturnValue(queryBuilder);
+    queryBuilder.andWhere.mockReturnValue(queryBuilder);
+    queryBuilder.getOne.mockResolvedValue(null);
+    fileRepository.createQueryBuilder.mockReturnValue(queryBuilder);
     ossService.createUploadSignature.mockResolvedValue({
       uploadUrl: 'https://oss.example.com/upload',
       expiresAt: '2026-01-01T00:00:00.000Z',

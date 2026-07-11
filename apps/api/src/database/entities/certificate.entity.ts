@@ -16,7 +16,7 @@ export class CertificateEntity {
   certificateTypeId!: string;
 
   @Column({ name: 'owner_type', type: 'varchar', length: 16 })
-  ownerType!: 'vessel' | 'vehicle' | 'personnel';
+  ownerType!: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 
   @Column({ name: 'owner_id', type: 'uuid' })
   ownerId!: string;

@@ -116,6 +116,10 @@ const WorkbenchHomeRoutePage = lazyNamed(
   () => import('../features/workbench/WorkbenchHomeRoutePage'),
   'WorkbenchHomeRoutePage',
 );
+const MasterDataPage = lazyNamed(
+  () => import('../features/workbench/MasterDataPage'),
+  'MasterDataPage',
+);
 const WorkbenchModulePage = lazyNamed(
   () => import('../features/workbench/WorkbenchModulePage'),
   'WorkbenchModulePage',
@@ -255,6 +259,10 @@ export function AppRoutes() {
           <Route
             path={workbenchRouteConfig.home.path}
             element={renderLazyPage(<WorkbenchHomeRoutePage />)}
+          />
+          <Route
+            path={workbenchRouteConfig.masterData.path}
+            element={renderLazyPage(<MasterDataPage />)}
           />
           <Route
             path={workbenchRouteConfig.module.path}

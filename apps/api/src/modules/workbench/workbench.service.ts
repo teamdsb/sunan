@@ -1,4 +1,4 @@
-import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
@@ -1485,9 +1485,10 @@ const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
 };
 
 @Injectable()
-export class WorkbenchService implements OnModuleInit {
+export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WorkbenchService.name);
   private exportWorkerTimer: ReturnType<typeof setInterval> | null = null;
+  private isShuttingDown = false;
 
   constructor(
     @InjectRepository(WorkbenchModuleEntity)
@@ -1530,8 +1531,14 @@ export class WorkbenchService implements OnModuleInit {
   async onModuleInit() {
     await this.syncRuntimeCatalog();
     await this.recoverExportJobs();
-    this.exportWorkerTimer = setInterval(() => void this.recoverExportJobs(), 10_000);
+    this.exportWorkerTimer = setInterval(() => void this.recoverExportJobs().catch((error) => this.logger.warn(`export worker recovery failed: ${error instanceof Error ? error.message : 'unknown error'}`)), 10_000);
     this.exportWorkerTimer.unref?.();
+  }
+
+  onModuleDestroy() {
+    this.isShuttingDown = true;
+    if (this.exportWorkerTimer) clearInterval(this.exportWorkerTimer);
+    this.exportWorkerTimer = null;
   }
 
   async listModules(user: CurrentUser) {
@@ -1734,6 +1741,7 @@ export class WorkbenchService implements OnModuleInit {
   }
 
   private async recoverExportJobs(): Promise<void> {
+    if (this.isShuttingDown) return;
     const running = await this.exportJobRepository.find({ where: { status: 'running', sourceType: 'attendance' } });
     for (const job of running) {
       job.status = 'failed'; job.finishedAt = new Date(); job.failureMessage = 'worker interrupted; retry export';

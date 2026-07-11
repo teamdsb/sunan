@@ -17,7 +17,7 @@ replaced_by: []
 |---|---|---|---|
 | `id` | uuid | PK | 主键 |
 | `certificate_type_id` | uuid | FK, NOT NULL | 关联证书类型 |
-| `owner_type` | varchar(16) | NOT NULL | `vessel` / `vehicle` / `personnel` |
+| `owner_type` | varchar(16) | NOT NULL | `vessel` / `vehicle` / `personnel` / `equipment` |
 | `owner_id` | uuid | NOT NULL | 持有对象主键 |
 | `certificate_no` | varchar(128) | NULL | 证书编号 |
 | `title` | varchar(128) | NOT NULL | 展示标题 |
@@ -57,6 +57,7 @@ replaced_by: []
 1. `expiry_date` 不得早于 `issue_date`。
 2. `advance_days` 默认来自 `certificate_types.default_advance_days`，最小值为 `1`。
 3. 同一 `owner_type + owner_id + certificate_type_id + certificate_no` 组合建议唯一，空编号时由业务层控制重复录入。
+4. Wave 4 新建或变更证书时，持有对象必须有效；已停用对象只允许在历史详情中展示，不允许作为新的 `owner_id`。
 
 ## 业务规则
 

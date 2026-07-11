@@ -278,6 +278,7 @@ export const baseApi = createApi({
     'ShipMonitor',
     'UserSettings',
     'File',
+    'MasterData',
   ],
   endpoints: () => ({}),
 });
