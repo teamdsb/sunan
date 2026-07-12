@@ -214,6 +214,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkbenchPrintSnapshotResponse'
+  /workbench/records/{recordId}/issues:
+    get:
+      summary: 获取检查整改记录的受权统一问题回链
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 仅返回调用者同时有来源记录和问题读取权限的关联问题
+        '403':
+          description: 无权读取来源记录或关联问题
+        '404':
+          description: Record not found
   /workbench/statistics/attendance:
     get:
       summary: 获取月度考勤统计

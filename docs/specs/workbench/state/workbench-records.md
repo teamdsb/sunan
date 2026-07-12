@@ -145,3 +145,9 @@ type ExportJobStatus = 'queued' | 'running' | 'succeeded' | 'failed';
 - 差异明细入口
 - 对账失败后的重试提示
 - 管理员场景下的原始口径说明
+
+## 9. M8 Wave 6 检查整改来源关联
+
+对四类 `inspection_rectification` 记录，详情响应可包含受权的 `issueLinks`。它只表示安全领域 `issue_sources` 的双向引用，不改变工作平台记录自身 `draft/assigned/checking/pending_review/rework_required/closed` 状态机，也不允许通过通用 `complete_step` 绕过 CAPA 关闭门槛。
+
+点击关联问题后由安全问题 API 重新执行 ABAC；问题关闭、返工或重开只更新安全领域状态和审计，不回写原记录的 `payload`。403 不显示问题数量、标题或等级。

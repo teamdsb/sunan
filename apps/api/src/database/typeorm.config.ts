@@ -61,6 +61,25 @@ import {
   SafetyTaskParticipantEntity,
   SafetyTaskTransferEntity,
 } from './entities/safety-plan-task.entity';
+import {
+  CapaActionEntity,
+  CapaActionEvidenceEntity,
+  CapaRootCauseEntity,
+  CapaVerificationEntity,
+  InspectionCapaActionLogEntity,
+  InspectionEntity,
+  InspectionPlanEntity,
+  InspectionResultEntity,
+  InspectionResultEvidenceEntity,
+  InspectionTemplateEntity,
+  InspectionTemplateItemEntity,
+  InspectionTemplateScopeEntity,
+  InspectionTemplateVersionEntity,
+  IssueSourceEntity,
+  IssueTransferJobEntity,
+  SafetyCapaEntity,
+  SafetyIssueEntity,
+} from './entities/safety-inspection-capa.entity';
 import { BootstrapAuth1710000000000 } from './migrations/1710000000000-bootstrap-auth';
 import { Wave21710000001000 } from './migrations/1710000001000-wave2-files-reference-data';
 import { Wave31710000002000 } from './migrations/1710000002000-wave3-enterprise-profile';
@@ -81,6 +100,7 @@ import { Wave3EvidenceAudits1710000016000 } from './migrations/1710000016000-wav
 import { Wave3EvidenceExport1710000017000 } from './migrations/1710000017000-wave3-evidence-export';
 import { Wave4MasterData1710000018000 } from './migrations/1710000018000-wave4-master-data';
 import { Wave5PlanTask1710000019000 } from './migrations/1710000019000-wave5-plan-task';
+import { Wave6InspectionCapa1710000020000 } from './migrations/1710000020000-wave6-inspection-capa';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -102,6 +122,23 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     SafetyTaskGenerationRunEntity,
     SafetyTaskGenerationEntryEntity,
     SafetyTaskNotificationDeliveryEntity,
+    InspectionTemplateEntity,
+    InspectionTemplateVersionEntity,
+    InspectionTemplateItemEntity,
+    InspectionTemplateScopeEntity,
+    InspectionPlanEntity,
+    InspectionEntity,
+    InspectionResultEntity,
+    InspectionResultEvidenceEntity,
+    SafetyIssueEntity,
+    IssueSourceEntity,
+    IssueTransferJobEntity,
+    SafetyCapaEntity,
+    CapaRootCauseEntity,
+    CapaActionEntity,
+    CapaActionEvidenceEntity,
+    CapaVerificationEntity,
+    InspectionCapaActionLogEntity,
     FileEntity,
     EvidenceAuditEntity,
     EvidenceRecordEntity, ExportJobEntity,
@@ -169,6 +206,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave3EvidenceExport1710000017000,
     Wave4MasterData1710000018000,
     Wave5PlanTask1710000019000,
+    Wave6InspectionCapa1710000020000,
   ],
   synchronize: false,
 });

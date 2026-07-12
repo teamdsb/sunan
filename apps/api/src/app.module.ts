@@ -14,6 +14,7 @@ import { FilesModule } from 'src/modules/files/files.module';
 import { SettingsModule } from 'src/modules/settings/settings.module';
 import { ReminderModule } from 'src/modules/reminder/reminder.module';
 import { PlanTaskModule } from 'src/modules/plan-task/plan-task.module';
+import { InspectionCapaModule } from 'src/modules/inspection-capa/inspection-capa.module';
 import { ShipMonitorModule } from 'src/modules/ship-monitor/ship-monitor.module';
 import { OfficeModule } from 'src/modules/office/office.module';
 import { ProcurementModule } from 'src/modules/procurement/procurement.module';
@@ -46,6 +47,7 @@ import { buildTypeOrmOptions } from 'src/database/typeorm.config';
     SettingsModule,
     ReminderModule,
     PlanTaskModule,
+    InspectionCapaModule,
     CertificateModule,
     OfficeModule,
     ProcurementModule,

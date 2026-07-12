@@ -15,6 +15,6 @@ replaced_by: []
 | 3 | `evidence-and-export-schema.md` | 已冻结：证据关系、签名、定位、快照和导出任务 |
 | 4 | `master-data-schema.md` | 船舶、人员任职、设备和证书关系 |
 | 5 | `plan-task-schema.md` | 计划、计划项、任务、日程、提醒和转移 |
-| 6 | `inspection-capa-schema.md` | 检查、结果、问题、CAPA、措施和验证 |
+| 6 | `inspection-capa-schema.md` | 已冻结：检查快照、结果、问题、CAPA、措施、验证与补偿 |
 
 迁移设计和数据兼容必须同时满足 `../migration-principles.md`；未评审的文件名不构成建表授权。

@@ -315,3 +315,9 @@ replaced_by: []
 - JSONB 字段的键命名需与 OpenAPI 和前端状态规格保持一致。
 - 运行时实体落地后，应以集成测试验证查询、动作、审批同步和打印快照链路。
 - 本规格冻结的是表级边界；字段最终命名需与 migration 和 TypeORM 实体保持一一对应。
+
+## 8. M8 Wave 6 检查整改来源关联
+
+`inspection_rectification` 继续是既有工作平台记录的模板类型与真源，不新增 CAPA 字段到 `workbench_records.payload` 或步骤表。四类模块 `goa_safety_hazard`、`shipping_self_inspection`、`shipping_vessel_inspection`、`shipping_maritime_safety_check` 通过安全领域的 `issue_sources` 建立多对多双向链接；链接保存来源快照但不覆盖原记录状态、步骤、附件或审计。
+
+工作平台 API 查询关联问题时必须同时检查原记录 ABAC 和 issue ABAC；问题领域的来源链接也遵守相同双重检查。新增来源关联不得修改、删除或软删除既有工作平台记录。

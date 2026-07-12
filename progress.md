@@ -204,7 +204,7 @@ replaced_by: []
 ## 会话：2026-07-12
 
 ### 阶段 11：M8 Wave 6 检查、问题与 CAPA
-- **状态：** in_progress
+- **状态：** completed
 - 执行的操作：
   - 完整阅读 Wave 6 指定的 M8 需求、执行计划/backlog、平台对比建议、Wave 2 权限、Wave 3 证据、Wave 5 任务、安全领域与工作平台检查整改规格。
   - 核验 Wave 5 完成提交、任务领域实体、前端路由和四类现有检查整改模块；确认应新增独立安全领域模块并仅通过链接集成工作平台来源。
@@ -212,3 +212,12 @@ replaced_by: []
   - 误将根目录历史规划文件当作新文件写入；发现后立即用 Git index 原文恢复，未更改业务代码或规格。
 - 下一步：
   - Wave 6 书面设计已写入、自检并通过文档索引校验；提交后等待用户审阅该设计文档。获得书面设计确认后开始规格冻结与 TDD。
+  - 用户审阅并确认书面设计；已冻结 inspection-capa API、DB、state、UI 规格，同步工作平台检查整改来源关联规格和安全领域索引。
+  - OpenAPI 首次校验定位为 YAML 流式 response description 的逗号未引号；按 Wave 5 已验证写法修正后，inspection-capa 与 workbench API 均通过 Swagger，文档索引通过。
+  - 已按 TDD 写入纯领域红灯测试与 PostgreSQL 集成测试；集成覆盖版本快照、多人 all 门槛、并发转单去重、失败转单补偿、CAPA 证据/返工/验证关闭及四类工作平台来源双向链接。
+  - 已实现独立 InspectionCapaModule、18 张领域表迁移、计划任务复用、模板/检查/统一问题/CAPA API、工作平台来源回链和工作平台内懒加载页面。
+  - 初次本地 migration 因 PostgreSQL 未启动被拒绝；启动仓库 compose 依赖后 `make migration-run` 成功。专项 API unit/integration、前端组件测试、API lint 与 API/Web build 已运行；进入最终全量复验与代码审阅。
+  - 最终复验：API 单元测试 16 suites / 79 tests 通过；Wave 6 PostgreSQL 集成测试 4 tests 通过；完整 Web 测试与根 `pnpm test` 通过；根 `pnpm build` 通过。
+  - 重新执行两个 OpenAPI Swagger 校验、`make migration-run`、文档 inventory/index 校验（258 个 Markdown）和 API lint；lint 发现并修复一个未使用导入后复验通过，`git diff --check` 通过。
+- 交付证据链：
+  - 集成测试 `inspection-capa.integration.spec.ts` 验证“计划 -> 两位检查人独立签认 -> all 门槛汇总 -> 去重不符合项 -> CAPA 根因/纠正/预防/证据 -> 验证返工 -> 受权验证人关闭”，并验证四类既有来源的双向链接。

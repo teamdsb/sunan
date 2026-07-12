@@ -220,6 +220,14 @@ export interface WorkbenchAttachmentUploadPayload {
   remark?: string;
 }
 
+export interface WorkbenchIssueLink {
+  id: string;
+  title: string;
+  issueType: string;
+  severity: string;
+  status: string;
+}
+
 export const workbenchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getWorkbenchModules: builder.query<{ data: WorkbenchModuleItem[] }, void>({
@@ -244,6 +252,10 @@ export const workbenchApi = baseApi.injectEndpoints({
     }),
     getWorkbenchRecord: builder.query<{ data: WorkbenchRecordDetail }, string>({
       query: (id) => ({ url: `/workbench/records/${id}` }),
+      providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
+    }),
+    getWorkbenchRecordIssues: builder.query<{ data: WorkbenchIssueLink[] }, string>({
+      query: (recordId) => ({ url: `/workbench/records/${recordId}/issues` }),
       providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
     }),
     getWorkbenchPrintSnapshot: builder.query<{ data: WorkbenchPrintSnapshot }, { recordId: string; paperSize?: 'A4' | 'A3' }>({
@@ -304,6 +316,7 @@ export const {
   useGetWorkbenchAttendanceStatisticsQuery,
   useGetWorkbenchRecordsQuery,
   useGetWorkbenchRecordQuery,
+  useGetWorkbenchRecordIssuesQuery,
   useLazyGetWorkbenchPrintSnapshotQuery,
   useGetWorkbenchPrintSnapshotQuery,
   useUploadWorkbenchRecordAttachmentMutation,

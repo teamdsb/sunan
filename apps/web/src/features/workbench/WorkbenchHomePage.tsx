@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { useWecomJsSdk } from '../../hooks/useWecomJsSdk';
+import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
 import {
   WorkbenchApprovalLaunchConfig,
   WorkbenchModuleSchemaField,
@@ -30,6 +31,7 @@ import {
   useLazyGetWorkbenchPrintSnapshotQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchRecordQuery,
+  useGetWorkbenchRecordIssuesQuery,
   useGetWorkbenchRecordsQuery,
   useLaunchWorkbenchApprovalMutation,
   usePerformWorkbenchRecordActionMutation,
@@ -248,6 +250,9 @@ export function WorkbenchHomePage({
     useGetWorkbenchRecordQuery(activeRecordId ?? '', {
       skip: !activeRecordId,
     });
+  const { data: issueLinksResponse } = useGetWorkbenchRecordIssuesQuery(activeRecordId ?? '', {
+    skip: !activeRecordId,
+  });
 
   const { data: moduleSchemaResponse, isLoading: schemaLoading } =
     useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
@@ -1164,6 +1169,20 @@ export function WorkbenchHomePage({
                 <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
                   审批实例：{detailResponse.data.externalProcessInstanceId}
                 </Typography.Paragraph>
+              ) : null}
+              {issueLinksResponse?.data.length ? (
+                <Card size="small" title="关联问题" style={{ marginTop: 12 }}>
+                  <List
+                    size="small"
+                    dataSource={issueLinksResponse.data}
+                    renderItem={(issue) => (
+                      <List.Item actions={[<Button key="issue" type="link" onClick={() => navigate(workbenchRouteConfig.issueDetail.buildPath(issue.id))}>查看 CAPA</Button>]}>
+                        <List.Item.Meta title={issue.title} description={`${issue.issueType} · ${issue.severity}`} />
+                        <Tag>{issue.status}</Tag>
+                      </List.Item>
+                    )}
+                  />
+                </Card>
               ) : null}
             </div>
 

@@ -83,6 +83,26 @@ import {
   SafetyTaskTransferEntity,
 } from 'src/database/entities/safety-plan-task.entity';
 import { Wave5PlanTask1710000019000 } from 'src/database/migrations/1710000019000-wave5-plan-task';
+import { Wave6InspectionCapa1710000020000 } from 'src/database/migrations/1710000020000-wave6-inspection-capa';
+import {
+  CapaActionEntity,
+  CapaActionEvidenceEntity,
+  CapaRootCauseEntity,
+  CapaVerificationEntity,
+  InspectionCapaActionLogEntity,
+  InspectionEntity,
+  InspectionPlanEntity,
+  InspectionResultEntity,
+  InspectionResultEvidenceEntity,
+  InspectionTemplateEntity,
+  InspectionTemplateItemEntity,
+  InspectionTemplateScopeEntity,
+  InspectionTemplateVersionEntity,
+  IssueSourceEntity,
+  IssueTransferJobEntity,
+  SafetyCapaEntity,
+  SafetyIssueEntity,
+} from 'src/database/entities/safety-inspection-capa.entity';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -141,6 +161,23 @@ const ALL_TEST_ENTITIES = [
   SafetyTaskGenerationRunEntity,
   SafetyTaskGenerationEntryEntity,
   SafetyTaskNotificationDeliveryEntity,
+  InspectionTemplateEntity,
+  InspectionTemplateVersionEntity,
+  InspectionTemplateItemEntity,
+  InspectionTemplateScopeEntity,
+  InspectionPlanEntity,
+  InspectionEntity,
+  InspectionResultEntity,
+  InspectionResultEvidenceEntity,
+  SafetyIssueEntity,
+  IssueSourceEntity,
+  IssueTransferJobEntity,
+  SafetyCapaEntity,
+  CapaRootCauseEntity,
+  CapaActionEntity,
+  CapaActionEvidenceEntity,
+  CapaVerificationEntity,
+  InspectionCapaActionLogEntity,
 ];
 
 const ALL_TEST_MIGRATIONS = [
@@ -164,6 +201,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave3EvidenceExport1710000017000,
   Wave4MasterData1710000018000,
   Wave5PlanTask1710000019000,
+  Wave6InspectionCapa1710000020000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

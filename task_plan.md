@@ -92,11 +92,11 @@ replaced_by: []
 - [x] 阅读用户指定的需求、计划、Wave 2/3/5 规格、工作平台检查整改规格与代码现状
 - [x] 提出独立安全领域对象、复用任务/证据/ABAC 的设计，并获用户确认
 - [x] 写入并自检可审查设计文档；等待用户审阅书面设计
-- [ ] 冻结 inspection-capa API、DB、state、UI 规格并校验
-- [ ] 先建立模板版本、多人完成、自动转单幂等、关闭门槛和返工的红灯测试
-- [ ] 实现迁移、领域服务、来源双向链接与前端页面
-- [ ] 完成 API/Web/迁移/OpenAPI/文档全量验证和端到端证据链
-- **状态：** in_progress
+- [x] 冻结 inspection-capa API、DB、state、UI 规格并校验
+- [x] 先建立模板版本、多人完成、自动转单幂等、关闭门槛和返工的红灯测试
+- [x] 实现迁移、领域服务、来源双向链接与前端页面
+- [x] 完成 API/Web/迁移/OpenAPI/文档全量验证和端到端证据链
+- **状态：** completed（Wave 6 自动化门禁全部通过）
 
 ## 关键问题
 1. 用户最新确认：M1-M6 修复应作为新的 M7；原 M7/M8 整体后移。
@@ -120,6 +120,8 @@ replaced_by: []
 |------|---------|---------|
 | 默认 PATH 找不到 `node` | 1 | 使用 Codex bundled Node 绝对路径执行文档脚本 |
 | 尝试直接反向应用 Git diff 恢复规划文件被 `apply_patch` 拒绝 | 1 | 改为读取 index 原文，再用 `apply_patch` 删除并重建三个文件；历史内容已恢复 |
+| Wave 6 OpenAPI 初次校验失败 | 1 | 流式 YAML 中带逗号的 response description 被解析为对象；按已验证的 Wave 5 模式加引号后通过 Swagger 校验 |
+| 直接运行本地迁移连接被拒绝 | 1 | 本地 PostgreSQL 未运行；按 `make db-up` 启动后 `make migration-run` 成功执行 |
 
 ## 备注
 - 所有新增文档默认使用仓库现有 YAML front matter 风格。

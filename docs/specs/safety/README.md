@@ -40,10 +40,10 @@ replaced_by: []
 | 5 | DB | `db/plan-task-schema.md` | 已迁移并通过 Wave 5 验收 |
 | 5 | State | `state/task-lifecycle.md` | 已实现并通过 Wave 5 验收 |
 | 5 | UI | `ui/task-center-and-calendar.md` | 已实现并通过 Wave 5 验收 |
-| 6 | API | `api/inspection-capa-api.yaml` | 待编写 |
-| 6 | DB | `db/inspection-capa-schema.md` | 待编写 |
-| 6 | State | `state/inspection-capa-lifecycle.md` | 待编写 |
-| 6 | UI | `ui/inspection-and-capa-pages.md` | 待编写 |
+| 6 | API | `api/inspection-capa-api.yaml` | 已冻结，待实现与验收 |
+| 6 | DB | `db/inspection-capa-schema.md` | 已冻结，待迁移与验收 |
+| 6 | State | `state/inspection-capa-lifecycle.md` | 已冻结，待实现与验收 |
+| 6 | UI | `ui/inspection-and-capa-pages.md` | 已冻结，待实现与验收 |
 
 “待编写”表示该 Wave 的具体合约尚未评审，不能据此新增生产表、Controller、页面或占位接口；“已冻结”只表示入口、边界和门禁已经确定。
 

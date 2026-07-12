@@ -9,6 +9,7 @@ const mockNavigate = vi.fn();
 const mockGetWorkbenchDashboardQuery = vi.fn();
 const mockGetWorkbenchRecordsQuery = vi.fn();
 const mockGetWorkbenchRecordQuery = vi.fn();
+const mockGetWorkbenchRecordIssuesQuery = vi.fn();
 const mockGetWorkbenchModuleSchemaQuery = vi.fn();
 const mockGetWorkbenchAttendanceStatisticsQuery = vi.fn();
 const mockTriggerPrintSnapshot = vi.fn();
@@ -34,6 +35,7 @@ vi.mock('./workbenchApi', () => ({
   useGetWorkbenchDashboardQuery: () => mockGetWorkbenchDashboardQuery(),
   useGetWorkbenchRecordsQuery: (params: unknown) => mockGetWorkbenchRecordsQuery(params),
   useGetWorkbenchRecordQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordQuery(recordId, options),
+  useGetWorkbenchRecordIssuesQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordIssuesQuery(recordId, options),
   useGetWorkbenchModuleSchemaQuery: (moduleCode: string, options: unknown) =>
     mockGetWorkbenchModuleSchemaQuery(moduleCode, options),
   useGetWorkbenchAttendanceStatisticsQuery: (params: unknown, options: unknown) =>
@@ -143,6 +145,7 @@ describe('WorkbenchHomePage', () => {
       data: undefined,
       isFetching: false,
     });
+    mockGetWorkbenchRecordIssuesQuery.mockReturnValue({ data: { data: [] } });
     mockGetWorkbenchModuleSchemaQuery.mockReturnValue({
       data: {
         data: {

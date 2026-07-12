@@ -14,6 +14,6 @@ replaced_by: []
 | 2 | `workflow-lifecycle.md` | 流程步骤、参与人、退回、终止、作废、代理与转移 |
 | 3 | `evidence-jobs.md` | 已冻结：证据替换/解除关联与导出任务状态 |
 | 5 | `task-lifecycle.md` | 计划、任务、提醒和日历状态 |
-| 6 | `inspection-capa-lifecycle.md` | 检查、问题、CAPA、措施与验证状态 |
+| 6 | `inspection-capa-lifecycle.md` | 已冻结：多人检查、问题、CAPA、措施、验证、返工与关闭状态 |
 
 未经状态规格评审，页面、接口和 job 不得自行新增状态值或直接写入状态字段。
