@@ -28,7 +28,7 @@ export class Wave4MasterData1710000018000 implements MigrationInterface {
     await q.query(`CREATE TRIGGER set_workbench_master_data_references_updated_at BEFORE UPDATE ON workbench_master_data_references FOR EACH ROW EXECUTE FUNCTION set_updated_at()`);
   }
   async down(q: QueryRunner): Promise<void> {
-    const equipmentCertificates = await q.query(`SELECT count(*)::int AS count FROM certificates WHERE owner_type = 'equipment' AND deleted_at IS NULL`);
+    const equipmentCertificates = await q.query(`SELECT count(*)::int AS count FROM certificates WHERE owner_type = 'equipment' AND deleted_at IS NULL`) as Array<{ count: number }>;
     if (Number(equipmentCertificates[0]?.count ?? 0) > 0) throw new Error('cannot roll back Wave 4 while equipment certificates exist');
     await q.query('DROP TRIGGER IF EXISTS set_workbench_master_data_references_updated_at ON workbench_master_data_references'); await q.query('DROP TABLE IF EXISTS workbench_master_data_references');
     await q.query('DROP TRIGGER IF EXISTS set_master_data_import_rows_updated_at ON master_data_import_rows'); await q.query('DROP TABLE IF EXISTS master_data_import_rows');

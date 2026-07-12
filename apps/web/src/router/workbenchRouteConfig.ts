@@ -9,6 +9,10 @@ export const workbenchRouteConfig = {
     label: '安全主数据中心',
     description: '管理船舶、人员任职、设备与受控选择器。',
   },
+  tasks: { path: '/workbench/tasks', label: '安全任务中心', description: '查看真实待办、参与任务、完成任务和日历。' },
+  taskDetail: { path: '/workbench/tasks/:taskId', label: '任务详情', description: '从任务中心或企业微信消息直达任务。', buildPath: (taskId: string) => `/workbench/tasks/${taskId}` },
+  plans: { path: '/workbench/plans', label: '计划管理', description: '创建、启用、暂停和查看安全计划。' },
+  planDetail: { path: '/workbench/plans/:planId', label: '计划项管理', description: '管理计划项、生成规则和完成率。', buildPath: (planId: string) => `/workbench/plans/${planId}` },
   module: {
     path: '/workbench/modules/:moduleCode',
     label: '模块工作台',

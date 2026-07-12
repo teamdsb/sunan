@@ -374,6 +374,7 @@ describe('CertificateReminderJobService', () => {
     state.failNextRenewal = true;
 
     const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+    jest.spyOn((service as unknown as { logger: { warn: (message: string) => void } }).logger, 'warn').mockImplementation(() => undefined);
     const enqueueResult = await service.enqueueScan({ source: 'manual' });
 
     const processing = (service as any).processQueueOnce();
@@ -418,6 +419,7 @@ describe('CertificateReminderJobService', () => {
     state.rejectNextRenewal = true;
 
     const service = new CertificateReminderJobService(redis as never, engine as never, clock as never);
+    jest.spyOn((service as unknown as { logger: { warn: (message: string) => void } }).logger, 'warn').mockImplementation(() => undefined);
     const enqueueResult = await service.enqueueScan({ source: 'manual' });
 
     const processing = (service as any).processQueueOnce();

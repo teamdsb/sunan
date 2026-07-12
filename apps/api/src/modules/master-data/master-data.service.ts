@@ -41,7 +41,7 @@ export class MasterDataService {
   async createVessel(dto: VesselMasterDataDto, user: CurrentUser) {
     this.ensureManager(user); this.require(dto.code, 'code'); this.require(dto.name, 'name'); this.require(dto.category, 'category');
     if (await this.vessels.exists({ where: [{ code: dto.code, deletedAt: IsNull() }, { name: dto.name, deletedAt: IsNull() }] })) throw new ConflictException('vessel code or name already exists');
-    const row = await this.vessels.save(this.vessels.create({ code: dto.code!, name: dto.name!, category: dto.category!, status: dto.status ?? 'active', mmsi: dto.mmsi ?? null, remarks: dto.remarks ?? null }));
+    const row = await this.vessels.save(this.vessels.create({ code: dto.code, name: dto.name, category: dto.category, status: dto.status ?? 'active', mmsi: dto.mmsi ?? null, remarks: dto.remarks ?? null }));
     return { data: this.vesselDto(row) };
   }
 
@@ -72,7 +72,7 @@ export class MasterDataService {
   async createPersonnel(dto: PersonnelMasterDataDto, user: CurrentUser) {
     this.ensureManager(user); this.require(dto.name, 'name'); this.require(dto.departmentCode, 'departmentCode');
     if (dto.wecomUserId && await this.personnel.exists({ where: { wecomUserId: dto.wecomUserId, deletedAt: IsNull() } })) throw new ConflictException('wecom identity already mapped');
-    const row = await this.personnel.save(this.personnel.create({ name: dto.name!, departmentCode: dto.departmentCode!, wecomUserId: dto.wecomUserId ?? null, position: dto.position ?? null, mobile: dto.mobile ?? null, employmentStatus: dto.employmentStatus ?? 'active', isSyncFromWecom: false, remarks: dto.remarks ?? null }));
+    const row = await this.personnel.save(this.personnel.create({ name: dto.name, departmentCode: dto.departmentCode, wecomUserId: dto.wecomUserId ?? null, position: dto.position ?? null, mobile: dto.mobile ?? null, employmentStatus: dto.employmentStatus ?? 'active', isSyncFromWecom: false, remarks: dto.remarks ?? null }));
     return { data: this.personnelDto(row, user) };
   }
 
@@ -107,14 +107,15 @@ export class MasterDataService {
   async createEquipment(dto: EquipmentMasterDataDto, user: CurrentUser) {
     this.ensureManager(user); this.require(dto.code, 'code'); this.require(dto.name, 'name'); this.require(dto.categoryCode, 'categoryCode'); this.require(dto.vesselId, 'vesselId');
     if (await this.equipment.exists({ where: { code: dto.code, deletedAt: IsNull() } })) throw new ConflictException('equipment code already exists');
-    const vessel = await this.vessel(dto.vesselId!); if (vessel.status !== 'active') throw new UnprocessableEntityException('inactive vessel cannot own new equipment');
-    const category = await this.activeCategory(dto.categoryCode!, user);
-    const row = await this.equipment.save(this.equipment.create({ code: dto.code!, name: dto.name!, categoryId: category.id, vesselId: vessel.id, serialNo: dto.serialNo ?? null, status: dto.status ?? 'active', remarks: dto.remarks ?? null, createdBy: user.userId, updatedBy: user.userId }));
+    const vessel = await this.vessel(dto.vesselId); if (vessel.status !== 'active') throw new UnprocessableEntityException('inactive vessel cannot own new equipment');
+    const category = await this.activeCategory(dto.categoryCode, user);
+    const row = await this.equipment.save(this.equipment.create({ code: dto.code, name: dto.name, categoryId: category.id, vesselId: vessel.id, serialNo: dto.serialNo ?? null, status: dto.status ?? 'active', remarks: dto.remarks ?? null, createdBy: user.userId, updatedBy: user.userId }));
     return { data: this.equipmentDto(row) };
   }
 
   async getEquipment(id: string, user: CurrentUser) {
     const row = await this.equipment.findOne({ where: { id, deletedAt: IsNull() } }); if (!row) throw new NotFoundException('equipment not found');
+    const vessel = await this.vessel(row.vesselId); if (!this.isVesselVisible(vessel, user)) throw new ForbiddenException('forbidden');
     const certificates = await this.certificates.find({ where: { ownerType: 'equipment', ownerId: id, deletedAt: IsNull() } });
     return { data: { ...this.equipmentDto(row), certificates: certificates.map((item) => this.certificateDto(item)) } };
   }
@@ -147,9 +148,9 @@ export class MasterDataService {
     for (const [index, input] of rows.entries()) {
       let outcome: MasterDataImportRowEntity['outcome'] = 'failed'; let naturalKey: string | null = null; let errorCode: string | null = null; let errorMessage: string | null = null;
       try {
-        if (dto.importType === 'vessels') { const code = String(input.code ?? '').trim(); const name = String(input.name ?? '').trim(); const category = String(input.category ?? '').trim(); naturalKey = code || null; if (!code || !name || !category) throw new UnprocessableEntityException('code, name and category are required'); if (await this.vessels.exists({ where: { code, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.vessels.save(this.vessels.create({ code, name, category, status: 'active', mmsi: null, remarks: null })); outcome = 'created'; } }
-        else if (dto.importType === 'personnel') { const wecomUserId = String(input.wecomUserId ?? '').trim(); const name = String(input.name ?? '').trim(); const departmentCode = String(input.departmentCode ?? '').trim(); naturalKey = wecomUserId || `${name}:${departmentCode}`; if (!name || !departmentCode) throw new UnprocessableEntityException('name and departmentCode are required'); if (wecomUserId && await this.personnel.exists({ where: { wecomUserId, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.personnel.save(this.personnel.create({ name, departmentCode, wecomUserId: wecomUserId || null, position: null, mobile: null, employmentStatus: 'active', isSyncFromWecom: false, remarks: null })); outcome = 'created'; } }
-        else if (dto.importType === 'assignments') { const vessel = await this.vessels.findOne({ where: { code: String(input.vesselCode ?? ''), deletedAt: IsNull() } }); const person = await this.personnel.findOne({ where: { wecomUserId: String(input.wecomUserId ?? ''), deletedAt: IsNull() } }); const roleCode = String(input.roleCode ?? ''); const effectiveFrom = String(input.effectiveFrom ?? ''); naturalKey = `${input.vesselCode ?? ''}:${input.wecomUserId ?? ''}:${effectiveFrom}`; if (!vessel || !person || !roleCode || !effectiveFrom || vessel.status !== 'active' || person.employmentStatus !== 'active') throw new UnprocessableEntityException('active vessel, personnel, roleCode and effectiveFrom are required'); if (await this.assignments.exists({ where: { vesselId: vessel.id, personnelId: person.id, effectiveFrom, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.assignments.save(this.assignments.create({ vesselId: vessel.id, personnelId: person.id, roleCode, effectiveFrom, effectiveTo: null, status: 'active', vesselNameSnapshot: vessel.name, personnelNameSnapshot: person.name, createdBy: user.userId, updatedBy: user.userId })); outcome = 'created'; } }
+        if (dto.importType === 'vessels') { const code = this.stringValue(input.code); const name = this.stringValue(input.name); const category = this.stringValue(input.category); naturalKey = code || null; if (!code || !name || !category) throw new UnprocessableEntityException('code, name and category are required'); if (await this.vessels.exists({ where: { code, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.vessels.save(this.vessels.create({ code, name, category, status: 'active', mmsi: null, remarks: null })); outcome = 'created'; } }
+        else if (dto.importType === 'personnel') { const wecomUserId = this.stringValue(input.wecomUserId); const name = this.stringValue(input.name); const departmentCode = this.stringValue(input.departmentCode); naturalKey = wecomUserId || `${name}:${departmentCode}`; if (!name || !departmentCode) throw new UnprocessableEntityException('name and departmentCode are required'); if (wecomUserId && await this.personnel.exists({ where: { wecomUserId, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.personnel.save(this.personnel.create({ name, departmentCode, wecomUserId: wecomUserId || null, position: null, mobile: null, employmentStatus: 'active', isSyncFromWecom: false, remarks: null })); outcome = 'created'; } }
+        else if (dto.importType === 'assignments') { const vesselCode = this.stringValue(input.vesselCode); const wecomUserId = this.stringValue(input.wecomUserId); const roleCode = this.stringValue(input.roleCode); const effectiveFrom = this.stringValue(input.effectiveFrom); const vessel = await this.vessels.findOne({ where: { code: vesselCode, deletedAt: IsNull() } }); const person = await this.personnel.findOne({ where: { wecomUserId, deletedAt: IsNull() } }); naturalKey = `${vesselCode}:${wecomUserId}:${effectiveFrom}`; if (!vessel || !person || !roleCode || !effectiveFrom || vessel.status !== 'active' || person.employmentStatus !== 'active') throw new UnprocessableEntityException('active vessel, personnel, roleCode and effectiveFrom are required'); if (await this.assignments.exists({ where: { vesselId: vessel.id, personnelId: person.id, effectiveFrom, deletedAt: IsNull() } })) outcome = 'skipped'; else { await this.assignments.save(this.assignments.create({ vesselId: vessel.id, personnelId: person.id, roleCode, effectiveFrom, effectiveTo: null, status: 'active', vesselNameSnapshot: vessel.name, personnelNameSnapshot: person.name, createdBy: user.userId, updatedBy: user.userId })); outcome = 'created'; } }
         else {
         const code = typeof input.code === 'string' ? input.code.trim() : ''; naturalKey = code || null;
         const name = typeof input.name === 'string' ? input.name.trim() : ''; const categoryCode = typeof input.categoryCode === 'string' ? input.categoryCode.trim() : ''; const vesselCode = typeof input.vesselCode === 'string' ? input.vesselCode.trim() : '';
@@ -191,6 +192,7 @@ export class MasterDataService {
   private async activeCategory(code: string, user: CurrentUser) { let row = await this.categories.findOne({ where: { code, deletedAt: IsNull() } }); if (!row) row = await this.categories.save(this.categories.create({ code, name: code, status: 'active', createdBy: user.userId, updatedBy: user.userId })); if (row.status !== 'active') throw new UnprocessableEntityException('equipment category is inactive'); return row; }
   private ensureManager(user: CurrentUser) { if (!user || !(user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)))) throw new ForbiddenException('forbidden'); }
   private require(value: string | undefined, field: string): asserts value is string { if (!value?.trim()) throw new UnprocessableEntityException(`${field} is required`); }
+  private stringValue(value: unknown) { return typeof value === 'string' ? value.trim() : ''; }
   private isVesselVisible(vessel: VesselEntity, user: CurrentUser) { return user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || user.departments.includes(`vessel:${vessel.id}`) || user.departments.includes(`vessel:${vessel.code}`); }
   private overlaps(from: string, to: string | null, existingFrom: string, existingTo: string | null) { return from <= (existingTo ?? '9999-12-31') && existingFrom <= (to ?? '9999-12-31'); }
   private vesselDto(row: VesselEntity) { return { id: row.id, code: row.code, name: row.name, category: row.category, status: row.status, mmsi: row.mmsi, remarks: row.remarks }; }

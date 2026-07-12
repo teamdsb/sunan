@@ -32,7 +32,7 @@ describe('EnterprisePolicyDetailPage', () => {
 
   it('relies on the global navigation instead of a return button', () => {
     render(
-      <MemoryRouter
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={[
           '/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D3%26pageSize%3D20%26status%3Dpublished%26keyword%3Ddemo',
         ]}
@@ -50,7 +50,7 @@ describe('EnterprisePolicyDetailPage', () => {
 
   it('supports edit and file bind', async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={['/my/enterprise-policy/1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-policy/1']}>
         <Routes>
           <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
         </Routes>

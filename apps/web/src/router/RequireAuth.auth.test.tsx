@@ -27,7 +27,7 @@ describe('RequireAuth auth mode', () => {
 
     render(
       <Provider store={createStore()}>
-        <MemoryRouter initialEntries={[target]}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[target]}>
           <Routes>
             <Route element={<RequireAuth />}>
               <Route

@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: M8 Safety Plan and Task API
+  version: 1.0.0
+  description: M8 Wave 5 contract for reusable plans, generated tasks, unified task views, calendar, action audit and WeCom delivery reconciliation.
+servers:
+  - url: /api/v1
+paths:
+  /plans:
+    get:
+      tags: [Plans]
+      summary: List plans visible under the caller's ABAC scope
+      parameters: [{$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}, {$ref: '#/components/parameters/PlanStatus'}, {$ref: '#/components/parameters/VesselId'}]
+      responses: {'200': {$ref: '#/components/responses/PlanList'}, '401': {$ref: '#/components/responses/Unauthorized'}}
+    post:
+      tags: [Plans]
+      summary: Create a draft plan in the caller's permitted scope
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PlanInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Plan'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /plans/{planId}:
+    get:
+      tags: [Plans]
+      summary: Get a plan, its items and task completion summary
+      parameters: [{$ref: '#/components/parameters/PlanId'}]
+      responses: {'200': {$ref: '#/components/responses/Plan'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      tags: [Plans]
+      summary: Update a draft or paused plan without altering generated tasks
+      parameters: [{$ref: '#/components/parameters/PlanId'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PlanInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Plan'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /plans/{planId}/actions:
+    post:
+      tags: [Plans]
+      summary: Activate, pause or retire a plan
+      parameters: [{$ref: '#/components/parameters/PlanId'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PlanActionRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/Plan'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /plans/{planId}/items:
+    get:
+      tags: [Plans]
+      summary: List plan items and their generation summaries
+      parameters: [{$ref: '#/components/parameters/PlanId'}]
+      responses: {'200': {$ref: '#/components/responses/PlanItemList'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+    post:
+      tags: [Plans]
+      summary: Add a plan item with an explicit recurrence rule and participants
+      parameters: [{$ref: '#/components/parameters/PlanId'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PlanItemInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/PlanItem'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /plans/{planId}/items/{itemId}:
+    patch:
+      tags: [Plans]
+      summary: Version a plan-item rule for future generation only
+      parameters: [{$ref: '#/components/parameters/PlanId'}, {$ref: '#/components/parameters/ItemId'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PlanItemInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/PlanItem'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /plans/{planId}/generation-runs:
+    get:
+      tags: [Generation]
+      summary: List durable generation runs and reconciliation counts
+      parameters: [{$ref: '#/components/parameters/PlanId'}, {$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/GenerationRunList'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+    post:
+      tags: [Generation]
+      summary: Request an idempotent generation or reconciliation run for a time window
+      parameters: [{$ref: '#/components/parameters/PlanId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/GenerationRequest'}}}}
+      responses: {'202': {$ref: '#/components/responses/GenerationRun'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: Query the single real task data set for todo, initiated, participated, completed, overdue, list or calendar views
+      parameters: [{$ref: '#/components/parameters/TaskView'}, {$ref: '#/components/parameters/TaskStatus'}, {$ref: '#/components/parameters/PlanIdQuery'}, {$ref: '#/components/parameters/VesselId'}, {$ref: '#/components/parameters/StartAt'}, {$ref: '#/components/parameters/EndAt'}, {$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/TaskList'}, '401': {$ref: '#/components/responses/Unauthorized'}}
+  /tasks/{taskId}:
+    get:
+      tags: [Tasks]
+      summary: Get one task, authorized actions, participants, audit trail and delivery summary
+      parameters: [{$ref: '#/components/parameters/TaskId'}]
+      responses: {'200': {$ref: '#/components/responses/Task'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+  /tasks/{taskId}/actions:
+    post:
+      tags: [Tasks]
+      summary: Execute an authorized task action with durable audit and idempotency
+      parameters: [{$ref: '#/components/parameters/TaskId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/TaskActionRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/Task'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /tasks/{taskId}/notification-deliveries:
+    get:
+      tags: [Notifications]
+      summary: List durable WeCom delivery records for an authorized task
+      parameters: [{$ref: '#/components/parameters/TaskId'}]
+      responses: {'200': {$ref: '#/components/responses/DeliveryList'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+  /tasks/{taskId}/notification-deliveries/{deliveryId}/retry:
+    post:
+      tags: [Notifications]
+      summary: Requeue a retryable failed task delivery without changing its dedupe key
+      parameters: [{$ref: '#/components/parameters/TaskId'}, {$ref: '#/components/parameters/DeliveryId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'202': {$ref: '#/components/responses/Delivery'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /task-notification-deliveries/actions/process:
+    post:
+      tags: [Notifications]
+      summary: Process queued and retry-due task deliveries as a system administrator worker entry point
+      responses:
+        '202':
+          description: Queue processing summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [processed, sent, failed, skipped]
+                    properties:
+                      processed: {type: integer, minimum: 0}
+                      sent: {type: integer, minimum: 0}
+                      failed: {type: integer, minimum: 0}
+                      skipped: {type: integer, minimum: 0}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /plan-task-jobs/actions/run:
+    post:
+      tags: [Generation, Notifications]
+      summary: Run the same daily generation, overdue-escalation and delivery-retry cycle used by the scheduler
+      responses:
+        '202':
+          description: Scheduled-cycle summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [plans, created, skipped, failed, escalated, deliveries]
+                    properties:
+                      plans: {type: integer, minimum: 0}
+                      created: {type: integer, minimum: 0}
+                      skipped: {type: integer, minimum: 0}
+                      failed: {type: integer, minimum: 0}
+                      escalated: {type: integer, minimum: 0}
+                      deliveries: {type: object}
+        '403': {$ref: '#/components/responses/Forbidden'}
+components:
+  parameters:
+    PlanId: {name: planId, in: path, required: true, schema: {type: string, format: uuid}}
+    PlanIdQuery: {name: planId, in: query, schema: {type: string, format: uuid}}
+    ItemId: {name: itemId, in: path, required: true, schema: {type: string, format: uuid}}
+    TaskId: {name: taskId, in: path, required: true, schema: {type: string, format: uuid}}
+    DeliveryId: {name: deliveryId, in: path, required: true, schema: {type: string, format: uuid}}
+    VesselId: {name: vesselId, in: query, schema: {type: string, format: uuid}}
+    Page: {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+    PageSize: {name: pageSize, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+    PlanStatus: {name: status, in: query, schema: {type: string, enum: [draft, active, paused, retired]}}
+    TaskStatus: {name: status, in: query, schema: {type: string, enum: [pending, in_progress, blocked, completed, cancelled]}}
+    TaskView: {name: view, in: query, schema: {type: string, enum: [todo, initiated, participated, completed, overdue]}}
+    StartAt: {name: startAt, in: query, schema: {type: string, format: date-time}}
+    EndAt: {name: endAt, in: query, schema: {type: string, format: date-time}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 16, maxLength: 128}}
+  responses:
+    Plan: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PlanResponse'}}}}
+    PlanList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PlanListResponse'}}}}
+    PlanItem: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PlanItemResponse'}}}}
+    PlanItemList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PlanItemListResponse'}}}}
+    GenerationRun: {description: Accepted, content: {application/json: {schema: {$ref: '#/components/schemas/GenerationRunResponse'}}}}
+    GenerationRunList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/GenerationRunListResponse'}}}}
+    Task: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TaskResponse'}}}}
+    TaskList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TaskListResponse'}}}}
+    Delivery: {description: Accepted, content: {application/json: {schema: {$ref: '#/components/schemas/DeliveryResponse'}}}}
+    DeliveryList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/DeliveryListResponse'}}}}
+    Unauthorized: {description: Authentication required}
+    Forbidden: {description: Resource or action is not authorized under ABAC}
+    NotFound: {description: Authorized resource was not found}
+    Conflict: {description: "Idempotency conflict, duplicate run, or illegal state transition"}
+    Unprocessable: {description: "Invalid recurrence, inactive reference, reason, date or completion rule"}
+  schemas:
+    PlanInput:
+      type: object
+      required: [title, planType, timeZone]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 200}
+        description: {type: string, maxLength: 2000}
+        planType: {type: string, enum: [annual, monthly, periodic, one_time]}
+        timeZone: {type: string, enum: [Asia/Shanghai]}
+        ownerUserId: {type: string, maxLength: 64, description: Required only when an authorized manager creates for another active user}
+        vesselId: {type: string, format: uuid, nullable: true}
+    PlanActionRequest: {type: object, required: [actionType], properties: {actionType: {type: string, enum: [activate, pause, retire]}, reason: {type: string, minLength: 1, maxLength: 500}}}
+    PlanItemInput:
+      type: object
+      required: [title, responsibleUserId, recurrence, dueOffsetMinutes, completionRule]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 200}
+        description: {type: string, maxLength: 2000}
+        responsibleUserId: {type: string, maxLength: 64}
+        participantUserIds: {type: array, items: {type: string, maxLength: 64}, uniqueItems: true}
+        completionRule: {type: string, enum: [all, any, quorum]}
+        quorumCount: {type: integer, minimum: 1, nullable: true}
+        dueOffsetMinutes: {type: integer, minimum: 0, maximum: 525600}
+        recurrence: {$ref: '#/components/schemas/RecurrenceRule'}
+    RecurrenceRule:
+      type: object
+      required: [kind, startAt]
+      properties:
+        kind: {type: string, enum: [annual, monthly, periodic, one_time]}
+        startAt: {type: string, format: date-time, description: "Local plan-zone occurrence for one_time, anchor for other rules"}
+        month: {type: integer, minimum: 1, maximum: 12, nullable: true, description: Required for annual rules}
+        dayOfMonth: {type: integer, minimum: 1, maximum: 31, nullable: true, description: Required for annual/monthly; overflow clamps to month end without anchor drift}
+        intervalDays: {type: integer, minimum: 1, maximum: 366, nullable: true, description: Required for periodic rules}
+    GenerationRequest: {type: object, required: [windowStart, windowEnd], properties: {windowStart: {type: string, format: date-time}, windowEnd: {type: string, format: date-time}, mode: {type: string, enum: [generate, reconcile], default: generate}}}
+    TaskActionRequest:
+      type: object
+      required: [actionType]
+      properties:
+        actionType: {type: string, enum: [start, complete, block, reschedule, cancel, remind, escalate, delegate, transfer]}
+        reason: {type: string, minLength: 1, maxLength: 500}
+        dueAt: {type: string, format: date-time, nullable: true}
+        scheduledAt: {type: string, format: date-time, nullable: true}
+        recipientUserId: {type: string, maxLength: 64, nullable: true}
+        delegateUserId: {type: string, maxLength: 64, nullable: true}
+        delegateUntil: {type: string, format: date-time, nullable: true}
+        transferToUserId: {type: string, maxLength: 64, nullable: true}
+    Plan:
+      type: object
+      required: [id, title, planType, status, ownerUserId, timeZone, completionRate]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        planType: {type: string, enum: [annual, monthly, periodic, one_time]}
+        status: {type: string, enum: [draft, active, paused, retired]}
+        ownerUserId: {type: string}
+        timeZone: {type: string, enum: [Asia/Shanghai]}
+        vesselId: {type: string, format: uuid, nullable: true}
+        completionRate: {type: number, minimum: 0, maximum: 1}
+        taskSummary: {$ref: '#/components/schemas/TaskCountSummary'}
+        items: {type: array, items: {$ref: '#/components/schemas/PlanItem'}}
+    PlanItem:
+      type: object
+      required: [id, planId, title, responsibleUserId, recurrence, ruleVersion, enabled]
+      properties:
+        id: {type: string, format: uuid}
+        planId: {type: string, format: uuid}
+        title: {type: string}
+        responsibleUserId: {type: string}
+        completionRule: {type: string, enum: [all, any, quorum]}
+        quorumCount: {type: integer, nullable: true}
+        recurrence: {$ref: '#/components/schemas/RecurrenceRule'}
+        dueOffsetMinutes: {type: integer}
+        ruleVersion: {type: integer, minimum: 1}
+        enabled: {type: boolean}
+    TaskCountSummary: {type: object, required: [total, pending, inProgress, blocked, completed, cancelled, overdue], properties: {total: {type: integer}, pending: {type: integer}, inProgress: {type: integer}, blocked: {type: integer}, completed: {type: integer}, cancelled: {type: integer}, overdue: {type: integer}}}
+    DeliveryCountSummary: {type: object, required: [total, queued, dispatching, sent, failed, skipped], properties: {total: {type: integer}, queued: {type: integer}, dispatching: {type: integer}, sent: {type: integer}, failed: {type: integer}, skipped: {type: integer}}}
+    Task:
+      type: object
+      required: [id, title, status, responsibleUserId, scheduledAt, dueAt, isOverdue, availableActions]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        status: {type: string, enum: [pending, in_progress, blocked, completed, cancelled]}
+        responsibleUserId: {type: string}
+        planId: {type: string, format: uuid, nullable: true}
+        planItemId: {type: string, format: uuid, nullable: true}
+        vesselId: {type: string, format: uuid, nullable: true}
+        scheduledAt: {type: string, format: date-time}
+        dueAt: {type: string, format: date-time}
+        completedAt: {type: string, format: date-time, nullable: true}
+        isOverdue: {type: boolean}
+        participants: {type: array, items: {$ref: '#/components/schemas/TaskParticipant'}}
+        actionLogs: {type: array, items: {$ref: '#/components/schemas/TaskActionLog'}}
+        notificationSummary: {$ref: '#/components/schemas/DeliveryCountSummary'}
+        notificationDeliveries: {type: array, items: {$ref: '#/components/schemas/Delivery'}}
+        transfers: {type: array, items: {type: object, properties: {id: {type: string, format: uuid}, fromUserId: {type: string}, toUserId: {type: string}, reason: {type: string}, createdAt: {type: string, format: date-time}}}}
+        delegations: {type: array, items: {type: object, properties: {id: {type: string, format: uuid}, delegatorUserId: {type: string}, delegateUserId: {type: string}, effectiveUntil: {type: string, format: date-time}, status: {type: string}}}}
+        availableActions: {type: array, items: {type: string, enum: [start, complete, block, reschedule, cancel, remind, escalate, delegate, transfer]}}
+    TaskParticipant: {type: object, required: [userId, role, status], properties: {userId: {type: string}, role: {type: string, enum: [executor, collaborator, reviewer, observer, delegate]}, status: {type: string, enum: [active, transferred, withdrawn]}, effectiveUntil: {type: string, format: date-time, nullable: true}}}
+    TaskActionLog: {type: object, required: [id, actionType, operatorUserId, createdAt], properties: {id: {type: string, format: uuid}, actionType: {type: string}, operatorUserId: {type: string}, reason: {type: string, nullable: true}, fromStatus: {type: string, nullable: true}, toStatus: {type: string, nullable: true}, createdAt: {type: string, format: date-time}}}
+    GenerationRun: {type: object, required: [id, planId, status, windowStart, windowEnd, createdCount, skippedCount, failedCount, requestedAt], properties: {id: {type: string, format: uuid}, planId: {type: string, format: uuid}, status: {type: string, enum: [queued, running, succeeded, failed]}, windowStart: {type: string, format: date-time}, windowEnd: {type: string, format: date-time}, createdCount: {type: integer}, skippedCount: {type: integer}, failedCount: {type: integer}, requestedAt: {type: string, format: date-time}, completedAt: {type: string, format: date-time, nullable: true}}}
+    Delivery: {type: object, required: [id, taskId, recipientUserId, messageType, status, attemptCount, attemptHistory], properties: {id: {type: string, format: uuid}, taskId: {type: string, format: uuid}, recipientUserId: {type: string}, messageType: {type: string, enum: [assignment, reminder, escalation, transfer]}, status: {type: string, enum: [queued, dispatching, sent, failed, skipped]}, attemptCount: {type: integer}, attemptHistory: {type: array, items: {type: object, required: [attempt, attemptedAt, status], properties: {attempt: {type: integer}, attemptedAt: {type: string, format: date-time}, status: {type: string, enum: [sent, failed, skipped]}, wecomErrcode: {type: integer, nullable: true}, failureReason: {type: string, nullable: true}}}}, failureReason: {type: string, nullable: true}, nextRetryAt: {type: string, format: date-time, nullable: true}, sentAt: {type: string, format: date-time, nullable: true}}}
+    PageMeta: {type: object, required: [page, pageSize, total, totalPages], properties: {page: {type: integer}, pageSize: {type: integer}, total: {type: integer}, totalPages: {type: integer}}}
+    PlanResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Plan'}}}
+    PlanListResponse: {type: object, required: [data, meta], properties: {data: {type: array, items: {$ref: '#/components/schemas/Plan'}}, meta: {$ref: '#/components/schemas/PageMeta'}}}
+    PlanItemResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/PlanItem'}}}
+    PlanItemListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/PlanItem'}}}}
+    GenerationRunResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/GenerationRun'}}}
+    GenerationRunListResponse: {type: object, required: [data, meta], properties: {data: {type: array, items: {$ref: '#/components/schemas/GenerationRun'}}, meta: {$ref: '#/components/schemas/PageMeta'}}}
+    TaskResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Task'}}}
+    TaskListResponse: {type: object, required: [data, meta], properties: {data: {type: array, items: {$ref: '#/components/schemas/Task'}}, meta: {$ref: '#/components/schemas/PageMeta'}}}
+    DeliveryResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Delivery'}}}
+    DeliveryListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Delivery'}}}}

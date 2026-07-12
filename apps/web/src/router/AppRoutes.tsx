@@ -120,6 +120,9 @@ const MasterDataPage = lazyNamed(
   () => import('../features/workbench/MasterDataPage'),
   'MasterDataPage',
 );
+const TaskCenterPage = lazyNamed(() => import('../features/workbench/TaskCenterPage'), 'TaskCenterPage');
+const TaskDetailPage = lazyNamed(() => import('../features/workbench/TaskDetailPage'), 'TaskDetailPage');
+const PlanManagementPage = lazyNamed(() => import('../features/workbench/PlanManagementPage'), 'PlanManagementPage');
 const WorkbenchModulePage = lazyNamed(
   () => import('../features/workbench/WorkbenchModulePage'),
   'WorkbenchModulePage',
@@ -264,6 +267,10 @@ export function AppRoutes() {
             path={workbenchRouteConfig.masterData.path}
             element={renderLazyPage(<MasterDataPage />)}
           />
+          <Route path={workbenchRouteConfig.tasks.path} element={renderLazyPage(<TaskCenterPage />)} />
+          <Route path={workbenchRouteConfig.taskDetail.path} element={renderLazyPage(<TaskDetailPage />)} />
+          <Route path={workbenchRouteConfig.plans.path} element={renderLazyPage(<PlanManagementPage />)} />
+          <Route path={workbenchRouteConfig.planDetail.path} element={renderLazyPage(<PlanManagementPage />)} />
           <Route
             path={workbenchRouteConfig.module.path}
             element={renderLazyPage(<WorkbenchModulePage />)}

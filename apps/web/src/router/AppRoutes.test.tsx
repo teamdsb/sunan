@@ -106,6 +106,18 @@ vi.mock('../features/workbench/MasterDataPage', () => ({
   MasterDataPage: () => <div>MASTER_DATA</div>,
 }));
 
+vi.mock('../features/workbench/TaskCenterPage', () => ({
+  TaskCenterPage: () => <div>TASK_CENTER</div>,
+}));
+
+vi.mock('../features/workbench/TaskDetailPage', () => ({
+  TaskDetailPage: () => <div>TASK_DETAIL</div>,
+}));
+
+vi.mock('../features/workbench/PlanManagementPage', () => ({
+  PlanManagementPage: () => <div>PLAN_MANAGEMENT</div>,
+}));
+
 vi.mock('../features/workbench/WorkbenchModulePage', () => ({
   WorkbenchModulePage: () => <div>WORKBENCH_MODULE</div>,
 }));
@@ -137,7 +149,7 @@ function renderRoute(path: string) {
       [baseApi.reducerPath]: baseApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(baseApi.middleware),
+      getDefaultMiddleware({ serializableCheck: false }).concat(baseApi.middleware),
   });
   store.dispatch(
     loginSucceeded({
@@ -154,7 +166,7 @@ function renderRoute(path: string) {
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}>
         <AppRoutes />
       </MemoryRouter>
     </Provider>,
@@ -169,7 +181,7 @@ function renderBackHref(path: string) {
       [baseApi.reducerPath]: baseApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(baseApi.middleware),
+      getDefaultMiddleware({ serializableCheck: false }).concat(baseApi.middleware),
   });
   store.dispatch(
     loginSucceeded({
@@ -186,7 +198,7 @@ function renderBackHref(path: string) {
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}>
         <BackHrefConsumer />
       </MemoryRouter>
     </Provider>,
@@ -223,6 +235,10 @@ describe('AppRoutes', () => {
     [procurementRouteConfig.dictionaries.path, 'PROCUREMENT_DICTIONARY_ADMIN'],
     [workbenchRouteConfig.home.path, 'WORKBENCH_HOME'],
     [workbenchRouteConfig.masterData.path, 'MASTER_DATA'],
+    [workbenchRouteConfig.tasks.path, 'TASK_CENTER'],
+    [workbenchRouteConfig.taskDetail.buildPath('task-1'), 'TASK_DETAIL'],
+    [workbenchRouteConfig.plans.path, 'PLAN_MANAGEMENT'],
+    [workbenchRouteConfig.planDetail.buildPath('plan-1'), 'PLAN_MANAGEMENT'],
     [workbenchRouteConfig.module.buildPath('shipping_chart_update'), 'WORKBENCH_MODULE'],
     [workbenchRouteConfig.recordDetail.buildPath('record-1'), 'WORKBENCH_RECORD_DETAIL'],
     [workbenchRouteConfig.attendanceStatistics.path, 'WORKBENCH_ATTENDANCE'],

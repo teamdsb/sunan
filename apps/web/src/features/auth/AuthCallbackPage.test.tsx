@@ -29,10 +29,11 @@ function renderPage(initialEntry: string) {
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[initialEntry]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/my" element={<div>MY_PAGE</div>} />
+          <Route path="/workbench/tasks/:taskId" element={<div>TASK_DETAIL</div>} />
         </Routes>
       </MemoryRouter>
     </Provider>,
@@ -83,6 +84,23 @@ describe('AuthCallbackPage', () => {
       expect(screen.getByText('MY_PAGE')).toBeInTheDocument();
     });
     expect(window.localStorage.getItem('sunan_token')).toBe('token-1');
+  });
+
+  it('restores the exact task deep link after OAuth', async () => {
+    window.sessionStorage.setItem(
+      'sunan_post_auth_redirect',
+      '/workbench/tasks/task-1?notificationId=delivery-1',
+    );
+    mockCallback.mockReturnValue({
+      unwrap: () => Promise.resolve({ data: { accessToken: 'token-1', expiresIn: 7200, user: { userId: 'u1', name: '张三', department: [], roles: [] } } }),
+    });
+    mockGetCurrentUser.mockReturnValue({
+      unwrap: () => Promise.resolve({ data: { userId: 'u1', name: '张三', department: [], roles: [] } }),
+    });
+
+    renderPage('/auth/callback?code=abc&state=safe-state');
+
+    expect(await screen.findByText('TASK_DETAIL')).toBeInTheDocument();
   });
 
   it('shows error when state verification fails', async () => {

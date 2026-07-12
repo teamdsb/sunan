@@ -22,7 +22,7 @@ describe('RequireAuth mock mode', () => {
 
     render(
       <Provider store={createStore()}>
-        <MemoryRouter initialEntries={['/my']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my']}>
           <Routes>
             <Route element={<RequireAuth />}>
               <Route path="/my" element={<div>MY_PAGE</div>} />

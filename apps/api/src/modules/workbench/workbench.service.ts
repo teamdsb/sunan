@@ -1720,12 +1720,13 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (!job) return;
     job.status = 'running'; job.startedAt = new Date(); await this.exportJobRepository.save(job);
     try {
-      const month = String(job.querySnapshot.month ?? '');
-      const content = `month,departmentCode,generatedAt\n${month},${String(job.querySnapshot.departmentCode ?? '')},${new Date().toISOString()}\n`;
+      const month = typeof job.querySnapshot.month === 'string' ? job.querySnapshot.month : '';
+      const departmentCode = typeof job.querySnapshot.departmentCode === 'string' ? job.querySnapshot.departmentCode : '';
+      const content = `month,departmentCode,generatedAt\n${month},${departmentCode},${new Date().toISOString()}\n`;
       const isPdf = job.exportFormat === 'pdf';
       const extension = isPdf ? 'pdf' : 'xlsx';
       const mimeType = isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      const buffer = isPdf ? this.buildPdf({ title: 'Attendance Export', lines: content.trim().split('\n'), paperSize: 'A4' }) : this.buildAttendanceWorkbook(month, String(job.querySnapshot.departmentCode ?? ''));
+      const buffer = isPdf ? this.buildPdf({ title: 'Attendance Export', lines: content.trim().split('\n'), paperSize: 'A4' }) : this.buildAttendanceWorkbook(month, departmentCode);
       const ossKey = `workbench/exports/${new Date().getUTCFullYear()}/${String(new Date().getUTCMonth() + 1).padStart(2, '0')}/${randomUUID()}.${extension}`;
       await this.ossService.uploadBuffer(ossKey, buffer, mimeType, `attendance-${month}.${extension}`);
       const file = await this.fileRepository.save(this.fileRepository.create({ ossKey, fileName: `attendance-${month}.${extension}`, mimeType, fileSize: buffer.length, category: 'workbench_export', uploadedBy: job.requestedBy }));

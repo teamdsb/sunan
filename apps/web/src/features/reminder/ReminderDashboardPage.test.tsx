@@ -134,7 +134,7 @@ describe('ReminderDashboardPage', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/my/reminders']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -142,7 +142,7 @@ describe('ReminderDashboardPage', () => {
     expect(screen.getByRole('heading', { name: '提醒列表' })).toBeInTheDocument();
 
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -169,7 +169,7 @@ describe('ReminderDashboardPage', () => {
     }));
 
     const { rerender } = render(
-      <MemoryRouter initialEntries={['/my/reminders']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -188,7 +188,7 @@ describe('ReminderDashboardPage', () => {
     };
 
     rerender(
-      <MemoryRouter initialEntries={['/my/reminders']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -201,7 +201,7 @@ describe('ReminderDashboardPage', () => {
 
   it('shows summary, filters recent reminders, and exposes scan for managers', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -228,7 +228,7 @@ describe('ReminderDashboardPage', () => {
 
   it('writes stat card selections into the URL and the list query', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -246,7 +246,7 @@ describe('ReminderDashboardPage', () => {
 
   it('clears unrelated filters like ownerType when a stat card changes the view', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?foo=bar&view=dashboard&ownerType=vessel&page=3&pageSize=20']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?foo=bar&view=dashboard&ownerType=vessel&page=3&pageSize=20']}>
         <ReminderDashboardPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -266,7 +266,7 @@ describe('ReminderDashboardPage', () => {
 
   it('preserves the current query when linking to detail pages', () => {
     render(
-      <MemoryRouter
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={['/my/reminders?view=list&page=2&pageSize=10&status=pending&ownerType=vessel']}
       >
         <ReminderDashboardPage />
@@ -281,7 +281,7 @@ describe('ReminderDashboardPage', () => {
 
   it('refreshes dashboard and list after a manual scan', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -300,7 +300,7 @@ describe('ReminderDashboardPage', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=dashboard']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -310,7 +310,7 @@ describe('ReminderDashboardPage', () => {
 
   it('keeps list filters collapsed until the user expands them', () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=list&status=pending']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=list&status=pending']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );
@@ -321,7 +321,7 @@ describe('ReminderDashboardPage', () => {
 
   it('reveals list filters when the filter panel is expanded', () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders?view=list&status=pending']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=list&status=pending']}>
         <ReminderDashboardPage />
       </MemoryRouter>,
     );

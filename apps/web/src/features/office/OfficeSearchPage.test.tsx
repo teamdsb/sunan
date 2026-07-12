@@ -82,7 +82,7 @@ describe('OfficeSearchPage', () => {
 
   it('opens an entry from the whole result card without redundant action buttons', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <OfficeSearchPage />
       </MemoryRouter>,
     );
@@ -104,7 +104,7 @@ describe('OfficeSearchPage', () => {
 
   it('uses URL keyword and category as the search source of truth', () => {
     render(
-      <MemoryRouter initialEntries={['/office/search?keyword=海事&categoryCode=maritime']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/office/search?keyword=海事&categoryCode=maritime']}>
         <OfficeSearchPage />
       </MemoryRouter>,
     );

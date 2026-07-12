@@ -238,6 +238,7 @@ export function ProcurementOrderDetailPage() {
   return (
     <>
       {contextHolder}
+      {!canEditDraft ? <Form form={form} component={false} /> : null}
       <section className="page-hero">
         <Typography.Title level={2}>采购单详情</Typography.Title>
         <Typography.Paragraph type="secondary">

@@ -123,7 +123,7 @@ describe('MyHomePage', () => {
 
   it('renders six grid entries including reminders', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -138,7 +138,7 @@ describe('MyHomePage', () => {
 
   it('renders the blue enterprise card grid hooks', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -150,7 +150,7 @@ describe('MyHomePage', () => {
 
   it('renders the refreshed command dashboard copy', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -166,7 +166,7 @@ describe('MyHomePage', () => {
 
   it('renders dashboard values from real API hooks instead of hardcoded demo data', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -186,7 +186,7 @@ describe('MyHomePage', () => {
 
   it('serves the ship artwork as the command card background instead of a separate image block', () => {
     const { container } = render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -197,7 +197,7 @@ describe('MyHomePage', () => {
 
   it('renders enterprise shortcut cards with stable labels', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -208,7 +208,7 @@ describe('MyHomePage', () => {
 
   it('renders shortcuts with blue icon plates', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -219,7 +219,7 @@ describe('MyHomePage', () => {
 
   it('uses the whole shortcut card as the action without rendering redundant view labels', () => {
     const { container } = render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MyHomePage />
       </MemoryRouter>,
     );

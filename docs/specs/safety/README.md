@@ -36,10 +36,10 @@ replaced_by: []
 | 4 | API | `api/master-data-api.yaml` | 已实现并通过 Wave 4 验收 |
 | 4 | DB | `db/master-data-schema.md` | 已迁移并通过 Wave 4 验收 |
 | 4 | UI | `ui/master-data-pages.md` | 已实现并通过 Wave 4 验收 |
-| 5 | API | `api/plan-task-api.yaml` | 待编写 |
-| 5 | DB | `db/plan-task-schema.md` | 待编写 |
-| 5 | State | `state/task-lifecycle.md` | 待编写 |
-| 5 | UI | `ui/task-center-and-calendar.md` | 待编写 |
+| 5 | API | `api/plan-task-api.yaml` | 已实现并通过 Wave 5 验收 |
+| 5 | DB | `db/plan-task-schema.md` | 已迁移并通过 Wave 5 验收 |
+| 5 | State | `state/task-lifecycle.md` | 已实现并通过 Wave 5 验收 |
+| 5 | UI | `ui/task-center-and-calendar.md` | 已实现并通过 Wave 5 验收 |
 | 6 | API | `api/inspection-capa-api.yaml` | 待编写 |
 | 6 | DB | `db/inspection-capa-schema.md` | 待编写 |
 | 6 | State | `state/inspection-capa-lifecycle.md` | 待编写 |

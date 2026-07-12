@@ -45,7 +45,7 @@ describe('EnterprisePolicyPage', () => {
 
   it('keeps keyword drafting local until search is committed', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=foo']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=foo']}>
         <EnterprisePolicyPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -85,7 +85,7 @@ describe('EnterprisePolicyPage', () => {
 
   it('does not add a redundant return button to the detail page', () => {
     render(
-      <MemoryRouter initialEntries={['/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar']}>
         <Routes>
           <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
         </Routes>
@@ -99,7 +99,7 @@ describe('EnterprisePolicyPage', () => {
 
   it('uses a vertical creation form for narrow screens', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <EnterprisePolicyPage />
       </MemoryRouter>,
     );

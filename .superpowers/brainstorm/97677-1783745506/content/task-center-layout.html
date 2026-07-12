@@ -1,0 +1,44 @@
+<h2>任务中心：仅选择布局</h2>
+<p class="subtitle">三种方案都沿用系统既有的蓝白企业 H5 样式、路由懒加载和移动端单列规则；此处只比较信息结构。</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#fff;border:1px solid #d9e7f6;border-radius:10px;padding:12px;color:#102a43;text-align:left">
+        <div style="font-weight:700;font-size:15px">任务中心　<span style="float:right;color:#1769e0;font-size:12px">新建计划</span></div>
+        <div style="margin:10px 0;display:flex;gap:6px;overflow:hidden;font-size:11px"><span style="background:#1769e0;color:#fff;border-radius:14px;padding:5px 8px">待办 12</span><span style="background:#eef5ff;border-radius:14px;padding:5px 8px">我发起</span><span style="background:#eef5ff;border-radius:14px;padding:5px 8px">我参与</span><span style="background:#eef5ff;border-radius:14px;padding:5px 8px">已完成</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#526577"><span>2026 年 7 月</span><span>列表　<span style="color:#1769e0">日历</span></span></div>
+        <div style="margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:10px;text-align:center"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span><span></span><span></span><span style="background:#e8f2ff;border-radius:4px;padding:4px">1<br><b style="color:#1769e0">2</b></span><span style="background:#fff5e7;border-radius:4px;padding:4px">2<br><b style="color:#d46b08">1</b></span><span>3</span><span>4</span><span>5</span><span>6</span><span style="background:#e8f2ff;border-radius:4px;padding:4px">7<br><b style="color:#1769e0">3</b></span><span>8</span><span style="background:#ffe9e7;border-radius:4px;padding:4px">9<br><b style="color:#cf1322">1</b></span><span>10</span><span>11</span><span>12</span></div>
+        <div style="border-top:1px solid #edf3fa;margin-top:10px;padding-top:8px;font-size:11px"><b>今日任务</b><br><span style="color:#1769e0">●</span> 救生设备月度检查　16:00<br><span style="color:#d46b08">●</span> 年度培训计划复核　明日到期</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A · 任务主导，列表/日历切换</h3><p>统一数据范围标签始终在顶端；日历和列表只是同一任务查询的两个视图。最贴近移动端短任务会话。</p></div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#fff;border:1px solid #d9e7f6;border-radius:10px;padding:12px;color:#102a43;text-align:left">
+        <div style="font-weight:700;font-size:15px">任务日历　<span style="float:right;color:#1769e0;font-size:12px">筛选</span></div>
+        <div style="margin:10px 0;display:flex;gap:6px;font-size:11px"><span style="background:#eef5ff;border-radius:14px;padding:5px 8px">本月</span><span style="background:#eef5ff;border-radius:14px;padding:5px 8px">负责人：我</span></div>
+        <div style="border:1px solid #edf3fa;border-radius:7px;padding:7px;font-size:10px;text-align:center">一　 二　 三　 四　 五　 六　 日<br><br>　　　1　 <b style="color:#1769e0">2</b>　 3　 4　 5<br>6　 <b style="color:#d46b08">7</b>　 8　 <b style="color:#cf1322">9</b>　10　11　12</div>
+        <div style="margin-top:9px;background:#f7fbff;border-left:3px solid #1769e0;padding:7px;font-size:11px"><b>7 月 7 日 · 3 项任务</b><br>救生设备月度检查　待执行<br>培训计划复核　临近到期</div>
+        <div style="margin-top:7px;font-size:10px;color:#526577">待办／我发起／我参与／已完成／逾期</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B · 日历主导，选日看任务</h3><p>时间排程一眼可见；点击日期展开任务抽屉。适合计划人员，但“待办”切换路径较长。</p></div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#fff;border:1px solid #d9e7f6;border-radius:10px;padding:12px;color:#102a43;text-align:left">
+        <div style="font-weight:700;font-size:15px">工作平台 · 安全任务</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:9px 0;font-size:10px"><span style="background:#eef5ff;padding:7px;border-radius:6px">待办<br><b style="color:#1769e0;font-size:15px">12</b></span><span style="background:#fff5e7;padding:7px;border-radius:6px">临期<br><b style="color:#d46b08;font-size:15px">3</b></span><span style="background:#ffe9e7;padding:7px;border-radius:6px">逾期<br><b style="color:#cf1322;font-size:15px">1</b></span></div>
+        <div style="font-size:11px;border-bottom:1px solid #edf3fa;padding:7px 0"><b>本周</b>　7/6　<span style="background:#e8f2ff;padding:4px;border-radius:5px">7/7</span>　7/8　7/9　7/10</div>
+        <div style="margin-top:7px;font-size:11px">▣ 救生设备月度检查<br><span style="color:#526577">7 月 7 日　负责人：王海</span><br><hr style="border:0;border-top:1px solid #edf3fa">▣ 年度培训计划复核<br><span style="color:#d46b08">明日到期　参与人：2</span></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C · 看板主导，周轴嵌入清单</h3><p>作为工作平台入口的概览较强，但数据范围、日历详情与完整任务中心会分散到更多层级。</p></div>
+  </div>
+</div>
+
+<div class="section"><p class="subtitle">建议 A：保留“任务中心”作为唯一入口，顶部按数据范围筛选；列表与日历共用一个真实任务查询和筛选条件。移动端以列表为默认，日历为显式切换。</p></div>

@@ -26,7 +26,7 @@ async function renderMockRoute(path: string) {
 
   render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}>
         <AppRoutes />
       </MemoryRouter>
     </Provider>,

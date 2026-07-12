@@ -70,6 +70,19 @@ import { Wave8WorkflowPermission1710000015000 } from 'src/database/migrations/17
 import { Wave3EvidenceAudits1710000016000 } from 'src/database/migrations/1710000016000-wave3-evidence-audits';
 import { Wave3EvidenceExport1710000017000 } from 'src/database/migrations/1710000017000-wave3-evidence-export';
 import { Wave4MasterData1710000018000 } from 'src/database/migrations/1710000018000-wave4-master-data';
+import {
+  SafetyPlanEntity,
+  SafetyPlanItemEntity,
+  SafetyTaskActionLogEntity,
+  SafetyTaskDelegationEntity,
+  SafetyTaskEntity,
+  SafetyTaskGenerationEntryEntity,
+  SafetyTaskGenerationRunEntity,
+  SafetyTaskNotificationDeliveryEntity,
+  SafetyTaskParticipantEntity,
+  SafetyTaskTransferEntity,
+} from 'src/database/entities/safety-plan-task.entity';
+import { Wave5PlanTask1710000019000 } from 'src/database/migrations/1710000019000-wave5-plan-task';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
@@ -118,6 +131,16 @@ const ALL_TEST_ENTITIES = [
   WecomApprovalTemplateBindingEntity,
   WecomApprovalInstanceSyncEntity,
   WecomApprovalCallbackEventEntity,
+  SafetyPlanEntity,
+  SafetyPlanItemEntity,
+  SafetyTaskEntity,
+  SafetyTaskParticipantEntity,
+  SafetyTaskActionLogEntity,
+  SafetyTaskTransferEntity,
+  SafetyTaskDelegationEntity,
+  SafetyTaskGenerationRunEntity,
+  SafetyTaskGenerationEntryEntity,
+  SafetyTaskNotificationDeliveryEntity,
 ];
 
 const ALL_TEST_MIGRATIONS = [
@@ -140,6 +163,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave3EvidenceAudits1710000016000,
   Wave3EvidenceExport1710000017000,
   Wave4MasterData1710000018000,
+  Wave5PlanTask1710000019000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;
@@ -176,7 +200,7 @@ export const bootstrapPgTestDatabase = async (): Promise<void> => {
 
   const pgContainer = new PostgreSqlContainer(
     process.env.TEST_POSTGRES_IMAGE ?? 'postgres:16-alpine',
-  );
+  ).withStartupTimeout(60_000);
   if (process.env.TEST_POSTGRES_PULL !== 'true') {
     pgContainer.withPullPolicy(neverPullPolicy);
   }

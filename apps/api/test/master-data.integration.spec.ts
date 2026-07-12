@@ -1,5 +1,6 @@
 import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/common';
 import { Module } from '@nestjs/common';
+import type { Server } from 'node:http';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
@@ -32,7 +33,7 @@ const authGuard: CanActivate = {
 class TestModule {}
 
 describe('Master data integration', () => {
-  let app: INestApplication;
+  let app: INestApplication<Server>;
   let source: DataSource;
   let vesselId: string;
   let personnelId: string;
