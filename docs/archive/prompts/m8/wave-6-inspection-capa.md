@@ -1,6 +1,6 @@
 ---
-status: operations
-owner: delivery
+status: historical-archive
+owner: archive
 updated: 2026-06-13
 replaces: []
 replaced_by: []
@@ -15,8 +15,8 @@ replaced_by: []
 必须阅读：
 - AGENTS.md
 - docs/requirements/M8-安全管理底座与核心闭环.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/archive/execplans/M8-execplans.md
+- docs/archive/backlogs/safety/M8-wave-backlog.md
 - docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md
 - Wave 2 权限、Wave 3 证据、Wave 5 任务规格
 - docs/specs/workbench 中检查整改相关规格

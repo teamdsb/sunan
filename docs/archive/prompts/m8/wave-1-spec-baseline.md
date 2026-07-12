@@ -1,6 +1,6 @@
 ---
-status: operations
-owner: delivery
+status: historical-archive
+owner: archive
 updated: 2026-06-13
 replaces: []
 replaced_by: []
@@ -15,9 +15,9 @@ replaced_by: []
 - docs/README.md
 - docs/guides/sdd-workflow.md
 - docs/requirements/M8-安全管理底座与核心闭环.md
-- docs/plans/M8-M9-upgrade-roadmap.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/archive/paused/m9/M8-M9-upgrade-roadmap.md
+- docs/archive/execplans/M8-execplans.md
+- docs/archive/backlogs/safety/M8-wave-backlog.md
 - docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md
 - docs/specs/common/README.md
 - docs/specs/workbench/README.md

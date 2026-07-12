@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: safety
-updated: 2026-07-10
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
@@ -37,3 +37,5 @@ replaced_by: []
 | 回滚 | `down()` 或批次恢复后，新旧数据仍可读取且来源不丢失 |
 
 迁移验收必须在 PostgreSQL 环境演练，并将命令输出、对账报告、异常清单和回滚结果链接到对应 Wave 验收记录。
+
+Wave 7 的具体表、映射、CLI 与回滚规则见 `db/legacy-migration-schema.md`。生产执行前必须先运行 `classify`，将预期来源数与备份快照核对；空数据环境的 0/0 演练不能替代生产存量核对。

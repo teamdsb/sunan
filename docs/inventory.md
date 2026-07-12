@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：258 个 Markdown 文件。
+总数：269 个 Markdown 文件。
 
 ## repository-root
 
@@ -84,19 +84,14 @@ replaced_by: []
 | [docs/requirements/M5-上线强化与遗留收口.md](requirements/M5-上线强化与遗留收口.md) | `historical-archive` | `requirements` | 里程碑 5 需求文档：上线强化与遗留收口 |
 | [docs/requirements/M6-全量兑现与完美上线.md](requirements/M6-全量兑现与完美上线.md) | `current-spec` | `requirements` | 里程碑 6 需求文档：全量兑现与完美上线 |
 | [docs/requirements/M7-上线体验与导航修复.md](requirements/M7-上线体验与导航修复.md) | `historical-archive` | `requirements` | 里程碑 7 需求文档：上线体验与导航修复（历史归档） |
-| [docs/requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) | `current-spec` | `requirements` | 里程碑 8 需求文档：安全管理底座与核心闭环 |
-| [docs/requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) | `current-spec` | `requirements` | 里程碑 9 需求文档：专业安全业务深化与体系完善 |
+| [docs/requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) | `historical-archive` | `requirements` | 里程碑 8 需求文档：安全管理底座与核心闭环（历史归档） |
+| [docs/requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) | `conditional-baseline` | `requirements` | 里程碑 9 需求文档：专业安全业务深化与体系完善 |
 | [docs/requirements/非功能需求.md](requirements/非功能需求.md) | `current-source` | `requirements` | 非功能需求 |
 
 ## plans
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/plans/M8-M9-upgrade-roadmap.md](plans/M8-M9-upgrade-roadmap.md) | `current-spec` | `planning` | M8-M9 升级总路线图：安全管理数字化闭环 |
-| [docs/plans/M8-execplans.md](plans/M8-execplans.md) | `current-spec` | `planning` | M8 执行计划：安全管理底座与核心闭环 |
-| [docs/plans/M8-wave-backlog.md](plans/M8-wave-backlog.md) | `current-spec` | `planning` | M8 分 Wave 实施清单 |
-| [docs/plans/M9-execplans.md](plans/M9-execplans.md) | `current-spec` | `planning` | M9 执行计划：专业安全业务深化与体系完善 |
-| [docs/plans/M9-wave-backlog.md](plans/M9-wave-backlog.md) | `current-spec` | `planning` | M9 分 Wave 实施清单 |
 | [docs/plans/README.md](plans/README.md) | `current-index` | `planning` | 当前执行计划索引 |
 | [docs/plans/wave-acceptance-template.md](plans/wave-acceptance-template.md) | `template` | `planning` | Mx Wave N 验收模板 |
 
@@ -104,22 +99,7 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/prompts/README.md](prompts/README.md) | `current-index` | `delivery` | 当前升级 Wave 提示词索引 |
-| [docs/prompts/m8/wave-1-spec-baseline.md](prompts/m8/wave-1-spec-baseline.md) | `operations` | `delivery` | M8 Wave 1 提示词：文档、架构与规格基线 |
-| [docs/prompts/m8/wave-2-permission-workflow.md](prompts/m8/wave-2-permission-workflow.md) | `operations` | `delivery` | M8 Wave 2 提示词：数据权限与流程状态链 |
-| [docs/prompts/m8/wave-3-evidence-export.md](prompts/m8/wave-3-evidence-export.md) | `operations` | `delivery` | M8 Wave 3 提示词：证据、打印、导出与移动能力 |
-| [docs/prompts/m8/wave-4-master-data.md](prompts/m8/wave-4-master-data.md) | `operations` | `delivery` | M8 Wave 4 提示词：安全主数据中心 |
-| [docs/prompts/m8/wave-5-plan-task.md](prompts/m8/wave-5-plan-task.md) | `operations` | `delivery` | M8 Wave 5 提示词：计划任务、统一待办与日历 |
-| [docs/prompts/m8/wave-6-inspection-capa.md](prompts/m8/wave-6-inspection-capa.md) | `operations` | `delivery` | M8 Wave 6 提示词：检查、问题与 CAPA |
-| [docs/prompts/m8/wave-7-release-acceptance.md](prompts/m8/wave-7-release-acceptance.md) | `operations` | `delivery` | M8 Wave 7 提示词：迁移、联调、上线与验收 |
-| [docs/prompts/m9/wave-1-baseline-specs.md](prompts/m9/wave-1-baseline-specs.md) | `operations` | `delivery` | M9 Wave 1 提示词：M8 基线回归与专业规格冻结 |
-| [docs/prompts/m9/wave-2-personnel-safety.md](prompts/m9/wave-2-personnel-safety.md) | `operations` | `delivery` | M9 Wave 2 提示词：人员安全与培训资格 |
-| [docs/prompts/m9/wave-3-ship-operations.md](prompts/m9/wave-3-ship-operations.md) | `operations` | `delivery` | M9 Wave 3 提示词：航次与船舶高风险作业 |
-| [docs/prompts/m9/wave-4-emergency-incident.md](prompts/m9/wave-4-emergency-incident.md) | `operations` | `delivery` | M9 Wave 4 提示词：应急、事故险情与防台 |
-| [docs/prompts/m9/wave-5-equipment-spares.md](prompts/m9/wave-5-equipment-spares.md) | `operations` | `delivery` | M9 Wave 5 提示词：设备维护、修理、备件与采购 |
-| [docs/prompts/m9/wave-6-safety-governance.md](prompts/m9/wave-6-safety-governance.md) | `operations` | `delivery` | M9 Wave 6 提示词：安全责任、费用与管理复查 |
-| [docs/prompts/m9/wave-7-documents-audit.md](prompts/m9/wave-7-documents-audit.md) | `operations` | `delivery` | M9 Wave 7 提示词：受控文件、内审、统计与档案 |
-| [docs/prompts/m9/wave-8-release-acceptance.md](prompts/m9/wave-8-release-acceptance.md) | `operations` | `delivery` | M9 Wave 8 提示词：全域联调、上线与验收 |
+| [docs/prompts/README.md](prompts/README.md) | `current-index` | `delivery` | Wave 提示词索引 |
 
 ## specs/common
 
@@ -219,6 +199,7 @@ replaced_by: []
 | [docs/specs/safety/db/README.md](specs/safety/db/README.md) | `current-spec` | `safety` | 安全领域 DB 规格目录 |
 | [docs/specs/safety/db/evidence-and-export-schema.md](specs/safety/db/evidence-and-export-schema.md) | `current-spec` | `safety` | Wave 3 证据与导出数据库规格 |
 | [docs/specs/safety/db/inspection-capa-schema.md](specs/safety/db/inspection-capa-schema.md) | `current-spec` | `safety` | Wave 6 检查、问题与 CAPA 数据库规格 |
+| [docs/specs/safety/db/legacy-migration-schema.md](specs/safety/db/legacy-migration-schema.md) | `current-spec` | `safety` | Wave 7 存量安全记录迁移与对账数据库规格 |
 | [docs/specs/safety/db/master-data-schema.md](specs/safety/db/master-data-schema.md) | `current-spec` | `safety` | M8 Wave 4 安全主数据数据库规格 |
 | [docs/specs/safety/db/plan-task-schema.md](specs/safety/db/plan-task-schema.md) | `current-spec` | `safety` | Wave 5 计划任务数据库规格 |
 | [docs/specs/safety/db/workflow-and-permission-schema.md](specs/safety/db/workflow-and-permission-schema.md) | `current-spec` | `safety` | Wave 2 工作流权限数据库规格 |
@@ -296,6 +277,7 @@ replaced_by: []
 | [docs/archive/execplans/M5-execplans.md](archive/execplans/M5-execplans.md) | `historical-archive` | `archive` | M5 执行计划：上线强化、工作平台正式化、遗留规格收口（历史归档） |
 | [docs/archive/execplans/M6-execplans.md](archive/execplans/M6-execplans.md) | `historical-archive` | `archive` | M6 执行计划：全量兑现、企业微信正式上线、生产交付闭环（历史归档） |
 | [docs/archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) | `historical-archive` | `archive` | M7 执行计划：上线体验与导航修复（历史归档） |
+| [docs/archive/execplans/M8-execplans.md](archive/execplans/M8-execplans.md) | `historical-archive` | `archive` | M8 执行计划：安全管理底座与核心闭环（历史归档） |
 | [docs/archive/execplans/execplans-m6-completed-snapshot.md](archive/execplans/execplans-m6-completed-snapshot.md) | `historical-archive` | `archive` | M6 执行计划：全量兑现、企业微信正式上线、生产交付闭环 |
 
 ## archive/acceptance/common
@@ -355,6 +337,7 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/archive/audits/M6-逐条需求对照表.md](archive/audits/M6-逐条需求对照表.md) | `audit-snapshot` | `archive` | M6 逐条需求对照表（基于 2026-04-22 代码审计） |
+| [docs/archive/audits/M8-最终功能实现核查.md](archive/audits/M8-最终功能实现核查.md) | `audit-snapshot` | `safety` | M8 最终功能实现核查 |
 
 ## archive/backlogs/common
 
@@ -391,11 +374,40 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
+| [docs/archive/acceptance/safety/acceptance-m8-overall.md](archive/acceptance/safety/acceptance-m8-overall.md) | `acceptance-archive` | `safety` | M8 总验收记录 |
 | [docs/archive/acceptance/safety/acceptance-m8-wave1.md](archive/acceptance/safety/acceptance-m8-wave1.md) | `acceptance-archive` | `safety` | M8 Wave 1 验收记录：安全管理底座文档冻结 |
 | [docs/archive/acceptance/safety/acceptance-m8-wave2.md](archive/acceptance/safety/acceptance-m8-wave2.md) | `acceptance-archive` | `safety` | M8 Wave 2 验收记录：权限与流程状态链 |
 | [docs/archive/acceptance/safety/acceptance-m8-wave3.md](archive/acceptance/safety/acceptance-m8-wave3.md) | `acceptance-archive` | `safety` | M8 Wave 3 验收记录：证据、打印、导出与移动能力 |
 | [docs/archive/acceptance/safety/acceptance-m8-wave4.md](archive/acceptance/safety/acceptance-m8-wave4.md) | `acceptance-archive` | `safety` | M8 Wave 4 验收记录：安全主数据中心 |
 | [docs/archive/acceptance/safety/acceptance-m8-wave5.md](archive/acceptance/safety/acceptance-m8-wave5.md) | `acceptance-archive` | `safety` | M8 Wave 5 验收记录：计划任务、统一待办、真实日历与企业微信消息 |
+| [docs/archive/acceptance/safety/acceptance-m8-wave6.md](archive/acceptance/safety/acceptance-m8-wave6.md) | `acceptance-archive` | `safety` | M8 Wave 6 验收记录：检查、问题与 CAPA |
+| [docs/archive/acceptance/safety/acceptance-m8-wave7.md](archive/acceptance/safety/acceptance-m8-wave7.md) | `acceptance-archive` | `safety` | M8 Wave 7 验收记录：迁移、联调、上线与验收 |
+| [docs/archive/acceptance/safety/m8-go-live-package.md](archive/acceptance/safety/m8-go-live-package.md) | `acceptance-archive` | `safety` | M8 上线包索引 |
+| [docs/archive/acceptance/safety/m8-wave7-migration-reconciliation.md](archive/acceptance/safety/m8-wave7-migration-reconciliation.md) | `acceptance-archive` | `safety` | M8 Wave 7 存量迁移、对账与回滚记录 |
+| [docs/archive/acceptance/safety/m8-wave7-real-device-matrix.md](archive/acceptance/safety/m8-wave7-real-device-matrix.md) | `acceptance-archive` | `safety` | M8 Wave 7 企业微信真机矩阵 |
+
+## archive/backlogs/safety
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/archive/backlogs/safety/M8-wave-backlog.md](archive/backlogs/safety/M8-wave-backlog.md) | `historical-archive` | `archive` | M8 分 Wave 实施清单（历史归档） |
+
+## archive/paused
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/archive/paused/m9/M8-M9-upgrade-roadmap.md](archive/paused/m9/M8-M9-upgrade-roadmap.md) | `conditional-baseline` | `planning` | M8-M9 升级总路线图：安全管理数字化闭环（M9 暂停基线） |
+| [docs/archive/paused/m9/M9-execplans.md](archive/paused/m9/M9-execplans.md) | `conditional-baseline` | `planning` | M9 执行计划：专业安全业务深化与体系完善（暂停基线） |
+| [docs/archive/paused/m9/M9-wave-backlog.md](archive/paused/m9/M9-wave-backlog.md) | `conditional-baseline` | `planning` | M9 分 Wave 实施清单（暂停基线） |
+| [docs/archive/paused/m9/README.md](archive/paused/m9/README.md) | `current-index` | `planning` | M9 暂停计划包 |
+| [docs/archive/paused/m9/prompts/wave-1-baseline-specs.md](archive/paused/m9/prompts/wave-1-baseline-specs.md) | `conditional-baseline` | `delivery` | M9 Wave 1 提示词：M8 基线回归与专业规格冻结 |
+| [docs/archive/paused/m9/prompts/wave-2-personnel-safety.md](archive/paused/m9/prompts/wave-2-personnel-safety.md) | `conditional-baseline` | `delivery` | M9 Wave 2 提示词：人员安全与培训资格 |
+| [docs/archive/paused/m9/prompts/wave-3-ship-operations.md](archive/paused/m9/prompts/wave-3-ship-operations.md) | `conditional-baseline` | `delivery` | M9 Wave 3 提示词：航次与船舶高风险作业 |
+| [docs/archive/paused/m9/prompts/wave-4-emergency-incident.md](archive/paused/m9/prompts/wave-4-emergency-incident.md) | `conditional-baseline` | `delivery` | M9 Wave 4 提示词：应急、事故险情与防台 |
+| [docs/archive/paused/m9/prompts/wave-5-equipment-spares.md](archive/paused/m9/prompts/wave-5-equipment-spares.md) | `conditional-baseline` | `delivery` | M9 Wave 5 提示词：设备维护、修理、备件与采购 |
+| [docs/archive/paused/m9/prompts/wave-6-safety-governance.md](archive/paused/m9/prompts/wave-6-safety-governance.md) | `conditional-baseline` | `delivery` | M9 Wave 6 提示词：安全责任、费用与管理复查 |
+| [docs/archive/paused/m9/prompts/wave-7-documents-audit.md](archive/paused/m9/prompts/wave-7-documents-audit.md) | `conditional-baseline` | `delivery` | M9 Wave 7 提示词：受控文件、内审、统计与档案 |
+| [docs/archive/paused/m9/prompts/wave-8-release-acceptance.md](archive/paused/m9/prompts/wave-8-release-acceptance.md) | `conditional-baseline` | `delivery` | M9 Wave 8 提示词：全域联调、上线与验收 |
 
 ## archive/prompts
 
@@ -407,11 +419,25 @@ replaced_by: []
 | [docs/archive/prompts/m7/wave-4-workbench-navigation-density.md](archive/prompts/m7/wave-4-workbench-navigation-density.md) | `historical-archive` | `archive` | M7 Wave 4 提示词：工作台返回、组件密度与导航锚点（历史归档） |
 | [docs/archive/prompts/m7/wave-5-wecom-direct-regression.md](archive/prompts/m7/wave-5-wecom-direct-regression.md) | `historical-archive` | `archive` | M7 Wave 5 提示词：企业微信直达与跨模块回归（历史归档） |
 | [docs/archive/prompts/m7/wave-6-final-acceptance-gate.md](archive/prompts/m7/wave-6-final-acceptance-gate.md) | `historical-archive` | `archive` | M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁（历史归档） |
+| [docs/archive/prompts/m8/wave-1-spec-baseline.md](archive/prompts/m8/wave-1-spec-baseline.md) | `historical-archive` | `archive` | M8 Wave 1 提示词：文档、架构与规格基线 |
+| [docs/archive/prompts/m8/wave-2-permission-workflow.md](archive/prompts/m8/wave-2-permission-workflow.md) | `historical-archive` | `archive` | M8 Wave 2 提示词：数据权限与流程状态链 |
+| [docs/archive/prompts/m8/wave-3-evidence-export.md](archive/prompts/m8/wave-3-evidence-export.md) | `historical-archive` | `archive` | M8 Wave 3 提示词：证据、打印、导出与移动能力 |
+| [docs/archive/prompts/m8/wave-4-master-data.md](archive/prompts/m8/wave-4-master-data.md) | `historical-archive` | `archive` | M8 Wave 4 提示词：安全主数据中心 |
+| [docs/archive/prompts/m8/wave-5-plan-task.md](archive/prompts/m8/wave-5-plan-task.md) | `historical-archive` | `archive` | M8 Wave 5 提示词：计划任务、统一待办与日历 |
+| [docs/archive/prompts/m8/wave-6-inspection-capa.md](archive/prompts/m8/wave-6-inspection-capa.md) | `historical-archive` | `archive` | M8 Wave 6 提示词：检查、问题与 CAPA |
+| [docs/archive/prompts/m8/wave-7-release-acceptance.md](archive/prompts/m8/wave-7-release-acceptance.md) | `historical-archive` | `archive` | M8 Wave 7 提示词：迁移、联调、上线与验收 |
+
+## archive/templates/safety
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/archive/templates/safety/m8-hypercare-daily-template.md](archive/templates/safety/m8-hypercare-daily-template.md) | `template` | `safety` | M8 Hypercare 每日记录模板 |
 
 ## handbook
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
+| [docs/handbook/M8-安全管理上线培训材料.md](handbook/M8-安全管理上线培训材料.md) | `operations` | `docs` | M8 安全管理上线培训材料 |
 | [docs/handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md](handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md) | `audit-snapshot` | `external-reference` | 航运公司 |
 | [docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md](handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md) | `audit-snapshot` | `docs` | 苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议 |
 | [docs/handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) | `operations` | `docs` | 苏南船舶管理系统操作手册 |

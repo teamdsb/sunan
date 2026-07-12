@@ -1,5 +1,5 @@
 ---
-status: operations
+status: conditional-baseline
 owner: delivery
 updated: 2026-06-13
 replaces: []
@@ -14,13 +14,13 @@ replaced_by: []
 
 必须阅读：
 - AGENTS.md
-- docs/plans/M8-M9-upgrade-roadmap.md
+- docs/archive/paused/m9/M8-M9-upgrade-roadmap.md
 - docs/requirements/M8-安全管理底座与核心闭环.md
 - docs/requirements/M9-专业安全业务深化与体系完善.md
-- docs/plans/M8-execplans.md
-- docs/plans/M9-execplans.md
-- docs/plans/M8-wave-backlog.md
-- docs/plans/M9-wave-backlog.md
+- docs/archive/execplans/M8-execplans.md
+- docs/archive/paused/m9/M9-execplans.md
+- docs/archive/backlogs/safety/M8-wave-backlog.md
+- docs/archive/paused/m9/M9-wave-backlog.md
 - M8/M9 已完成 Wave 的实际验收文档
 - docs/plans/wave-acceptance-template.md
 - docs/specs/safety/README.md 及全部现行 safety 规格

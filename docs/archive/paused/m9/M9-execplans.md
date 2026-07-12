@@ -1,17 +1,17 @@
 ---
-status: current-spec
+status: conditional-baseline
 owner: planning
 updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
-# M9 执行计划：专业安全业务深化与体系完善
+# M9 执行计划：专业安全业务深化与体系完善（暂停基线）
 
-> 当前调度：M9 已顺延。M9 仍以 M8 总体验收为前置，且 M8 只有在 M7 修复 Wave 6 验收后才可重新启动。
+> 当前调度：M9 已由用户于 2026-07-12 主动暂停。M8 总验收已通过，但不会自动触发 M9；恢复时需重新确认范围、数据基线、真机结果和排期。
 
 ## 1. 执行状态
 
-> 当前状态：顺延待排期。M8 未通过总体验收前，不得开始 M9 业务实现。
+> 当前状态：暂停、未开始。全部 Wave 保持未勾选，仅作为可恢复规划保存。
 
 ### Wave 1
 
@@ -260,7 +260,7 @@ replaced_by: []
 ## 11. 交付物关系
 
 - 需求：`docs/requirements/M9-专业安全业务深化与体系完善.md`
-- Backlog：`docs/plans/M9-wave-backlog.md`
-- 提示词：`docs/prompts/m9/`
+- Backlog：`docs/archive/paused/m9/M9-wave-backlog.md`
+- 提示词：`docs/archive/paused/m9/prompts/`
 - 验收模板：`docs/plans/wave-acceptance-template.md`
 - 规格入口：`docs/specs/safety/README.md`

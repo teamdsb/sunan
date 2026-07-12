@@ -1,17 +1,17 @@
 ---
-status: current-spec
-owner: planning
-updated: 2026-07-10
+status: historical-archive
+owner: archive
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
-# M8 执行计划：安全管理底座与核心闭环
+# M8 执行计划：安全管理底座与核心闭环（历史归档）
 
-> 当前调度：M7 已于 2026-07-10 验收归档，M8 可从 Wave 1 启动。M9 仍以 M8 总体验收为前置。
+> 完成状态：Wave 1-7 已按 2026-07-12 用户确认口径通过，M8 已归档。三端真机、生产存量和生产恢复未在本次任务执行，也未写成通过；M9 由用户决定暂停。
 
 ## 1. 执行状态
 
-> 当前状态：可从 Wave 1 排期启动。勾选任务前必须存在对应验收证据。
+> 历史状态：M8 仓库功能、自动化、迁移能力和交付材料完成；总验收见 `docs/archive/acceptance/safety/acceptance-m8-overall.md`。
 
 ### Wave 1
 
@@ -45,15 +45,15 @@ replaced_by: []
 
 ### Wave 6
 
-- [ ] `M8-W6A` 检查模板、检查项、计划和多人任务
-- [ ] `M8-W6B` 统一问题、不符合项和重大性判定
-- [ ] `M8-W6C` 根因、CAPA、验证、返工、关闭和既有模块接入
+- [x] `M8-W6A` 检查模板、检查项、计划和多人任务
+- [x] `M8-W6B` 统一问题、不符合项和重大性判定
+- [x] `M8-W6C` 根因、CAPA、验证、返工、关闭和既有模块接入
 
 ### Wave 7
 
-- [ ] `M8-W7A` 存量数据迁移、兼容和回滚
-- [ ] `M8-W7B` 全链路测试、性能、弱网和真机回归
-- [ ] `M8-W7C` 上线切换、验收归档、手册更新和 Hypercare
+- [x] `M8-W7A` 存量数据迁移、兼容和回滚（迁移能力、本地/合成演练；生产存量不在本次范围）
+- [x] `M8-W7B` 全链路测试、性能、弱网和回归（自动化范围；三端真机未执行）
+- [x] `M8-W7C` 上线材料、验收归档、手册更新和 Hypercare（未执行真实上线）
 
 ## 2. 执行原则
 
@@ -239,7 +239,7 @@ replaced_by: []
 ## 10. 交付物关系
 
 - 需求：`docs/requirements/M8-安全管理底座与核心闭环.md`
-- Backlog：`docs/plans/M8-wave-backlog.md`
-- 提示词：`docs/prompts/m8/`
+- Backlog：`docs/archive/backlogs/safety/M8-wave-backlog.md`
+- 提示词：`docs/archive/prompts/m8/`
 - 验收模板：`docs/plans/wave-acceptance-template.md`
 - 规格入口：`docs/specs/safety/README.md`

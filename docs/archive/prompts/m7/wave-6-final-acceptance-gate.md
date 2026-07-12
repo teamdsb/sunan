@@ -20,9 +20,9 @@ replaced_by: []
 - docs/plans/wave-acceptance-template.md
 - docs/prompts/README.md
 - docs/requirements/M6-全量兑现与完美上线.md
-- docs/plans/M8-M9-upgrade-roadmap.md
-- docs/plans/M8-execplans.md
-- docs/plans/M9-execplans.md
+- docs/archive/paused/m9/M8-M9-upgrade-roadmap.md
+- docs/archive/execplans/M8-execplans.md
+- docs/archive/paused/m9/M9-execplans.md
 - docs/specs/common/frontend-experience-guidelines.md
 - docs/specs/wecom/real-device-regression-matrix.md
 

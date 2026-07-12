@@ -195,4 +195,4 @@ npx swagger-cli validate <openapi-file>
 - 提示词：`docs/archive/prompts/m7/`
 - 通用体验：`docs/specs/common/frontend-experience-guidelines.md`
 - 通用上传：`docs/specs/common/file-upload-spec.md`
-- 当前延后升级：`docs/plans/M8-M9-upgrade-roadmap.md`
+- 后续升级历史路线：`docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`

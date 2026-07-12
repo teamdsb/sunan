@@ -115,7 +115,7 @@ replaced_by: []
 ## 会话：2026-07-10
 
 ### 阶段 7：M7 实现审计与 M8/M9 缺口登记
-- **状态：** in_progress
+- **状态：** completed
 - 执行的操作：
   - 读取现有规划文件和 M7/M8/M9 执行计划、提示词索引。
   - 确认当前文档将 M7 标为“Wave 1-6 已完成本地最终门禁”，并将 M8/M9 标为后续升级路线。
@@ -221,3 +221,30 @@ replaced_by: []
   - 重新执行两个 OpenAPI Swagger 校验、`make migration-run`、文档 inventory/index 校验（258 个 Markdown）和 API lint；lint 发现并修复一个未使用导入后复验通过，`git diff --check` 通过。
 - 交付证据链：
   - 集成测试 `inspection-capa.integration.spec.ts` 验证“计划 -> 两位检查人独立签认 -> all 门槛汇总 -> 去重不符合项 -> CAPA 根因/纠正/预防/证据 -> 验证返工 -> 受权验证人关闭”，并验证四类既有来源的双向链接。
+
+### 阶段 12：M8 Wave 7 迁移、联调、上线与验收
+- **状态：** in_progress
+- 开始时工作树干净，HEAD 为 `1793702 M8 Wave6完成`。
+- 已读取 `AGENTS.md`、M8 需求、执行计划/backlog、Wave 7 prompt、Wave 1-5 验收和 Wave 6 设计/prompt。
+- 前置审计发现 Wave 6 安全验收文件缺失，执行计划 Wave 6 状态也未回填；不将完成提交自动视为验收通过。
+- 下一步：读完验收模板、测试策略、真机矩阵、上线 runbook、监控基线和操作手册，形成实施设计并处理前置缺口。
+- 已新增 Wave 7 批次/逐行对账 schema、四类存量迁移器、CLI 和 PostgreSQL 集成测试；补齐目录审计发现的 25 个外键支撑索引。
+- 专项集成测试 5/5 通过：分类/迁移/重放/回滚、逐行失败隔离、100 条性能批次、全外键索引、22 个 migration 全量 down/up/重复 up。
+- 本地迁移 CLI 首次被 pnpm 传入的 `--` 阻断，已定位为参数解析问题；当时只有 schema migration 生效，未生成数据批次。
+- 本地实际数据演练批次 `aad4f174-892a-42d8-bb6d-0005a3e5ee5c`：来源/创建/跳过/失败/链接均为 0，同 request 重放返回原批次，回滚 0/保留 0；明确不以空数据演练代替生产对账。
+- 合成迁移证据：四类 4/4 创建、4/4 链接、4/4 来源不变，并发重放 4 条全跳过，回滚 4/4 且可再迁移；100 条最新用时 550ms。
+- 独立 code reviewer 因外部用量限制未返回结论，不将其标记为 review 通过；已用同一清单自审并修正快照覆盖、只读保护和回滚保留边界。
+- 最终完整命令链通过：`generate-doc-inventory` 267、`check-doc-index` 267、API lint、API unit 16/79、API integration 18/78、Web 61/238、API/Web build、21 份 OpenAPI、`git diff --check`；自动化共 395 项、0 失败。
+- 验收结论：Wave 6 通过；Wave 7 不通过；M8 总验收不通过且 M9 不得启动，直到企微真机、生产存量和备份恢复证据齐全。
+
+### 阶段 13：M8 最终功能核查、归档与 M9 暂停
+- **状态：** in_progress
+- 用户修订验收口径：三端真机、生产存量和生产恢复不阻断 M8 归档，三端真机由用户在任务后自行执行。
+- 已逐条核查 M8 八项成功标准与 Wave 1-7 的代码、OpenAPI、migration、前端路由和自动化证据；未发现缺失的 P0/P1 功能。
+- 已将 Wave 7 和 M8 总验收更新为通过，同时在验收、真机矩阵、迁移对账和上线包中保留现场项“未执行”的真实状态。
+- 已创建 `docs/archive/audits/M8-最终功能实现核查.md`，记录 395 项自动化、21 份 OpenAPI、22 个 migration、迁移对账、缺陷与范围边界。
+- 已归档 M8 计划/backlog/提示词，并将 M9 路线、计划、backlog、提示词独立封存到 `docs/archive/paused/m9/`。
+- 归档后的 inventory 生成和索引检查通过（269 份 Markdown），`git diff --check` 通过；下一步运行最终完整质量门禁。
+- 最终新鲜门禁全部通过：API lint；API unit 16 suites / 79 tests；API integration 18 suites / 78 tests；Web 61 files / 238 tests；API/Web build；21/21 OpenAPI；269 份 Markdown inventory/index；`git diff --check`。
+- 自动化最终合计 395 项、失败 0。Node v24.18.0 相对项目声明 20.x 产生 engine warning，但全部命令退出 0；该环境偏差已在最终核查中单列。
+- 最终结论：M8 总验收通过并完成归档；未上线；三端真机保持未执行并由用户后续完成；M9 暂停包已就绪且不会自动启动。

@@ -1,17 +1,17 @@
 ---
-status: current-spec
-owner: planning
-updated: 2026-07-10
+status: historical-archive
+owner: archive
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
-# M8 分 Wave 实施清单
+# M8 分 Wave 实施清单（历史归档）
 
 ## 1. 使用说明
 
-本清单是 `docs/plans/M8-execplans.md` 的工程展开。实施者必须先读取对应 Wave 提示词，再按任务顺序更新规格、测试、实现和验收证据。
+本清单是 `docs/archive/execplans/M8-execplans.md` 的历史工程展开。M8 已完成并归档，不再作为当前开发入口。
 
-当前调度：M7 已于 2026-07-10 验收归档，本清单可从 Wave 1 启动；M9 仍需等待 M8 总体验收。
+完成状态：Wave 1-7 已按 2026-07-12 用户确认口径通过。三端真机、生产存量和生产恢复未在本次任务执行；M9 已独立暂停。
 
 优先级：
 

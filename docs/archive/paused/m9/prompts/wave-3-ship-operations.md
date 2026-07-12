@@ -1,5 +1,5 @@
 ---
-status: operations
+status: conditional-baseline
 owner: delivery
 updated: 2026-06-13
 replaces: []
@@ -15,8 +15,8 @@ replaced_by: []
 必须阅读：
 - AGENTS.md
 - docs/requirements/M9-专业安全业务深化与体系完善.md
-- docs/plans/M9-execplans.md
-- docs/plans/M9-wave-backlog.md
+- docs/archive/paused/m9/M9-execplans.md
+- docs/archive/paused/m9/M9-wave-backlog.md
 - ship-operation 规格组
 - M8 任务、证据、检查和 CAPA 规格
 - M9 personnel-safety 资格快照规格

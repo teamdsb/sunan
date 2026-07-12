@@ -103,7 +103,7 @@ replaced_by: []
 - `docs/requirements/M7-上线体验与导航修复.md`
 - `docs/archive/execplans/M7-execplans.md`
 - `docs/archive/backlogs/common/M7-wave-backlog.md`
-- `docs/plans/M8-M9-upgrade-roadmap.md`
+- `docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`
 - `docs/specs/common/frontend-experience-guidelines.md`
 - `docs/specs/wecom/real-device-regression-matrix.md`
 

@@ -26,9 +26,9 @@ replaced_by: []
 
 | 工作包 | 状态 | 证据 |
 |---|---|---|
-| `M8-W1A` | 通过 | `docs/requirements/M8-安全管理底座与核心闭环.md`、`docs/plans/M8-M9-upgrade-roadmap.md`、`docs/plans/M8-execplans.md`、`docs/plans/M8-wave-backlog.md`、`docs/specs/safety/domain-boundaries.md` |
+| `M8-W1A` | 通过 | `docs/requirements/M8-安全管理底座与核心闭环.md`、`docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`、`docs/archive/execplans/M8-execplans.md`、`docs/archive/backlogs/safety/M8-wave-backlog.md`、`docs/specs/safety/domain-boundaries.md` |
 | `M8-W1B` | 通过 | `docs/specs/safety/domain-boundaries.md`、`docs/specs/safety/terminology-and-status.md`、`docs/specs/safety/api/README.md`、`db/README.md`、`state/README.md`、`ui/README.md` |
-| `M8-W1C` | 通过 | `docs/specs/safety/testing-matrix.md`、`docs/specs/safety/migration-principles.md`、`docs/plans/wave-acceptance-template.md`、`docs/prompts/m8/wave-1-spec-baseline.md` |
+| `M8-W1C` | 通过 | `docs/specs/safety/testing-matrix.md`、`docs/specs/safety/migration-principles.md`、`docs/plans/wave-acceptance-template.md`、`docs/archive/prompts/m8/wave-1-spec-baseline.md` |
 
 ## 冻结决策核对
 

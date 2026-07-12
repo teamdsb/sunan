@@ -16,5 +16,6 @@ replaced_by: []
 | 4 | `master-data-schema.md` | 船舶、人员任职、设备和证书关系 |
 | 5 | `plan-task-schema.md` | 计划、计划项、任务、日程、提醒和转移 |
 | 6 | `inspection-capa-schema.md` | 已冻结：检查快照、结果、问题、CAPA、措施、验证与补偿 |
+| 7 | `legacy-migration-schema.md` | 存量四类来源、批次/逐行对账、只读兼容和回滚 |
 
 迁移设计和数据兼容必须同时满足 `../migration-principles.md`；未评审的文件名不构成建表授权。

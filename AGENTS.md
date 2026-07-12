@@ -42,7 +42,7 @@ Use this index to choose the right entry point before editing code or specs.
 | M4-M6 | 工作平台 | `docs/requirements/M4-工作平台.md`, `docs/requirements/M6-全量兑现与完美上线.md` | `docs/specs/workbench/README.md` | `api/`, `db/`, `state/`, `ui/` |
 | M5-M6 | 上线强化与收口 | `docs/requirements/M5-上线强化与遗留收口.md`, `docs/archive/audits/M6-逐条需求对照表.md` | `docs/specs/common/README.md`, `docs/specs/wecom/README.md` | acceptance, quality gates, go-live, observability |
 | M7 | 上线体验与导航修复（已归档） | `docs/requirements/M7-上线体验与导航修复.md` | `docs/archive/execplans/M7-execplans.md` | 历史计划、backlog、提示词与验收证据 |
-| M8-M9 | 安全管理数字化 | `docs/requirements/M8-安全管理底座与核心闭环.md`, `docs/requirements/M9-专业安全业务深化与体系完善.md` | `docs/specs/safety/README.md` | `api/`, `db/`, `state/`, `ui/`, plans, prompts |
+| M8-M9 | 安全管理数字化（M8 已归档、M9 已暂停） | `docs/requirements/M8-安全管理底座与核心闭环.md`, `docs/requirements/M9-专业安全业务深化与体系完善.md` | `docs/specs/safety/README.md` | M8 当前实现规格；M8 历史验收；M9 暂停包 |
 | Cross-cutting | 非功能需求 | `docs/requirements/非功能需求.md` | `docs/specs/common/README.md` | security, testing, operations, conventions |
 
 ### Change Navigation Rules
@@ -51,7 +51,7 @@ Use this index to choose the right entry point before editing code or specs.
 - For persistence changes, start from the domain `docs/specs/<domain>/db/*.md`, then verify `docs/specs/common/db-conventions.md`.
 - For UI or state changes, read the domain `ui/` page map and matching `state/` slice spec before changing `apps/web/src`.
 - For WeCom, approval, callback, token, or production cutover work, check `docs/specs/wecom/README.md` before implementation.
-- For M8/M9 safety work, start from `docs/execplans.md`, read the matching Wave prompt, then update `docs/specs/safety/` before implementation.
+- For safety work, start from `docs/execplans.md`; M8 history is archived and M9 must not resume until the user explicitly reactivates its paused package.
 - Treat `docs/inventory.md` as the Markdown inventory; if a document is marked `historical-archive`, `acceptance-archive`, `audit-snapshot`, or `superseded`, do not use it as a current implementation source without checking the listed replacement.
 - When adding a new spec, update the nearest domain `README.md` and `docs/inventory.md`; update `docs/README.md` or this index only when adding a new top-level domain, milestone, or primary entry point.
 

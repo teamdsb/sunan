@@ -101,6 +101,7 @@ import { Wave3EvidenceExport1710000017000 } from './migrations/1710000017000-wav
 import { Wave4MasterData1710000018000 } from './migrations/1710000018000-wave4-master-data';
 import { Wave5PlanTask1710000019000 } from './migrations/1710000019000-wave5-plan-task';
 import { Wave6InspectionCapa1710000020000 } from './migrations/1710000020000-wave6-inspection-capa';
+import { Wave7LegacySafetyMigration1710000021000 } from './migrations/1710000021000-wave7-legacy-safety-migration';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -207,6 +208,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave4MasterData1710000018000,
     Wave5PlanTask1710000019000,
     Wave6InspectionCapa1710000020000,
+    Wave7LegacySafetyMigration1710000021000,
   ],
   synchronize: false,
 });

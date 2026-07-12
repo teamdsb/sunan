@@ -97,6 +97,25 @@ replaced_by: []
 - 用户确认采用独立安全领域对象方案：检查任务保存模板版本快照；按 `all/any/quorum` 汇总；按检查任务和检查项快照生成稳定幂等问题；CAPA 关闭需措施、证据、验证和有效性评价，重大问题限制关闭角色。
 - 根目录规划文件本为历史追踪文件。误写入后已用 Git index 原文恢复，后续仅追加本 Wave 记录。
 
+## 2026-07-12：M8 Wave 7 前置审计
+- 当前 HEAD 为 `1793702 M8 Wave6完成`，工作树开始时干净。
+- `docs/archive/acceptance/safety/` 仅存在 Wave 1-5 验收文档，没有 Wave 6 实际验收文档；Wave 7 的“Wave 1-6 均有通过文档”前置尚未满足。
+- `docs/plans/M8-execplans.md` 仍将 `M8-W6A/B/C` 标为未完成，与 Wave 6 完成提交和自动化记录不一致。
+- Wave 6 有设计文档、代码、迁移、测试和前序执行记录，但不能因此直接伪造验收结论；需基于新鲜门禁证据补齐 Wave 6 验收文件。
+- Wave 3 验收记录已包含用户确认的 iOS/Android 拍照、定位、签名和预览真机结果，但 Wave 7 要求的完整主链路及桌面端回归尚无本轮实际证据，不得写为通过。
+- 最终自审发现并修正两个数据保护问题：重放不再更新首次 `issue_sources.source_snapshot`；`legacyReadOnly=true` 来源由 PostgreSQL trigger 拒绝 UPDATE/DELETE，批次回滚删除链接后恢复可写。
+- 回滚安全边界补强：存在 CAPA、额外来源或问题动作审计时保留目标问题，不强删。
+- 最终完整门禁：API unit 79、API integration 78、Web 238，合计 395 项全通过；API lint、API/Web build、21 份 OpenAPI、267 份 Markdown 索引与 `git diff --check` 全通过。
+- 当前无未关闭 P0/P1 代码缺陷，但存在两个 P0 上线门禁（非代码缺陷）：企微三平台真机未执行；生产存量/备份恢复未执行。
+
+## 2026-07-12：M8 最终功能核查与归档口径调整
+- 用户明确撤销三端真机、生产存量和生产恢复作为本次 M8 归档阻断项；三端真机将在任务后由用户自行执行。本决策只改变验收范围，不把未执行项改写为通过。
+- 按 M8 八项成功标准逐条核查了实际后端模块、前端懒加载路由、OpenAPI、PostgreSQL migration 和测试：ABAC/动作隔离、统一附件/PDF/导出、主数据、计划任务/待办/日历、检查转问题、CAPA 验证关闭和企微消息深链均有实现与自动化证据。
+- M8 Wave 1-7 均可按修订口径通过；未关闭 P0/P1 代码缺陷为 0。独立核查记录为 `docs/archive/audits/M8-最终功能实现核查.md`。
+- M8 计划、backlog、提示词已迁入 `docs/archive/execplans/`、`docs/archive/backlogs/safety/`、`docs/archive/prompts/m8/`；M8 需求改为历史归档，safety 规格继续作为当前实现基线。
+- M9 没有开始任何 Wave，已作为 `conditional-baseline` 独立封存在 `docs/archive/paused/m9/`；M8 通过不会自动触发 M9。
+- 归档后最终新鲜门禁全部通过：API unit 79、API integration 78、Web 238，合计 395 项、失败 0；API lint、双端 build、21/21 OpenAPI、269 份 Markdown 索引和 `git diff --check` 均通过。
+
 ---
 *每执行2次查看/浏览器/搜索操作后更新此文件*
 *防止视觉信息丢失*

@@ -1,6 +1,6 @@
 ---
-status: operations
-owner: delivery
+status: historical-archive
+owner: archive
 updated: 2026-07-10
 replaces: []
 replaced_by: []
@@ -15,8 +15,8 @@ replaced_by: []
 必须阅读：
 - AGENTS.md
 - docs/requirements/M8-安全管理底座与核心闭环.md
-- docs/plans/M8-execplans.md
-- docs/plans/M8-wave-backlog.md
+- docs/archive/execplans/M8-execplans.md
+- docs/archive/backlogs/safety/M8-wave-backlog.md
 - docs/specs/common/file-upload-spec.md
 - docs/specs/common/frontend-experience-guidelines.md
 - docs/specs/wecom/jssdk-spec.md
