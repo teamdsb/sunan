@@ -120,6 +120,57 @@ replaced_by: []
 *每执行2次查看/浏览器/搜索操作后更新此文件*
 *防止视觉信息丢失*
 
+## 2026-07-12：新版本生产发布
+- 用户已明确授权读取部署文档、重建相关文件或 Docker 镜像并上线新版本平台。
+- 用户要求同步处理全局版本号，给出的版本口径是 `0.0.4`，且明确不涉及前端页面中的版本展示；需先核对仓库版本真源和现有值，再判断这是目标值还是已存在值。
+- 当前分支为 `main`，跟踪 `origin/main`；开始时仅发现 `.superpowers/brainstorm/97677-1783745506/` 下 4 个既有删除项，视为用户已有变更，本次发布不得恢复、覆盖或纳入版本调整。
+- 下一步以仓库部署/runbook 文档和实际脚本为准确认发布目标、镜像策略、生产数据库迁移/备份、回滚和验收流程。
+- `deploy/deployment-runbook.md` 明确当前生产交付方式不是推送镜像归档，而是把排除本地环境文件/构建产物的源码同步到 `39.106.103.45:/dev/sunan/sunan-source/current`，再由 `/dev/sunan/deploy/docker-compose.yml` 在服务器原地 `up -d --build`。
+- 生产域名为 `https://app.qzssncb.com` 与 `https://api.qzssncb.com`；部署前后至少检查 Compose 服务状态、`/api/health`、`/api/health/ready` 和 Web 响应头。
+- `deploy/docker-compose.yml`、`deploy/docker-compose.prod.yml` 及 `deploy/.env.example` 当前版本默认值均为 `0.0.3`；因此用户所说“现在版本号是 0.0.4”与仓库状态结合后可明确解释为本次目标版本 `0.0.4`，无需再询问是否升级到 `0.0.5`。
+- 架构与企业微信切换文档要求 migration 前完成生产 PostgreSQL 备份；标准同步/构建手册本身没有执行备份命令。本次必须在生产重建前补做可验证备份并记录回滚源，不可只照抄 `up -d --build`。
+- Compose 中 API 容器启动命令会自动执行 schema migration 和幂等 seed；新安全领域还存在独立存量迁移 CLI，需在上线前核对生产来源数量并决定是否执行 `classify/run/verify`，不能把 schema migration 与存量业务迁移混为一谈。
+- 生产 Compose 使用固定容器名和版本化 API/Web/Nginx 镜像标签；持久化 PostgreSQL、Redis、OSS、日志、证书和企业微信 IP 列表均挂载在 `/dev/sunan/`，源码轮换不会覆盖这些数据卷。
+- 全仓产品版本真源共有 6 个受控文件：根 `package.json`、`apps/api/package.json`、`apps/web/package.json`、当前生产 `deploy/docker-compose.yml`、对照快照 `deploy/docker-compose.prod.yml` 和 `deploy/.env.example`；这些位置均仍是 `0.0.3`。`pnpm-lock.yaml` 不记录 workspace 自身版本，现有 `package-lock.json` 的根 package 条目也没有 version 字段，因此不应机械改锁文件。
+- Dockerfile 不直接写产品版本；Compose 通过 `SUNAN_VERSION` 同时控制 API/Web/Nginx 镜像 tag 与 OCI version label。前端源码中没有产品版本展示绑定，本次只改 package metadata/部署 metadata，符合“不涉及前端页面版本显示”。
+- `deploy/README.md` 声明 `deploy/docker-compose.yml` 是服务器当前真源，`docker-compose.prod.yml` 只是早期快照；发布时必须同步当前 Compose，不能让服务器继续保留 `0.0.3` 默认标签。
+- 备份手册给出可验证的 PostgreSQL `pg_dump -Fc` 和 `pg_restore --list`，并建议同时备份生产配置与 Redis AOF；发布手册会自动轮换源码备份。API 容器启动前迁移，因此数据库备份必须先于 `docker compose up`。
+- Git 历史提交 `4752c84` 是上一轮 `0.0.2 → 0.0.3` 的全局发布升级，精确联动 11 个文件；本次按同一已验证边界升级为 `0.0.4`，避免遗漏后端默认值、测试期望、环境模板和运维清单。
+- 本机 Node 为 v24.18.0（高于仓库声明的 Node 20.x），pnpm 10.33.0、Docker 29.6.1、Compose 5.2.0 和 Docker daemon 均可用；实际镜像构建由 Dockerfile 固定使用 Node 20，发布构建不会依赖宿主 Node 24。
+- `git diff --check` 与产品版本残留扫描通过；唯一命中的 `0.0.3` 是依赖 `@nestjs/passport` 的包版本，不是平台版本。
+- 本地 `docker compose config --quiet` 因 Compose 中生产绝对路径 `/dev/sunan/deploy/.env` 不存在而拒绝，属于校验环境缺失而非 YAML 解析失败；不能为方便校验把真实生产 `.env` 复制回本地，应在远端用真实路径复验。
+- 版本更新后的完整本地测试门禁已新鲜通过：Web 61 files / 238 tests、API unit 16 suites / 79 tests、API PostgreSQL testcontainers integration 18 suites / 78 tests，合计 395 tests、失败 0。
+- `pnpm build` 已完成 Web 与 API 生产构建，`pnpm lint` 已完成 API 全量 ESLint，均退出 0；Web 产物维持按路由拆分的独立 chunk。
+- 当前共有 21 份 OpenAPI YAML；发布门禁要求全部验证。文档索引生成/检查和 `git diff --check` 也需要在版本文档修改后重新执行。
+- 安全存量迁移 CLI 的 `classify` 为只读分类；`run <request-id>` 创建可重放批次并返回/复用批次对账；`verify <batch-id>` 需要实际 batch UUID。生产 runbook 要求在 schema migration 前保存 classify、迁移后 run+verify，不能把 request-id 错当 batch-id。
+- 两套发布文档存在重要层级差异：`deploy/deployment-runbook.md` 是日常源码部署流程，但最新企业微信生产切换 runbook 增加了备份、预演、M8 存量迁移和真机/恢复硬门禁。本次生产操作必须采用更严格顺序，不能直接执行日常手册的一步式重建。
+- 21/21 份 OpenAPI 已逐份通过 `swagger-cli validate`；文档 inventory 已重建为 269 个 Markdown，`check-doc-index` 和 `git diff --check` 均通过。
+- 2026-07-12 22:29 生产只读预检：服务器在线，当前 `SUNAN_VERSION=0.0.3`，API/Web/Nginx 均为 `0.0.3` 且 API/DB/Redis healthy，OSS/Web/Nginx Up；公网 API live/ready 与 Web 200 均正常。
+- 生产真实 `.env` 的关键敏感项均为 SET（只核对存在性，未输出值），当前生产 Compose `config --quiet` 通过；企业微信 IP 同步与 certbot timer 均 active。
+- 生产磁盘 79G、已用 20G、可用 56G；Docker build cache 约 17G，但空间足够，不需要冒险清理。最近一次数据库/配置/Redis 备份为 2026-07-07，本次上线前必须生成新备份。
+- 生产当前源码/镜像仍是 `0.0.3`，数据库 migrations 仅 15 条，最新到 Wave 4/采购预算；当前源码没有安全存量迁移 CLI。新版本将首次带入 Wave 5/6/7 schema 与存量迁移能力，风险显著高于纯版本标签重建，需拆分“构建镜像、classify、schema migration、存量 run/verify、切流”。
+- 首次按旧手册在线 tar Redis AOF 时，`appendonly.aof.*.incr.aof` 在读取期间持续增长，tar 返回非零并由 `set -e` 中止。诊断确认 PostgreSQL dump 与配置归档均有效；Redis 归档虽可列目录但不具备一致性保证。
+- Redis 当前 AOF 正常、无 rewrite、最近 RDB save 正常，且容器内 `redis-cli` 支持 `--rdb`。根因是备份方法与活跃 AOF 写入冲突；采用复制协议生成时间点 RDB，再用 `redis-check-rdb` 验证，是不停止生产服务且可验证的一致性方案。
+- 一致性备份已于 `20260712223040` 完成：PostgreSQL custom dump（258 个 restore entries）、生产配置归档、Redis 时间点 RDB 均已验证并设为 mode 600；三份文件的 SHA-256 清单已保存。失败的在线 AOF tar 已删除，避免被误当可恢复备份。
+- 生产需从 15 条 migration 升到 22 条，共新增 7 条：工作流权限、证据审计、证据/导出、主数据、计划任务、检查/CAPA、存量迁移支撑。`up` 路径以新增列（带默认值）、新表/索引/约束/触发器为主，没有删除现有表或列；旧 API 在 schema migration 窗口内保持向后兼容的风险较低。
+- `classify` 只查询现有 `workbench_records` 四类模块并计算映射，不依赖新迁移表，因此可用构建好的 `0.0.4` 镜像在 schema migration 前只读执行。`run` 必须等 7 条 schema migration 完成后执行。
+- 当前工作区本任务变更与 4 个用户已有 `.superpowers` 删除项可明确区分；发布 tar 应继续排除 `.superpowers`，避免把本地设计会话状态带到生产构建上下文。
+- 源码流式包经本地独立验证为 2,816,000 bytes；远端 `upload-20260712223349` 已完整落位，现网 `current` 仍为 `0.0.3`。首次上传命令失败发生在后置校验：本地双引号提前把远端 `$UPLOAD` 展开为空，误查根目录；并非 tar、网络或远端磁盘故障。
+- 远端源码已在校验环境文件缺失、版本号和迁移 CLI 后原子切换为 `0.0.4` 构建上下文；旧源码保留为 `/dev/sunan/sunan-source/backup-20260712223349`，运行容器不挂载源码，因此切换期间现网未受影响。
+- 生产已构建 `sunan-api:0.0.4`、`sunan-web:0.0.4`、`sunan-nginx:0.0.4`，三者 OCI version label 均为 `0.0.4`；构建日志已保存。现网 API/Web/Nginx 仍运行 `0.0.3`，符合“先构建、后迁移/切流”。
+- schema 前安全存量 `classify` 已用 `0.0.4` 镜像只读运行并保存报告，结果 `[]`；生产四类来源记录数为 0，现网 API 仍为 `0.0.3`。
+- 首次恢复演练校验脚本的表名/引号/退出码处理不可靠，末尾 `passed` 已明确作废。使用无嵌套引号的 SSH stdin 脚本完整重做后，PostgreSQL dump 成功恢复到临时库：15 条 migrations、4 个企微用户、0 条工作平台记录、9 个文件元数据；所有 SQL 由 `ON_ERROR_STOP` 保护，临时库已确认删除，恢复演练真实通过。
+- 生产 schema 已由一次性 `0.0.4` 容器从 15 条成功迁移到 22 条；新增 7 条名称逐一核对通过。迁移后旧 `0.0.3` API 的 live/ready 仍正常，证明 schema 切换未破坏现网旧服务。
+- 安全存量批次 `074c54d9-8ac1-4169-81de-8012a9659c04` / request `release-0.0.4-20260712223349` 已完成。run 与独立 verify JSON 完全一致：source/created/skipped/failed/unchanged/linked 全为 0，批次 1 条、映射行 0。
+- `docker compose run` 在 SSH stdin heredoc 中会消费后续脚本输入；首次 run 实际成功，缺少的是后续 verify。显式从 `/dev/null` 输入后 verify 与严格 JSON/数据库断言通过，未创建重复批次。
+- 服务器实际 Compose 与旧源码 hash 一致、Nginx 挂载配置与新旧源码均一致，未发现运维侧漂移。已备份生产 `.env`/Compose，把实际 Compose 同步到 `0.0.4` 真源并仅修改 `SUNAN_VERSION=0.0.4`；远端 `config --quiet` 通过，运行容器尚未切换。
+- API 已单独切换为 `sunan-api:0.0.4`，容器 healthy、OCI label 与进程环境均为 `0.0.4`，migration=22，公网 live/ready 通过；内置回切未触发。
+- Web 与 Nginx 随后单独切换为 `0.0.4`，容器运行、OCI label、Nginx `-t`、公网 Web 200 和 API ready 均通过；任务中心、计划管理、检查/CAPA 三个新懒加载 chunk 在容器内存在且公网可取。
+- 完成前独立复验通过：Compose 配置、API/DB/Redis 健康、三个应用镜像/标签/状态、22 条 migration、4 张关键安全表、0 行存量批次、三份备份 SHA-256、5 份发布证据、10 条 Web 直达路由、4 个受保护 API 的 401、3 个新懒加载资产、公网 live/ready、系统 timers 均符合预期。
+- 切换后最近 20 分钟 API/Nginx 错误标记均为 0，未残留一次性 Compose 容器；服务器侧和本机外部网络重复检查均返回 Web 200、API live/ready。
+- 不能由本次自动化代替的唯一现场项是企业微信 iOS、Android、桌面三端的真实 OAuth/JS-SDK/业务主链操作；该项不得表述为已执行。
+- 最终本地一致性复验确认 11 个全局版本文件全部为 `0.0.4`，前端 `apps/web/src` 中没有版本号/`SUNAN_VERSION` 展示引用；文档索引 269 份、diff 格式均通过。用户已有 4 个 `.superpowers` 删除项保持原样，未被恢复或纳入版本文件。
+
 ## 2026-07-11：M8 Wave 5 启动记录
 - 用户要求实施可复用计划任务中心、统一待办、真实日历与企业微信任务消息，明确 Wave 4 主数据已经验收。
 - 当前工作树干净，最新提交为 `dfd83de M8 Wave4完成`；现有根目录规划文件仍停留在 Wave 2，需要以本 Wave 的验收目标重置当前阶段，但保留历史记录。
