@@ -13,11 +13,14 @@ import { EnterpriseProfileModule } from 'src/modules/enterprise-profile/enterpri
 import { FilesModule } from 'src/modules/files/files.module';
 import { SettingsModule } from 'src/modules/settings/settings.module';
 import { ReminderModule } from 'src/modules/reminder/reminder.module';
+import { PlanTaskModule } from 'src/modules/plan-task/plan-task.module';
+import { InspectionCapaModule } from 'src/modules/inspection-capa/inspection-capa.module';
 import { ShipMonitorModule } from 'src/modules/ship-monitor/ship-monitor.module';
 import { OfficeModule } from 'src/modules/office/office.module';
 import { ProcurementModule } from 'src/modules/procurement/procurement.module';
 import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
+import { MasterDataModule } from 'src/modules/master-data/master-data.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { buildTypeOrmOptions } from 'src/database/typeorm.config';
 
@@ -43,10 +46,13 @@ import { buildTypeOrmOptions } from 'src/database/typeorm.config';
     ShipMonitorModule,
     SettingsModule,
     ReminderModule,
+    PlanTaskModule,
+    InspectionCapaModule,
     CertificateModule,
     OfficeModule,
     ProcurementModule,
     WorkbenchModule,
+    MasterDataModule,
   ],
   controllers: [HealthController],
   providers: [

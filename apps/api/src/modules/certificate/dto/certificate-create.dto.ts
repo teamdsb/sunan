@@ -4,8 +4,8 @@ export class CertificateCreateDto {
   @IsUUID()
   certificateTypeId!: string;
 
-  @IsEnum(['vessel', 'vehicle', 'personnel'])
-  ownerType!: 'vessel' | 'vehicle' | 'personnel';
+  @IsEnum(['vessel', 'vehicle', 'personnel', 'equipment'])
+  ownerType!: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 
   @IsUUID()
   ownerId!: string;
@@ -49,4 +49,3 @@ export class CertificateCreateDto {
   @IsUUID('4', { each: true })
   fileIds?: string[];
 }
-

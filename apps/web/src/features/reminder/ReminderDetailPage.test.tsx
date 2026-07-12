@@ -69,7 +69,7 @@ describe('ReminderDetailPage', () => {
 
   it('renders detail summary and allows acknowledge for the recipient', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/reminders/r1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders/r1']}>
         <Routes>
           <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
         </Routes>
@@ -94,7 +94,7 @@ describe('ReminderDetailPage', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/my/reminders/r1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders/r1']}>
         <Routes>
           <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
         </Routes>
@@ -110,7 +110,7 @@ describe('ReminderDetailPage', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/my/reminders/r1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders/r1']}>
         <Routes>
           <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
         </Routes>
@@ -127,7 +127,7 @@ describe('ReminderDetailPage', () => {
 
   it('relies on the global navigation instead of return buttons', () => {
     render(
-      <MemoryRouter
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
       >
         <Routes>

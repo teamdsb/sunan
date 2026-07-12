@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Space, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Modal, Space, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -12,6 +12,7 @@ import {
   ProcurementFile,
   ProcurementOrderStatus,
   useBindProcurementOrderAttachmentsMutation,
+  useUnlinkProcurementOrderAttachmentMutation,
   useGetProcurementOrderApprovalsQuery,
   useGetProcurementOrderQuery,
   useLazyGetProcurementOrderAttachmentDownloadUrlQuery,
@@ -91,6 +92,7 @@ export function ProcurementOrderDetailPage() {
   const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
   const [resubmitOrder, { isLoading: isResubmitting }] = useResubmitProcurementOrderMutation();
   const [bindAttachments, { isLoading: isBinding }] = useBindProcurementOrderAttachmentsMutation();
+  const [unlinkAttachment, { isLoading: isUnlinking }] = useUnlinkProcurementOrderAttachmentMutation();
   const [getAttachmentDownloadUrl, { isFetching: isPreparingAttachment }] =
     useLazyGetProcurementOrderAttachmentDownloadUrlQuery();
   const [printOrder, { isLoading: isPrinting }] = usePrintProcurementOrderMutation();
@@ -213,6 +215,22 @@ export function ProcurementOrderDetailPage() {
     messageApi.success('PDF 已生成');
   };
 
+  const handleUnlinkAttachment = (file: ProcurementFile) => {
+    if (!id) return;
+    let reason = '';
+    Modal.confirm({
+      title: '解除附件关联',
+      content: <Input autoFocus placeholder="请输入解除原因" onChange={(event) => { reason = event.target.value; }} />,
+      okText: '确认解除', cancelText: '取消', okButtonProps: { danger: true, loading: isUnlinking },
+      onOk: async () => {
+        if (!reason.trim()) throw new Error('请输入解除原因');
+        await unlinkAttachment({ id, fileId: file.id, reason: reason.trim() }).unwrap();
+        messageApi.success('附件关联已解除，原文件未被删除');
+        await refetch();
+      },
+    });
+  };
+
   if (!id) {
     return null;
   }
@@ -220,6 +238,7 @@ export function ProcurementOrderDetailPage() {
   return (
     <>
       {contextHolder}
+      {!canEditDraft ? <Form form={form} component={false} /> : null}
       <section className="page-hero">
         <Typography.Title level={2}>采购单详情</Typography.Title>
         <Typography.Paragraph type="secondary">
@@ -322,6 +341,9 @@ export function ProcurementOrderDetailPage() {
                     >
                       下载
                     </Button>,
+                    ...(canEditDraft ? [
+                      <Button key="unlink" danger type="link" loading={isUnlinking} onClick={() => handleUnlinkAttachment(item)}>解除关联</Button>,
+                    ] : []),
                   ]}
                 >
                   <List.Item.Meta title={item.fileName} description={`${item.mimeType} · ${item.fileSize} bytes`} />

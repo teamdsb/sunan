@@ -21,6 +21,7 @@ const ownerTabs = [
   { label: '船舶', value: 'vessel' },
   { label: '车辆', value: 'vehicle' },
   { label: '人员', value: 'personnel' },
+  { label: '设备', value: 'equipment' },
 ] as const;
 const scrollStoragePrefix = 'certificate-list-scroll:';
 const certificateStatusLabelMap: Record<string, string> = {
@@ -67,7 +68,7 @@ export function CertificateListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: settings } = useGetSettingsQuery();
   const [messageApi, contextHolder] = message.useMessage();
-  const ownerType = (searchParams.get('ownerType') as 'vessel' | 'vehicle' | 'personnel' | null) || 'vessel';
+  const ownerType = (searchParams.get('ownerType') as 'vessel' | 'vehicle' | 'personnel' | 'equipment' | null) || 'vessel';
   const groupBy =
     (searchParams.get('groupBy') as 'owner' | 'type' | null) || settings?.data.certificateGroupBy || 'owner';
   const status = searchParams.get('status') || undefined;
@@ -323,7 +324,7 @@ export function CertificateListPage() {
             <Select
               showSearch
               loading={loadingOwners}
-              placeholder="选择船舶、车辆或人员"
+              placeholder="选择船舶、车辆、人员或设备"
               optionFilterProp="label"
               options={owners.map((item) => ({
                 value: item.id,

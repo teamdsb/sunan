@@ -9,6 +9,7 @@ import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
 import { WorkbenchRecordPrintQueryDto } from './dto/workbench-record-print-query.dto';
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
+import { WorkbenchRecordParticipantDto } from './dto/workbench-record-participant.dto';
 import { WorkbenchService } from './workbench.service';
 
 @Controller('/api/v1/workbench')
@@ -38,8 +39,24 @@ export class WorkbenchController {
 
   @Get('statistics/attendance/export')
   @HttpCode(202)
-  exportAttendanceStatistics(@Query() query: WorkbenchAttendanceExportQueryDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: this.service.exportAttendanceStatistics(query, user) };
+  async exportAttendanceStatistics(@Query() query: WorkbenchAttendanceExportQueryDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.exportAttendanceStatistics(query, user) };
+  }
+
+  @Get('export-jobs/:jobId')
+  async getExportJob(@Param('jobId') jobId: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.getExportJob(jobId, user) };
+  }
+
+  @Post('export-jobs/:jobId/retry')
+  @HttpCode(202)
+  async retryExportJob(@Param('jobId') jobId: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.retryExportJob(jobId, user) };
+  }
+
+  @Get('export-jobs/:jobId/download-url')
+  async getExportDownloadUrl(@Param('jobId') jobId: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.getExportDownloadUrl(jobId, user) };
   }
 
   @Post('statistics/attendance/reconcile')
@@ -68,6 +85,11 @@ export class WorkbenchController {
     return { data: await this.service.performRecordAction(recordId, dto, user) };
   }
 
+  @Post('records/:recordId/participants')
+  async assignParticipant(@Param('recordId') recordId: string, @Body() dto: WorkbenchRecordParticipantDto, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.assignParticipant(recordId, dto, user) };
+  }
+
   @Post('records/:recordId/attachments')
   async uploadAttachment(
     @Param('recordId') recordId: string,
@@ -84,5 +106,15 @@ export class WorkbenchController {
     @CurrentUserDecorator() user: CurrentUser,
   ) {
     return { data: await this.service.getPrintSnapshot(recordId, user, query.paperSize ?? 'A4') };
+  }
+
+  @Post('records/:recordId/signature-evidence')
+  async createSignatureEvidence(@Param('recordId') recordId: string, @Body() body: { signatureFileId: string; businessSummaryHash: string }, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.createSignatureEvidence(recordId, body.signatureFileId, body.businessSummaryHash, user) };
+  }
+
+  @Post('records/:recordId/location-evidence')
+  async createLocationEvidence(@Param('recordId') recordId: string, @Body() body: { captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.createLocationEvidence(recordId, body, user) };
   }
 }

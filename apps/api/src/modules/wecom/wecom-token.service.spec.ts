@@ -75,6 +75,7 @@ describe('WecomTokenService', () => {
     gateway.getAccessToken.mockResolvedValue({ access_token: 'degraded-token' });
 
     const service = new WecomTokenService(redis as never, gateway as never);
+    jest.spyOn((service as unknown as { logger: { warn: (message: string) => void } }).logger, 'warn').mockImplementation(() => undefined);
 
     await expect(service.getAccessToken()).resolves.toBe('degraded-token');
   });

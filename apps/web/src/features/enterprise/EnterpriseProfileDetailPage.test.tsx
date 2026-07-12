@@ -32,7 +32,7 @@ describe('EnterpriseProfileDetailPage', () => {
 
   it('relies on the global navigation instead of a return button', () => {
     render(
-      <MemoryRouter
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={[
           '/my/enterprise-profile/1?backTo=%2Fmy%2Fenterprise-profile%3Fpage%3D2%26pageSize%3D10%26category%3Dlicense%26status%3Ddraft',
         ]}
@@ -50,7 +50,7 @@ describe('EnterpriseProfileDetailPage', () => {
 
   it('supports edit and bind files', async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={['/my/enterprise-profile/1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-profile/1']}>
         <Routes>
           <Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} />
         </Routes>

@@ -1,7 +1,7 @@
 ---
 status: current-source
 owner: wecom
-updated: 2026-05-04
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
@@ -15,7 +15,7 @@ replaced_by: []
 
 | 字段 | 要求 |
 |---|---|
-| 平台 | iOS 企业微信 / Android 企业微信 |
+| 平台 | iOS 企业微信 / Android 企业微信 / 桌面企业微信 |
 | 设备型号 | 必填 |
 | 系统版本 | 必填 |
 | 企业微信版本 | 必填 |
@@ -57,3 +57,17 @@ replaced_by: []
 - `docs/specs/wecom/workbench-go-live-checklist.md`
 - `docs/specs/wecom/procurement-go-live-checklist.md`
 - `docs/specs/wecom/production-cutover-runbook.md`
+
+## 7. M8 安全主链路补充矩阵
+
+| 场景 | iOS | Android | 桌面 | 最小证据 |
+|---|---|---|---|---|
+| 消息深链 -> OAuth 恢复 -> 任务详情 | [ ] | [ ] | [ ] | 录屏 + 投递 ID |
+| 计划生成任务，待办/日历同源 | [ ] | [ ] | [ ] | 任务 ID + 列表/日历截图 |
+| 检查人拍照、定位、签名并弱网重试 | [ ] | [ ] | 不适用（拍照/定位） | 录屏 + 证据 ID |
+| 多人检查满足门槛后汇总 | [ ] | [ ] | [ ] | 两位执行人和汇总状态 |
+| 不符合 -> CAPA -> 证据 -> 独立验证 -> 关闭 | [ ] | [ ] | [ ] | 问题/CAPA/验证 ID |
+| 附件预览、PDF、导出和无权拒绝 | [ ] | [ ] | [ ] | 截图 + 下载/审计记录 |
+| 重复点击、掉线后重入与失败恢复 | [ ] | [ ] | [ ] | 录屏 + 服务端幂等记录 |
+
+未取得真实设备、企业微信版本、执行人、时间和证据索引时，上表只能保持未勾选，不得以浏览器或 mock 结果代替。

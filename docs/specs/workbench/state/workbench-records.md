@@ -20,7 +20,7 @@ replaced_by: []
 - 记录列表与分页
 - 记录详情与步骤明细
 - 动作提交
-- 附件上传与删除
+- 附件上传、拍照、签名、定位、受审计解除关联与下载
 - 打印预览与打印快照读取
 - 月度导出任务跟踪
 - 财务对账提交与结果提示
@@ -124,7 +124,7 @@ M5 新增 `record_source` 概念，前端至少要能识别：
 M5 新增导出任务态：
 
 ```ts
-type ExportJobStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
+type ExportJobStatus = 'queued' | 'running' | 'succeeded' | 'failed';
 ```
 
 要求：
@@ -132,6 +132,7 @@ type ExportJobStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
 - 导出触发后前端进入异步任务跟踪，而不是假设立即返回文件。
 - 成功态展示导出时间、导出范围、下载入口。
 - 失败态展示失败原因与重试入口。
+- `queued` 和 `running` 均不是成功态，不展示伪造 fileId 或下载入口；成功下载前仍由服务端重新验证考勤范围/源记录权限。
 
 ## 8. 对账态
 
@@ -144,3 +145,9 @@ type ExportJobStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
 - 差异明细入口
 - 对账失败后的重试提示
 - 管理员场景下的原始口径说明
+
+## 9. M8 Wave 6 检查整改来源关联
+
+对四类 `inspection_rectification` 记录，详情响应可包含受权的 `issueLinks`。它只表示安全领域 `issue_sources` 的双向引用，不改变工作平台记录自身 `draft/assigned/checking/pending_review/rework_required/closed` 状态机，也不允许通过通用 `complete_step` 绕过 CAPA 关闭门槛。
+
+点击关联问题后由安全问题 API 重新执行 ABAC；问题关闭、返工或重开只更新安全领域状态和审计，不回写原记录的 `payload`。403 不显示问题数量、标题或等级。

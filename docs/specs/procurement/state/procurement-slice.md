@@ -19,7 +19,7 @@ replaced_by: []
 - 编辑态：`draft`、`dirtyFields`
 - 提交态：`submitting`、`submitError`
 - 审批态：`approvalActionLoading`、`approvalActionError`
-- 附件态：`attachmentUploading`、`attachmentBinding`
+- 附件态：`attachmentUploading`、`attachmentBinding`、`attachmentUnlinking`、`attachmentUnlinkError`
 
 ## 关键动作
 
@@ -30,6 +30,7 @@ replaced_by: []
 - `submitOrder`
 - `resubmitOrder`
 - `bindOrderAttachments`
+- `unlinkOrderAttachment`：仅在草稿编辑权限存在时显示；提交 `reason`，成功后失效订单详情缓存并刷新附件列表
 - `approveOrder` / `rejectOrder` / `returnOrder`
 
 ## 兼容约束

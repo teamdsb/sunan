@@ -79,7 +79,7 @@ describe('OfficeHomePage', () => {
 
   it('renders entries and opens the admin page for managers', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -91,7 +91,7 @@ describe('OfficeHomePage', () => {
 
   it('records open action before launching the target', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -104,7 +104,7 @@ describe('OfficeHomePage', () => {
 
   it('restores category and keyword from the URL', () => {
     render(
-      <MemoryRouter initialEntries={['/office?categoryCode=customs&keyword=港口']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/office?categoryCode=customs&keyword=港口']}>
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -115,7 +115,7 @@ describe('OfficeHomePage', () => {
 
   it('renders all office categories and keeps category switches in the URL state', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <OfficeHomePage />
       </MemoryRouter>,
     );

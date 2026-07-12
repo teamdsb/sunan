@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { OssService } from 'src/modules/files/oss.service';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
@@ -36,6 +37,14 @@ const wecomMessageMock = {
   sendTextCard: jest.fn(async () => ({ success: true, invalidUser: [] })),
 };
 
+const ossMock = {
+  uploadBuffer: jest.fn(async () => undefined),
+  createDownloadSignature: jest.fn(async (ossKey: string) => ({
+    downloadUrl: `https://files.test/${encodeURIComponent(ossKey)}`,
+    expiresAt: new Date(Date.now() + 300_000).toISOString(),
+  })),
+};
+
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -59,6 +68,8 @@ describe('Procurement Wave4 integration', () => {
       .useValue(authGuard)
       .overrideProvider(WecomMessageService)
       .useValue(wecomMessageMock)
+      .overrideProvider(OssService)
+      .useValue(ossMock)
       .compile();
 
     app = moduleRef.createNestApplication();

@@ -30,6 +30,7 @@
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.24",
     "uuid": "^11.1.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -58,6 +59,7 @@
     "test:unit": "jest --config ./jest.unit.config.ts",
     "test:integration": "jest --config ./jest.integration.config.ts",
     "migration:run": "NODE_PATH=. ts-node src/database/run-migrations.ts",
+    "migration:safety": "NODE_PATH=. ts-node src/database/run-safety-legacy-migration.ts",
     "migration:generate": "NODE_PATH=. typeorm-ts-node-commonjs migration:generate src/database/migrations/auto -d src/database/data-source.ts",
     "seed": "NODE_PATH=. ts-node src/database/seeds/run-seed.ts"
   }

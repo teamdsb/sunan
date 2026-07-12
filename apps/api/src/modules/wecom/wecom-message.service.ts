@@ -14,6 +14,7 @@ interface SendTextCardOptions {
 export interface SendTextCardResult {
   success: boolean;
   invalidUser: string[];
+  errcode?: number;
   failureReason?: string;
 }
 
@@ -57,7 +58,7 @@ export class WecomMessageService {
           if (data.invaliduser) {
             data.invaliduser.split('|').filter(Boolean).forEach((id) => invalidUser.add(id));
           }
-          return { success: true, invalidUser: [...invalidUser] };
+          return { success: true, invalidUser: [...invalidUser], errcode: data.errcode };
         }
 
         if (data.errcode === 42001) {
@@ -72,7 +73,7 @@ export class WecomMessageService {
 
         const failureReason = `WeCom API error ${data.errcode}: ${data.errmsg}`;
         this.logger.warn(`WeCom sendTextCard failed: ${failureReason}`);
-        return { success: false, invalidUser: [...invalidUser], failureReason };
+        return { success: false, invalidUser: [...invalidUser], errcode: data.errcode, failureReason };
       } catch (error) {
         const axiosLike = error as { code?: string };
         if (axiosLike.code === 'ECONNABORTED' && attempt < 2) {

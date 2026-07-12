@@ -10,6 +10,12 @@ const ACTION_TYPES = [
   'request_rework',
   'close_record',
   'archive',
+  'return_step',
+  'terminate',
+  'void',
+  'reopen',
+  'delegate',
+  'transfer',
 ] as const;
 
 export class WorkbenchRecordActionDto {

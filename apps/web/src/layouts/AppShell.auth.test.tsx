@@ -37,7 +37,7 @@ describe('AppShell auth recovery', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/my']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my']}>
           <AppShell />
         </MemoryRouter>
       </Provider>,

@@ -52,4 +52,5 @@ replaced_by: []
 
 1. 船名在系统内唯一，不允许重复创建。
 2. 被 `certificates` 或 `ship_monitors` 引用的船舶不可物理删除。
-3. `inactive` 船舶默认不在前端可选项中展示，历史证书仍保留可查。
+3. `inactive` 船舶默认不在前端可选项中展示，历史证书、任职、设备和工作平台引用仍保留可查，并使用关联快照显示当时船名。
+4. Wave 4 船舶安全关系见 `docs/specs/safety/db/master-data-schema.md`；新业务写入必须拒绝已停用船舶。

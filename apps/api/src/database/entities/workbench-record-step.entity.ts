@@ -28,6 +28,12 @@ export class WorkbenchRecordStepEntity {
   @Column({ type: 'varchar', length: 32, default: 'pending' })
   status!: string;
 
+  @Column({ name: 'completion_rule', type: 'varchar', length: 16, default: 'all' })
+  completionRule!: string;
+
+  @Column({ name: 'quorum_count', type: 'int', nullable: true })
+  quorumCount!: number | null;
+
   @Column({ name: 'check_result', type: 'varchar', length: 64, nullable: true })
   checkResult!: string | null;
 

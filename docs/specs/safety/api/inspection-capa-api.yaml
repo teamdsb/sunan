@@ -1,0 +1,401 @@
+openapi: 3.0.3
+info:
+  title: Safety Inspection and CAPA API
+  version: 1.0.0
+  description: M8 Wave 6 contract for versioned inspections, unified issues and CAPA closure.
+servers:
+  - url: /api/v1
+paths:
+  /inspection-templates:
+    get:
+      tags: [Inspection templates]
+      summary: List templates visible in the caller scope
+      responses: {'200': {$ref: '#/components/responses/TemplateList'}}
+    post:
+      tags: [Inspection templates]
+      summary: Create an inspection template and its initial draft version
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateTemplateRequest'}}}}
+      responses:
+        '201': {$ref: '#/components/responses/Template'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /inspection-templates/{templateId}/versions:
+    get:
+      tags: [Inspection templates]
+      summary: List immutable and draft versions of a template
+      parameters: [{$ref: '#/components/parameters/TemplateId'}]
+      responses: {'200': {$ref: '#/components/responses/TemplateVersionList'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+    post:
+      tags: [Inspection templates]
+      summary: Create the next draft version by copying a published version
+      parameters: [{$ref: '#/components/parameters/TemplateId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateTemplateVersionRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/TemplateVersion'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspection-template-versions/{versionId}/publish:
+    post:
+      tags: [Inspection templates]
+      summary: Freeze a complete draft version for future inspection plans
+      parameters: [{$ref: '#/components/parameters/VersionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/TemplateVersion'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspection-plans:
+    get:
+      tags: [Inspection plans]
+      summary: List inspection plans and backing task-plan status
+      responses: {'200': {$ref: '#/components/responses/InspectionPlanList'}}
+    post:
+      tags: [Inspection plans]
+      summary: Create an inspection plan backed by a Wave 5 plan item
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateInspectionPlanRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/InspectionPlan'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspection-plans/{inspectionPlanId}/generation-runs:
+    post:
+      tags: [Inspection plans]
+      summary: Generate/reconcile tasks and snapshot inspections for a time window
+      parameters: [{$ref: '#/components/parameters/InspectionPlanId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionGenerationRequest'}}}}
+      responses: {'202': {$ref: '#/components/responses/GenerationRun'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspections:
+    get:
+      tags: [Inspections]
+      summary: List inspections whose task or source scope is visible to the caller
+      parameters:
+        - {in: query, name: status, schema: {type: string, enum: [pending, in_progress, submitted, completed, cancelled]}}
+        - {in: query, name: taskId, schema: {type: string, format: uuid}}
+        - {in: query, name: vesselId, schema: {type: string, format: uuid}}
+      responses: {'200': {$ref: '#/components/responses/InspectionList'}}
+  /inspections/{inspectionId}:
+    get:
+      tags: [Inspections]
+      summary: Read a template snapshot, independent result slots and permitted actions
+      parameters: [{$ref: '#/components/parameters/InspectionId'}]
+      responses: {'200': {$ref: '#/components/responses/Inspection'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+  /inspections/{inspectionId}/results:
+    post:
+      tags: [Inspections]
+      summary: Upsert one caller-owned result for a snapshot item without submitting the inspection
+      parameters: [{$ref: '#/components/parameters/InspectionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SaveInspectionResultRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/InspectionResult'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspections/{inspectionId}/submit:
+    post:
+      tags: [Inspections]
+      summary: Sign and submit the caller's independent result set
+      parameters: [{$ref: '#/components/parameters/InspectionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SubmitInspectionRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/Inspection'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspections/{inspectionId}/summaries:
+    post:
+      tags: [Inspections]
+      summary: Aggregate submitted results only after all/any/quorum completion is satisfied
+      parameters: [{$ref: '#/components/parameters/InspectionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/Inspection'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /issues:
+    get:
+      tags: [Issues]
+      summary: List unified issues; every item returns source drill-down metadata
+      parameters:
+        - {in: query, name: status, schema: {type: string, enum: [open, analyzing, action_in_progress, pending_verification, closed]}}
+        - {in: query, name: issueType, schema: {type: string, enum: [hazard, nonconformity, general, external]}}
+        - {in: query, name: severity, schema: {type: string, enum: [minor, major, critical]}}
+        - {in: query, name: vesselId, schema: {type: string, format: uuid}}
+      responses: {'200': {$ref: '#/components/responses/IssueList'}}
+    post:
+      tags: [Issues]
+      summary: Register an issue manually or from an authorized existing workbench source
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateIssueRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/Issue'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /issues/{issueId}:
+    get:
+      tags: [Issues]
+      summary: Read issue, source links, CAPA and allowed actions
+      parameters: [{$ref: '#/components/parameters/IssueId'}]
+      responses: {'200': {$ref: '#/components/responses/Issue'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+  /issues/{issueId}/capa:
+    post:
+      tags: [CAPA]
+      summary: Create the single CAPA container required to close an issue
+      parameters: [{$ref: '#/components/parameters/IssueId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateCapaRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/Capa'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capas/{capaId}/root-cause:
+    put:
+      tags: [CAPA]
+      summary: Save structured root-cause analysis for the CAPA
+      parameters: [{$ref: '#/components/parameters/CapaId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/RootCauseRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/Capa'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capas/{capaId}/actions:
+    post:
+      tags: [CAPA]
+      summary: Assign a corrective or preventive action
+      parameters: [{$ref: '#/components/parameters/CapaId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateCapaActionRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/CapaAction'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capa-actions/{actionId}/submit:
+    post:
+      tags: [CAPA]
+      summary: Submit action completion statement and immutable evidence links
+      parameters: [{$ref: '#/components/parameters/ActionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SubmitCapaActionRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/CapaAction'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capa-actions/{actionId}/accept:
+    post:
+      tags: [CAPA]
+      summary: Accept a submitted action without allowing its executor to accept it
+      parameters: [{$ref: '#/components/parameters/ActionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/AcceptCapaActionRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/CapaAction'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capas/{capaId}/request-verification:
+    post:
+      tags: [CAPA]
+      summary: Re-submit completed actions for independent verification after rework
+      parameters: [{$ref: '#/components/parameters/CapaId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/Capa'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capas/{capaId}/verifications:
+    post:
+      tags: [CAPA]
+      summary: Pass or return CAPA after independent verification and effectiveness evaluation
+      parameters: [{$ref: '#/components/parameters/CapaId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VerificationRequest'}}}}
+      responses: {'201': {$ref: '#/components/responses/Verification'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /issues/{issueId}/close:
+    post:
+      tags: [Issues]
+      summary: Close an issue only when CAPA, evidence, verification and effectiveness gates pass
+      parameters: [{$ref: '#/components/parameters/IssueId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CloseIssueRequest'}}}}
+      responses: {'200': {$ref: '#/components/responses/Issue'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /issues/statistics:
+    get:
+      tags: [Issues]
+      summary: Aggregate source-backed issue statistics with inspection and CAPA drill-down links
+      responses: {'200': {$ref: '#/components/responses/IssueStatistics'}}
+  /issue-transfer-jobs/actions/reconcile:
+    post:
+      tags: [Issues]
+      summary: Reprocess failed or queued automatic issue transfers without changing their stable dedupe keys
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'202': {$ref: '#/components/responses/TransferReconcile'}, '403': {$ref: '#/components/responses/Forbidden'}}
+  /workbench/records/{recordId}/issues:
+    get:
+      tags: [Workbench integration]
+      summary: List issue links for an authorized inspection-rectification source record
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      responses: {'200': {$ref: '#/components/responses/IssueList'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
+components:
+  parameters:
+    TemplateId: {in: path, name: templateId, required: true, schema: {type: string, format: uuid}}
+    VersionId: {in: path, name: versionId, required: true, schema: {type: string, format: uuid}}
+    InspectionPlanId: {in: path, name: inspectionPlanId, required: true, schema: {type: string, format: uuid}}
+    InspectionId: {in: path, name: inspectionId, required: true, schema: {type: string, format: uuid}}
+    IssueId: {in: path, name: issueId, required: true, schema: {type: string, format: uuid}}
+    CapaId: {in: path, name: capaId, required: true, schema: {type: string, format: uuid}}
+    ActionId: {in: path, name: actionId, required: true, schema: {type: string, format: uuid}}
+    RecordId: {in: path, name: recordId, required: true, schema: {type: string, format: uuid}}
+    IdempotencyKey: {in: header, name: Idempotency-Key, required: true, schema: {type: string, minLength: 1, maxLength: 128}}
+  responses:
+    Template: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TemplateResponse'}}}}
+    TemplateList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TemplateListResponse'}}}}
+    TemplateVersion: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TemplateVersionResponse'}}}}
+    TemplateVersionList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TemplateVersionListResponse'}}}}
+    InspectionPlan: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionPlanResponse'}}}}
+    InspectionPlanList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionPlanListResponse'}}}}
+    GenerationRun: {description: Accepted, content: {application/json: {schema: {$ref: '#/components/schemas/GenerationRunResponse'}}}}
+    Inspection: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionResponse'}}}}
+    InspectionList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionListResponse'}}}}
+    InspectionResult: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/InspectionResultResponse'}}}}
+    Issue: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IssueResponse'}}}}
+    IssueList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IssueListResponse'}}}}
+    Capa: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/CapaResponse'}}}}
+    CapaAction: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/CapaActionResponse'}}}}
+    Verification: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/VerificationResponse'}}}}
+    IssueStatistics: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IssueStatisticsResponse'}}}}
+    TransferReconcile: {description: Accepted, content: {application/json: {schema: {$ref: '#/components/schemas/TransferReconcileResponse'}}}}
+    Forbidden: {description: Caller cannot read or act on this resource}
+    NotFound: {description: Resource is not visible or does not exist}
+    Conflict: {description: "State transition, version or idempotency conflict"}
+    Unprocessable: {description: "Required result, gate, evidence, personnel or data rule is invalid"}
+  schemas:
+    TemplateItemInput:
+      type: object
+      required: [itemCode, title, resultRequired]
+      properties:
+        itemCode: {type: string, maxLength: 64}
+        title: {type: string, maxLength: 200}
+        clauseRef: {type: string, maxLength: 200}
+        resultRequired: {type: boolean}
+        evidenceRequiredOnFailure: {type: boolean, default: true}
+        sequenceNo: {type: integer, minimum: 1}
+    CreateTemplateRequest:
+      type: object
+      required: [code, name, sourceType, items]
+      properties:
+        code: {type: string, maxLength: 64}
+        name: {type: string, maxLength: 200}
+        sourceType: {type: string, enum: [regulation, company, vessel]}
+        importSource: {type: string, maxLength: 500}
+        scopes: {type: array, items: {type: object, properties: {vesselId: {type: string, format: uuid}, departmentCode: {type: string}}}}
+        items: {type: array, minItems: 1, items: {$ref: '#/components/schemas/TemplateItemInput'}}
+    CreateTemplateVersionRequest:
+      type: object
+      required: [items]
+      properties:
+        importSource: {type: string, maxLength: 500}
+        items: {type: array, minItems: 1, items: {$ref: '#/components/schemas/TemplateItemInput'}}
+    CreateInspectionPlanRequest:
+      type: object
+      required: [title, templateVersionId, responsibleUserId, recurrence, dueOffsetMinutes]
+      properties:
+        title: {type: string, maxLength: 200}
+        templateVersionId: {type: string, format: uuid}
+        responsibleUserId: {type: string}
+        participantUserIds: {type: array, items: {type: string}}
+        completionRule: {type: string, enum: [all, any, quorum], default: all}
+        quorumCount: {type: integer, minimum: 1}
+        vesselId: {type: string, format: uuid}
+        recurrence: {type: object, additionalProperties: true}
+        dueOffsetMinutes: {type: integer, minimum: 0}
+    InspectionGenerationRequest:
+      type: object
+      required: [windowStart, windowEnd, mode]
+      properties:
+        windowStart: {type: string, format: date-time}
+        windowEnd: {type: string, format: date-time}
+        mode: {type: string, enum: [generate, reconcile]}
+    SaveInspectionResultRequest:
+      type: object
+      required: [templateItemSnapshotKey, conclusion]
+      properties:
+        templateItemSnapshotKey: {type: string}
+        conclusion: {type: string, enum: [conforming, nonconforming, not_applicable]}
+        remark: {type: string, maxLength: 2000}
+        evidenceFileIds: {type: array, items: {type: string, format: uuid}}
+    SubmitInspectionRequest:
+      type: object
+      required: [signatureFileId]
+      properties:
+        signatureFileId: {type: string, format: uuid}
+        remark: {type: string, maxLength: 500}
+    CreateIssueRequest:
+      type: object
+      required: [title, issueType, severity, responsibleUserId, dueAt]
+      properties:
+        title: {type: string, maxLength: 200}
+        issueType: {type: string, enum: [hazard, nonconformity, general, external]}
+        severity: {type: string, enum: [minor, major, critical]}
+        vesselId: {type: string, format: uuid}
+        responsibilityScope: {type: string, enum: [vessel, department, company]}
+        responsibleUserId: {type: string}
+        dueAt: {type: string, format: date-time}
+        source: {type: object, properties: {sourceType: {type: string}, sourceId: {type: string}, sourceItemKey: {type: string}}}
+    CreateCapaRequest:
+      type: object
+      required: [verifierUserId]
+      properties: {verifierUserId: {type: string}, effectivenessRequired: {type: boolean, default: true}}
+    RootCauseRequest:
+      type: object
+      required: [method, conclusion]
+      properties:
+        method: {type: string, enum: [five_whys, fishbone, category, other]}
+        conclusion: {type: string, minLength: 1, maxLength: 4000}
+        analysis: {type: object, additionalProperties: true}
+    CreateCapaActionRequest:
+      type: object
+      required: [actionType, title, responsibleUserId, dueAt]
+      properties:
+        actionType: {type: string, enum: [corrective, preventive]}
+        title: {type: string, maxLength: 500}
+        responsibleUserId: {type: string}
+        dueAt: {type: string, format: date-time}
+    SubmitCapaActionRequest:
+      type: object
+      required: [completionStatement, evidenceFileIds]
+      properties:
+        completionStatement: {type: string, minLength: 1, maxLength: 4000}
+        evidenceFileIds: {type: array, minItems: 1, items: {type: string, format: uuid}}
+    AcceptCapaActionRequest:
+      type: object
+      required: [comment]
+      properties: {comment: {type: string, minLength: 1, maxLength: 1000}}
+    VerificationRequest:
+      type: object
+      required: [result, conclusion]
+      properties:
+        result: {type: string, enum: [passed, failed]}
+        conclusion: {type: string, minLength: 1, maxLength: 4000}
+        effectivenessEvaluation: {type: string, minLength: 1, maxLength: 4000}
+        reworkReason: {type: string, maxLength: 4000}
+    CloseIssueRequest:
+      type: object
+      required: [comment]
+      properties: {comment: {type: string, minLength: 1, maxLength: 1000}}
+    Template:
+      type: object
+      required: [id, code, name, sourceType, currentVersionId]
+      properties: {id: {type: string, format: uuid}, code: {type: string}, name: {type: string}, sourceType: {type: string}, currentVersionId: {type: string, format: uuid, nullable: true}}
+    TemplateVersion:
+      type: object
+      required: [id, templateId, versionNo, status, items]
+      properties: {id: {type: string, format: uuid}, templateId: {type: string, format: uuid}, versionNo: {type: integer}, status: {type: string, enum: [draft, published, retired]}, importSource: {type: string, nullable: true}, items: {type: array, items: {$ref: '#/components/schemas/TemplateItemInput'}}}
+    InspectionPlan:
+      type: object
+      required: [id, title, planId, planItemId, templateVersionId]
+      properties: {id: {type: string, format: uuid}, title: {type: string}, planId: {type: string, format: uuid}, planItemId: {type: string, format: uuid}, templateVersionId: {type: string, format: uuid}}
+    GenerationRun:
+      type: object
+      required: [id, status, createdCount, skippedCount, failedCount]
+      properties: {id: {type: string, format: uuid}, status: {type: string, enum: [queued, running, succeeded, failed]}, createdCount: {type: integer}, skippedCount: {type: integer}, failedCount: {type: integer}}
+    InspectionResult:
+      type: object
+      required: [id, inspectorUserId, templateItemSnapshotKey, conclusion, status]
+      properties: {id: {type: string, format: uuid}, inspectorUserId: {type: string}, templateItemSnapshotKey: {type: string}, conclusion: {type: string}, remark: {type: string, nullable: true}, status: {type: string, enum: [draft, submitted]}, signedAt: {type: string, format: date-time, nullable: true}}
+    Inspection:
+      type: object
+      required: [id, taskId, status, templateVersionId, templateSnapshot, results, availableActions]
+      properties: {id: {type: string, format: uuid}, taskId: {type: string, format: uuid}, status: {type: string, enum: [pending, in_progress, submitted, completed, cancelled]}, templateVersionId: {type: string, format: uuid}, templateSnapshot: {type: object, additionalProperties: true}, results: {type: array, items: {$ref: '#/components/schemas/InspectionResult'}}, availableActions: {type: array, items: {type: string}}}
+    IssueSource:
+      type: object
+      required: [sourceType, sourceId]
+      properties: {sourceType: {type: string}, sourceId: {type: string}, sourceItemKey: {type: string, nullable: true}, sourceHref: {type: string, nullable: true}}
+    Issue:
+      type: object
+      required: [id, title, issueType, severity, status, responsibleUserId, dueAt, sources, availableActions]
+      properties: {id: {type: string, format: uuid}, title: {type: string}, issueType: {type: string}, severity: {type: string}, status: {type: string}, vesselId: {type: string, format: uuid, nullable: true}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, sources: {type: array, items: {$ref: '#/components/schemas/IssueSource'}}, capa: {$ref: '#/components/schemas/Capa'}, availableActions: {type: array, items: {type: string}}}
+    CapaAction:
+      type: object
+      required: [id, actionType, title, responsibleUserId, dueAt, status]
+      properties: {id: {type: string, format: uuid}, actionType: {type: string}, title: {type: string}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, status: {type: string}, evidenceFileIds: {type: array, items: {type: string, format: uuid}}}
+    Capa:
+      type: object
+      nullable: true
+      properties: {id: {type: string, format: uuid}, issueId: {type: string, format: uuid}, status: {type: string}, verifierUserId: {type: string}, rootCause: {type: object, nullable: true}, actions: {type: array, items: {$ref: '#/components/schemas/CapaAction'}}}
+    Verification:
+      type: object
+      required: [id, result, verifierUserId, conclusion]
+      properties: {id: {type: string, format: uuid}, result: {type: string}, verifierUserId: {type: string}, conclusion: {type: string}, effectivenessEvaluation: {type: string, nullable: true}}
+    IssueStatistics:
+      type: object
+      required: [total, bySeverity, drillDown]
+      properties: {total: {type: integer}, bySeverity: {type: object, additionalProperties: {type: integer}}, drillDown: {type: array, items: {$ref: '#/components/schemas/Issue'}}}
+    TransferReconcile: {type: object, required: [processed, succeeded, failed], properties: {processed: {type: integer}, succeeded: {type: integer}, failed: {type: integer}}}
+    TemplateResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Template'}}}
+    TemplateListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Template'}}}}
+    TemplateVersionResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/TemplateVersion'}}}
+    TemplateVersionListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/TemplateVersion'}}}}
+    InspectionPlanResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/InspectionPlan'}}}
+    InspectionPlanListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/InspectionPlan'}}}}
+    GenerationRunResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/GenerationRun'}}}
+    InspectionResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Inspection'}}}
+    InspectionListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Inspection'}}}}
+    InspectionResultResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/InspectionResult'}}}
+    IssueResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Issue'}}}
+    IssueListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Issue'}}}}
+    CapaResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Capa'}}}
+    CapaActionResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/CapaAction'}}}
+    VerificationResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Verification'}}}
+    IssueStatisticsResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/IssueStatistics'}}}
+    TransferReconcileResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/TransferReconcile'}}}

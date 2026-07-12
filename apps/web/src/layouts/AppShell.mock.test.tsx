@@ -46,7 +46,7 @@ describe('AppShell mock mode', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/my']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my']}>
           <AppShell />
         </MemoryRouter>
       </Provider>,
@@ -71,7 +71,7 @@ describe('AppShell mock mode', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/my/reminders']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
           <AppShell />
         </MemoryRouter>
       </Provider>,
@@ -108,7 +108,7 @@ describe('AppShell mock mode', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/my/reminders']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
           <Routes>
             <Route element={<AppShell />}>
               <Route path="/my" element={<LocationDisplay />} />
@@ -142,7 +142,7 @@ describe('AppShell mock mode', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/my/reminders']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders']}>
           <AppShell />
         </MemoryRouter>
       </Provider>,
@@ -167,7 +167,7 @@ describe('AppShell mock mode', () => {
 
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/procurement']}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/procurement']}>
           <AppShell />
         </MemoryRouter>
       </Provider>,

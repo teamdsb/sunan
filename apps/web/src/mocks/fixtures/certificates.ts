@@ -109,6 +109,9 @@ export const certificateOwnerFixtures: Record<
   personnel: [
     { id: 'personnel-001', name: '张三', code: 'zhangsan', status: 'active' },
   ],
+  equipment: [
+    { id: 'equipment-001', name: '主机', code: 'EQ-001', status: 'active' },
+  ],
 };
 
 function timestamp(offsetMinutes: number): string {

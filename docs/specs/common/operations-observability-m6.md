@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: common
-updated: 2026-05-04
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
@@ -43,6 +43,11 @@ replaced_by: []
 | 文件回调 | `fileId`/`ossKey`/`status` | 成功率 >= 99% | 10 分钟失败 >= 5 次 |
 | 导出任务 | `jobId`/`module`/`status`/`durationMs` | 30 分钟内完成率 >= 95% | 超时任务 >= 3 条 |
 | 打印快照 | `recordId`/`renderedFormat` | 成功率 >= 99% | 30 分钟失败 >= 3 次 |
+| 计划生成 | `runId`/`planId`/`created`/`skipped`/`failed` | 失败数 = 0，重放不重复 | 单批失败 > 0 或发现重复 generation key |
+| 任务消息 | `deliveryId`/`taskId`/`dedupeKey`/`errcode` | 10 分钟成功率 >= 99% | 失败 >= 5 或队列最老等待 > 10 分钟 |
+| 检查转单 | `jobId`/`dedupeKey`/`inspectionResultId`/`issueId` | 失败可对账恢复，无重复问题 | 失败 >= 1 超过 5 分钟未补偿 |
+| CAPA 闭环 | `issueId`/`capaId`/`actionId`/`verificationId` | 非法关闭均拒绝，返工可追溯 | 逾期且未升级 >= 1 |
+| 存量迁移 | `batchId`/`requestId`/`source`/`created`/`skipped`/`failed` | `source=created+skipped+failed`，来源不变 | 任一数量不平或 `failed > 0` 未处理 |
 
 ## 4.1 日志字段标准化补充（Wave D）
 

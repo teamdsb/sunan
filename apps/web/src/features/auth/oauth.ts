@@ -54,7 +54,7 @@ export function getStoredTokenExpiresAt(): string | null {
 }
 
 export function setRedirectTarget(target: string): void {
-  getSessionStorage()?.setItem(REDIRECT_TARGET_STORAGE_KEY, target);
+  getSessionStorage()?.setItem(REDIRECT_TARGET_STORAGE_KEY, sanitizeRedirectTarget(target));
 }
 
 export function getRedirectTarget(): string | null {
@@ -62,9 +62,19 @@ export function getRedirectTarget(): string | null {
 }
 
 export function consumeRedirectTarget(): string {
-  const target = getRedirectTarget() ?? '/my';
+  const target = sanitizeRedirectTarget(getRedirectTarget() ?? '/my');
   getSessionStorage()?.removeItem(REDIRECT_TARGET_STORAGE_KEY);
   return target;
+}
+
+function sanitizeRedirectTarget(target: string): string {
+  if (!target.startsWith('/') || target.startsWith('//') || target.includes('\\')) return '/my';
+  try {
+    const parsed = new URL(target, 'https://local.sunan.invalid');
+    return parsed.origin === 'https://local.sunan.invalid' ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/my';
+  } catch {
+    return '/my';
+  }
 }
 
 export function buildWecomOAuthUrl(targetPath: string): string {

@@ -5,6 +5,7 @@ import { CertificateEntity } from 'src/database/entities/certificate.entity';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
+import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateController } from './certificate.controller';
@@ -21,6 +22,7 @@ import { CertificateService } from './certificate.service';
       VesselEntity,
       VehicleEntity,
       PersonnelEntity,
+      SafetyEquipmentEntity,
     ]),
   ],
   controllers: [CertificateController, CertificateReferenceController],

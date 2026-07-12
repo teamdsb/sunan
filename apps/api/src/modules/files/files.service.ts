@@ -104,6 +104,15 @@ export class FilesService {
     dto: FileFromWecomDto,
     currentUser?: CurrentUser,
   ): Promise<FileResponse> {
+    const idempotentNamePrefix = `wecom-${dto.mediaId}.`;
+    const existing = await this.fileRepository
+      .createQueryBuilder('file')
+      .where('file.category = :category', { category: dto.category })
+      .andWhere('file.file_name LIKE :fileName', { fileName: `${idempotentNamePrefix}%` })
+      .getOne();
+    if (existing) {
+      return this.toFileResponse(existing);
+    }
     const accessToken = await this.wecomTokenService.getAccessToken();
     const media = await this.wecomHttpGateway.getMedia(accessToken, dto.mediaId);
     const mimeType = media.contentType.toLowerCase();

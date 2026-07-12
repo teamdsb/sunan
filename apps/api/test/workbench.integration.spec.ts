@@ -10,6 +10,8 @@ import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
+import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
@@ -805,5 +807,134 @@ describe('WorkbenchController integration', () => {
       .set('Authorization', 'Bearer token')
       .query({ month: '2026-04', exportFormat: 'pdf' });
     expect(forbiddenExport.status).toBe(403);
+  });
+
+  it('rejects a crew member outside the vessel, owner and participant scopes', async () => {
+    const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
+    const record = await recordRepository.save(
+      recordRepository.create({
+        moduleCode: 'shipping_self_inspection',
+        templateCode: 'shipping_self_inspection_v1',
+        recordNo: `WBABAC${Date.now()}`,
+        recordSource: 'manual',
+        status: 'assigned',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        title: '非本船自查',
+        summary: 'ABAC 边界测试',
+        departmentCode: 'shipping',
+        vesselId: 'sunan-999',
+        ownerUserId: 'shipping-owner-1',
+        applicantUserId: 'shipping-owner-1',
+        assigneeUserId: 'shipping-owner-1',
+        reviewerUserId: null,
+        occurredAt: new Date(),
+        submittedAt: null,
+        closedAt: null,
+        payload: {},
+      }),
+    );
+
+    currentUser = {
+      ...currentUser,
+      userId: 'crew-outsider-1',
+      roles: ['all_authenticated', 'crew'],
+      departments: ['船务部'],
+      isAdmin: false,
+    };
+
+    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/workbench/records/${record.id}`)
+      .set('Authorization', 'Bearer token');
+
+    expect(response.status).toBe(403);
+  });
+
+  it('rejects an illegal close transition from assigned', async () => {
+    const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
+    const record = await recordRepository.save(
+      recordRepository.create({
+        moduleCode: 'shipping_self_inspection',
+        templateCode: 'shipping_self_inspection_v1',
+        recordNo: `WBSTATE${Date.now()}`,
+        recordSource: 'manual',
+        status: 'assigned',
+        approvalChannel: 'internal',
+        externalProcessInstanceId: null,
+        externalStatus: null,
+        title: '非法关闭',
+        summary: '状态机边界测试',
+        departmentCode: 'shipping',
+        vesselId: 'sunan-999',
+        ownerUserId: 'shipping-owner-1',
+        applicantUserId: 'shipping-owner-1',
+        assigneeUserId: 'shipping-owner-1',
+        reviewerUserId: null,
+        occurredAt: new Date(),
+        submittedAt: null,
+        closedAt: null,
+        payload: {},
+      }),
+    );
+
+    currentUser = {
+      ...currentUser,
+      userId: 'shipping-owner-1',
+      roles: ['all_authenticated', 'shipping'],
+      departments: ['船务部'],
+      isAdmin: false,
+    };
+
+    const response = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/workbench/records/${record.id}/actions`)
+      .set('Authorization', 'Bearer token')
+      .send({ actionType: 'close_record' });
+
+    expect(response.status).toBe(409);
+  });
+
+  it('rejects a visible non-executor step action and permits the assigned executor', async () => {
+    const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
+    const stepRepository = dataSource.getRepository(WorkbenchRecordStepEntity);
+    const record = await recordRepository.save(recordRepository.create({
+      moduleCode: 'shipping_self_inspection', templateCode: 'shipping_self_inspection_v1', recordNo: `WBSTEP${Date.now()}`,
+      recordSource: 'manual', status: 'in_progress', approvalChannel: 'internal', externalProcessInstanceId: null, externalStatus: null,
+      title: '执行人边界', summary: '参与人授权测试', departmentCode: 'shipping', vesselId: 'sunan-999', ownerUserId: 'shipping-owner-2', applicantUserId: 'shipping-owner-2', assigneeUserId: 'shipping-owner-2', reviewerUserId: null,
+      occurredAt: new Date(), submittedAt: null, closedAt: null, payload: {},
+    }));
+    await stepRepository.save(stepRepository.create({ businessRecordId: record.id, stepCode: 'inspect', stepName: '检查', stepType: 'normal', sequenceNo: 1, status: 'in_progress', completionRule: 'all', quorumCount: null, checkResult: null, rectificationRequired: false, rectificationStatus: null, completedBy: null, completedAt: null, stepPayload: {} }));
+
+    currentUser = { ...currentUser, userId: 'shipping-owner-2', roles: ['all_authenticated', 'shipping'], departments: ['船务部'], isAdmin: false };
+    const assign = await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/workbench/records/${record.id}/participants`).set('Authorization', 'Bearer token').send({ userId: 'executor-1', role: 'executor', stepCode: 'inspect', completionRule: 'all' });
+    expect(assign.status).toBe(201);
+
+    currentUser = { ...currentUser, userId: 'crew-visible-not-executor', roles: ['all_authenticated', 'crew'], departments: ['vessel:sunan-999'], isAdmin: false };
+    const forbidden = await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/workbench/records/${record.id}/actions`).set('Authorization', 'Bearer token').send({ actionType: 'complete_step', payload: { stepCode: 'inspect' } });
+    expect(forbidden.status).toBe(403);
+
+    currentUser = { ...currentUser, userId: 'executor-1', roles: ['all_authenticated', 'crew'], departments: ['vessel:sunan-999'], isAdmin: false };
+    const allowed = await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/workbench/records/${record.id}/actions`).set('Authorization', 'Bearer token').send({ actionType: 'complete_step', payload: { stepCode: 'inspect' } });
+    expect(allowed.status).toBe(201);
+  });
+
+  it('prevents an outside crew member from attaching or printing another vessel record', async () => {
+    const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
+    const record = await recordRepository.save(recordRepository.create({ moduleCode: 'shipping_self_inspection', templateCode: 'shipping_self_inspection_v1', recordNo: `WBEVID${Date.now()}`, recordSource: 'manual', status: 'assigned', approvalChannel: 'internal', externalProcessInstanceId: null, externalStatus: null, title: '证据越权', summary: '附件打印权限', departmentCode: 'shipping', vesselId: 'sunan-888', ownerUserId: 'owner-evidence', applicantUserId: 'owner-evidence', assigneeUserId: 'owner-evidence', reviewerUserId: null, occurredAt: new Date(), submittedAt: null, closedAt: null, payload: {} }));
+    currentUser = { ...currentUser, userId: 'crew-evidence-outsider', roles: ['all_authenticated', 'crew'], departments: ['vessel:sunan-999'], isAdmin: false };
+    const print = await request(app.getHttpServer() as Parameters<typeof request>[0]).get(`/api/v1/workbench/records/${record.id}/print`).set('Authorization', 'Bearer token');
+    const attachment = await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/workbench/records/${record.id}/attachments`).set('Authorization', 'Bearer token').send({ category: 'evidence', fileId: '00000000-0000-0000-0000-000000000001' });
+    expect(print.status).toBe(403);
+    expect(attachment.status).toBe(403);
+  });
+
+  it('audits an administrator sensitive record view', async () => {
+    const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
+    const actionLogRepository = dataSource.getRepository(WorkbenchRecordActionLogEntity);
+    const record = await recordRepository.save(recordRepository.create({ moduleCode: 'shipping_self_inspection', templateCode: 'shipping_self_inspection_v1', recordNo: `WBAUDIT${Date.now()}`, recordSource: 'manual', status: 'assigned', approvalChannel: 'internal', externalProcessInstanceId: null, externalStatus: null, title: '敏感记录', summary: '管理员审计', departmentCode: 'shipping', vesselId: 'sunan-888', ownerUserId: 'owner-audit', applicantUserId: 'owner-audit', assigneeUserId: 'owner-audit', reviewerUserId: null, occurredAt: new Date(), submittedAt: null, closedAt: null, payload: {} }));
+    currentUser = { ...currentUser, userId: 'system-admin-audit', roles: ['all_authenticated', 'system_admin'], departments: ['总经办'], isAdmin: true };
+    const response = await request(app.getHttpServer() as Parameters<typeof request>[0]).get(`/api/v1/workbench/records/${record.id}`).set('Authorization', 'Bearer token');
+    expect(response.status).toBe(200);
+    expect(await actionLogRepository.exist({ where: { businessRecordId: record.id, actionType: 'sensitive_view', operatorUserId: 'system-admin-audit' } })).toBe(true);
   });
 });

@@ -1,5 +1,6 @@
 ﻿import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
@@ -7,6 +8,7 @@ import { CertificateTypeEntity } from 'src/database/entities/certificate-type.en
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
+import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateBindFilesDto } from './dto/certificate-bind-files.dto';
@@ -34,6 +36,8 @@ export class CertificateService {
     private readonly vehicleRepository: Repository<VehicleEntity>,
     @InjectRepository(PersonnelEntity)
     private readonly personnelRepository: Repository<PersonnelEntity>,
+    @InjectRepository(SafetyEquipmentEntity)
+    private readonly equipmentRepository: Repository<SafetyEquipmentEntity>,
   ) {}
 
   async list(query: CertificateListQueryDto) {
@@ -53,7 +57,7 @@ export class CertificateService {
     return { data, meta: { page, pageSize, total } };
   }
 
-  async listTypes(ownerType?: 'vessel' | 'vehicle' | 'personnel') {
+  async listTypes(ownerType?: 'vessel' | 'vehicle' | 'personnel' | 'equipment') {
     const rows = await this.certificateTypeRepository.find({
       where: { isActive: true },
       order: { sortOrder: 'ASC', name: 'ASC' },
@@ -72,10 +76,10 @@ export class CertificateService {
       }));
   }
 
-  async listOwners(ownerType: 'vessel' | 'vehicle' | 'personnel') {
+  async listOwners(ownerType: 'vessel' | 'vehicle' | 'personnel' | 'equipment') {
     if (ownerType === 'vessel') {
       const rows = await this.vesselRepository.find({
-        where: { deletedAt: IsNull() },
+        where: { deletedAt: IsNull(), status: 'active' },
         order: { name: 'ASC' },
       });
       return rows.map((row) => ({
@@ -88,7 +92,7 @@ export class CertificateService {
 
     if (ownerType === 'vehicle') {
       const rows = await this.vehicleRepository.find({
-        where: { deletedAt: IsNull() },
+        where: { deletedAt: IsNull(), status: 'active' },
         order: { plateNumber: 'ASC' },
       });
       return rows.map((row) => ({
@@ -99,8 +103,13 @@ export class CertificateService {
       }));
     }
 
+    if (ownerType === 'equipment') {
+      const rows = await this.equipmentRepository.find({ where: { deletedAt: IsNull(), status: 'active' }, order: { code: 'ASC' } });
+      return rows.map((row) => ({ id: row.id, name: row.name, code: row.code, status: row.status }));
+    }
+
     const rows = await this.personnelRepository.find({
-      where: { deletedAt: IsNull() },
+      where: { deletedAt: IsNull(), employmentStatus: 'active' },
       order: { name: 'ASC' },
     });
     return rows.map((row) => ({
@@ -164,8 +173,8 @@ export class CertificateService {
     this.ensureManager(user);
     const entity = await this.findOneOrThrow(id);
 
-    if (dto.ownerType && dto.ownerId) {
-      await this.assertOwnerExists(dto.ownerType, dto.ownerId);
+    if (dto.ownerType || dto.ownerId) {
+      await this.assertOwnerExists(dto.ownerType ?? entity.ownerType, dto.ownerId ?? entity.ownerId);
     }
 
     Object.assign(entity, {
@@ -222,7 +231,7 @@ export class CertificateService {
     throw new ForbiddenException('forbidden');
   }
 
-  private matchesOwnerScope(ownerScope: string, ownerType?: 'vessel' | 'vehicle' | 'personnel') {
+  private matchesOwnerScope(ownerScope: string, ownerType?: 'vessel' | 'vehicle' | 'personnel' | 'equipment') {
     if (!ownerType || ownerScope === 'mixed' || ownerScope === 'all') {
       return true;
     }
@@ -230,21 +239,31 @@ export class CertificateService {
     return ownerScope === ownerType;
   }
 
-  private async assertOwnerExists(ownerType: 'vessel' | 'vehicle' | 'personnel', ownerId: string) {
+  private async assertOwnerExists(ownerType: 'vessel' | 'vehicle' | 'personnel' | 'equipment', ownerId: string) {
     if (ownerType === 'vessel') {
       const row = await this.vesselRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
       if (!row) throw new NotFoundException('vessel owner not found');
+      if (row.status !== 'active') throw new UnprocessableEntityException('inactive owner cannot be selected');
       return;
     }
 
     if (ownerType === 'vehicle') {
       const row = await this.vehicleRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
       if (!row) throw new NotFoundException('vehicle owner not found');
+      if (row.status !== 'active') throw new UnprocessableEntityException('inactive owner cannot be selected');
+      return;
+    }
+
+    if (ownerType === 'equipment') {
+      const row = await this.equipmentRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
+      if (!row) throw new NotFoundException('equipment owner not found');
+      if (row.status !== 'active') throw new UnprocessableEntityException('inactive owner cannot be selected');
       return;
     }
 
     const row = await this.personnelRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
     if (!row) throw new NotFoundException('personnel owner not found');
+    if (row.employmentStatus !== 'active') throw new UnprocessableEntityException('inactive owner cannot be selected');
   }
 
   private async findOneOrThrow(id: string) {
@@ -262,6 +281,11 @@ export class CertificateService {
     if (ownerType === 'vehicle') {
       const vehicle = await this.vehicleRepository.findOne({ where: { id: ownerId } });
       return vehicle?.plateNumber ?? ownerId;
+    }
+
+    if (ownerType === 'equipment') {
+      const equipment = await this.equipmentRepository.findOne({ where: { id: ownerId } });
+      return equipment?.name ?? ownerId;
     }
 
     const person = await this.personnelRepository.findOne({ where: { id: ownerId } });

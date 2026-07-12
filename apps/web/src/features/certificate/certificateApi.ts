@@ -9,7 +9,7 @@ export interface CertificateItem {
   id: string;
   certificateTypeId: string;
   certificateTypeName: string;
-  ownerType: 'vessel' | 'vehicle' | 'personnel';
+  ownerType: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
   ownerId: string;
   ownerName: string;
   title: string;

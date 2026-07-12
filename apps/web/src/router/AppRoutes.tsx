@@ -116,6 +116,19 @@ const WorkbenchHomeRoutePage = lazyNamed(
   () => import('../features/workbench/WorkbenchHomeRoutePage'),
   'WorkbenchHomeRoutePage',
 );
+const MasterDataPage = lazyNamed(
+  () => import('../features/workbench/MasterDataPage'),
+  'MasterDataPage',
+);
+const TaskCenterPage = lazyNamed(() => import('../features/workbench/TaskCenterPage'), 'TaskCenterPage');
+const TaskDetailPage = lazyNamed(() => import('../features/workbench/TaskDetailPage'), 'TaskDetailPage');
+const PlanManagementPage = lazyNamed(() => import('../features/workbench/PlanManagementPage'), 'PlanManagementPage');
+const InspectionTemplatePage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'InspectionTemplatePage');
+const InspectionPlanPage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'InspectionPlanPage');
+const InspectionListPage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'InspectionListPage');
+const InspectionDetailPage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'InspectionDetailPage');
+const IssueCenterPage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'IssueCenterPage');
+const IssueDetailPage = lazyNamed(() => import('../features/workbench/InspectionCapaPages'), 'IssueDetailPage');
 const WorkbenchModulePage = lazyNamed(
   () => import('../features/workbench/WorkbenchModulePage'),
   'WorkbenchModulePage',
@@ -256,6 +269,20 @@ export function AppRoutes() {
             path={workbenchRouteConfig.home.path}
             element={renderLazyPage(<WorkbenchHomeRoutePage />)}
           />
+          <Route
+            path={workbenchRouteConfig.masterData.path}
+            element={renderLazyPage(<MasterDataPage />)}
+          />
+          <Route path={workbenchRouteConfig.tasks.path} element={renderLazyPage(<TaskCenterPage />)} />
+          <Route path={workbenchRouteConfig.taskDetail.path} element={renderLazyPage(<TaskDetailPage />)} />
+          <Route path={workbenchRouteConfig.plans.path} element={renderLazyPage(<PlanManagementPage />)} />
+          <Route path={workbenchRouteConfig.planDetail.path} element={renderLazyPage(<PlanManagementPage />)} />
+          <Route path={workbenchRouteConfig.inspectionTemplates.path} element={renderLazyPage(<InspectionTemplatePage />)} />
+          <Route path={workbenchRouteConfig.inspectionPlans.path} element={renderLazyPage(<InspectionPlanPage />)} />
+          <Route path={workbenchRouteConfig.inspections.path} element={renderLazyPage(<InspectionListPage />)} />
+          <Route path={workbenchRouteConfig.inspectionDetail.path} element={renderLazyPage(<InspectionDetailPage />)} />
+          <Route path={workbenchRouteConfig.issues.path} element={renderLazyPage(<IssueCenterPage />)} />
+          <Route path={workbenchRouteConfig.issueDetail.path} element={renderLazyPage(<IssueDetailPage />)} />
           <Route
             path={workbenchRouteConfig.module.path}
             element={renderLazyPage(<WorkbenchModulePage />)}

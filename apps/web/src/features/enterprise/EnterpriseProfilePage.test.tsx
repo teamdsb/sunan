@@ -34,7 +34,7 @@ describe('EnterpriseProfilePage', () => {
 
   it('syncs the list query to the URL and preserves it in detail links', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/enterprise-profile?page=1&pageSize=10&category=license&status=draft']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-profile?page=1&pageSize=10&category=license&status=draft']}>
         <EnterpriseProfilePage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -65,7 +65,7 @@ describe('EnterpriseProfilePage', () => {
 
   it('uses a vertical creation form for mobile-friendly input flow', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <EnterpriseProfilePage />
       </MemoryRouter>,
     );

@@ -1,44 +1,45 @@
 ---
 status: current-index
 owner: planning
-updated: 2026-07-04
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
 # 当前执行计划索引
 
-> 本目录只存放尚未完成的当前计划。里程碑完成并通过验收后，将对应执行计划、backlog 和验收证据迁入 `docs/archive/`。
+> 本目录只存放尚未完成的当前计划。当前没有正在执行的里程碑；这里只保留通用 Wave 验收模板。
 
-## 当前路线
+## 当前文件
 
 | 文档 | 状态 | 用途 |
 |---|---|---|
-| `M7-execplans.md` | 当前待实施 | M7 上线体验、文件上传、返回路径、模块导航和最终收口计划 |
-| `M7-wave-backlog.md` | 当前待实施 | M7 修复的工程级分 Wave 清单 |
-| `M8-M9-upgrade-roadmap.md` | 后移规格 | M8/M9 总体边界、依赖、能力地图和交付顺序 |
-| `M8-execplans.md` | 后移待排期 | M8 七个 Wave 的任务、产出和验收 |
-| `M8-wave-backlog.md` | 后移待排期 | M8 API/DB/UI/state/测试级工作清单 |
-| `M9-execplans.md` | 后移待排期 | M9 八个 Wave 的任务、产出和验收 |
-| `M9-wave-backlog.md` | 后移待排期 | M9 API/DB/UI/state/测试级工作清单 |
 | `wave-acceptance-template.md` | 模板 | 每个 Wave 的统一验收记录格式 |
+
+## M8 已归档
+
+- 总验收：`docs/archive/acceptance/safety/acceptance-m8-overall.md`
+- 最终功能核查：`docs/archive/audits/M8-最终功能实现核查.md`
+- 历史执行计划：`docs/archive/execplans/M8-execplans.md`
+- 历史 backlog：`docs/archive/backlogs/safety/M8-wave-backlog.md`
+- 历史提示词：`docs/archive/prompts/m8/`
+
+## M9 已暂停
+
+- 暂停包：`docs/archive/paused/m9/`
+- 恢复条件：用户明确重新启动，并重新确认 M8 生产/真机基线、M9 范围和排期。
 
 ## 配套入口
 
-- 当前 M7 修复计划：`docs/plans/M7-execplans.md`
-- 当前 M7 修复提示词：`docs/prompts/m7/`
-- M7 需求：`docs/requirements/M7-上线体验与导航修复.md`
+- 执行计划总入口：`docs/execplans.md`
 - M8 需求：`docs/requirements/M8-安全管理底座与核心闭环.md`
-- M9 需求：`docs/requirements/M9-专业安全业务深化与体系完善.md`
+- M9 暂停需求：`docs/requirements/M9-专业安全业务深化与体系完善.md`
 - 安全领域规格索引：`docs/specs/safety/README.md`
-- Wave 提示词索引：`docs/prompts/README.md`
-- 功能差距基线：`docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md`
+- 提示词索引：`docs/prompts/README.md`
 
 ## 使用规则
 
 1. 每个 Wave 必须先冻结规格，再写测试，最后实现。
 2. 未通过当前 Wave 验收，不得将其任务标记为完成。
-3. 跨 Wave 变更必须更新需求、执行计划和 backlog 的依赖关系。
-4. 外部海事、AIS、CCTV 等真实接口不在 M8/M9 范围。
-5. 不得用通用文本字段替代已经冻结的专业结构化数据。
-6. 完成后将计划状态改为历史归档，并建立独立验收证据。
-7. M7 Wave 6 未验收前，不得启动 M8/M9 业务实现。
+3. 外部海事、AIS、CCTV 等真实接口不在 M8/M9 范围。
+4. 不得用通用文本字段替代已经冻结的专业结构化数据。
+5. 暂停的 M9 不因 M8 已通过而自动启动。

@@ -34,6 +34,15 @@ export class WorkbenchRecordActionLogEntity {
   @Column({ name: 'payload_digest', type: 'text', nullable: true })
   payloadDigest!: string | null;
 
+  @Column({ name: 'request_id', type: 'varchar', length: 128, nullable: true })
+  requestId!: string | null;
+
+  @Column({ name: 'action_scope', type: 'varchar', length: 32, default: 'record' })
+  actionScope!: string;
+
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
+  metadata!: Record<string, unknown>;
+
   @CreateDateColumn({ name: 'created_at', type: timestampColumnType })
   createdAt!: Date;
 }

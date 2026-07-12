@@ -4,7 +4,7 @@ info:
   version: 2.0.0
   description: >-
     工作平台平台级接口，覆盖模块入口、模块 schema、首页聚合、统一记录列表/详情/动作、
-    附件、打印快照，以及 M5 新增的考勤导出与财务对账接口。
+    附件、证据、受控打印快照，以及真实异步考勤导出与财务对账接口。
 servers:
   - url: /api/v1
 paths:
@@ -214,6 +214,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkbenchPrintSnapshotResponse'
+  /workbench/records/{recordId}/issues:
+    get:
+      summary: 获取检查整改记录的受权统一问题回链
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 仅返回调用者同时有来源记录和问题读取权限的关联问题
+        '403':
+          description: 无权读取来源记录或关联问题
+        '404':
+          description: Record not found
   /workbench/statistics/attendance:
     get:
       summary: 获取月度考勤统计
@@ -632,6 +649,14 @@ components:
         renderedAt:
           type: string
           format: date-time
+        downloadUrl:
+          type: string
+          format: uri
+          description: 仅在记录级 ABAC 授权通过后返回的短期下载地址
+        businessNo:
+          type: string
+        watermark:
+          type: string
         snapshotData:
           type: object
           additionalProperties: true
@@ -689,7 +714,7 @@ components:
               type: string
             status:
               type: string
-              enum: [queued, processing, succeeded, failed]
+              enum: [queued, running, succeeded, failed]
             month:
               type: string
             downloadFileId:
@@ -722,7 +747,7 @@ components:
               type: string
             status:
               type: string
-              enum: [queued, processing, succeeded, failed]
+              enum: [queued, running, succeeded, failed]
             month:
               type: string
             differenceCount:

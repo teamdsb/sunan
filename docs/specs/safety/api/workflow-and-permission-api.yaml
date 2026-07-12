@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Safety Workflow and Permission API
+  version: 1.0.0
+  description: M8 Wave 2 record-level ABAC and workflow-action contract.
+servers:
+  - url: /api/v1
+paths:
+  /workbench/records:
+    get:
+      tags: [Workflow]
+      summary: List records visible under the caller's ABAC context
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+  /workbench/records/{recordId}:
+    get:
+      tags: [Workflow]
+      summary: Read one record under the caller's ABAC context
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      responses:
+        '200': { description: OK }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+  /workbench/records/{recordId}/actions:
+    post:
+      tags: [Workflow]
+      summary: Execute an authorized workflow action
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RecordActionRequest'}
+      responses:
+        '201': { description: Accepted }
+        '403': { description: Action or record forbidden }
+        '409': { description: Illegal state transition }
+        '422': { description: Participant or segregation-of-duty rule rejected }
+  /workbench/records/{recordId}/participants:
+    post:
+      tags: [Workflow]
+      summary: Assign a participant to a record or step
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ParticipantAssignment'}
+      responses:
+        '201': { description: Created }
+        '403': { description: Forbidden }
+        '422': { description: Invalid participant assignment }
+  /workbench/records/{recordId}/attachments:
+    post:
+      tags: [Workflow]
+      summary: Upload an attachment after record-level authorization
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      responses:
+        '201': { description: Created }
+        '403': { description: Forbidden }
+  /workbench/records/{recordId}/print:
+    get:
+      tags: [Workflow]
+      summary: Generate a print snapshot after record-level authorization
+      parameters: [{$ref: '#/components/parameters/RecordId'}]
+      responses:
+        '200': { description: OK }
+        '403': { description: Forbidden }
+components:
+  parameters:
+    RecordId:
+      in: path
+      name: recordId
+      required: true
+      schema: {type: string, format: uuid}
+  schemas:
+    RecordActionRequest:
+      type: object
+      required: [actionType]
+      properties:
+        actionType:
+          type: string
+          enum: [submit, assign, start, complete_step, update_payload, submit_review, request_rework, close_record, archive, return_step, terminate, void, reopen, delegate, transfer]
+        comment: {type: string}
+        payload: {type: object, additionalProperties: true}
+    ParticipantAssignment:
+      type: object
+      required: [userId, role]
+      properties:
+        userId: {type: string}
+        role: {type: string, enum: [executor, collaborator, reviewer, observer, verifier]}
+        stepCode: {type: string}
+        completionRule: {type: string, enum: [all, any, quorum]}
+        quorumCount: {type: integer, minimum: 1}

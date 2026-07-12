@@ -80,7 +80,7 @@ describe('CertificateListPage', () => {
 
   it('syncs the route query to list filters and preserves it in detail links', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
         <CertificateListPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -114,7 +114,7 @@ describe('CertificateListPage', () => {
 
   it('updates the route query when the keyword search is edited through the UI', async () => {
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
         <CertificateListPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -149,7 +149,7 @@ describe('CertificateListPage', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&status=active&keyword=abc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&status=active&keyword=abc']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -169,7 +169,7 @@ describe('CertificateListPage', () => {
     );
 
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -181,7 +181,7 @@ describe('CertificateListPage', () => {
 
   it('hides advanced filters behind an expandable panel by default', () => {
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -192,7 +192,7 @@ describe('CertificateListPage', () => {
 
   it('opens a create drawer backed by real certificate reference data', () => {
     render(
-      <MemoryRouter initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
         <CertificateListPage />
       </MemoryRouter>,
     );

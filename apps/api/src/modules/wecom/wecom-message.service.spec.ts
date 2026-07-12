@@ -1,4 +1,5 @@
 ﻿import { HttpService } from '@nestjs/axios';
+import { Logger } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
 import { WecomMessageService } from './wecom-message.service';
 
@@ -20,6 +21,7 @@ describe('WecomMessageService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     service = new WecomMessageService(httpServiceMock, tokenServiceMock as never);
     jest.spyOn(global, 'setTimeout').mockImplementation(((fn: (...args: unknown[]) => void) => {
       fn();
@@ -39,6 +41,7 @@ describe('WecomMessageService', () => {
 
     expect(result.success).toBe(true);
     expect(result.invalidUser).toEqual(['u3']);
+    expect(result.errcode).toBe(0);
   });
 
   it('refreshes token on token-expired response', async () => {
@@ -66,6 +69,7 @@ describe('WecomMessageService', () => {
     expect(result.success).toBe(false);
     expect(result.invalidUser).toEqual(['u2', 'u3']);
     expect(result.failureReason).toBe('WeCom API error 81013: invalid user');
+    expect(result.errcode).toBe(81013);
     expect(postMock).toHaveBeenCalledTimes(1);
   });
 

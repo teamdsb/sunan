@@ -32,7 +32,7 @@ describe('CertificateDetailPage', () => {
 
   it('relies on the global navigation instead of a return button', () => {
     render(
-      <MemoryRouter
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={[
           '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
         ]}
@@ -50,7 +50,7 @@ describe('CertificateDetailPage', () => {
 
   it('renders detail, edit and bind file', async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={['/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc']}>
         <Routes>
           <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
         </Routes>

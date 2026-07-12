@@ -29,7 +29,7 @@ describe('MonitorPage', () => {
 
   it('renders manager form and creates monitor', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MonitorPage />
       </MemoryRouter>,
     );
@@ -44,7 +44,7 @@ describe('MonitorPage', () => {
 
   it('loads vessel specific route', () => {
     render(
-      <MemoryRouter initialEntries={['/my/monitors/vessel-1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/monitors/vessel-1']}>
         <Routes>
           <Route path="/my/monitors/:vesselId" element={<MonitorPage />} />
         </Routes>
@@ -55,7 +55,7 @@ describe('MonitorPage', () => {
 
   it('uses a vertical monitor creation form for mobile-friendly entry', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MonitorPage />
       </MemoryRouter>,
     );

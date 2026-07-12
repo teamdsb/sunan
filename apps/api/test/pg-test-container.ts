@@ -12,6 +12,11 @@ import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.
 import { EnterpriseProfileFileEntity } from 'src/database/entities/enterprise-profile-file.entity';
 import { EnterpriseProfileEntity } from 'src/database/entities/enterprise-profile.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
+import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
+import { ExportJobEntity } from 'src/database/entities/export-job.entity';
+import { MasterDataImportBatchEntity } from 'src/database/entities/master-data-import-batch.entity';
+import { MasterDataImportRowEntity } from 'src/database/entities/master-data-import-row.entity';
 import { OfficeCategoryEntity } from 'src/database/entities/office-category.entity';
 import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit.entity';
 import { OfficeEntryEntity } from 'src/database/entities/office-entry.entity';
@@ -25,9 +30,13 @@ import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.
 import { ProcurementReportApprovalEntity } from 'src/database/entities/procurement-report-approval.entity';
 import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
 import { ShipMonitorEntity } from 'src/database/entities/ship-monitor.entity';
+import { SafetyEquipmentCategoryEntity } from 'src/database/entities/safety-equipment-category.entity';
+import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { UserSettingsEntity } from 'src/database/entities/user-settings.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
+import { VesselPersonnelAssignmentEntity } from 'src/database/entities/vessel-personnel-assignment.entity';
+import { WorkbenchMasterDataReferenceEntity } from 'src/database/entities/workbench-master-data-reference.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
@@ -37,7 +46,10 @@ import { WorkbenchPrintSnapshotEntity } from 'src/database/entities/workbench-pr
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench-record-attachment.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
+import { WorkbenchRecordParticipantEntity } from 'src/database/entities/workbench-record-participant.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchRecordTransferEntity } from 'src/database/entities/workbench-record-transfer.entity';
+import { WorkbenchDelegationEntity } from 'src/database/entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { BootstrapAuth1710000000000 } from 'src/database/migrations/1710000000000-bootstrap-auth';
 import { Wave21710000001000 } from 'src/database/migrations/1710000001000-wave2-files-reference-data';
@@ -54,11 +66,55 @@ import { Wave51710000011000 } from 'src/database/migrations/1710000011000-wave5-
 import { Wave51710000012000 } from 'src/database/migrations/1710000012000-wave5-workbench-approval-ops';
 import { Wave61710000013000 } from 'src/database/migrations/1710000013000-wave6-workbench-module-split';
 import { ProcurementBudgets1710000014000 } from 'src/database/migrations/1710000014000-procurement-budgets';
+import { Wave8WorkflowPermission1710000015000 } from 'src/database/migrations/1710000015000-wave8-workflow-permission';
+import { Wave3EvidenceAudits1710000016000 } from 'src/database/migrations/1710000016000-wave3-evidence-audits';
+import { Wave3EvidenceExport1710000017000 } from 'src/database/migrations/1710000017000-wave3-evidence-export';
+import { Wave4MasterData1710000018000 } from 'src/database/migrations/1710000018000-wave4-master-data';
+import {
+  SafetyPlanEntity,
+  SafetyPlanItemEntity,
+  SafetyTaskActionLogEntity,
+  SafetyTaskDelegationEntity,
+  SafetyTaskEntity,
+  SafetyTaskGenerationEntryEntity,
+  SafetyTaskGenerationRunEntity,
+  SafetyTaskNotificationDeliveryEntity,
+  SafetyTaskParticipantEntity,
+  SafetyTaskTransferEntity,
+} from 'src/database/entities/safety-plan-task.entity';
+import { Wave5PlanTask1710000019000 } from 'src/database/migrations/1710000019000-wave5-plan-task';
+import { Wave6InspectionCapa1710000020000 } from 'src/database/migrations/1710000020000-wave6-inspection-capa';
+import { Wave7LegacySafetyMigration1710000021000 } from 'src/database/migrations/1710000021000-wave7-legacy-safety-migration';
+import {
+  CapaActionEntity,
+  CapaActionEvidenceEntity,
+  CapaRootCauseEntity,
+  CapaVerificationEntity,
+  InspectionCapaActionLogEntity,
+  InspectionEntity,
+  InspectionPlanEntity,
+  InspectionResultEntity,
+  InspectionResultEvidenceEntity,
+  InspectionTemplateEntity,
+  InspectionTemplateItemEntity,
+  InspectionTemplateScopeEntity,
+  InspectionTemplateVersionEntity,
+  IssueSourceEntity,
+  IssueTransferJobEntity,
+  SafetyCapaEntity,
+  SafetyIssueEntity,
+} from 'src/database/entities/safety-inspection-capa.entity';
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
   FileEntity,
+  EvidenceAuditEntity,
+  EvidenceRecordEntity, ExportJobEntity,
+  MasterDataImportBatchEntity, MasterDataImportRowEntity,
   VesselEntity,
+  VesselPersonnelAssignmentEntity,
+  SafetyEquipmentCategoryEntity,
+  SafetyEquipmentEntity,
   VehicleEntity,
   PersonnelEntity,
   CertificateTypeEntity,
@@ -85,13 +141,44 @@ const ALL_TEST_ENTITIES = [
   WorkbenchModuleEntity,
   WorkbenchTemplateEntity,
   WorkbenchRecordEntity,
+  WorkbenchMasterDataReferenceEntity,
+  WorkbenchRecordParticipantEntity,
   WorkbenchRecordStepEntity,
+  WorkbenchRecordTransferEntity,
+  WorkbenchDelegationEntity,
   WorkbenchRecordAttachmentEntity,
   WorkbenchRecordActionLogEntity,
   WorkbenchPrintSnapshotEntity,
   WecomApprovalTemplateBindingEntity,
   WecomApprovalInstanceSyncEntity,
   WecomApprovalCallbackEventEntity,
+  SafetyPlanEntity,
+  SafetyPlanItemEntity,
+  SafetyTaskEntity,
+  SafetyTaskParticipantEntity,
+  SafetyTaskActionLogEntity,
+  SafetyTaskTransferEntity,
+  SafetyTaskDelegationEntity,
+  SafetyTaskGenerationRunEntity,
+  SafetyTaskGenerationEntryEntity,
+  SafetyTaskNotificationDeliveryEntity,
+  InspectionTemplateEntity,
+  InspectionTemplateVersionEntity,
+  InspectionTemplateItemEntity,
+  InspectionTemplateScopeEntity,
+  InspectionPlanEntity,
+  InspectionEntity,
+  InspectionResultEntity,
+  InspectionResultEvidenceEntity,
+  SafetyIssueEntity,
+  IssueSourceEntity,
+  IssueTransferJobEntity,
+  SafetyCapaEntity,
+  CapaRootCauseEntity,
+  CapaActionEntity,
+  CapaActionEvidenceEntity,
+  CapaVerificationEntity,
+  InspectionCapaActionLogEntity,
 ];
 
 const ALL_TEST_MIGRATIONS = [
@@ -110,6 +197,13 @@ const ALL_TEST_MIGRATIONS = [
   Wave51710000012000,
   Wave61710000013000,
   ProcurementBudgets1710000014000,
+  Wave8WorkflowPermission1710000015000,
+  Wave3EvidenceAudits1710000016000,
+  Wave3EvidenceExport1710000017000,
+  Wave4MasterData1710000018000,
+  Wave5PlanTask1710000019000,
+  Wave6InspectionCapa1710000020000,
+  Wave7LegacySafetyMigration1710000021000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;
@@ -146,7 +240,7 @@ export const bootstrapPgTestDatabase = async (): Promise<void> => {
 
   const pgContainer = new PostgreSqlContainer(
     process.env.TEST_POSTGRES_IMAGE ?? 'postgres:16-alpine',
-  );
+  ).withStartupTimeout(60_000);
   if (process.env.TEST_POSTGRES_PULL !== 'true') {
     pgContainer.withPullPolicy(neverPullPolicy);
   }

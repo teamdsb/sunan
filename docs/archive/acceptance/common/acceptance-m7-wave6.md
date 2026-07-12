@@ -1,7 +1,7 @@
 ---
 status: acceptance-archive
 owner: delivery
-updated: 2026-07-06
+updated: 2026-07-10
 replaces: []
 replaced_by: []
 ---
@@ -19,23 +19,23 @@ replaced_by: []
 
 ## 2. 验收结论
 
-- 状态：有条件通过
+- 状态：通过
 - 未关闭 P0：无
 - 未关闭 P1：无
-- 未关闭 P2：企业微信 iOS、Android、桌面工作台真机截图证据未在本地环境执行
-- 条件项及期限：生产发布前补真机截图或录屏，并按 `docs/specs/wecom/real-device-regression-matrix.md` 归档
+- 未关闭 P2：无
+- 真机确认：产品负责人于 2026-07-10 确认已完成 M7 真机验证，并允许 M7 结束归档；本仓库未代为补写设备型号、版本或截图索引。
 - M8/M9 判断：M8 可从 Wave 1 重新排期；M9 仍以 M8 总体验收为前置
 
 ## 3. M7 Wave 1-6 状态
 
 | Wave | 主题 | 状态 | P0/P1 结论 | 证据 |
 |---|---|---|---|---|
-| Wave 1 | 上传与我的板块视觉 | 有条件通过 | 无未关闭代码 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave1.md` |
-| Wave 2 | 办事 CSS 与搜索体验 | 有条件通过 | 无未关闭代码 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave2.md` |
-| Wave 3 | 采购返回、附件与中文 PDF | 有条件通过 | 无未关闭代码 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave3.md` |
-| Wave 4 | 工作台返回、密度与导航锚点 | 有条件通过 | 无未关闭代码 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave4.md` |
-| Wave 5 | 企业微信直达与跨模块回归 | 有条件通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave5.md` |
-| Wave 6 | 最终收口与重启门禁 | 有条件通过 | 无未关闭 P0/P1 | 本文 |
+| Wave 1 | 上传与我的板块视觉 | 通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave1.md` |
+| Wave 2 | 办事 CSS 与搜索体验 | 通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave2.md` |
+| Wave 3 | 采购返回、附件与中文 PDF | 通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave3.md` |
+| Wave 4 | 工作台返回、密度与导航锚点 | 通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave4.md` |
+| Wave 5 | 企业微信直达与跨模块回归 | 通过 | 无未关闭 P0/P1 | `docs/archive/acceptance/common/acceptance-m7-wave5.md` |
+| Wave 6 | 最终收口与重启门禁 | 通过 | 无未关闭 P0/P1 | 本文 |
 
 ## 4. 工作包状态
 
@@ -53,7 +53,7 @@ replaced_by: []
 |---|---|---|---|
 | P0 | 无 | 不阻断 M8 | 无 |
 | P1 | 无 | 不阻断 M8 | 无 |
-| P2 | 企业微信 iOS、Android、桌面工作台真机截图证据未执行 | 不阻断 M8 规格与开发重启；阻断生产发布前最终截图包 | 发布前按真机矩阵补证 |
+| P2 | 无 | 无 | 无 |
 
 ## 6. 企业微信直达和导航回归结论
 
@@ -84,7 +84,7 @@ replaced_by: []
 
 ## 8. 上线后回归说明
 
-- 发布前：补企业微信 iOS、Android、桌面工作台截图或录屏，覆盖直达、认证恢复、返回、上传、PDF、工作台导航和弱网重试。
+- 产品负责人已确认 M7 真机验证完成；设备与截图索引按实际验证材料保管。
 - 发布后首日：重点巡检 OAuth2、文件上传 callback、采购 PDF、工作台深链和企业微信 JS-SDK 初始化日志。
 - 发布后一周：按 `docs/specs/wecom/real-device-regression-matrix.md` 保留设备、企业微信版本、执行人、执行时间和截图索引。
 
@@ -99,11 +99,11 @@ replaced_by: []
 
 ### 规格
 
-- `docs/prompts/m7/wave-6-final-acceptance-gate.md`
+- `docs/archive/prompts/m7/wave-6-final-acceptance-gate.md`
 - `docs/requirements/M7-上线体验与导航修复.md`
-- `docs/plans/M7-execplans.md`
-- `docs/plans/M7-wave-backlog.md`
-- `docs/plans/M8-M9-upgrade-roadmap.md`
+- `docs/archive/execplans/M7-execplans.md`
+- `docs/archive/backlogs/common/M7-wave-backlog.md`
+- `docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`
 - `docs/specs/common/frontend-experience-guidelines.md`
 - `docs/specs/wecom/real-device-regression-matrix.md`
 
@@ -130,7 +130,7 @@ replaced_by: []
 
 | 编号 | 级别 | 描述 | 责任人 | 期限 | 状态 |
 |---|---|---|---|---|---|
-| `M7-W6-FU-01` | P2 | 企业微信 iOS、Android、桌面工作台真机截图或录屏未在本地环境执行 | QA | 生产发布前 | 待补 |
+| `M7-W6-FU-01` | P2 | 企业微信真机验证材料未在本地环境执行 | 产品负责人 | 2026-07-10 | 已由产品负责人确认完成 |
 
 ## 12. 复核签字
 

@@ -1,4 +1,4 @@
-export type ReminderOwnerType = 'vessel' | 'vehicle' | 'personnel';
+export type ReminderOwnerType = 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 export type ReminderStatus = 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed';
 export type ReminderType = 'upcoming' | 'overdue';
 

@@ -2,10 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkbenchHomePage } from './WorkbenchHomePage';
 
+vi.mock('../files/FileUploadField', () => ({ FileUploadField: () => <button type="button">上传文件</button> }));
+vi.mock('../files/useFileUpload', () => ({ useFileUpload: () => ({ uploadFile: vi.fn().mockResolvedValue({ id: 'signature-file' }) }) }));
+
 const mockNavigate = vi.fn();
 const mockGetWorkbenchDashboardQuery = vi.fn();
 const mockGetWorkbenchRecordsQuery = vi.fn();
 const mockGetWorkbenchRecordQuery = vi.fn();
+const mockGetWorkbenchRecordIssuesQuery = vi.fn();
 const mockGetWorkbenchModuleSchemaQuery = vi.fn();
 const mockGetWorkbenchAttendanceStatisticsQuery = vi.fn();
 const mockTriggerPrintSnapshot = vi.fn();
@@ -13,6 +17,8 @@ const mockCreateWorkbenchRecord = vi.fn();
 const mockPerformWorkbenchRecordAction = vi.fn();
 const mockLaunchWorkbenchApproval = vi.fn();
 const mockUploadWorkbenchRecordAttachment = vi.fn();
+const mockCreateSignatureEvidence = vi.fn();
+const mockCreateLocationEvidence = vi.fn();
 const mockWxInvoke = vi.fn();
 const mockScrollTo = vi.fn();
 const mockScrollIntoView = vi.fn();
@@ -29,6 +35,7 @@ vi.mock('./workbenchApi', () => ({
   useGetWorkbenchDashboardQuery: () => mockGetWorkbenchDashboardQuery(),
   useGetWorkbenchRecordsQuery: (params: unknown) => mockGetWorkbenchRecordsQuery(params),
   useGetWorkbenchRecordQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordQuery(recordId, options),
+  useGetWorkbenchRecordIssuesQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordIssuesQuery(recordId, options),
   useGetWorkbenchModuleSchemaQuery: (moduleCode: string, options: unknown) =>
     mockGetWorkbenchModuleSchemaQuery(moduleCode, options),
   useGetWorkbenchAttendanceStatisticsQuery: (params: unknown, options: unknown) =>
@@ -38,6 +45,8 @@ vi.mock('./workbenchApi', () => ({
   usePerformWorkbenchRecordActionMutation: () => [mockPerformWorkbenchRecordAction, { isLoading: false }],
   useLaunchWorkbenchApprovalMutation: () => [mockLaunchWorkbenchApproval, { isLoading: false }],
   useUploadWorkbenchRecordAttachmentMutation: () => [mockUploadWorkbenchRecordAttachment, { isLoading: false }],
+  useCreateWorkbenchSignatureEvidenceMutation: () => [mockCreateSignatureEvidence, { isLoading: false }],
+  useCreateWorkbenchLocationEvidenceMutation: () => [mockCreateLocationEvidence, { isLoading: false }],
 }));
 
 vi.mock('../../hooks/useWecomJsSdk', () => ({
@@ -136,6 +145,7 @@ describe('WorkbenchHomePage', () => {
       data: undefined,
       isFetching: false,
     });
+    mockGetWorkbenchRecordIssuesQuery.mockReturnValue({ data: { data: [] } });
     mockGetWorkbenchModuleSchemaQuery.mockReturnValue({
       data: {
         data: {

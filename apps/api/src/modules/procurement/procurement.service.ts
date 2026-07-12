@@ -25,6 +25,7 @@ import { Brackets, DataSource, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { appEnv } from 'src/config/env';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
 import { ProcurementBudgetAuditEntity } from 'src/database/entities/procurement-budget-audit.entity';
 import { ProcurementBudgetEntity } from 'src/database/entities/procurement-budget.entity';
 import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
@@ -214,6 +215,8 @@ export class ProcurementService {
     private readonly reportApprovalRepository: Repository<ProcurementReportApprovalEntity>,
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    @InjectRepository(EvidenceAuditEntity)
+    private readonly evidenceAuditRepository: Repository<EvidenceAuditEntity>,
     @InjectRepository(WecomUserEntity)
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly ossService: OssService,
@@ -857,6 +860,32 @@ export class ProcurementService {
     }
 
     return this.getOrderDetail(id, user);
+  }
+
+  async unlinkOrderAttachment(
+    id: string,
+    fileId: string,
+    reason: string,
+    user: CurrentUser,
+  ): Promise<void> {
+    const order = await this.mustFindOrder(id);
+    if (order.status !== 'draft') {
+      throw new UnprocessableEntityException('only draft order attachment can be unlinked');
+    }
+    if (order.createdBy !== user.userId && !user.roles.includes('system_admin')) {
+      throw new ForbiddenException('forbidden');
+    }
+    const relation = await this.orderFileRepository.findOne({ where: { orderId: id, fileId } });
+    if (!relation) {
+      throw new NotFoundException('attachment not found');
+    }
+
+    await this.orderFileRepository.remove(relation);
+    await this.evidenceAuditRepository.save(this.evidenceAuditRepository.create({
+      objectType: 'procurement_order', objectId: order.id, fileId, action: 'unlink_attachment',
+      reason: reason.trim(), operatorUserId: user.userId, requestId: null,
+      metadata: { relationId: relation.id, relationType: relation.relationType },
+    }));
   }
 
   async getOrderAttachmentDownloadUrl(
@@ -2423,7 +2452,7 @@ export class ProcurementService {
         color,
       });
     };
-    const isAscii = (value: string) => /^[\x00-\x7F]+$/.test(value);
+    const isAscii = (value: string) => [...value].every((char) => char.codePointAt(0)! <= 0x7f);
     const valueFont = (value: string) =>
       isAscii(value) ? latinFont : regularFont;
     const inlineText = (
@@ -3184,7 +3213,11 @@ export class ProcurementService {
       return JSON.stringify(value);
     }
 
-    return String(value);
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+      return `${value}`;
+    }
+
+    return '-';
   }
 
   private toDepartmentLabel(code: ProcurementDepartmentCode): string {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
 import { ProcurementBudgetAuditEntity } from 'src/database/entities/procurement-budget-audit.entity';
 import { ProcurementBudgetEntity } from 'src/database/entities/procurement-budget.entity';
 import { ProcurementDimensionItemEntity } from 'src/database/entities/procurement-dimension-item.entity';
@@ -29,6 +30,7 @@ import { ProcurementService } from './procurement.service';
       ProcurementReportEntity,
       ProcurementReportApprovalEntity,
       FileEntity,
+      EvidenceAuditEntity,
       WecomUserEntity,
     ]),
   ],
