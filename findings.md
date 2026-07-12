@@ -90,6 +90,13 @@ replaced_by: []
 ## 视觉/浏览器发现
 - 未使用浏览器或视觉工具。
 
+## 2026-07-12：M8 Wave 6 检查、问题与 CAPA
+- Wave 5 已由提交 `5e36c10` 完成；`safety_tasks` 可复用参与人、完成规则、生成幂等、对账和统一待办能力。
+- 四类存量来源为 `goa_safety_hazard`、`shipping_self_inspection`、`shipping_vessel_inspection` 与 `shipping_maritime_safety_check`；均属通用 `inspection_rectification` 工作平台记录，Wave 6 必须保留原记录并建立双向链接。
+- 已冻结术语规定：不符合项是 `issue_type=nonconformity`，不新增平行不符合表；CAPA、措施和验证维持独立结构化生命周期。
+- 用户确认采用独立安全领域对象方案：检查任务保存模板版本快照；按 `all/any/quorum` 汇总；按检查任务和检查项快照生成稳定幂等问题；CAPA 关闭需措施、证据、验证和有效性评价，重大问题限制关闭角色。
+- 根目录规划文件本为历史追踪文件。误写入后已用 Git index 原文恢复，后续仅追加本 Wave 记录。
+
 ---
 *每执行2次查看/浏览器/搜索操作后更新此文件*
 *防止视觉信息丢失*

@@ -200,3 +200,15 @@ replaced_by: []
   - PostgreSQL 集成测试覆盖并发不重复、数据同源、改期/取消、转移后旧责任人 403、代理执行、消息失败/重试/去重和同日逾期升级。
   - 2026-07-12 最终复跑：完整 Web 60 files / 236 tests、API unit 15 suites / 70 tests、API integration 16 suites / 69 tests 通过；Wave 5 专项 11 tests 通过；API/Web build 和 API lint 通过，并清零 Router、Form、Redux、OSS 测试网络与严格类型告警。
   - 独立复核后将任务、参与人、生成 entry 和 assignment outbox 收入按 generation key 加锁的同连接事务；将任务动作、日志和投递 outbox 同事务提交；投递新增追加式 `attempt_history`。故障注入测试验证失败回滚、failed entry、可安全重放和错误历史保留。
+
+## 会话：2026-07-12
+
+### 阶段 11：M8 Wave 6 检查、问题与 CAPA
+- **状态：** in_progress
+- 执行的操作：
+  - 完整阅读 Wave 6 指定的 M8 需求、执行计划/backlog、平台对比建议、Wave 2 权限、Wave 3 证据、Wave 5 任务、安全领域与工作平台检查整改规格。
+  - 核验 Wave 5 完成提交、任务领域实体、前端路由和四类现有检查整改模块；确认应新增独立安全领域模块并仅通过链接集成工作平台来源。
+  - 提出三种架构路径；用户确认采用独立检查/CAPA 对象、复用计划任务/证据/ABAC 的推荐设计。
+  - 误将根目录历史规划文件当作新文件写入；发现后立即用 Git index 原文恢复，未更改业务代码或规格。
+- 下一步：
+  - Wave 6 书面设计已写入、自检并通过文档索引校验；提交后等待用户审阅该设计文档。获得书面设计确认后开始规格冻结与 TDD。
