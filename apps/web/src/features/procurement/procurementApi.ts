@@ -465,6 +465,8 @@ export const procurementApi = baseApi.injectEndpoints({
       {
         entityType?: 'order' | 'report';
         departmentCode?: ProcurementDepartmentCode;
+        page?: number;
+        pageSize?: number;
       } | void
     >({
       query: (params) => ({ url: '/procurement/approvals/pending', params }),

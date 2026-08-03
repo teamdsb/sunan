@@ -15,7 +15,6 @@ coverage
 .env.local
 .env.test
 .env.*.local
-!apps/web/.env.mock.local
 *.tsbuildinfo
 *.py[cod]
 __pycache__/

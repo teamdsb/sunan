@@ -40,4 +40,4 @@ pnpm --filter web test
 
 ## 手动测试补充
 
-M1 "我的"模块进入 mock 模式开发与 QA 阶段后，手动测试执行基线见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
+M1 "我的"模块的历史手动测试场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)；执行时使用真实后端与真实认证。

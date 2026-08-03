@@ -1488,6 +1488,8 @@ const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
 export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WorkbenchService.name);
   private exportWorkerTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly exportJobsInFlight = new Map<string, Promise<void>>();
+  private exportRecoveryInFlight: Promise<void> | null = null;
   private isShuttingDown = false;
 
   constructor(
@@ -1531,14 +1533,28 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     await this.syncRuntimeCatalog();
     await this.recoverExportJobs();
-    this.exportWorkerTimer = setInterval(() => void this.recoverExportJobs().catch((error) => this.logger.warn(`export worker recovery failed: ${error instanceof Error ? error.message : 'unknown error'}`)), 10_000);
+    this.exportWorkerTimer = setInterval(() => this.queueExportRecovery(), 10_000);
     this.exportWorkerTimer.unref?.();
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     this.isShuttingDown = true;
     if (this.exportWorkerTimer) clearInterval(this.exportWorkerTimer);
     this.exportWorkerTimer = null;
+    const pendingTasks = [...this.exportJobsInFlight.values()];
+    if (this.exportRecoveryInFlight) pendingTasks.push(this.exportRecoveryInFlight);
+    if (pendingTasks.length === 0) return;
+
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const completed = await Promise.race([
+      Promise.allSettled(pendingTasks).then(() => true),
+      new Promise<boolean>((resolve) => {
+        timeout = setTimeout(() => resolve(false), 30_000);
+        timeout.unref?.();
+      }),
+    ]);
+    if (timeout) clearTimeout(timeout);
+    if (!completed) this.logger.warn('export worker shutdown timed out after 30 seconds');
   }
 
   async listModules(user: CurrentUser) {
@@ -1675,7 +1691,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const month = this.normalizeMonth(query.month);
     const exportFormat = query.exportFormat ?? 'xlsx';
     const job = await this.exportJobRepository.save(this.exportJobRepository.create({ sourceType: 'attendance', sourceId: month, querySnapshot: { month, departmentCode: query.departmentCode ?? null }, exportFormat, status: 'queued', resultFileId: null, failureMessage: null, retryCount: 0, requestedBy: user.userId, startedAt: null, finishedAt: null }));
-    void this.runAttendanceExport(job.id);
+    this.queueAttendanceExport(job.id);
 
     this.logger.log(
       `attendance export queued: month=${month}, format=${exportFormat}, department=${query.departmentCode ?? 'all'}, job=${job.id}`,
@@ -1702,7 +1718,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (!job) throw new NotFoundException('export job not found');
     if (job.status !== 'failed') throw new ConflictException('only failed export job can be retried');
     Object.assign(job, { status: 'queued', resultFileId: null, failureMessage: null, retryCount: job.retryCount + 1, startedAt: null, finishedAt: null });
-    await this.exportJobRepository.save(job); void this.runAttendanceExport(job.id);
+    await this.exportJobRepository.save(job); this.queueAttendanceExport(job.id);
     return this.toExportJob(job);
   }
 
@@ -1716,9 +1732,15 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async runAttendanceExport(jobId: string): Promise<void> {
-    const job = await this.exportJobRepository.findOne({ where: { id: jobId, status: 'queued' } });
+    const startedAt = new Date();
+    const claim = await this.exportJobRepository.update(
+      { id: jobId, status: 'queued' },
+      { status: 'running', startedAt },
+    );
+    if (!claim.affected) return;
+
+    const job = await this.exportJobRepository.findOne({ where: { id: jobId, status: 'running' } });
     if (!job) return;
-    job.status = 'running'; job.startedAt = new Date(); await this.exportJobRepository.save(job);
     try {
       const month = typeof job.querySnapshot.month === 'string' ? job.querySnapshot.month : '';
       const departmentCode = typeof job.querySnapshot.departmentCode === 'string' ? job.querySnapshot.departmentCode : '';
@@ -1734,6 +1756,34 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     } catch (error) { Object.assign(job, { status: 'failed', finishedAt: new Date(), failureMessage: error instanceof Error ? error.message : 'export failed' }); await this.exportJobRepository.save(job); }
   }
 
+  private queueAttendanceExport(jobId: string): void {
+    if (this.isShuttingDown || this.exportJobsInFlight.has(jobId)) return;
+
+    const task = this.runAttendanceExport(jobId)
+      .catch((error) => {
+        this.logger.warn(
+          `attendance export failed: job=${jobId}, error=${error instanceof Error ? error.message : 'unknown error'}`,
+        );
+      })
+      .finally(() => this.exportJobsInFlight.delete(jobId));
+    this.exportJobsInFlight.set(jobId, task);
+  }
+
+  private queueExportRecovery(): void {
+    if (this.isShuttingDown || this.exportRecoveryInFlight) return;
+
+    const task = this.recoverExportJobs()
+      .catch((error) => {
+        this.logger.warn(
+          `export worker recovery failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+        );
+      })
+      .finally(() => {
+        if (this.exportRecoveryInFlight === task) this.exportRecoveryInFlight = null;
+      });
+    this.exportRecoveryInFlight = task;
+  }
+
   private buildAttendanceWorkbook(month: string, departmentCode: string): Buffer {
     const workbook = XLSX.utils.book_new();
     const sheet = XLSX.utils.json_to_sheet([{ month, departmentCode, generatedAt: new Date().toISOString() }]);
@@ -1743,13 +1793,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private async recoverExportJobs(): Promise<void> {
     if (this.isShuttingDown) return;
-    const running = await this.exportJobRepository.find({ where: { status: 'running', sourceType: 'attendance' } });
-    for (const job of running) {
-      job.status = 'failed'; job.finishedAt = new Date(); job.failureMessage = 'worker interrupted; retry export';
-      await this.exportJobRepository.save(job);
-    }
     const queued = await this.exportJobRepository.find({ where: { status: 'queued', sourceType: 'attendance' }, order: { requestedAt: 'ASC' }, take: 10 });
-    for (const job of queued) void this.runAttendanceExport(job.id);
+    for (const job of queued) this.queueAttendanceExport(job.id);
   }
 
   private toExportJob(job: ExportJobEntity) { return { id: job.id, status: job.status, exportFormat: job.exportFormat, resultFileId: job.resultFileId, failureMessage: job.failureMessage, retryCount: job.retryCount, requestedAt: job.requestedAt.toISOString(), startedAt: job.startedAt?.toISOString() ?? null, finishedAt: job.finishedAt?.toISOString() ?? null }; }

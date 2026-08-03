@@ -65,6 +65,26 @@ body {
   gap: 12px;
 }
 
+.shell-mobile-topbar.has-back {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.shell-mobile-back-button.ant-btn {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  color: #0b58c7;
+  border-radius: 999px;
+  background: rgba(232, 241, 255, 0.86);
+  box-shadow: none;
+}
+
+.shell-mobile-back-button.ant-btn .ant-btn-icon {
+  font-size: 18px;
+}
+
 .shell-mobile-page-title.ant-typography {
   margin: 0;
   font-size: 28px;
@@ -393,7 +413,7 @@ body {
   .ant-btn:focus-visible {
   width: 100%;
   height: 100%;
-  min-height: 40px;
+  min-height: 38px;
   padding-inline: 0;
   border: 0 !important;
   border-inline-start: 1px solid rgba(29, 99, 214, 0.12) !important;
@@ -575,10 +595,16 @@ body {
   font-weight: 600;
 }
 
+.shell-layout-enterprise .shell-mobile-back-button.ant-btn {
+  color: #0b58c7;
+}
+
 .shell-layout-enterprise .shell-subtitle {
   color: #5b708a;
 }
 
+.shell-layout-enterprise .shell-mobile-back-button.ant-btn:hover,
+.shell-layout-enterprise .shell-mobile-back-button.ant-btn:focus-visible,
 .shell-layout-enterprise .shell-mobile-more-button.ant-btn:hover,
 .shell-layout-enterprise .shell-mobile-more-button.ant-btn:focus-visible {
   color: #1769e0;
@@ -4588,5 +4614,2223 @@ body {
 
   .office-search-panel .ant-btn {
     width: 100%;
+  }
+}
+
+/* Mobile work-style design for My module */
+.shell-layout-my-home .my-home-page {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 20px 26px 112px;
+  overflow: visible;
+  color: #102a43;
+}
+
+.shell-layout-my-home .my-home-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.shell-layout-my-home .my-home-status-card,
+.shell-layout-my-home .my-home-focus-panel,
+.shell-layout-my-home .my-home-main-panel,
+.shell-layout-my-home .my-home-warning-panel {
+  min-width: 0;
+  border: 1px solid rgba(29, 99, 214, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.05);
+}
+
+.shell-layout-my-home .my-home-status-card {
+  padding: 16px;
+}
+
+.shell-layout-my-home .my-home-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.shell-layout-my-home .my-home-profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  color: #ffffff;
+  font-size: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #477ad9, #1d63d6);
+}
+
+.shell-layout-my-home .my-home-profile-copy {
+  min-width: 0;
+}
+
+.shell-layout-my-home .my-home-title.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 820;
+  letter-spacing: 0;
+}
+
+.shell-layout-my-home .my-home-subtitle.ant-typography {
+  margin: 6px 0 0;
+  color: #5f7088;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 650;
+}
+
+.shell-layout-my-home .my-home-card-chevron,
+.shell-layout-my-home .my-home-row-chevron {
+  flex: 0 0 auto;
+  color: #75869b;
+  font-size: 17px;
+}
+
+.shell-layout-my-home .my-home-status-divider {
+  height: 1px;
+  margin: 16px 0 14px;
+  background: rgba(29, 99, 214, 0.1);
+}
+
+.shell-layout-my-home .my-home-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+}
+
+.shell-layout-my-home .my-home-stat {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid rgba(29, 99, 214, 0.12);
+  border-radius: 0;
+  background: transparent;
+}
+
+.shell-layout-my-home .my-home-stat:first-child {
+  padding-left: 0;
+}
+
+.shell-layout-my-home .my-home-stat:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.shell-layout-my-home .my-home-stat-icon {
+  grid-row: span 2;
+  color: #1d63d6;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.shell-layout-my-home .my-home-stat span:not(.my-home-stat-icon) {
+  min-width: 0;
+  color: #2e4561;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 720;
+}
+
+.shell-layout-my-home .my-home-stat strong {
+  display: block;
+  margin-top: 3px;
+  color: #102a43;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 830;
+}
+
+.shell-layout-my-home .sunan-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.shell-layout-my-home .sunan-panel-heading h2.ant-typography {
+  position: relative;
+  margin: 0;
+  padding-left: 14px;
+  color: #102a43;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 840;
+  letter-spacing: 0;
+}
+
+.shell-layout-my-home .sunan-panel-heading h2.ant-typography::before {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 4px;
+  height: 20px;
+  border-radius: 999px;
+  background: #1d63d6;
+  content: '';
+}
+
+.shell-layout-my-home .my-home-focus-panel,
+.shell-layout-my-home .my-home-main-panel {
+  padding: 14px 16px;
+}
+
+.shell-layout-my-home .my-home-task-list {
+  display: grid;
+  gap: 9px;
+}
+
+.shell-layout-my-home .my-home-task-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 9px 12px;
+  border: 1px solid rgba(29, 99, 214, 0.11);
+  border-left-width: 1px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.shell-layout-my-home .my-home-task-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #1d63d6;
+  font-size: 21px;
+  border-radius: 8px;
+  background: #edf5ff;
+}
+
+.shell-layout-my-home .my-home-task-item.is-warning .my-home-task-icon {
+  color: #f59f00;
+  background: #fff6e4;
+}
+
+.shell-layout-my-home .my-home-task-copy {
+  min-width: 0;
+}
+
+.shell-layout-my-home .my-home-task-item strong {
+  color: #102a43;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 820;
+}
+
+.shell-layout-my-home .my-home-task-item small {
+  margin-top: 3px;
+  color: #60738c;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.shell-layout-my-home .my-home-task-item em {
+  min-width: 22px;
+  padding: 0;
+  color: #e03131;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 850;
+  border: 0;
+  background: transparent;
+}
+
+.shell-layout-my-home .my-home-task-item.is-warning em {
+  color: #f76707;
+}
+
+.shell-layout-my-home .my-home-page .my-home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  padding: 0;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  align-content: center;
+  gap: 6px;
+  min-height: 68px;
+  padding: 10px 24px 10px 10px;
+  overflow: hidden;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  border: 1px solid rgba(29, 99, 214, 0.13);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: none;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut::before,
+.shell-layout-my-home .my-home-page .my-home-shortcut::after {
+  content: none;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #1d63d6;
+  font-size: 20px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut-copy {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut-label.ant-typography {
+  display: block;
+  color: #102a43;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 830;
+  white-space: nowrap;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut-description.ant-typography {
+  display: block;
+  color: #60738c;
+  font-size: 10.8px;
+  line-height: 1.25;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.shell-layout-my-home .my-home-page .my-home-shortcut .my-home-row-chevron {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .shell-layout-my-home .my-home-page {
+    width: 100%;
+    padding: 20px 26px 112px;
+  }
+
+  .shell-layout-my-home .my-home-warning-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .shell-layout-my-home .my-home-page {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 320px) {
+  .shell-layout-my-home .my-home-page .my-home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shell-layout-my-home .my-home-stat {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 4px;
+    text-align: center;
+  }
+}
+
+/* Mobile work-style design for Office module */
+.shell-layout-module-office.shell-layout-enterprise .shell-content {
+  background: #ffffff;
+}
+
+.shell-layout-module-office.shell-layout-enterprise .shell-content::before {
+  content: none;
+}
+
+.shell-layout-module-office .office-mobile-home {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 0 26px 112px;
+  color: #102a43;
+}
+
+.shell-layout-module-office .office-mobile-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.shell-layout-module-office .office-mobile-hero-copy h1.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 26px;
+  line-height: 1.12;
+  font-weight: 860;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-office .office-mobile-hero-copy .ant-typography {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 680;
+}
+
+.shell-layout-module-office .office-mobile-hero-action .ant-btn {
+  min-width: 86px;
+  height: 40px;
+  padding-inline: 15px;
+  font-size: 17px;
+  font-weight: 820;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1f74f2, #0b5de4);
+  box-shadow: 0 10px 20px rgba(29, 99, 214, 0.18);
+  transition:
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease;
+}
+
+.shell-layout-module-office .office-search-panel.office-mobile-search-panel,
+.shell-layout-module-office .office-filter-panel.office-mobile-filter-panel,
+.shell-layout-module-office .office-mobile-status-card,
+.shell-layout-module-office .office-dashboard.office-mobile-dashboard {
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.shell-layout-module-office .office-search-panel.office-mobile-search-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 66px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #1a70f0;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.shell-layout-module-office .office-mobile-search-panel .ant-input-affix-wrapper {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.shell-layout-module-office .office-mobile-search-panel .ant-input-prefix {
+  margin-inline-end: 12px;
+  color: #52657d;
+  font-size: 21px;
+}
+
+.shell-layout-module-office .office-mobile-search-panel .ant-input {
+  color: #102a43;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.shell-layout-module-office .office-mobile-search-panel .ant-input::placeholder {
+  color: #9aa3ad;
+  opacity: 1;
+}
+
+.shell-layout-module-office .office-mobile-search-panel .ant-btn {
+  min-width: 0;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
+  font-size: 17px;
+  font-weight: 860;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: linear-gradient(135deg, #1d73f2, #0b5de4);
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease;
+}
+
+.shell-layout-module-office .office-filter-panel.office-mobile-filter-panel {
+  margin-bottom: 12px;
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-thumb {
+  display: none;
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item {
+  flex: 0 0 calc((100% - 39px) / 4);
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid rgba(29, 99, 214, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: none;
+  transition:
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item-selected {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #1d73f2, #0b5de4);
+  box-shadow: 0 9px 18px rgba(29, 99, 214, 0.16);
+}
+
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item-label {
+  min-height: 34px;
+  padding: 0 6px;
+  color: inherit;
+  font-size: 15px;
+  line-height: 34px;
+  font-weight: 780;
+  text-align: center;
+}
+
+.shell-layout-module-office .office-mobile-status-card,
+.shell-layout-module-office .office-mobile-entry-panel,
+.shell-layout-module-office .office-mobile-approval-panel {
+  overflow: hidden;
+  border: 1px solid rgba(29, 99, 214, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.05);
+}
+
+.shell-layout-module-office .office-mobile-card-heading,
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading,
+.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 14px;
+  margin: 0;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-office .office-mobile-card-heading h2.ant-typography,
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading h2.ant-typography,
+.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading h2.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 860;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-office .office-mobile-card-heading .ant-btn,
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading .ant-btn,
+.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading .ant-btn {
+  height: 34px;
+  padding: 0;
+  color: #65748a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.shell-layout-module-office .office-mobile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 9px 0;
+}
+
+.shell-layout-module-office .office-mobile-stats-unavailable {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 14px 16px;
+  color: #64748b;
+}
+
+.shell-layout-module-office .office-mobile-stats-unavailable > .anticon {
+  color: #1769e0;
+  font-size: 24px;
+}
+
+.shell-layout-module-office .office-mobile-stats-unavailable span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.shell-layout-module-office .office-mobile-stats-unavailable strong {
+  color: #102a43;
+  font-size: 14px;
+}
+
+.shell-layout-module-office .office-mobile-stats-unavailable small {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.my-home-page > .ant-alert,
+.shell-layout-module-office .office-mobile-home > .ant-alert,
+.shell-layout-module-procurement .procurement-mobile-home > .ant-alert,
+.shell-layout-module-workbench .workbench-mobile-home > .ant-alert {
+  margin-bottom: 12px;
+}
+
+.shell-layout-module-office .office-mobile-stat {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: center;
+  column-gap: 9px;
+  row-gap: 6px;
+  min-width: 0;
+  border-right: 1px solid rgba(29, 99, 214, 0.11);
+  color: #102a43;
+}
+
+.shell-layout-module-office .office-mobile-stat:last-child {
+  border-right: 0;
+}
+
+.shell-layout-module-office .office-mobile-stat .anticon {
+  color: #f08a00;
+  font-size: 18px;
+}
+
+.shell-layout-module-office .office-mobile-stat.is-review .anticon {
+  color: #116fe8;
+}
+
+.shell-layout-module-office .office-mobile-stat.is-done .anticon {
+  color: #11a260;
+}
+
+.shell-layout-module-office .office-mobile-stat span {
+  color: #102a43;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 760;
+}
+
+.shell-layout-module-office .office-mobile-stat strong {
+  grid-column: 1 / -1;
+  color: #f08a00;
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 880;
+  text-align: center;
+}
+
+.shell-layout-module-office .office-mobile-stat.is-review strong {
+  color: #116fe8;
+}
+
+.shell-layout-module-office .office-mobile-stat.is-done strong {
+  color: #11a260;
+}
+
+.shell-layout-module-office .office-dashboard.office-mobile-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.shell-layout-module-office .office-mobile-entry-panel,
+.shell-layout-module-office .office-mobile-approval-panel {
+  padding: 0;
+}
+
+.shell-layout-module-office .office-mobile-entry-panel .office-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 0 12px;
+}
+
+.shell-layout-module-office .office-mobile-entry-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 58px;
+  padding: 6px 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+  background: transparent;
+  box-shadow: none;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease,
+    background-color 160ms ease;
+}
+
+.shell-layout-module-office .office-mobile-entry-row:last-child {
+  border-bottom: 0;
+}
+
+.shell-layout-module-office .office-mobile-entry-row:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.shell-layout-module-office .office-mobile-entry-row .module-entry-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #0f68e8;
+  font-size: 21px;
+  border: 1px solid rgba(29, 99, 214, 0.08);
+  border-radius: 9px;
+  background: #f1f6fd;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.shell-layout-module-office .office-mobile-entry-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.shell-layout-module-office .office-mobile-entry-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.shell-layout-module-office .office-mobile-entry-title h3.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 14.5px;
+  line-height: 1.2;
+  font-weight: 860;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-office .office-mobile-entry-title em {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  color: #0f68e8;
+  font-size: 11px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 760;
+  border: 1px solid rgba(29, 99, 214, 0.18);
+  border-radius: 8px;
+  background: #edf5ff;
+}
+
+.shell-layout-module-office .office-mobile-entry-copy .ant-typography {
+  margin: 0;
+  color: #63748b;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.shell-layout-module-office .office-mobile-row-chevron {
+  color: #75869b;
+  font-size: 18px;
+}
+
+.shell-layout-module-office .office-mobile-empty {
+  padding: 28px 14px;
+  color: #64748b;
+  font-size: 14px;
+  text-align: center;
+}
+
+.shell-layout-module-office .office-mobile-approval-panel .office-approval-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 8px 12px 9px;
+}
+
+.shell-layout-module-office .office-mobile-approval-panel .office-approval-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  align-content: start;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 0;
+  text-align: center;
+  border: 0;
+  background: transparent;
+}
+
+.shell-layout-module-office .office-mobile-approval-panel .office-approval-item > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.shell-layout-module-office .office-approval-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #0f68e8;
+  font-size: 16px;
+  border: 1px solid rgba(29, 99, 214, 0.12);
+  border-radius: 50%;
+  background: #f7fbff;
+}
+
+.shell-layout-module-office .office-approval-icon em {
+  position: absolute;
+  right: -7px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 820;
+  border-radius: 50%;
+  background: #0f68e8;
+}
+
+.shell-layout-module-office .office-mobile-approval-panel .office-approval-item strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #102a43;
+  font-size: 12.5px;
+  line-height: 1.2;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.shell-layout-module-office .office-mobile-approval-panel .office-approval-item small {
+  display: block;
+  color: #63748b;
+  font-size: 10px;
+  line-height: 1.16;
+  font-weight: 650;
+}
+
+.shell-layout-module-office .office-approval-connector {
+  position: absolute;
+  top: 17px;
+  left: calc(50% + 34px);
+  width: calc(100% - 68px);
+  height: 1px;
+  border-top: 1px dashed rgba(75, 103, 140, 0.42);
+}
+
+.shell-layout-module-office .office-approval-connector::after {
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid rgba(75, 103, 140, 0.52);
+  border-right: 2px solid rgba(75, 103, 140, 0.52);
+  transform: rotate(45deg);
+  content: '';
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .shell-layout-module-office .office-mobile-hero-action .ant-btn:hover,
+  .shell-layout-module-office .office-mobile-search-panel .ant-btn:hover,
+  .shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item:hover,
+  .shell-layout-module-office .office-mobile-entry-row:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.shell-layout-module-office .office-mobile-hero-action .ant-btn:active,
+.shell-layout-module-office .office-mobile-search-panel .ant-btn:active,
+.shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item:active,
+.shell-layout-module-office .office-mobile-entry-row:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-layout-module-office .office-mobile-hero-action .ant-btn,
+  .shell-layout-module-office .office-mobile-search-panel .ant-btn,
+  .shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item,
+  .shell-layout-module-office .office-mobile-entry-row {
+    transition: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .shell-layout-module-office .office-mobile-home {
+    padding-inline: 18px;
+  }
+
+  .shell-layout-module-office .office-mobile-hero-copy h1.ant-typography {
+    font-size: 28px;
+  }
+
+  .shell-layout-module-office .office-mobile-filter-panel .ant-segmented-group {
+    gap: 9px;
+  }
+
+  .shell-layout-module-office .office-mobile-filter-panel .ant-segmented-item {
+    flex-basis: calc((100% - 27px) / 4);
+  }
+}
+
+/* Mobile work-style design for Procurement module */
+.shell-layout-module-procurement.shell-layout-enterprise .shell-content {
+  background: #ffffff;
+}
+
+.shell-layout-module-procurement.shell-layout-enterprise .shell-content::before {
+  content: none;
+}
+
+.shell-layout-module-procurement .procurement-mobile-home {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 24px 26px 112px;
+  color: #102a43;
+}
+
+.shell-layout-module-procurement .procurement-mobile-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-hero-copy h1.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 29px;
+  line-height: 1.12;
+  font-weight: 860;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-hero-copy .ant-typography {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 680;
+}
+
+.shell-layout-module-procurement .procurement-mobile-hero .ant-btn {
+  min-width: 128px;
+  height: 46px;
+  padding-inline: 14px;
+  font-size: 17px;
+  font-weight: 840;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1f74f2, #0b5de4);
+  box-shadow: 0 10px 20px rgba(29, 99, 214, 0.18);
+  transition:
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shell-layout-module-procurement .procurement-mobile-admin-links {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 15px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-admin-links button {
+  padding: 0;
+  color: #0f68e8;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 820;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+.shell-layout-module-procurement .procurement-mobile-admin-links span {
+  width: 1px;
+  height: 24px;
+  background: rgba(29, 99, 214, 0.16);
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi-card,
+.shell-layout-module-procurement .procurement-mobile-budget-card,
+.shell-layout-module-procurement .procurement-mobile-pending-card,
+.shell-layout-module-procurement .procurement-mobile-execution-card {
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid rgba(29, 99, 214, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.05);
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 86px;
+  padding: 17px 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 0 16px;
+  border-right: 1px solid rgba(29, 99, 214, 0.12);
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi:last-child {
+  border-right: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi span {
+  color: #102a43;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 760;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi strong {
+  color: #102a43;
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 880;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi.is-primary strong {
+  color: #0f68e8;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi.is-warning strong {
+  color: #f08a00;
+}
+
+.shell-layout-module-procurement .procurement-mobile-kpi .anticon {
+  position: absolute;
+  right: 13px;
+  bottom: 19px;
+  color: #344962;
+  font-size: 29px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-procurement .procurement-mobile-card-heading h2.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 860;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-card-heading span,
+.shell-layout-module-procurement .procurement-mobile-card-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  color: #65748a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 720;
+  border: 0;
+  background: transparent;
+}
+
+.shell-layout-module-procurement .procurement-mobile-card-heading button {
+  cursor: pointer;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 14px 14px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-progress {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dce5ef;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-progress span {
+  display: block;
+  width: var(--procurement-budget-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f68e8, #1c7df6);
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-overview > strong {
+  color: #0f68e8;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 840;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-overview > em {
+  color: #314762;
+  font-size: 13px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list {
+  display: grid;
+  padding: 0 14px 12px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list > div {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 43px;
+  border-top: 1px solid rgba(29, 99, 214, 0.1);
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list span {
+  color: #102a43;
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list strong {
+  color: #102a43;
+  font-size: 14px;
+  font-weight: 760;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list em {
+  color: #0f68e8;
+  font-size: 13px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list .is-over-budget strong,
+.shell-layout-module-procurement .procurement-mobile-budget-list .is-over-budget em {
+  color: #d92d38;
+}
+
+.shell-layout-module-procurement .procurement-mobile-budget-list .is-over-budget em {
+  padding: 7px 8px;
+  border: 1px solid rgba(217, 45, 56, 0.18);
+  border-radius: 8px;
+  background: #fff0f0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-list {
+  display: grid;
+  padding: 0 14px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-list-empty {
+  display: block;
+  padding: 20px 14px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 10px 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+  background: transparent;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease,
+    background-color 160ms ease;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-row:last-child {
+  border-bottom: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-row-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #0f68e8;
+  font-size: 25px;
+  border-radius: 9px;
+  background: #edf5ff;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy strong {
+  color: #102a43;
+  font-size: 16px;
+  font-weight: 840;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy em {
+  padding: 5px 7px;
+  color: #d92d38;
+  font-size: 12px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 780;
+  border-radius: 7px;
+  background: #fff0f0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy em.is-warning {
+  color: #d46b08;
+  background: #fff7e6;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy small {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-copy i {
+  width: 1px;
+  height: 13px;
+  background: rgba(29, 99, 214, 0.12);
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-row > strong {
+  color: #102a43;
+  font-size: 17px;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pending-row > strong.is-danger {
+  color: #d92d38;
+}
+
+.shell-layout-module-procurement .procurement-mobile-row-chevron {
+  color: #75869b;
+  font-size: 17px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-table {
+  display: grid;
+}
+
+.shell-layout-module-procurement .procurement-mobile-list-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 150px 150px;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-procurement .procurement-mobile-list-filters .ant-input-affix-wrapper,
+.shell-layout-module-procurement .procurement-mobile-list-filters .ant-input-group-addon,
+.shell-layout-module-procurement .procurement-mobile-list-filters .ant-select-selector {
+  min-height: 38px;
+  border-color: rgba(29, 99, 214, 0.16);
+  border-radius: 7px;
+}
+
+.shell-layout-module-procurement .procurement-mobile-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-head,
+.shell-layout-module-procurement .procurement-mobile-execution-row {
+  display: grid;
+  grid-template-columns: 1.8fr 0.95fr 1fr 0.9fr 18px;
+  align-items: center;
+  column-gap: 8px;
+  min-width: 0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-head {
+  min-height: 38px;
+  padding: 0 14px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 720;
+  background: #f5f7fb;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row {
+  min-height: 48px;
+  padding: 0 14px;
+  color: #102a43;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  border-top: 1px solid rgba(29, 99, 214, 0.09);
+  background: transparent;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease,
+    background-color 160ms ease;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row span {
+  min-width: 0;
+  overflow: hidden;
+  color: #102a43;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row em {
+  justify-self: start;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 780;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row em.is-done {
+  color: #16835c;
+  background: #e9f7f0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row em.is-warning {
+  color: #d46b08;
+  background: #fff7e6;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row em.is-processing {
+  color: #0f68e8;
+  background: #edf5ff;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row em.is-danger {
+  color: #d92d38;
+  background: #fff0f0;
+}
+
+.shell-layout-module-procurement .procurement-mobile-execution-row .anticon {
+  color: #75869b;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .shell-layout-module-procurement .procurement-mobile-hero .ant-btn:hover,
+  .shell-layout-module-procurement .procurement-mobile-admin-links button:hover,
+  .shell-layout-module-procurement .procurement-mobile-card-heading button:hover,
+  .shell-layout-module-procurement .procurement-mobile-pending-row:hover,
+  .shell-layout-module-procurement .procurement-mobile-execution-row:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.shell-layout-module-procurement .procurement-mobile-hero .ant-btn:active,
+.shell-layout-module-procurement .procurement-mobile-admin-links button:active,
+.shell-layout-module-procurement .procurement-mobile-card-heading button:active,
+.shell-layout-module-procurement .procurement-mobile-pending-row:active,
+.shell-layout-module-procurement .procurement-mobile-execution-row:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-layout-module-procurement .procurement-mobile-hero .ant-btn,
+  .shell-layout-module-procurement .procurement-mobile-admin-links button,
+  .shell-layout-module-procurement .procurement-mobile-card-heading button,
+  .shell-layout-module-procurement .procurement-mobile-pending-row,
+  .shell-layout-module-procurement .procurement-mobile-execution-row {
+    transition: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .shell-layout-module-procurement .procurement-mobile-home {
+    padding-inline: 18px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero-copy h1.ant-typography {
+    font-size: 27px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero .ant-btn {
+    min-width: 118px;
+    font-size: 15px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-kpi {
+    padding-inline: 10px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-kpi strong {
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 767px) {
+  .shell-layout-module-procurement .procurement-mobile-list-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-list-filters .ant-input-search {
+    grid-column: 1 / -1;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pagination {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .shell-layout-module-procurement.shell-layout-enterprise .shell-header {
+    padding: 9px 18px 8px;
+  }
+
+  .shell-layout-module-procurement .shell-mobile-brand .shell-brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    border-radius: 9px;
+  }
+
+  .shell-layout-module-procurement .shell-mobile-page-title.ant-typography {
+    font-size: 20px;
+  }
+
+  .shell-layout-module-procurement .shell-mobile-more-button.ant-btn {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-home {
+    padding: 16px 14px 104px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero {
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero-copy h1.ant-typography {
+    font-size: 28px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero-copy .ant-typography {
+    margin-top: 6px;
+    font-size: 13px;
+    white-space: normal;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-hero .ant-btn {
+    width: 140px;
+    min-width: 140px;
+    height: 40px;
+    padding-inline: 8px;
+    font-size: 15px;
+    border-radius: 9px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-admin-links {
+    gap: 16px;
+    margin: 2px 4px 12px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-admin-links button {
+    font-size: 15px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-kpi-card,
+  .shell-layout-module-procurement .procurement-mobile-budget-card,
+  .shell-layout-module-procurement .procurement-mobile-pending-card,
+  .shell-layout-module-procurement .procurement-mobile-execution-card {
+    margin-bottom: 9px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-kpi-card {
+    min-height: 78px;
+    padding-block: 13px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-kpi {
+    gap: 8px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-card-heading {
+    min-height: 40px;
+    padding-inline: 13px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-card-heading h2.ant-typography {
+    font-size: 18px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-card-heading span,
+  .shell-layout-module-procurement .procurement-mobile-card-heading button {
+    font-size: 13px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-overview {
+    gap: 10px;
+    padding: 10px 13px 9px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-list {
+    padding: 0 13px 9px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-list > div {
+    grid-template-columns: 82px minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 32px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-list span {
+    font-size: 14px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-list strong,
+  .shell-layout-module-procurement .procurement-mobile-budget-list em {
+    font-size: 12px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-budget-list .is-over-budget em {
+    padding: 6px 7px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-list {
+    padding-inline: 13px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-row {
+    gap: 8px;
+    min-height: 48px;
+    padding-block: 5px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-row-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-copy {
+    gap: 4px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-copy strong {
+    font-size: 14px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-copy em {
+    padding: 4px 5px;
+    font-size: 11px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-copy small {
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-pending-row > strong {
+    font-size: 15px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-execution-head,
+  .shell-layout-module-procurement .procurement-mobile-execution-row {
+    grid-template-columns: 1.9fr 0.9fr 1fr 0.85fr 16px;
+    column-gap: 6px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-execution-head {
+    min-height: 35px;
+    padding-inline: 13px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-execution-row {
+    height: 36px;
+    min-height: 36px;
+    padding-inline: 13px;
+    line-height: 1;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-execution-row span {
+    font-size: 12px;
+  }
+
+  .shell-layout-module-procurement .procurement-mobile-execution-row em {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile work-style design for Workbench module */
+.shell-layout-module-workbench.shell-layout-enterprise .shell-content {
+  background:
+    linear-gradient(180deg, rgba(247, 251, 255, 0.98), #ffffff 84%),
+    #ffffff;
+}
+
+.shell-layout-module-workbench.shell-layout-enterprise .shell-content::before {
+  content: none;
+}
+
+.shell-layout-module-workbench .workbench-mobile-home {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 22px 14px 104px;
+  color: #102a43;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-copy h1.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 29px;
+  line-height: 1.08;
+  font-weight: 880;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-copy {
+  min-width: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-copy .ant-typography {
+  margin: 9px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 8px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-actions button,
+.shell-layout-module-workbench .workbench-mobile-card-heading button,
+.shell-layout-module-workbench .workbench-mobile-priority-row,
+.shell-layout-module-workbench .workbench-mobile-module-tile,
+.shell-layout-module-workbench .workbench-mobile-recent-row,
+.shell-layout-module-workbench .workbench-mobile-alert button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 86px;
+  height: 35px;
+  padding: 0 10px;
+  color: #0f68e8;
+  font-size: 14px;
+  font-weight: 840;
+  border: 1px solid rgba(29, 99, 214, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 10px rgba(15, 104, 232, 0.05);
+  transition:
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-actions .anticon {
+  font-size: 17px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat-card,
+.shell-layout-module-workbench .workbench-mobile-priority-card,
+.shell-layout-module-workbench .workbench-mobile-module-card,
+.shell-layout-module-workbench .workbench-mobile-recent-card,
+.shell-layout-module-workbench .workbench-mobile-alert {
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid rgba(29, 99, 214, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.05);
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat-card {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 102px;
+  padding: 13px 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 8px;
+  border-right: 1px solid rgba(29, 99, 214, 0.11);
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat:last-child {
+  border-right: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat-icon {
+  color: #0f68e8;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat > span:not(.workbench-mobile-stat-icon) {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 730;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-stat strong {
+  color: #102a43;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 880;
+}
+
+.shell-layout-module-workbench .workbench-mobile-card-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px 0 22px;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-workbench .workbench-mobile-card-heading::before {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 3px;
+  height: 20px;
+  border-radius: 999px;
+  background: #0f68e8;
+  transform: translateY(-50%);
+  content: '';
+}
+
+.shell-layout-module-workbench .workbench-mobile-card-heading h2.ant-typography {
+  margin: 0;
+  color: #102a43;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 880;
+  letter-spacing: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-card-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  color: #65748a;
+  font-size: 14px;
+  font-weight: 720;
+  border: 0;
+  background: transparent;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-list,
+.shell-layout-module-workbench .workbench-mobile-recent-list {
+  display: grid;
+  padding: 0 12px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 51px;
+  padding: 6px 0;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+  background: transparent;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row:last-child {
+  border-bottom: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-row-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #0f68e8;
+  font-size: 21px;
+  border-radius: 8px;
+  background: #edf5ff;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row.is-warning .workbench-mobile-row-icon {
+  color: #f08a00;
+  background: #fff6e4;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #102a43;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 820;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row em,
+.shell-layout-module-workbench .workbench-mobile-recent-row em {
+  padding: 5px 7px;
+  color: #0f68e8;
+  font-size: 12px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 780;
+  border-radius: 7px;
+  background: #edf5ff;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-row.is-warning em,
+.shell-layout-module-workbench .workbench-mobile-recent-row.is-warning em {
+  color: #f08a00;
+  background: #fff6e4;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row.is-success em {
+  color: #16835c;
+  background: #e9f7f0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-chevron {
+  color: #75869b;
+  font-size: 17px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 7px 12px 8px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-priority-list > .ant-empty,
+.shell-layout-module-workbench .workbench-mobile-recent-list > .ant-empty {
+  padding: 18px 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-grid > .ant-empty {
+  grid-column: 1 / -1;
+  padding: 16px 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-tile {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  justify-items: start;
+  min-width: 0;
+  min-height: 80px;
+  padding: 7px 9px 5px;
+  color: inherit;
+  text-align: left;
+  border: 1px solid rgba(29, 99, 214, 0.16);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.92);
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-icon {
+  color: #0f68e8;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-tile strong {
+  margin-top: 4px;
+  color: #102a43;
+  font-size: 13px;
+  line-height: 1.12;
+  font-weight: 840;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-tile small {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 680;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5px;
+  padding-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 720;
+  border-top: 1px solid rgba(29, 99, 214, 0.09);
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-footer b {
+  margin-left: 4px;
+  color: #0f68e8;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 880;
+}
+
+.shell-layout-module-workbench .workbench-mobile-module-footer .anticon {
+  color: #75869b;
+  font-size: 15px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto 62px;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 3px 0;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid rgba(29, 99, 214, 0.09);
+  background: transparent;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row:last-child {
+  border-bottom: 0;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row > span .anticon {
+  font-size: 14px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #102a43;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-recent-row small {
+  justify-self: end;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-alert {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  color: #65748a;
+  font-size: 13px;
+  font-weight: 720;
+  background: #f2f7ff;
+}
+
+.shell-layout-module-workbench .workbench-mobile-alert > .anticon {
+  color: #0f68e8;
+  font-size: 17px;
+}
+
+.shell-layout-module-workbench .workbench-mobile-alert span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-layout-module-workbench .workbench-mobile-alert button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: #75869b;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .shell-layout-module-workbench .workbench-mobile-hero-actions button:hover,
+  .shell-layout-module-workbench .workbench-mobile-card-heading button:hover,
+  .shell-layout-module-workbench .workbench-mobile-priority-row:hover,
+  .shell-layout-module-workbench .workbench-mobile-module-tile:hover,
+  .shell-layout-module-workbench .workbench-mobile-recent-row:hover,
+  .shell-layout-module-workbench .workbench-mobile-alert button:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.shell-layout-module-workbench .workbench-mobile-hero-actions button:active,
+.shell-layout-module-workbench .workbench-mobile-card-heading button:active,
+.shell-layout-module-workbench .workbench-mobile-priority-row:active,
+.shell-layout-module-workbench .workbench-mobile-module-tile:active,
+.shell-layout-module-workbench .workbench-mobile-recent-row:active,
+.shell-layout-module-workbench .workbench-mobile-alert button:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-layout-module-workbench .workbench-mobile-hero-actions button,
+  .shell-layout-module-workbench .workbench-mobile-priority-row,
+  .shell-layout-module-workbench .workbench-mobile-module-tile,
+  .shell-layout-module-workbench .workbench-mobile-recent-row {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .shell-layout-module-workbench.shell-layout-enterprise .shell-header {
+    padding: 11px 16px 9px;
+  }
+
+  .shell-layout-module-workbench .shell-mobile-brand .shell-brand-mark {
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
+    border-radius: 9px;
+  }
+
+  .shell-layout-module-workbench .shell-mobile-page-title.ant-typography {
+    font-size: 21px;
+  }
+
+  .shell-layout-module-workbench .shell-mobile-more-button.ant-btn {
+    width: 44px;
+    min-width: 44px;
+    height: 36px;
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-home {
+    padding: 22px 14px 104px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero {
+    align-items: start;
+    margin-bottom: 18px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero-copy .ant-typography {
+    font-size: 13px;
+    white-space: normal;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero-actions {
+    gap: 6px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero-actions button {
+    min-width: 82px;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .shell-layout-module-workbench .workbench-mobile-home {
+    padding-inline: 12px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero {
+    grid-template-columns: 1fr;
+    margin-bottom: 14px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero-actions {
+    justify-content: end;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-hero-copy .ant-typography {
+    white-space: normal;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-module-grid {
+    gap: 8px;
+  }
+
+  .shell-layout-module-workbench .workbench-mobile-recent-row {
+    grid-template-columns: 62px minmax(0, 1fr) auto 54px;
+    gap: 6px;
   }
 }

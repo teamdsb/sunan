@@ -18,7 +18,6 @@
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter api build",
     "dev:web": "pnpm --filter web dev",
-    "dev:web:mock": "pnpm --filter web dev --mode mock",
     "lint": "pnpm --filter api lint",
     "test": "pnpm --filter web test && pnpm --filter api test",
     "test:web": "pnpm --filter web test",

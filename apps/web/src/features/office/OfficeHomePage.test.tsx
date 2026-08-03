@@ -42,6 +42,7 @@ describe('OfficeHomePage', () => {
     vi.clearAllMocks();
     mockCategories.mockReturnValue({
       data: { data: officeCategories },
+      isError: false,
     });
     mockEntries.mockReturnValue({
       data: {
@@ -63,6 +64,7 @@ describe('OfficeHomePage', () => {
         ],
       },
       isLoading: false,
+      isError: false,
     });
     mockOpen.mockReturnValue({
       unwrap: () => Promise.resolve({
@@ -85,8 +87,26 @@ describe('OfficeHomePage', () => {
     );
 
     expect(screen.getByText('海事入口')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '办事中心' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '我的办理' })).toBeInTheDocument();
+    expect(screen.getByText('暂未提供办理统计')).toBeInTheDocument();
+    expect(screen.getByText('后端当前仅提供办事入口目录，尚无个人办理实例接口')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '办事入口' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '审批链路' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '进入治理台' }));
     expect(mockNavigate).toHaveBeenCalledWith('/office/admin');
+  });
+
+  it('shows an error when the office catalog cannot be loaded', () => {
+    mockEntries.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <OfficeHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('办事入口加载失败')).toBeInTheDocument();
   });
 
   it('records open action before launching the target', async () => {
@@ -96,7 +116,7 @@ describe('OfficeHomePage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '打开入口' }));
+    fireEvent.click(screen.getByRole('button', { name: '打开入口 海事入口' }));
 
     await waitFor(() => expect(mockOpen).toHaveBeenCalledWith('office-1'));
     expect(mockLaunch).toHaveBeenCalled();
@@ -121,9 +141,10 @@ describe('OfficeHomePage', () => {
     );
 
     const categoryFilter = screen.getByRole('radiogroup', { name: 'segmented control' });
-    ['全部', '海事', '海关', '边检', '船检', '环保', '其他', '石化园区'].forEach((label) => {
+    ['全部', '海事', '海关', '边检', '船检', '环保', '石化园区'].forEach((label) => {
       expect(within(categoryFilter).getByText(label)).toBeInTheDocument();
     });
+    expect(within(categoryFilter).queryByText('其他')).not.toBeInTheDocument();
 
     fireEvent.click(within(categoryFilter).getByText('海关'));
 

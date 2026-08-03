@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { startTransition, useState } from 'react';
 
-import { env } from '../../app/env';
 import {
   useCreateFileCallbackMutation,
   useCreateFileFromWecomMutation,
@@ -111,18 +110,14 @@ export function useFileUpload({
         category,
       }).unwrap();
 
-      if (!env.mockMode) {
-        await axios.put(presign.data.uploadUrl, file, {
-          headers: presign.data.headers,
-          onUploadProgress: (event) => {
-            const total = event.total ?? file.size;
-            const progress = total > 0 ? Math.round((event.loaded / total) * 100) : 0;
-            setPartialState({ progress });
-          },
-        });
-      } else {
-        setPartialState({ progress: 100 });
-      }
+      await axios.put(presign.data.uploadUrl, file, {
+        headers: presign.data.headers,
+        onUploadProgress: (event) => {
+          const total = event.total ?? file.size;
+          const progress = total > 0 ? Math.round((event.loaded / total) * 100) : 0;
+          setPartialState({ progress });
+        },
+      });
 
       const callback = await createCallback({
         ossKey: presign.data.ossKey,

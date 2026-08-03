@@ -16,7 +16,6 @@ describe('AppShell auth recovery', () => {
     vi.mocked(useGetCurrentUserQuery).mockReset();
     window.localStorage.clear();
     window.sessionStorage.clear();
-    vi.stubEnv('VITE_MOCK_MODE', 'false');
   });
 
   it('restores the current user from /auth/me when a stored token exists', async () => {
