@@ -3,7 +3,6 @@ import Spin from 'antd/es/spin';
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { env } from '../app/env';
 import { setAuthStatus } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
 
@@ -14,11 +13,6 @@ export function RequireAuth() {
   const location = useLocation();
 
   useEffect(() => {
-    if (env.mockMode) {
-      dispatch(setAuthStatus('authenticated'));
-      return;
-    }
-
     if (!token) {
       dispatch(setAuthStatus('authorizing'));
       redirectToOAuth(location.pathname + location.search + location.hash);
@@ -27,10 +21,6 @@ export function RequireAuth() {
 
     dispatch(setAuthStatus('authenticated'));
   }, [dispatch, location.hash, location.pathname, location.search, token]);
-
-  if (env.mockMode) {
-    return <Outlet />;
-  }
 
   if (!token || authStatus === 'authorizing') {
     return (

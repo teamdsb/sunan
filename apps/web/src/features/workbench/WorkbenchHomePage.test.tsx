@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkbenchHomePage } from './WorkbenchHomePage';
 
@@ -33,7 +33,8 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('./workbenchApi', () => ({
   useGetWorkbenchDashboardQuery: () => mockGetWorkbenchDashboardQuery(),
-  useGetWorkbenchRecordsQuery: (params: unknown) => mockGetWorkbenchRecordsQuery(params),
+  useGetWorkbenchRecordsQuery: (params: unknown, options: unknown) =>
+    mockGetWorkbenchRecordsQuery(params, options),
   useGetWorkbenchRecordQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordQuery(recordId, options),
   useGetWorkbenchRecordIssuesQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordIssuesQuery(recordId, options),
   useGetWorkbenchModuleSchemaQuery: (moduleCode: string, options: unknown) =>
@@ -119,6 +120,7 @@ describe('WorkbenchHomePage', () => {
         },
       },
       isLoading: false,
+      isError: false,
     });
     mockGetWorkbenchRecordsQuery.mockReturnValue({
       data: {
@@ -140,6 +142,7 @@ describe('WorkbenchHomePage', () => {
         },
       },
       isLoading: false,
+      isError: false,
     });
     mockGetWorkbenchRecordQuery.mockReturnValue({
       data: undefined,
@@ -181,10 +184,10 @@ describe('WorkbenchHomePage', () => {
   it('supports route-aware navigation for workbench entry links', () => {
     render(<WorkbenchHomePage routeAware />);
 
-    fireEvent.click(screen.getByRole('button', { name: '考勤统计' }));
-    fireEvent.click(screen.getByRole('button', { name: '审批看板' }));
-    fireEvent.click(screen.getAllByRole('button', { name: '查看记录' })[0]);
-    fireEvent.click(screen.getByRole('button', { name: '海图批次 2026-04' }));
+    fireEvent.click(screen.getByRole('button', { name: /考勤统计/ }));
+    fireEvent.click(screen.getByRole('button', { name: /审批看板/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: /海图更新/ })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /海图批次 2026-04/ })[0]);
 
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/statistics/attendance');
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/approvals');
@@ -197,6 +200,68 @@ describe('WorkbenchHomePage', () => {
 
     expect(mockScrollTo).toHaveBeenCalledWith({ top: 0, left: 0 });
     expect(mockScrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('expands all real module entries and all records from the loaded page', () => {
+    const dashboard = mockGetWorkbenchDashboardQuery().data.data;
+    mockGetWorkbenchDashboardQuery.mockReturnValue({
+      data: {
+        data: {
+          ...dashboard,
+          modules: [
+            ...dashboard.modules,
+            {
+              moduleCode: 'goa_meeting',
+              moduleName: '会议管理',
+              departmentCode: 'general_office',
+              templateType: 'ledger_form',
+              pendingCount: 0,
+              requiresApproval: false,
+              supportsPrint: true,
+              supportsStatistics: false,
+              mobileFirst: false,
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
+    const records = Array.from({ length: 4 }, (_, index) => ({
+      id: `record-${index + 1}`,
+      moduleCode: 'shipping_chart_update',
+      title: `海图记录 ${index + 1}`,
+      status: 'assigned',
+      vesselId: 'ship-1',
+      occurredAt: `2026-04-${22 - index}T10:00:00.000+08:00`,
+      approvalChannel: 'internal',
+    }));
+    mockGetWorkbenchRecordsQuery.mockReturnValue({
+      data: {
+        data: records,
+        pagination: { page: 1, pageSize: 20, total: 4 },
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<WorkbenchHomePage routeAware />);
+
+    const moduleSection = screen
+      .getByRole('heading', { name: '模块入口' })
+      .closest('section');
+    expect(moduleSection).not.toBeNull();
+    expect(within(moduleSection!).queryByText('会议管理')).toBeNull();
+    fireEvent.click(within(moduleSection!).getByRole('button', { name: /查看全部/ }));
+    expect(within(moduleSection!).getByText('会议管理')).toBeInTheDocument();
+
+    const recordSection = screen
+      .getByRole('heading', { name: '最近记录' })
+      .closest('section');
+    expect(recordSection).not.toBeNull();
+    expect(within(recordSection!).queryByText('海图记录 4')).toBeNull();
+    fireEvent.click(within(recordSection!).getByRole('button', { name: /展开本页/ }));
+    expect(within(recordSection!).getByText('海图记录 4')).toBeInTheDocument();
   });
 
   it('anchors direct module entries to their selected module card', () => {
@@ -225,12 +290,74 @@ describe('WorkbenchHomePage', () => {
     render(<WorkbenchHomePage routeAware />);
 
     expect(screen.getByText('最近记录')).toBeInTheDocument();
-    expect(screen.getByText('待优先处理')).toBeInTheDocument();
+    expect(screen.getByText('优先处理')).toBeInTheDocument();
     expect(screen.getAllByText('海图批次 2026-04').length).toBeGreaterThan(0);
     expect(screen.queryByText('总经办例会')).not.toBeInTheDocument();
     expect(screen.queryByText('证书到期确认')).not.toBeInTheDocument();
     expect(screen.queryByText('+4 今日')).not.toBeInTheDocument();
     expect(screen.queryByText('低于 SLA')).not.toBeInTheDocument();
+    expect(screen.getByText('审批回调待重试 1 条')).toBeInTheDocument();
+  });
+
+  it('loads approval-pending priorities independently from the recent-record page', () => {
+    const recentClosedRecords = Array.from({ length: 20 }, (_, index) => ({
+      id: `closed-${index + 1}`,
+      moduleCode: 'shipping_chart_update',
+      title: `已关闭记录 ${index + 1}`,
+      status: 'closed',
+      vesselId: 'ship-1',
+      occurredAt: `2026-04-${String(30 - index).padStart(2, '0')}T10:00:00.000+08:00`,
+      approvalChannel: 'internal',
+    }));
+    mockGetWorkbenchRecordsQuery.mockImplementation(
+      (params: { status?: string }) => ({
+        data: params?.status === 'approval_pending'
+          ? {
+              data: [
+                {
+                  id: 'older-approval',
+                  moduleCode: 'business_signin_desk',
+                  title: '较早的待审批记录',
+                  status: 'approval_pending',
+                  vesselId: null,
+                  occurredAt: '2026-03-01T10:00:00.000+08:00',
+                  approvalChannel: 'internal',
+                },
+              ],
+              pagination: { page: 1, pageSize: 100, total: 1 },
+            }
+          : {
+              data: recentClosedRecords,
+              pagination: { page: 1, pageSize: 20, total: 20 },
+            },
+        isLoading: false,
+        isError: false,
+      }),
+    );
+
+    render(<WorkbenchHomePage routeAware />);
+
+    const prioritySection = screen
+      .getByRole('heading', { name: '优先处理' })
+      .closest('section');
+    expect(prioritySection).not.toBeNull();
+    expect(within(prioritySection!).getByText('较早的待审批记录')).toBeInTheDocument();
+    expect(mockGetWorkbenchRecordsQuery).toHaveBeenCalledWith(
+      { status: 'approval_pending', page: 1, pageSize: 100 },
+      { skip: false },
+    );
+  });
+
+  it('shows a partial-data error when the dashboard request fails', () => {
+    mockGetWorkbenchDashboardQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+
+    render(<WorkbenchHomePage routeAware />);
+
+    expect(screen.getByText('部分工作台数据加载失败')).toBeInTheDocument();
   });
 
   it('shows print actions in record detail and triggers print endpoint', async () => {
@@ -314,12 +441,13 @@ describe('WorkbenchHomePage', () => {
           page: 1,
           pageSize: 20,
         },
+        undefined,
       );
     });
-    expect(mockGetWorkbenchRecordsQuery).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        templateType: 'wecom_approval',
-      }),
+    expect(
+      mockGetWorkbenchRecordsQuery.mock.calls.map(([params]) => params),
+    ).not.toContainEqual(
+      expect.objectContaining({ templateType: 'wecom_approval' }),
     );
   });
 
@@ -385,6 +513,8 @@ describe('WorkbenchHomePage', () => {
   it('renders attendance statistics view and skips module grid in statistics-only mode', () => {
     render(<WorkbenchHomePage routeAware statisticsOnly />);
 
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
     expect(screen.queryByTestId('workbench-module-grid')).toBeNull();
     expect(screen.getByText('月度考勤统计')).toBeInTheDocument();
     expect(screen.getByTestId('workbench-attendance-stat-grid')).toHaveClass(
@@ -394,7 +524,7 @@ describe('WorkbenchHomePage', () => {
       8,
     );
     expect(mockGetWorkbenchAttendanceStatisticsQuery).toHaveBeenCalledWith(
-      { month: '2026-04' },
+      { month: currentMonth },
       { skip: false },
     );
   });

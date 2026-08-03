@@ -33,17 +33,11 @@ make dev
 - API: `http://127.0.0.1:3000`
 - Web: `http://127.0.0.1:5173`
 
-## Mock 模式
+## 本地联调
 
-如需在本地跳过企微认证进行 M1 页面预览，可在前端环境中设置：
+前端只使用真实后端和企业微信认证，不提供运行时 mock 或本地假用户。开始联调前需在 `apps/api/.env` 与 `apps/web/.env` 配置数据库、JWT、企业微信和 API 地址；企业微信 OAuth 与 JS-SDK 必须使用已登记的可信域名验证。
 
-```bash
-VITE_LOCAL_BYPASS_AUTH=true
-```
-
-开启后会自动注入本地预览用户，默认角色为 `all_authenticated + shipping`。
-
-详细的 QA 启动步骤、限制说明与手动测试场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)。
+历史 M1 QA 场景见 [qa-testing-my-module.md](./qa-testing-my-module.md)，其中旧 mock 启动流程已停用。
 
 M2 企业微信上线前检查项见 [wecom-dev-setup.md](./wecom-dev-setup.md) 中的「M2 上线检查清单（Wave4）」。
 

@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
@@ -16,6 +17,8 @@ import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-app
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
+import { WorkbenchService } from 'src/modules/workbench/workbench.service';
+import { OssService } from 'src/modules/files/oss.service';
 import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase } from 'test/pg-test-container';
 
 let currentUser = {
@@ -88,6 +91,8 @@ const buildCallbackSignature = (payload: {
 describe('WorkbenchController integration', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let workbenchService: WorkbenchService;
+  let ossService: OssService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
@@ -104,6 +109,8 @@ describe('WorkbenchController integration', () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
+    workbenchService = moduleRef.get(WorkbenchService);
+    ossService = moduleRef.get(OssService);
     wecomTokenServiceMock.getAccessToken.mockResolvedValue('test-access-token');
     wecomHttpGatewayMock.createApprovalTemplate.mockResolvedValue({ template_id: 'tpl-shipping-voyage' });
     wecomHttpGatewayMock.getOpenApprovalData.mockResolvedValue({
@@ -112,6 +119,63 @@ describe('WorkbenchController integration', () => {
         OpenTemplateId: 'tpl-shipping-voyage',
       },
     });
+  });
+
+  it('claims queued exports once and leaves running jobs untouched during recovery', async () => {
+    const exportJobRepository = dataSource.getRepository(ExportJobEntity);
+    const worker = workbenchService as unknown as {
+      recoverExportJobs(): Promise<void>;
+      runAttendanceExport(jobId: string): Promise<void>;
+    };
+    const interruptedJob = await exportJobRepository.save(
+      exportJobRepository.create({
+        sourceType: 'attendance',
+        sourceId: '2026-02',
+        querySnapshot: { month: '2026-02', departmentCode: null },
+        exportFormat: 'xlsx',
+        status: 'running',
+        resultFileId: null,
+        failureMessage: null,
+        retryCount: 0,
+        requestedBy: 'finance-user-1',
+        startedAt: new Date(Date.now() - 60 * 60 * 1000),
+        finishedAt: null,
+      }),
+    );
+
+    await worker.recoverExportJobs();
+
+    await expect(
+      exportJobRepository.findOneByOrFail({ id: interruptedJob.id }),
+    ).resolves.toMatchObject({ status: 'running', finishedAt: null });
+
+    const queuedJob = await exportJobRepository.save(
+      exportJobRepository.create({
+        sourceType: 'attendance',
+        sourceId: '2026-03',
+        querySnapshot: { month: '2026-03', departmentCode: null },
+        exportFormat: 'xlsx',
+        status: 'queued',
+        resultFileId: null,
+        failureMessage: null,
+        retryCount: 0,
+        requestedBy: 'finance-user-1',
+        startedAt: null,
+        finishedAt: null,
+      }),
+    );
+    const uploadSpy = jest.spyOn(ossService, 'uploadBuffer').mockResolvedValue();
+
+    await Promise.all([
+      worker.runAttendanceExport(queuedJob.id),
+      worker.runAttendanceExport(queuedJob.id),
+    ]);
+
+    expect(uploadSpy).toHaveBeenCalledTimes(1);
+    await expect(
+      exportJobRepository.findOneByOrFail({ id: queuedJob.id }),
+    ).resolves.toMatchObject({ status: 'succeeded', failureMessage: null });
+    uploadSpy.mockRestore();
   });
 
   afterAll(async () => {

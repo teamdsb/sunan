@@ -1,4 +1,20 @@
 import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+  CloseOutlined,
+  FileTextOutlined,
+  InfoCircleFilled,
+  ProfileOutlined,
+  ReadOutlined,
+  RightOutlined,
+  SafetyCertificateOutlined,
+  TableOutlined,
+  WarningOutlined,
+  UserSwitchOutlined,
+} from '@ant-design/icons';
+import {
   Alert,
   Button,
   Card,
@@ -44,9 +60,10 @@ import { EvidencePanel } from './EvidencePanel';
 const departmentLabelMap: Record<string, string> = {
   general_office: '总经办',
   finance: '财务部',
-  business: '业务部',
-  shipping: '船务部',
+  business: '综合部',
+  shipping: '航运部',
   logistics: '后勤部',
+  safety: '安全部',
   workgroup: '工作组',
 };
 
@@ -144,6 +161,70 @@ function formatRecordTime(occurredAt: string) {
       });
 }
 
+function formatMobileRecordTime(occurredAt: string) {
+  const date = new Date(occurredAt);
+  if (Number.isNaN(date.getTime())) {
+    return occurredAt;
+  }
+
+  const dateKey = date.toLocaleDateString('zh-CN');
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const timeText = date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  if (dateKey === today.toLocaleDateString('zh-CN')) {
+    return timeText;
+  }
+  if (dateKey === yesterday.toLocaleDateString('zh-CN')) {
+    return `昨日 ${timeText}`;
+  }
+  return date.toLocaleDateString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
+
+function getMobileStatusMeta(record: WorkbenchRecordSummary) {
+  if (record.status === 'approval_passed') {
+    return { label: '已通过', tone: 'success' };
+  }
+  if (record.status === 'closed') {
+    return { label: '已关闭', tone: 'success' };
+  }
+  if (record.status === 'rework_required' || record.status === 'approval_rejected') {
+    return { label: labelFrom(recordStatusLabelMap, record.status), tone: 'warning' };
+  }
+  if (record.status === 'approval_pending') {
+    return { label: '待审批', tone: 'primary' };
+  }
+  return {
+    label: labelFrom(recordStatusLabelMap, record.status, '待处理'),
+    tone: 'primary',
+  };
+}
+
+function renderMobileModuleIcon(moduleCode: string) {
+  if (moduleCode === 'business_signin_desk') {
+    return <CalendarOutlined />;
+  }
+  if (moduleCode === 'safety_task_center') {
+    return <SafetyCertificateOutlined />;
+  }
+  return <ReadOutlined />;
+}
+
+function renderMobileRecordIcon(record: WorkbenchRecordSummary) {
+  if (record.status === 'rework_required' || record.status === 'approval_rejected') {
+    return <WarningOutlined />;
+  }
+  return <FileTextOutlined />;
+}
+
 const WECOM_APPROVAL_AGENT_JS_API_LIST = ['thirdPartyOpenPage'];
 
 function renderDynamicField(field: WorkbenchModuleSchemaField) {
@@ -200,6 +281,12 @@ export function WorkbenchHomePage({
   moduleFilter = 'all',
   recordListTitle,
 }: WorkbenchHomePageProps = {}) {
+  const showMobileWorkbenchHome =
+    routeAware &&
+    !statisticsOnly &&
+    !initialModuleCode &&
+    !initialRecordId &&
+    moduleFilter === 'all';
   const [activeModuleCode, setActiveModuleCode] = useState<string | null>(
     initialModuleCode,
   );
@@ -207,12 +294,17 @@ export function WorkbenchHomePage({
     initialRecordId,
   );
   const [createOpen, setCreateOpen] = useState(false);
-  const [statisticsMonth, setStatisticsMonth] = useState('2026-04');
+  const [statisticsMonth, setStatisticsMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7),
+  );
   const [trainingProgressPercent, setTrainingProgressPercent] =
     useState<string>('0');
   const [trainingProgressStatus, setTrainingProgressStatus] = useState<
     'not_started' | 'in_progress' | 'completed'
   >('not_started');
+  const [alertNoticeVisible, setAlertNoticeVisible] = useState(true);
+  const [mobileModulesExpanded, setMobileModulesExpanded] = useState(false);
+  const [mobileRecordsExpanded, setMobileRecordsExpanded] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -221,8 +313,11 @@ export function WorkbenchHomePage({
     agentJsApiList: WECOM_APPROVAL_AGENT_JS_API_LIST,
   });
 
-  const { data: dashboardResponse, isLoading: dashboardLoading } =
-    useGetWorkbenchDashboardQuery();
+  const {
+    data: dashboardResponse,
+    isLoading: dashboardLoading,
+    isError: dashboardError,
+  } = useGetWorkbenchDashboardQuery();
   const dashboard = dashboardResponse?.data;
   const moduleCards = useMemo(
     () => dashboard?.modules ?? [],
@@ -244,8 +339,18 @@ export function WorkbenchHomePage({
     : moduleFilter === 'requiresApproval'
       ? { requiresApproval: true, page: 1, pageSize: 20 }
       : { page: 1, pageSize: 20 };
-  const { data: recordsResponse, isLoading: recordsLoading } =
-    useGetWorkbenchRecordsQuery(recordsQuery);
+  const {
+    data: recordsResponse,
+    isLoading: recordsLoading,
+    isError: recordsError,
+  } = useGetWorkbenchRecordsQuery(recordsQuery);
+  const {
+    data: approvalPendingResponse,
+    isError: approvalPendingError,
+  } = useGetWorkbenchRecordsQuery(
+    { status: 'approval_pending', page: 1, pageSize: 100 },
+    { skip: !showMobileWorkbenchHome },
+  );
   const { data: detailResponse, isFetching: detailLoading } =
     useGetWorkbenchRecordQuery(activeRecordId ?? '', {
       skip: !activeRecordId,
@@ -261,6 +366,7 @@ export function WorkbenchHomePage({
   const {
     data: attendanceStatisticsResponse,
     isLoading: attendanceStatisticsLoading,
+    isError: attendanceStatisticsError,
   } = useGetWorkbenchAttendanceStatisticsQuery(
     statisticsMonth ? { month: statisticsMonth } : undefined,
     {
@@ -355,23 +461,30 @@ export function WorkbenchHomePage({
       ),
     [records],
   );
-  const recentRecords = useMemo(
+  const sortedRecords = useMemo(
     () =>
       [...records]
-        .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
-        .slice(0, 5),
+        .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)),
     [records],
   );
+  const recentRecords = useMemo(() => sortedRecords.slice(0, 5), [sortedRecords]);
   const priorityRecords = useMemo(
-    () =>
-      pendingRecords
-        .filter(
-          (record) =>
-            record.status === 'approval_pending' ||
-            approvalModuleCodes.has(record.moduleCode),
-        )
-        .slice(0, 5),
-    [approvalModuleCodes, pendingRecords],
+    () => {
+      if (showMobileWorkbenchHome) {
+        return (approvalPendingResponse?.data ?? [])
+          .filter((record) => record.status === 'approval_pending')
+          .slice(0, 5);
+      }
+      return pendingRecords
+        .filter((record) => approvalModuleCodes.has(record.moduleCode))
+        .slice(0, 5);
+    },
+    [
+      approvalModuleCodes,
+      approvalPendingResponse?.data,
+      pendingRecords,
+      showMobileWorkbenchHome,
+    ],
   );
   const recentRecordRows = useMemo(
     () =>
@@ -383,6 +496,43 @@ export function WorkbenchHomePage({
       })),
     [moduleCards, recentRecords],
   );
+  const mobileModuleCards = useMemo(() => {
+    const sorted = [...visibleModuleCards].sort(
+        (left, right) =>
+          Number(right.mobileFirst) - Number(left.mobileFirst) ||
+          right.pendingCount - left.pendingCount ||
+          left.moduleName.localeCompare(right.moduleName, 'zh-CN'),
+      );
+    return mobileModulesExpanded ? sorted : sorted.slice(0, 3);
+  }, [mobileModulesExpanded, visibleModuleCards]);
+  const mobilePriorityRecords = useMemo(
+    () =>
+      [
+        ...priorityRecords,
+        ...pendingRecords.filter(
+          (record) => !priorityRecords.some((priority) => priority.id === record.id),
+        ),
+      ].slice(0, 2),
+    [pendingRecords, priorityRecords],
+  );
+  const mobileRecentRecords = useMemo(
+    () => {
+      const source = mobileRecordsExpanded
+        ? sortedRecords
+        : sortedRecords.slice(0, 3);
+      return source.map((record) => ({
+        ...record,
+        moduleName:
+          moduleCards.find((item) => item.moduleCode === record.moduleCode)
+            ?.moduleName ?? record.moduleCode,
+      }));
+    },
+    [mobileRecordsExpanded, moduleCards, sortedRecords],
+  );
+  const mobileActiveModuleTotal = dashboardResponse
+    ? visibleModuleCards.length
+    : undefined;
+  const mobileRecordTotal = recordsResponse?.pagination.total;
 
   useEffect(() => {
     setActiveModuleCode(initialModuleCode);
@@ -405,7 +555,7 @@ export function WorkbenchHomePage({
     window.requestAnimationFrame(() => {
       document
         .getElementById(`workbench-module-${initialModuleCode}`)
-        ?.scrollIntoView({ block: 'center' });
+        ?.scrollIntoView?.({ block: 'center' });
     });
   }, [initialModuleCode, routeAware, visibleModuleCards.length]);
 
@@ -653,9 +803,223 @@ export function WorkbenchHomePage({
     });
   };
 
+  if (showMobileWorkbenchHome) {
+    const mobileStats = [
+      {
+        label: '当前待办',
+        value: dashboard?.pendingTotal ?? '--',
+        icon: <ProfileOutlined />,
+      },
+      {
+        label: '待审批',
+        value: dashboard?.approvalPendingTotal ?? '--',
+        icon: <UserSwitchOutlined />,
+      },
+      {
+        label: '活跃模块',
+        value: mobileActiveModuleTotal ?? '--',
+        icon: <AppstoreOutlined />,
+      },
+      {
+        label: '记录总数',
+        value: mobileRecordTotal ?? '--',
+        icon: <FileTextOutlined />,
+      },
+    ];
+
+    return (
+      <>
+        {contextHolder}
+        <div className="workbench-mobile-home">
+          {dashboardError || recordsError || approvalPendingError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="部分工作台数据加载失败"
+              description="请检查网络后刷新，未加载的指标不会按 0 处理。"
+            />
+          ) : null}
+          <section className="workbench-mobile-hero" aria-labelledby="workbench-mobile-title">
+            <div className="workbench-mobile-hero-copy">
+              <Typography.Title level={1} id="workbench-mobile-title">
+                工作台
+              </Typography.Title>
+              <Typography.Paragraph>
+                部门记录、审批、打印与统计任务
+              </Typography.Paragraph>
+            </div>
+            <div className="workbench-mobile-hero-actions">
+              <button
+                type="button"
+                onClick={() => navigate('/workbench/statistics/attendance')}
+              >
+                <BarChartOutlined />
+                考勤统计
+              </button>
+              <button type="button" onClick={() => navigate('/workbench/approvals')}>
+                <TableOutlined />
+                审批看板
+              </button>
+            </div>
+          </section>
+
+          <section className="workbench-mobile-stat-card" aria-label="工作台关键指标">
+            {mobileStats.map((item) => (
+              <div className="workbench-mobile-stat" key={item.label}>
+                <span className="workbench-mobile-stat-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </section>
+
+          <section className="workbench-mobile-priority-card" aria-labelledby="workbench-mobile-priority-title">
+            <div className="workbench-mobile-card-heading">
+              <Typography.Title level={2} id="workbench-mobile-priority-title">
+                优先处理
+              </Typography.Title>
+              <button type="button" onClick={() => navigate('/workbench/approvals')}>
+                查看全部 <RightOutlined />
+              </button>
+            </div>
+            <div className="workbench-mobile-priority-list">
+              {mobilePriorityRecords.map((record) => {
+                const meta = getMobileStatusMeta(record);
+                return (
+                  <button
+                    type="button"
+                    className={`workbench-mobile-priority-row is-${meta.tone}`}
+                    key={record.id}
+                    onClick={() => openRecord(record.id)}
+                  >
+                    <span className="workbench-mobile-row-icon" aria-hidden="true">
+                      {renderMobileRecordIcon(record)}
+                    </span>
+                    <strong>{record.title}</strong>
+                    <em>{meta.label}</em>
+                    <RightOutlined className="workbench-mobile-chevron" aria-hidden="true" />
+                  </button>
+                );
+              })}
+              {recordsResponse && mobilePriorityRecords.length === 0 ? (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前没有优先待办" />
+              ) : null}
+            </div>
+          </section>
+
+          <section className="workbench-mobile-module-card" aria-labelledby="workbench-mobile-module-title">
+            <div className="workbench-mobile-card-heading">
+              <Typography.Title level={2} id="workbench-mobile-module-title">
+                模块入口
+              </Typography.Title>
+              {visibleModuleCards.length > 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileModulesExpanded((expanded) => !expanded)}
+                >
+                  {mobileModulesExpanded ? '收起' : '查看全部'} <RightOutlined />
+                </button>
+              ) : null}
+            </div>
+            <div className="workbench-mobile-module-grid" data-testid="workbench-module-grid">
+              {mobileModuleCards.map((item) => (
+                <button
+                  type="button"
+                  id={`workbench-module-${item.moduleCode}`}
+                  className="workbench-mobile-module-tile"
+                  key={item.moduleCode}
+                  onClick={() => openModule(item.moduleCode)}
+                >
+                  <span className="workbench-mobile-module-icon" aria-hidden="true">
+                    {renderMobileModuleIcon(item.moduleCode)}
+                  </span>
+                  <strong>{item.moduleName}</strong>
+                  <small>{labelFrom(departmentLabelMap, item.departmentCode, '未配置部门')}</small>
+                  <span className="workbench-mobile-module-footer">
+                    <span>
+                      待办 <b>{item.pendingCount}</b>
+                    </span>
+                    <RightOutlined aria-hidden="true" />
+                  </span>
+                </button>
+              ))}
+              {dashboardResponse && mobileModuleCards.length === 0 ? (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前没有可访问模块" />
+              ) : null}
+            </div>
+          </section>
+
+          <section className="workbench-mobile-recent-card" aria-labelledby="workbench-mobile-recent-title">
+            <div className="workbench-mobile-card-heading">
+              <Typography.Title level={2} id="workbench-mobile-recent-title">
+                最近记录
+              </Typography.Title>
+              {recentRecordRows.length > 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileRecordsExpanded((expanded) => !expanded)}
+                >
+                  {mobileRecordsExpanded ? '收起' : '展开本页'} <RightOutlined />
+                </button>
+              ) : null}
+            </div>
+            <div className="workbench-mobile-recent-list">
+              {mobileRecentRecords.map((record) => {
+                const meta = getMobileStatusMeta(record);
+                return (
+                  <button
+                    type="button"
+                    className={`workbench-mobile-recent-row is-${meta.tone}`}
+                    key={record.id}
+                    onClick={() => openRecord(record.id)}
+                  >
+                    <span>
+                      <ClockCircleOutlined />
+                      {formatMobileRecordTime(record.occurredAt)}
+                    </span>
+                    <strong>{record.title}</strong>
+                    <em>{meta.label}</em>
+                    <small>{record.moduleName}</small>
+                  </button>
+                );
+              })}
+              {recordsResponse && mobileRecentRecords.length === 0 ? (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前没有工作记录" />
+              ) : null}
+            </div>
+          </section>
+
+          {dashboard?.alerts.length && alertNoticeVisible ? (
+            <section className="workbench-mobile-alert" aria-label="工作台提醒">
+              <InfoCircleFilled aria-hidden="true" />
+              <span>{dashboard.alerts[0].message}</span>
+              <button
+                type="button"
+                aria-label="关闭工作台提醒"
+                onClick={() => setAlertNoticeVisible(false)}
+              >
+                <CloseOutlined />
+              </button>
+            </section>
+          ) : null}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {contextHolder}
+      {dashboardError || recordsError ? (
+        <Alert
+          type="error"
+          showIcon
+          message="部分工作台数据加载失败"
+          description="请检查网络后刷新，未加载的指标不会按 0 处理。"
+        />
+      ) : null}
       <section className="page-hero sunan-page-hero workbench-command-hero">
         <div>
           <Typography.Title level={2}>{heroTitle}</Typography.Title>
@@ -684,19 +1048,27 @@ export function WorkbenchHomePage({
         <article className="workbench-stat-card">
           <Statistic
             title="当前待办"
-            value={dashboard?.pendingTotal ?? 0}
+            value={dashboard?.pendingTotal ?? '--'}
             loading={dashboardLoading}
           />
-          <span>{pendingRecords.length > 0 ? `最近 ${pendingRecords.length} 条进行中` : '暂无进行中记录'}</span>
+          <span>
+            {dashboardError || recordsError
+              ? '数据暂不可用'
+              : pendingRecords.length > 0
+                ? `最近 ${pendingRecords.length} 条进行中`
+                : '暂无进行中记录'}
+          </span>
         </article>
         <article className="workbench-stat-card">
           <Statistic
             title="待审批"
-            value={dashboard?.approvalPendingTotal ?? 0}
+            value={dashboard?.approvalPendingTotal ?? '--'}
             loading={dashboardLoading}
           />
           <span>
-            {dashboard?.approvalPendingTotal
+            {dashboardError
+              ? '数据暂不可用'
+              : dashboard?.approvalPendingTotal
               ? `${dashboard.approvalPendingTotal} 条需审批`
               : '当前无待审批'}
           </span>
@@ -704,18 +1076,30 @@ export function WorkbenchHomePage({
         <article className="workbench-stat-card">
           <Statistic
             title="活跃模块"
-            value={visibleModuleCards.length}
+            value={dashboardResponse ? visibleModuleCards.length : '--'}
             loading={dashboardLoading}
           />
-          <span>{visibleModuleCards.length > 0 ? '实时模块入口' : '暂无模块可见'}</span>
+          <span>
+            {dashboardError
+              ? '数据暂不可用'
+              : visibleModuleCards.length > 0
+                ? '实时模块入口'
+                : '暂无模块可见'}
+          </span>
         </article>
         <article className="workbench-stat-card">
           <Statistic
             title="本页记录"
-            value={records.length}
+            value={recordsResponse ? records.length : '--'}
             loading={recordsLoading}
           />
-          <span>{records.length > 0 ? '当前筛选结果' : '暂无记录'}</span>
+          <span>
+            {recordsError
+              ? '数据暂不可用'
+              : records.length > 0
+                ? '当前筛选结果'
+                : '暂无记录'}
+          </span>
         </article>
       </section>
 
@@ -949,6 +1333,14 @@ export function WorkbenchHomePage({
         <section className="page-card-grid">
           <Card className="placeholder-card" variant="borderless">
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              {attendanceStatisticsError ? (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="考勤统计加载失败"
+                  description="请检查网络后刷新，未加载的统计不会按 0 处理。"
+                />
+              ) : null}
               <div className="sunan-query-grid">
                 <Typography.Title level={4}>月度考勤统计</Typography.Title>
                 <Input
@@ -969,7 +1361,7 @@ export function WorkbenchHomePage({
                     title="总签到数"
                     value={
                       attendanceStatisticsResponse?.data.summary.totalCheckIns ??
-                      0
+                      '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -982,7 +1374,7 @@ export function WorkbenchHomePage({
                     title="财务/船务签到"
                     value={
                       attendanceStatisticsResponse?.data.summary
-                        .financeAndShippingCheckIns ?? 0
+                        .financeAndShippingCheckIns ?? '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -995,7 +1387,7 @@ export function WorkbenchHomePage({
                     title="业务/工作组签到"
                     value={
                       attendanceStatisticsResponse?.data.summary
-                        .operationFlowCheckIns ?? 0
+                        .operationFlowCheckIns ?? '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -1008,7 +1400,7 @@ export function WorkbenchHomePage({
                     title="上午签到"
                     value={
                       attendanceStatisticsResponse?.data.summary.morningCount ??
-                      0
+                      '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -1021,7 +1413,7 @@ export function WorkbenchHomePage({
                     title="下午签到"
                     value={
                       attendanceStatisticsResponse?.data.summary
-                        .afternoonCount ?? 0
+                        .afternoonCount ?? '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -1034,7 +1426,7 @@ export function WorkbenchHomePage({
                     title="钦州范围内"
                     value={
                       attendanceStatisticsResponse?.data.summary.inRangeCount ??
-                      0
+                      '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -1047,7 +1439,7 @@ export function WorkbenchHomePage({
                     title="钦州范围外"
                     value={
                       attendanceStatisticsResponse?.data.summary
-                        .outRangeCount ?? 0
+                        .outRangeCount ?? '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />
@@ -1060,7 +1452,7 @@ export function WorkbenchHomePage({
                     title="出差/外派"
                     value={
                       attendanceStatisticsResponse?.data.summary
-                        .businessTripCount ?? 0
+                        .businessTripCount ?? '--'
                     }
                     loading={attendanceStatisticsLoading}
                   />

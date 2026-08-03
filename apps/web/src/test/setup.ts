@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom';
 
-import { afterEach, vi } from 'vitest';
-import { resetMockRuntime } from '../mocks/store/mockRuntime';
+import { vi } from 'vitest';
 
 process.env.TZ = 'Asia/Shanghai';
 
@@ -9,7 +8,6 @@ vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000/api/v1');
 vi.stubEnv('VITE_WECOM_CORP_ID', 'ww-test');
 vi.stubEnv('VITE_WECOM_AGENT_ID', '1000002');
 vi.stubEnv('VITE_WECOM_REDIRECT_URI', 'http://localhost:5173/auth/callback');
-vi.stubEnv('VITE_MOCK_MODE', 'false');
 
 Object.defineProperty(globalThis, 'crypto', {
   value: {
@@ -86,8 +84,4 @@ Object.defineProperty(window, 'getComputedStyle', {
       marginTop: '0px',
       marginBottom: '0px',
     }) as CSSStyleDeclaration,
-});
-
-afterEach(() => {
-  resetMockRuntime();
 });

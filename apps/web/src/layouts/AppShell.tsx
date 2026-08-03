@@ -5,6 +5,7 @@ import DownOutlined from '@ant-design/icons/DownOutlined';
 import DoubleLeftOutlined from '@ant-design/icons/DoubleLeftOutlined';
 import DoubleRightOutlined from '@ant-design/icons/DoubleRightOutlined';
 import HomeOutlined from '@ant-design/icons/HomeOutlined';
+import LeftOutlined from '@ant-design/icons/LeftOutlined';
 import ProjectOutlined from '@ant-design/icons/ProjectOutlined';
 import ShoppingCartOutlined from '@ant-design/icons/ShoppingCartOutlined';
 import Avatar from 'antd/es/avatar';
@@ -17,7 +18,6 @@ import Typography from 'antd/es/typography';
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { env } from '../app/env';
 import { useGetCurrentUserQuery } from '../features/auth/authApi';
 import { logout, setCurrentUser } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
@@ -36,6 +36,15 @@ const bottomIconMap = {
   '/procurement': ShoppingCartOutlined,
   '/workbench': ProjectOutlined,
 } as const;
+
+const moduleRootPathMap = {
+  my: '/my',
+  office: '/office',
+  procurement: '/procurement',
+  workbench: '/workbench',
+} as const;
+
+type ModuleRootKey = keyof typeof moduleRootPathMap;
 
 const roleLabelMap: Record<string, string> = {
   all_authenticated: '全体成员',
@@ -59,7 +68,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentUserQuery = useGetCurrentUserQuery(undefined, {
-    skip: env.mockMode || !token || Boolean(user),
+    skip: !token || Boolean(user),
   });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -70,8 +79,12 @@ export function AppShell() {
   const isMyHomeRoute = location.pathname === '/my';
   const currentModuleKey = useMemo(() => {
     const moduleKey = location.pathname.split('/').filter(Boolean)[0] ?? 'my';
-    return ['my', 'office', 'procurement', 'workbench'].includes(moduleKey) ? moduleKey : 'my';
+    return Object.keys(moduleRootPathMap).includes(moduleKey)
+      ? (moduleKey as ModuleRootKey)
+      : 'my';
   }, [location.pathname]);
+  const moduleRootPath = moduleRootPathMap[currentModuleKey];
+  const showMobileBack = location.pathname !== moduleRootPath;
 
   useEffect(() => {
     setOpenGroupKey(activeNavGroupKey);
@@ -84,10 +97,6 @@ export function AppShell() {
   }, [currentUserQuery.data, dispatch]);
 
   const reauthorize = () => {
-    if (env.mockMode) {
-      return;
-    }
-
     dispatch(logout());
     redirectToOAuth(location.pathname + location.search + location.hash);
   };
@@ -97,8 +106,22 @@ export function AppShell() {
     navigate(path);
   };
 
+  const navigateBack = () => {
+    navigate(moduleRootPath);
+  };
+
   const toggleGroup = (groupKey: string) => {
     setOpenGroupKey((current) => (current === groupKey ? null : groupKey));
+  };
+
+  const navigateToDesktopGroup = (groupKey: string, path: string, isOpen: boolean) => {
+    if (isOpen) {
+      setOpenGroupKey(null);
+      return;
+    }
+
+    setOpenGroupKey(groupKey);
+    navigateTo(path);
   };
 
   const isActiveModule = (matchPrefixes: readonly string[]) =>
@@ -122,7 +145,16 @@ export function AppShell() {
     >
       <div className="shell-panel">
         <header className="shell-header">
-          <div className="shell-mobile-topbar">
+          <div className={['shell-mobile-topbar', showMobileBack ? 'has-back' : ''].filter(Boolean).join(' ')}>
+            {showMobileBack ? (
+              <Button
+                type="text"
+                className="shell-mobile-back-button"
+                aria-label="返回"
+                icon={<LeftOutlined />}
+                onClick={navigateBack}
+              />
+            ) : null}
             <div className="shell-mobile-brand">
               <span className="shell-brand-mark" aria-hidden="true">
                 <ProjectOutlined />
@@ -200,7 +232,7 @@ export function AppShell() {
                       aria-expanded={sidebarCollapsed ? undefined : groupOpen}
                       aria-label={group.label}
                       title={sidebarCollapsed ? group.label : undefined}
-                      onClick={() => (sidebarCollapsed ? navigateTo(group.path) : toggleGroup(group.key))}
+                      onClick={() => navigateToDesktopGroup(group.key, group.path, groupOpen)}
                     >
                       <GroupIcon aria-hidden="true" />
                       <span className="shell-sidebar-label">{group.label}</span>

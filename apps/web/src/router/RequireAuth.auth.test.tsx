@@ -13,7 +13,6 @@ describe('RequireAuth auth mode', () => {
   beforeEach(() => {
     vi.resetModules();
     redirectToOAuth.mockReset();
-    vi.stubEnv('VITE_MOCK_MODE', 'false');
   });
 
   afterEach(() => {

@@ -149,8 +149,6 @@ services:
         VITE_WECOM_CORP_ID: ${WECOM_CORP_ID}
         VITE_WECOM_AGENT_ID: ${WECOM_AGENT_ID}
         VITE_WECOM_REDIRECT_URI: https://app.qzssncb.com/auth/callback
-        VITE_LOCAL_BYPASS_AUTH: "false"
-        VITE_MOCK_MODE: "false"
     image: sunan-web:${SUNAN_VERSION:-stable}
     container_name: sunan-web
     restart: unless-stopped

@@ -63,6 +63,5 @@ declare global {
     readonly VITE_WECOM_CORP_ID: string;
     readonly VITE_WECOM_AGENT_ID: string;
     readonly VITE_WECOM_REDIRECT_URI: string;
-    readonly VITE_LOCAL_BYPASS_AUTH?: string;
   }
 }

@@ -14,11 +14,29 @@ vi.mock('../features/auth/oauth', async (importOriginal) => {
   };
 });
 
-describe('AppShell mock mode', () => {
+async function createAuthenticatedStore() {
+  const { createStore } = await import('../app/store');
+  const { loginSucceeded } = await import('../features/auth/authSlice');
+  const store = createStore();
+  store.dispatch(
+    loginSucceeded({
+      accessToken: 'jwt-token',
+      expiresIn: 3600,
+      user: {
+        userId: 'u-navigation',
+        name: '导航测试用户',
+        department: ['总经办'],
+        roles: ['all_authenticated', 'system_admin'],
+      },
+    }),
+  );
+  return store;
+}
+
+describe('AppShell navigation', () => {
   beforeEach(() => {
     vi.resetModules();
     redirectToOAuth.mockReset();
-    vi.stubEnv('VITE_MOCK_MODE', 'true');
   });
 
   function setViewport(width: number) {
@@ -32,17 +50,18 @@ describe('AppShell mock mode', () => {
 
   function LocationDisplay() {
     const location = useLocation();
-    return <div data-testid="location-path">{location.pathname}</div>;
+    return (
+      <>
+        <div data-testid="location-path">{location.pathname}</div>
+        <div data-testid="location-search">{location.search}</div>
+      </>
+    );
   }
 
-  it('keeps the mock user and does not redirect on reauthorize', async () => {
-    const { createStore } = await import('../app/store');
-    const { bootstrapAuth } = await import('../features/auth/bootstrap');
+  it('clears the current session and redirects when reauthorizing', async () => {
     const { AppShell } = await import('./AppShell');
-    const store = createStore();
+    const store = await createAuthenticatedStore();
     const user = userEvent.setup();
-
-    await bootstrapAuth(store.dispatch);
 
     render(
       <Provider store={store}>
@@ -52,22 +71,18 @@ describe('AppShell mock mode', () => {
       </Provider>,
     );
 
-    expect(screen.getByText('调试管理员')).toBeInTheDocument();
+    expect(screen.getByText('导航测试用户')).toBeInTheDocument();
     await user.click(screen.getAllByRole('button', { name: /重新认证/ }).at(-1)!);
-    expect(redirectToOAuth).not.toHaveBeenCalled();
-    expect(screen.getByText('调试管理员')).toBeInTheDocument();
+    expect(redirectToOAuth).toHaveBeenCalledWith('/my');
+    expect(store.getState().auth.token).toBeNull();
   }, 20000);
 
   it('shows a mobile more menu that exposes navigation links on small screens', async () => {
     setViewport(375);
 
-    const { createStore } = await import('../app/store');
-    const { bootstrapAuth } = await import('../features/auth/bootstrap');
     const { AppShell } = await import('./AppShell');
-    const store = createStore();
+    const store = await createAuthenticatedStore();
     const user = userEvent.setup();
-
-    await bootstrapAuth(store.dispatch);
 
     render(
       <Provider store={store}>
@@ -98,13 +113,9 @@ describe('AppShell mock mode', () => {
   it('navigates when tapping a mobile drawer button body', async () => {
     setViewport(375);
 
-    const { createStore } = await import('../app/store');
-    const { bootstrapAuth } = await import('../features/auth/bootstrap');
     const { AppShell } = await import('./AppShell');
-    const store = createStore();
+    const store = await createAuthenticatedStore();
     const user = userEvent.setup();
-
-    await bootstrapAuth(store.dispatch);
 
     render(
       <Provider store={store}>
@@ -129,16 +140,96 @@ describe('AppShell mock mode', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent('/office');
   });
 
+  it('shows a mobile back button on secondary pages and returns to the module home', async () => {
+    setViewport(375);
+
+    const { AppShell } = await import('./AppShell');
+    const store = await createAuthenticatedStore();
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          initialEntries={['/my', '/my/enterprise-profile']}
+          initialIndex={1}
+        >
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/my" element={<LocationDisplay />} />
+              <Route path="/my/enterprise-profile" element={<LocationDisplay />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my/enterprise-profile');
+
+    await user.click(screen.getByRole('button', { name: '返回' }));
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my');
+    expect(screen.queryByRole('button', { name: '返回' })).toBeNull();
+  });
+
+  it('returns to the module home even when a backTo query preserves a list state', async () => {
+    setViewport(375);
+
+    const { AppShell } = await import('./AppShell');
+    const store = await createAuthenticatedStore();
+    const user = userEvent.setup();
+    const backTo = encodeURIComponent(
+      '/my/certificates?page=1&pageSize=10&ownerType=vehicle&groupBy=owner&status=active',
+    );
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          initialEntries={[`/my/certificates/c1?backTo=${backTo}`]}
+        >
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/my" element={<LocationDisplay />} />
+              <Route path="/my/certificates" element={<LocationDisplay />} />
+              <Route path="/my/certificates/:id" element={<LocationDisplay />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my/certificates/c1');
+
+    await user.click(screen.getByRole('button', { name: '返回' }));
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my');
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
+  });
+
+  it('does not show the mobile back button on module root pages', async () => {
+    setViewport(375);
+
+    const { AppShell } = await import('./AppShell');
+    const store = await createAuthenticatedStore();
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my']}>
+          <AppShell />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    expect(screen.queryByRole('button', { name: '返回' })).toBeNull();
+  });
+
   it('renders drawer navigation as lightweight text items without the default button fill class', async () => {
     setViewport(375);
 
-    const { createStore } = await import('../app/store');
-    const { bootstrapAuth } = await import('../features/auth/bootstrap');
     const { AppShell } = await import('./AppShell');
-    const store = createStore();
+    const store = await createAuthenticatedStore();
     const user = userEvent.setup();
-
-    await bootstrapAuth(store.dispatch);
 
     render(
       <Provider store={store}>
@@ -157,18 +248,21 @@ describe('AppShell mock mode', () => {
   it('renders collapsible desktop sidebar navigation', async () => {
     setViewport(1280);
 
-    const { createStore } = await import('../app/store');
-    const { bootstrapAuth } = await import('../features/auth/bootstrap');
     const { AppShell } = await import('./AppShell');
-    const store = createStore();
+    const store = await createAuthenticatedStore();
     const user = userEvent.setup();
-
-    await bootstrapAuth(store.dispatch);
 
     render(
       <Provider store={store}>
         <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/procurement']}>
-          <AppShell />
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/my" element={<LocationDisplay />} />
+              <Route path="/office" element={<LocationDisplay />} />
+              <Route path="/procurement" element={<LocationDisplay />} />
+              <Route path="/workbench" element={<LocationDisplay />} />
+            </Route>
+          </Routes>
         </MemoryRouter>
       </Provider>,
     );
@@ -184,17 +278,30 @@ describe('AppShell mock mode', () => {
 
     await user.click(within(sidebar).getByRole('button', { name: '办事中心' }));
 
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/office');
     expect(within(sidebar).getByRole('button', { name: '采购管理' })).toHaveAttribute('aria-expanded', 'false');
     expect(within(sidebar).getByRole('button', { name: '办事中心' })).toHaveAttribute('aria-expanded', 'true');
+    expect(within(sidebar).getByRole('button', { name: '办事首页' })).toHaveClass('shell-sidebar-subitem', 'is-active');
 
     await user.click(within(sidebar).getByRole('button', { name: '我的' }));
 
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my');
     expect(within(sidebar).getByRole('button', { name: '办事中心' })).toHaveAttribute('aria-expanded', 'false');
     expect(within(sidebar).getByRole('button', { name: '我的' })).toHaveAttribute('aria-expanded', 'true');
+    expect(within(sidebar).getByRole('button', { name: '我的首页' })).toHaveClass('shell-sidebar-subitem', 'is-active');
+
+    await user.click(within(sidebar).getByRole('button', { name: '我的' }));
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/my');
+    expect(within(sidebar).getByRole('button', { name: '我的' })).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(screen.getByRole('button', { name: '收起左侧导航' }));
 
     expect(document.querySelector('.shell-main-layout')).toHaveClass('is-sidebar-collapsed');
     expect(screen.getByRole('button', { name: '展开左侧导航' })).toBeInTheDocument();
+
+    await user.click(within(sidebar).getByRole('button', { name: '工作平台' }));
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent('/workbench');
   });
 });
