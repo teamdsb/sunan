@@ -1,11 +1,38 @@
 ---
 status: operations
 owner: planning
-updated: 2026-07-11
+updated: 2026-07-14
 replaces: []
 replaced_by: []
 ---
 # 进度日志
+
+## 会话：2026-07-14（苏南操作手册全面更新）
+
+### 阶段 15：全面更新苏南船舶管理系统操作手册
+- **状态：** completed
+- **开始时间：** 2026-07-14
+- 执行的操作：
+  - 读取仓库 `AGENTS.md`、规划技能、文档共创技能和创意校准技能。
+  - 恢复既有 `task_plan.md`、`findings.md`、`progress.md`，确认上一轮生产发布已完成。
+  - 检查 Git 工作树、最近提交、`docs/handbook` 文件清单和前端路由入口。
+  - 确认本轮只更新文档，不改变产品代码、权限或生产状态。
+  - 通读主手册现有章节与 4 份 handbook 的目录/状态，识别安全专用页面、采购预算和报表申请等覆盖缺口。
+  - 读取需求目录、各领域规格索引、体验指引、前端路由配置和 My/Office/Procurement/Workbench 页面上的用户可见字段与动作。
+  - 通读安全 UI/状态规格、工作平台模块/权限矩阵与任务、计划、主数据、检查和 CAPA 的实际 React 页面，实现规格与现有按钮分层记录。
+  - 逐页核对企业资料、制度、电子证照、提醒、设置、监控和办事治理表单，并读取文件上传、认证与企业微信 JS-SDK 规格。
+  - 将主手册从 859 行重构扩展至 1929 行，完整写入 16 章操作说明和 64 项正式截图清单。
+  - 执行占位词、边界词、重复标题、关键路由和关键动作覆盖扫描，当前无重复标题或缺失关键入口。
+  - 进行读者问题测试和第二轮源码对照，修正采购退回/驳回、PDF 归档口径及安全专用页面入口说明。
+  - 更新 `docs/README.md` 的手册版本导航，重新生成 269 份 Markdown 的 `docs/inventory.md` 并通过索引检查。
+  - 最终校验首次因 README 链接显示文字断言过窄而提前退出；逐项诊断确认正文、日期、章节、README 实际链接和 inventory 链接均正确，问题仅在校验表达式。
+  - 改用稳定链接目标的固定字符串断言后执行新鲜全量复验：文档索引 269/269、`git diff --check`、front matter、16 章结构、64 项截图连续编号、10 个本地链接、关键模块/边界词和未决占位词扫描全部通过，命令退出码为 0。
+- 创建/修改的文件：
+  - `task_plan.md`
+  - `findings.md`
+  - `progress.md`
+  - `docs/README.md`
+  - `docs/handbook/苏南船舶管理系统操作手册.md`
 
 ## 会话：2026-07-04
 
@@ -173,6 +200,87 @@ replaced_by: []
 
 ---
 *每个阶段完成后或遇到错误时更新此文件*
+
+## 会话：2026-07-12（新版本发布）
+
+### 阶段 14：新版本构建、版本号更新与生产发布
+- **状态：** in_progress
+- **开始时间：** 2026-07-12
+- 执行的操作：
+  - 读取 `planning-with-files-zh` 技能并恢复根目录规划文件。
+  - 检查当前 Git 分支和工作树，识别并隔离用户已有的 `.superpowers` 删除项。
+  - 建立发布发现、版本更新、构建、迁移、上线、验收和回滚保护的执行清单。
+  - 读取部署架构、快速开始、生产部署手册、两份 Compose、部署环境示例及企业微信生产切换 runbook。
+  - 确认本次采用源码同步后服务器构建，目标版本应为 `0.0.4`，且生产重建前需补做数据库备份。
+  - 核对根/API/Web package metadata、Compose OCI 标签和 `SUNAN_VERSION`，确定 6 个最小版本文件；确认无需更改前端 UI 或锁文件。
+  - 读取 Dockerfile、Makefile、部署索引、运维边界与备份恢复手册，冻结“先备份、再同步/构建、后验收”的顺序。
+  - 参照上一轮发布提交的精确变更边界，将根/API/Web package metadata、API 环境默认值与测试、部署模板、两份 Compose OCI 标签以及环境/服务器文档统一更新为 `0.0.4`；未改前端 UI。
+- 创建/修改的版本文件：
+  - `package.json`
+  - `apps/api/package.json`
+  - `apps/web/package.json`
+  - `apps/api/.env.example`
+  - `apps/api/src/config/env.ts`
+  - `apps/api/src/config/env.spec.ts`
+  - `deploy/.env.example`
+  - `deploy/docker-compose.yml`
+  - `deploy/docker-compose.prod.yml`
+  - `deploy/environment-variables.md`
+  - `deploy/server-inventory.md`
+  - 执行 `git diff --check` 和版本残留扫描，结果通过；确认 11 个文件的 `0.0.4` 联动完整。
+  - 尝试在本地运行两份 Compose `config --quiet`；因文件硬编码引用生产 `/dev/sunan/deploy/.env` 而在读取阶段失败，已改为计划在远端真实环境复验。
+  - 运行完整 `pnpm test`：Web 61/61 files、238/238 tests；API unit 16/16 suites、79/79 tests；API integration 18/18 suites、78/78 tests；总计 395 项，失败 0。
+
+## 本次发布测试结果
+| 测试 | 结果 | 状态 |
+|---|---|---|
+| Web Vitest | 61 files / 238 tests | pass |
+| API Jest unit | 16 suites / 79 tests | pass |
+| API PostgreSQL integration | 18 suites / 78 tests | pass |
+| Web production build | Vite + TypeScript | pass |
+| API production build | Nest build | pass |
+| API lint | ESLint src + test | pass |
+| OpenAPI | 21/21 specs | pass |
+| 文档 inventory/index | 269 Markdown | pass |
+| Diff 格式 | `git diff --check` | pass |
+  - 完成生产只读预检：版本 `0.0.3`、Compose 配置有效、服务和公网健康正常、关键配置均已设置、磁盘余量充足、系统 timers active。
+  - 确认生产仅有 15 条 migration 且尚无安全存量迁移 CLI；下一步先创建并验证新鲜备份，再同步源码/构建但暂不切流。
+  - 首次备份生成了有效 PostgreSQL dump 和配置归档；Redis 在线 AOF tar 因增量文件持续写入返回非零，发布流程已自动停止，未同步源码或构建镜像。
+  - 按系统化调试完成根因调查：AOF 写入与 tar 读取竞争；确认 Redis 持久化健康且支持 `redis-cli --rdb`，准备改用可验证的时间点 RDB。
+  - 使用 `redis-cli --rdb` 生成一致性 Redis 快照并由 `redis-check-rdb` 验证；重新核验 PostgreSQL/配置备份，生成 SHA-256 清单。发布前备份批次 `20260712223040` 全部通过。
+  - 审计生产待执行的 7 条新 migration：上行路径以增量 schema 为主，不删除既有表/列；确认 classify 可在 schema 变更前只读运行，run/verify 必须在 schema 后执行。
+  - 源码首次上传已成功但后置校验因本地提前展开远端变量而退出；现网 current 未变。已用分层诊断确认 tar 大小、远端 upload 目录和失败边界，准备复用 upload 做参数化校验/切换。
+  - 复用已上传目录完成参数化校验和原子源码切换；旧源码备份路径为 `/dev/sunan/sunan-source/backup-20260712223349`。
+  - 在不重建容器的前提下完成 API/Web/Nginx `0.0.4` 镜像构建和 OCI 标签核验；现网继续运行三个 `0.0.3` 应用镜像。
+  - 用 `0.0.4` API 镜像在旧 schema 上执行只读安全存量 classify，结果为空数组并保存报告。
+  - 首次恢复演练校验因错误表名/引号和退出码掩盖不可采信；按系统化调试重写后完整重做，临时库恢复、核心表计数和删除确认均通过。
+  - 用一次性 `0.0.4` 容器执行生产 schema migration，migration 15 → 22；核对 7 条新增名称，旧 API 迁移后仍 live/ready。
+  - 安全存量 run 已生成 0 行完成批次；修复 SSH stdin 被 Compose 消费的问题后补做独立 verify，JSON 和数据库对账全部通过。
+  - 确认生产 Compose/Nginx 无运维漂移；备份实际 `.env`/Compose，将部署配置更新为 `0.0.4` 并通过远端 Compose 校验，服务仍未重建。
+  - 分阶段切换 API：`sunan-api:0.0.4` healthy，版本环境/OCI/migration/live/ready 全部通过，未触发回切。
+  - 分阶段切换 Web 和 Nginx：两者均为 `0.0.4`，Nginx 配置、容器内 Web、关键懒加载 chunk、公网 Web/API 检查通过，未触发回切。
+  - 按 `verification-before-completion` 执行独立新鲜复验：版本、容器、数据库、备份、发布证据、直达路由、鉴权边界、静态资产、日志错误、timer 和客户端公网检查全部通过。
+  - 现场企业微信 iOS/Android/桌面真机主链未由 Codex 执行，最终交付必须保留该人工验收项。
+
+### 生产发布结果
+- **版本：** `0.0.4`
+- **源码切换：** `20260712223349`
+- **数据库/配置/Redis 备份：** `20260712223040`
+- **安全存量批次：** `074c54d9-8ac1-4169-81de-8012a9659c04`（0 来源、0 失败）
+- **数据库 migration：** 15 → 22
+- **运行镜像：** `sunan-api:0.0.4`、`sunan-web:0.0.4`、`sunan-nginx:0.0.4`
+- **回滚源码：** `/dev/sunan/sunan-source/backup-20260712223349`
+- **回滚配置：** `/dev/sunan/deploy/.env.bak-20260712223349`、`/dev/sunan/deploy/docker-compose.yml.bak-20260712223349`
+- **发布结论：** 生产切换和自动化 smoke 通过；企业微信三端真机项待用户现场执行。
+
+### 最终新鲜复验
+- `node scripts/check-doc-index.mjs`：269 个 Markdown，通过。
+- 全局版本一致性脚本：11 个版本/部署文件均为 `0.0.4`，通过。
+- 前端源码版本展示扫描：`apps/web/src` 无 `SUNAN_VERSION` 或 `0.0.4` 引用，通过。
+- 生产二次稳定性检查：三个应用镜像 `0.0.4`、API healthy、22 migrations、近 15 分钟 API/Nginx 错误标记 0。
+- 服务器与本机外部网络：API ready 依赖全为 ok，任务/问题直达 Web 路由 200。
+- 下一步：
+  - 并行核对部署文档、版本号真源与本地/远端发布基础设施。
 
 ## 会话：2026-07-11
 

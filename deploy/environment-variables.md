@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: operations
-updated: 2026-07-06
+updated: 2026-07-12
 replaces: []
 replaced_by: []
 ---
@@ -26,7 +26,7 @@ deploy/.env.example
 | 变量 | 用途 | 示例/说明 |
 |---|---|---|
 | `SUNAN_SOURCE_DIR` | Compose build context | `/dev/sunan/sunan-source/current` |
-| `SUNAN_VERSION` | 当前部署版本，用于容器环境和镜像标签追踪 | `0.0.3` |
+| `SUNAN_VERSION` | 当前部署版本，用于容器环境和镜像标签追踪 | `0.0.4` |
 | `APP_DOMAIN` | 根域名 | `qzssncb.com` |
 | `WEB_PUBLIC_URL` | 前端公网地址 | `https://app.qzssncb.com` |
 | `API_PUBLIC_URL` | 后端公网地址 | `https://api.qzssncb.com` |
