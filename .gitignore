@@ -22,3 +22,4 @@ __pycache__/
 .vscode/settings.json
 .worktrees/
 .agents/skills/
+.superpowers/brainstorm/
