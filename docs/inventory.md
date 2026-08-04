@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：272 个 Markdown 文件。
+总数：273 个 Markdown 文件。
 
 ## repository-root
 
@@ -456,5 +456,6 @@ replaced_by: []
 | [docs/superpowers/specs/2026-07-10-m8-wave4-master-data-design.md](superpowers/specs/2026-07-10-m8-wave4-master-data-design.md) | `current-spec` | `safety` | M8 Wave 4 安全主数据中心设计 |
 | [docs/superpowers/specs/2026-07-11-m8-wave5-plan-task-design.md](superpowers/specs/2026-07-11-m8-wave5-plan-task-design.md) | `current-spec` | `safety` | M8 Wave 5 计划任务中心设计 |
 | [docs/superpowers/specs/2026-07-12-m8-wave6-inspection-capa-design.md](superpowers/specs/2026-07-12-m8-wave6-inspection-capa-design.md) | `current-spec` | `safety` | M8 Wave 6 检查、问题与 CAPA 设计 |
+| [docs/superpowers/specs/2026-08-04-cross-module-layout-spacing-design.md](superpowers/specs/2026-08-04-cross-module-layout-spacing-design.md) | `current-spec` | `frontend` | 跨模块页面边距与控件间距修复设计 |
 | [docs/superpowers/specs/2026-08-04-real-backend-integration-design.md](superpowers/specs/2026-08-04-real-backend-integration-design.md) | `current-spec` | `frontend` | 前端真实后端接入设计 |
 | [docs/superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md](superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md) | `current-spec` | `frontend` | UI 与主分支后端能力边界收口设计 |
