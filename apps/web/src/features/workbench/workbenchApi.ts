@@ -55,6 +55,8 @@ export interface WorkbenchAttachment {
   category: string;
   fileId: string;
   fileName: string;
+  mimeType: string;
+  fileSize: number;
   uploadedAt: string;
 }
 
@@ -234,19 +236,30 @@ export const workbenchApi = baseApi.injectEndpoints({
       query: () => ({ url: '/workbench/modules' }),
       providesTags: ['Workbench'],
     }),
-    getWorkbenchModuleSchema: builder.query<{ data: WorkbenchModuleSchema }, string>({
-      query: (moduleCode) => ({ url: `/workbench/modules/${moduleCode}/schema` }),
+    getWorkbenchModuleSchema: builder.query<
+      { data: WorkbenchModuleSchema },
+      string
+    >({
+      query: (moduleCode) => ({
+        url: `/workbench/modules/${moduleCode}/schema`,
+      }),
       providesTags: ['Workbench'],
     }),
     getWorkbenchDashboard: builder.query<{ data: WorkbenchDashboard }, void>({
       query: () => ({ url: '/workbench/dashboard' }),
       providesTags: ['Workbench'],
     }),
-    getWorkbenchAttendanceStatistics: builder.query<{ data: WorkbenchAttendanceStatistics }, { month?: string } | void>({
+    getWorkbenchAttendanceStatistics: builder.query<
+      { data: WorkbenchAttendanceStatistics },
+      { month?: string } | void
+    >({
       query: (params) => ({ url: '/workbench/statistics/attendance', params }),
       providesTags: ['Workbench'],
     }),
-    getWorkbenchRecords: builder.query<WorkbenchRecordListResponse, WorkbenchRecordQuery | void>({
+    getWorkbenchRecords: builder.query<
+      WorkbenchRecordListResponse,
+      WorkbenchRecordQuery | void
+    >({
       query: (params) => ({ url: '/workbench/records', params }),
       providesTags: ['WorkbenchRecord'],
     }),
@@ -254,19 +267,37 @@ export const workbenchApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/workbench/records/${id}` }),
       providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
     }),
-    getWorkbenchRecordIssues: builder.query<{ data: WorkbenchIssueLink[] }, string>({
+    getWorkbenchRecordIssues: builder.query<
+      { data: WorkbenchIssueLink[] },
+      string
+    >({
       query: (recordId) => ({ url: `/workbench/records/${recordId}/issues` }),
       providesTags: (_result, _error, id) => [{ type: 'WorkbenchRecord', id }],
     }),
-    getWorkbenchPrintSnapshot: builder.query<{ data: WorkbenchPrintSnapshot }, { recordId: string; paperSize?: 'A4' | 'A3' }>({
+    getWorkbenchPrintSnapshot: builder.query<
+      { data: WorkbenchPrintSnapshot },
+      { recordId: string; paperSize?: 'A4' | 'A3' }
+    >({
       query: ({ recordId, paperSize }) => ({
         url: `/workbench/records/${recordId}/print`,
         params: paperSize ? { paperSize } : undefined,
       }),
-      providesTags: (_result, _error, arg) => [{ type: 'WorkbenchRecord', id: arg.recordId }],
+      providesTags: (_result, _error, arg) => [
+        { type: 'WorkbenchRecord', id: arg.recordId },
+      ],
     }),
     uploadWorkbenchRecordAttachment: builder.mutation<
-      { data: { id: string; category: string; fileId: string; fileName: string; uploadedAt: string } },
+      {
+        data: {
+          id: string;
+          category: string;
+          fileId: string;
+          fileName: string;
+          mimeType: string;
+          fileSize: number;
+          uploadedAt: string;
+        };
+      },
       { recordId: string; data: WorkbenchAttachmentUploadPayload }
     >({
       query: ({ recordId, data }) => ({
@@ -274,22 +305,71 @@ export const workbenchApi = baseApi.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+      invalidatesTags: (_result, _error, arg) => [
+        'WorkbenchRecord',
+        { type: 'WorkbenchRecord', id: arg.recordId },
+      ],
     }),
-    createWorkbenchSignatureEvidence: builder.mutation<{ data: unknown }, { recordId: string; signatureFileId: string; businessSummaryHash: string }>({
-      query: ({ recordId, ...data }) => ({ url: `/workbench/records/${recordId}/signature-evidence`, method: 'POST', data }),
-      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+    getWorkbenchAttachmentDownloadUrl: builder.query<
+      { data: { downloadUrl: string; expiresAt: string } },
+      { recordId: string; fileId: string }
+    >({
+      query: ({ recordId, fileId }) => ({
+        url: `/workbench/records/${recordId}/attachments/${fileId}/download-url`,
+      }),
     }),
-    createWorkbenchLocationEvidence: builder.mutation<{ data: unknown }, { recordId: string; captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }>({
-      query: ({ recordId, ...data }) => ({ url: `/workbench/records/${recordId}/location-evidence`, method: 'POST', data }),
-      invalidatesTags: (_result, _error, arg) => ['WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+    createWorkbenchSignatureEvidence: builder.mutation<
+      { data: unknown },
+      { recordId: string; signatureFileId: string; businessSummaryHash: string }
+    >({
+      query: ({ recordId, ...data }) => ({
+        url: `/workbench/records/${recordId}/signature-evidence`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        'WorkbenchRecord',
+        { type: 'WorkbenchRecord', id: arg.recordId },
+      ],
     }),
-    createWorkbenchRecord: builder.mutation<{ data: WorkbenchRecordDetail }, WorkbenchRecordCreatePayload>({
+    createWorkbenchLocationEvidence: builder.mutation<
+      { data: unknown },
+      {
+        recordId: string;
+        captureStatus: string;
+        latitude?: number;
+        longitude?: number;
+        accuracyMeters?: number;
+        failureReason?: string;
+        addressText?: string;
+      }
+    >({
+      query: ({ recordId, ...data }) => ({
+        url: `/workbench/records/${recordId}/location-evidence`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        'WorkbenchRecord',
+        { type: 'WorkbenchRecord', id: arg.recordId },
+      ],
+    }),
+    createWorkbenchRecord: builder.mutation<
+      { data: WorkbenchRecordDetail },
+      WorkbenchRecordCreatePayload
+    >({
       query: (data) => ({ url: '/workbench/records', method: 'POST', data }),
       invalidatesTags: ['Workbench', 'WorkbenchRecord'],
     }),
     performWorkbenchRecordAction: builder.mutation<
-      { data: { recordId: string; status: string; acceptedAction: string; approvalLaunchConfig?: WorkbenchApprovalLaunchConfig | null } },
+      {
+        data: {
+          recordId: string;
+          status: string;
+          acceptedAction: string;
+          approvalLaunchConfig?: WorkbenchApprovalLaunchConfig | null;
+        };
+      },
       { recordId: string; data: WorkbenchRecordActionPayload }
     >({
       query: ({ recordId, data }) => ({
@@ -297,13 +377,21 @@ export const workbenchApi = baseApi.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: (_result, _error, arg) => ['Workbench', 'WorkbenchRecord', { type: 'WorkbenchRecord', id: arg.recordId }],
+      invalidatesTags: (_result, _error, arg) => [
+        'Workbench',
+        'WorkbenchRecord',
+        { type: 'WorkbenchRecord', id: arg.recordId },
+      ],
     }),
     launchWorkbenchApproval: builder.mutation<
       { data: WorkbenchApprovalLaunchResult },
       WorkbenchApprovalLaunchPayload
     >({
-      query: (data) => ({ url: '/wecom/approval/launch', method: 'POST', data }),
+      query: (data) => ({
+        url: '/wecom/approval/launch',
+        method: 'POST',
+        data,
+      }),
       invalidatesTags: ['Workbench', 'WorkbenchRecord'],
     }),
   }),
@@ -320,6 +408,7 @@ export const {
   useLazyGetWorkbenchPrintSnapshotQuery,
   useGetWorkbenchPrintSnapshotQuery,
   useUploadWorkbenchRecordAttachmentMutation,
+  useLazyGetWorkbenchAttachmentDownloadUrlQuery,
   useCreateWorkbenchSignatureEvidenceMutation,
   useCreateWorkbenchLocationEvidenceMutation,
   useCreateWorkbenchRecordMutation,

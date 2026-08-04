@@ -55,6 +55,7 @@ import { ProcurementReportMonthlyQueryDto } from './dto/procurement-report-month
 import { ProcurementReportRequestCreateDto } from './dto/procurement-report-request-create.dto';
 import { ProcurementReportRequestListQueryDto } from './dto/procurement-report-request-list-query.dto';
 import { ProcurementReportYearlyQueryDto } from './dto/procurement-report-yearly-query.dto';
+import { buildProcurementReportPdf } from './procurement-report-pdf';
 import {
   DEPARTMENT_ROLE_MAP,
   PROCUREMENT_APPROVAL_CHANNELS,
@@ -94,9 +95,6 @@ const DICTIONARY_DIMENSION_TYPES = ['vessel', 'logistics_category'] as const;
 const PDF_PAGE_WIDTH = 595;
 const PDF_PAGE_HEIGHT = 842;
 const PDF_MARGIN_LEFT = 56;
-const PDF_MARGIN_TOP = 48;
-const PDF_LINE_HEIGHT = 20;
-const PDF_MAX_LINES_PER_PAGE = 35;
 const PDF_MARGIN_BOTTOM = 56;
 const PDF_CONTENT_RIGHT = PDF_PAGE_WIDTH - PDF_MARGIN_LEFT;
 const PDF_CONTENT_WIDTH = PDF_CONTENT_RIGHT - PDF_MARGIN_LEFT;
@@ -945,27 +943,18 @@ export class ProcurementService {
     this.assertCanViewReport(report, user);
 
     const generatedAt = new Date();
-    const lines = [
-      `报表编号：${report.reportNo}`,
-      `生成时间：${this.formatDateTime(generatedAt)}`,
-      '',
-      '采购报表审批单',
-      `报表类型：${report.reportType === 'monthly' ? '月报' : '年报'}`,
-      `周期：${report.periodMonth ? `${report.periodYear}-${String(report.periodMonth).padStart(2, '0')}` : report.periodYear}`,
-      `部门：${report.departmentCode ? this.toDepartmentLabel(report.departmentCode) : '-'}`,
-      `申请人：${report.createdBy}`,
-      `状态：${this.toReportStatusLabel(report.status)}`,
-      `提交时间：${report.submittedAt ? this.formatDateTime(report.submittedAt) : '-'}`,
-      `终审时间：${report.finalApprovedAt ? this.formatDateTime(report.finalApprovedAt) : '-'}`,
-      '',
-      '汇总快照：',
-      ...this.formatSnapshotLines(report.snapshotSummary),
-    ];
-
-    const pdfBuffer = this.buildA4Pdf({
-      title: '采购报表审批单',
-      lines,
-      rightAlignedLineIndexes: [],
+    const approvals = await this.reportApprovalRepository.find({
+      where: { reportId: id },
+      order: { approvedAt: 'ASC' },
+    });
+    const cachedPrint = await this.findCurrentReportExport(report, approvals);
+    if (cachedPrint) {
+      return cachedPrint;
+    }
+    const pdfBuffer = await buildProcurementReportPdf({
+      report,
+      approvals,
+      generatedAt,
     });
 
     const printResult = await this.persistExportPdf({
@@ -2368,17 +2357,12 @@ export class ProcurementService {
   }): Promise<PrintResultDto> {
     const ossKey = this.buildExportOssKey(params.category);
 
-    try {
-      await this.ossService.uploadBuffer(
-        ossKey,
-        params.buffer,
-        'application/pdf',
-        params.fileName,
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'unknown error';
-      this.logger.warn(`oss upload failed for ${ossKey}: ${message}`);
-    }
+    await this.ossService.uploadBuffer(
+      ossKey,
+      params.buffer,
+      'application/pdf',
+      params.fileName,
+    );
 
     const file = await this.fileRepository.save(
       this.fileRepository.create({
@@ -2396,6 +2380,44 @@ export class ProcurementService {
       fileId: file.id,
       downloadUrl: signature.downloadUrl,
     };
+  }
+
+  private async findCurrentReportExport(
+    report: ProcurementReportEntity,
+    approvals: ProcurementReportApprovalEntity[],
+  ): Promise<PrintResultDto | null> {
+    if (!report.exportPdfFileId) {
+      return null;
+    }
+
+    const file = await this.fileRepository.findOne({
+      where: { id: report.exportPdfFileId },
+    });
+    if (
+      !file ||
+      file.category !== 'procurement_exports' ||
+      file.mimeType !== 'application/pdf'
+    ) {
+      return null;
+    }
+
+    const sourceTimes = [
+      report.createdAt,
+      report.submittedAt,
+      report.finalApprovedAt,
+      ...approvals.map((approval) => approval.approvedAt),
+    ].filter((value): value is Date => value instanceof Date);
+    const latestSourceTime = Math.max(
+      ...sourceTimes.map((value) => value.getTime()),
+    );
+    if (file.createdAt.getTime() < latestSourceTime) {
+      return null;
+    }
+
+    const signature = await this.ossService.createDownloadSignature(
+      file.ossKey,
+    );
+    return { fileId: file.id, downloadUrl: signature.downloadUrl };
   }
 
   private buildExportOssKey(category: string): string {
@@ -2847,144 +2869,6 @@ export class ProcurementService {
     return Buffer.from(pdfBytes);
   }
 
-  private buildA4Pdf(input: {
-    title: string;
-    lines: string[];
-    rightAlignedLineIndexes: number[];
-  }): Buffer {
-    const pages: string[][] = [];
-    for (
-      let index = 0;
-      index < input.lines.length;
-      index += PDF_MAX_LINES_PER_PAGE
-    ) {
-      pages.push(input.lines.slice(index, index + PDF_MAX_LINES_PER_PAGE));
-    }
-
-    const pageStreams = pages.map((pageLines, pageIndex) => {
-      const commands: string[] = ['BT', '/F1 12 Tf'];
-
-      const pageTitle = `${input.title} 第 ${pageIndex + 1}/${pages.length} 页`;
-      commands.push(
-        `1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(PDF_PAGE_HEIGHT - PDF_MARGIN_TOP).toFixed(2)} Tm ${this.toPdfText(pageTitle)} Tj`,
-      );
-
-      pageLines.forEach((line, lineIndex) => {
-        const globalLineIndex = pageIndex * PDF_MAX_LINES_PER_PAGE + lineIndex;
-        const isRightAligned =
-          input.rightAlignedLineIndexes.includes(globalLineIndex);
-        const y =
-          PDF_PAGE_HEIGHT - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
-        const x = isRightAligned
-          ? Math.max(
-              PDF_MARGIN_LEFT,
-              PDF_PAGE_WIDTH -
-                PDF_MARGIN_LEFT -
-                this.estimatePdfTextWidth(line, 12),
-            )
-          : PDF_MARGIN_LEFT;
-
-        commands.push(
-          `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm ${this.toPdfText(line)} Tj`,
-        );
-      });
-
-      commands.push('ET');
-      return commands.join('\n');
-    });
-
-    return this.composePdf(pageStreams);
-  }
-
-  private composePdf(pageStreams: string[]): Buffer {
-    const objects: string[] = [];
-    const pageObjectIds: number[] = [];
-
-    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
-    objects[3] =
-      '<< /Type /Font /Subtype /Type0 /BaseFont /STSong-Light /Encoding /UniGB-UCS2-H /DescendantFonts [4 0 R] >>';
-    objects[4] =
-      '<< /Type /Font /Subtype /CIDFontType0 /BaseFont /STSong-Light /CIDSystemInfo << /Registry (Adobe) /Ordering (GB1) /Supplement 5 >> >>';
-
-    let nextObjectId = 5;
-    pageStreams.forEach((stream) => {
-      const pageObjectId = nextObjectId;
-      const contentObjectId = nextObjectId + 1;
-
-      pageObjectIds.push(pageObjectId);
-      objects[pageObjectId] =
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
-      objects[contentObjectId] =
-        `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
-
-      nextObjectId += 2;
-    });
-
-    objects[2] = `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageObjectIds.length} >>`;
-
-    const maxObjectId = nextObjectId - 1;
-    let pdf = '%PDF-1.4\n';
-    const offsets: number[] = [0];
-
-    for (let id = 1; id <= maxObjectId; id += 1) {
-      const objectBody = objects[id] ?? '<< >>';
-      offsets[id] = Buffer.byteLength(pdf, 'utf8');
-      pdf += `${id} 0 obj\n${objectBody}\nendobj\n`;
-    }
-
-    const xrefOffset = Buffer.byteLength(pdf, 'utf8');
-    pdf += `xref\n0 ${maxObjectId + 1}\n`;
-    pdf += '0000000000 65535 f \n';
-
-    for (let id = 1; id <= maxObjectId; id += 1) {
-      pdf += `${String(offsets[id] ?? 0).padStart(10, '0')} 00000 n \n`;
-    }
-
-    pdf += `trailer\n<< /Size ${maxObjectId + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-    return Buffer.from(pdf, 'utf8');
-  }
-
-  private wrapTextLines(text: string, maxUnitsPerLine: number): string[] {
-    const rawLines = text.replace(/\r\n/g, '\n').split('\n');
-    const wrapped: string[] = [];
-
-    rawLines.forEach((rawLine) => {
-      if (!rawLine) {
-        wrapped.push('');
-        return;
-      }
-
-      let currentLine = '';
-      let currentUnits = 0;
-      for (const char of rawLine) {
-        const charUnits = char.charCodeAt(0) > 255 ? 2 : 1;
-        if (currentUnits + charUnits > maxUnitsPerLine) {
-          wrapped.push(currentLine);
-          currentLine = char;
-          currentUnits = charUnits;
-          continue;
-        }
-
-        currentLine += char;
-        currentUnits += charUnits;
-      }
-
-      if (currentLine) {
-        wrapped.push(currentLine);
-      }
-    });
-
-    return wrapped;
-  }
-
-  private estimatePdfTextWidth(text: string, fontSize: number): number {
-    const units = Array.from(text).reduce(
-      (sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1),
-      0,
-    );
-    return units * fontSize * 0.48;
-  }
-
   private measurePdfTextWidth(
     text: string,
     font: PDFFont,
@@ -3050,36 +2934,6 @@ export class ProcurementService {
     });
 
     return lines.length ? lines : ['-'];
-  }
-
-  private fitPdfText(text: string, maxWidth: number, fontSize: number): string {
-    if (this.estimatePdfTextWidth(text, fontSize) <= maxWidth) {
-      return text;
-    }
-
-    let result = '';
-    for (const char of text) {
-      const next = `${result}${char}`;
-      if (this.estimatePdfTextWidth(`${next}...`, fontSize) > maxWidth) {
-        return `${result}...`;
-      }
-      result = next;
-    }
-
-    return result;
-  }
-
-  private wrapTextToPdfWidth(
-    text: string,
-    maxWidth: number,
-    fontSize: number,
-  ): string[] {
-    const maxUnits = Math.max(8, Math.floor(maxWidth / (fontSize * 0.48)));
-    return this.wrapTextLines(text, maxUnits);
-  }
-
-  private toPdfText(text: string): string {
-    return `<${Buffer.from(`\uFEFF${text}`, 'utf16le').swap16().toString('hex')}>`;
   }
 
   private escapeHtml(text: string): string {
@@ -3179,45 +3033,6 @@ export class ProcurementService {
       'image/webp': '图片',
     };
     return labels[normalized] ?? mimeType;
-  }
-
-  private toReportStatusLabel(status: ProcurementReportRequestStatus): string {
-    const labels: Record<ProcurementReportRequestStatus, string> = {
-      draft: '草稿',
-      submitted: '已提交',
-      dept_approved: '部门通过',
-      finance_approved: '财务通过',
-      final_approved: '终审通过',
-      rejected: '已驳回',
-    };
-    return labels[status];
-  }
-
-  private formatSnapshotLines(snapshot: Record<string, unknown>): string[] {
-    const entries = Object.entries(snapshot);
-    if (entries.length === 0) {
-      return ['-'];
-    }
-
-    return entries.flatMap(([key, value]) =>
-      this.wrapTextLines(`${key}：${this.formatSnapshotValue(value)}`, 72),
-    );
-  }
-
-  private formatSnapshotValue(value: unknown): string {
-    if (value === null || value === undefined) {
-      return '-';
-    }
-
-    if (typeof value === 'object') {
-      return JSON.stringify(value);
-    }
-
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
-      return `${value}`;
-    }
-
-    return '-';
   }
 
   private toDepartmentLabel(code: ProcurementDepartmentCode): string {

@@ -6,12 +6,12 @@ import { FileEntity } from 'src/database/entities/file.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { EnterpriseProfileController } from './enterprise-profile.controller';
 import { EnterpriseProfileService } from './enterprise-profile.service';
+import { OssService } from 'src/modules/files/oss.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([EnterpriseProfileEntity, EnterpriseProfileFileEntity, FileEntity, WecomUserEntity])],
   controllers: [EnterpriseProfileController],
-  providers: [EnterpriseProfileService],
+  providers: [EnterpriseProfileService, OssService],
   exports: [EnterpriseProfileService],
 })
 export class EnterpriseProfileModule {}
-

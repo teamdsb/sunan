@@ -131,6 +131,27 @@ paths:
       responses:
         '204':
           description: No Content
+  '/enterprise-profiles/{id}/files/{fileId}/download-url':
+    get:
+      tags: [EnterpriseProfiles]
+      summary: 获取已绑定企业资料附件的短期下载地址
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDownloadUrlResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -214,6 +235,20 @@ components:
           type: string
         fileSize:
           type: integer
+    FileDownloadUrlResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [downloadUrl, expiresAt]
+          properties:
+            downloadUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
     EnterpriseProfileCreateRequest:
       type: object
       required: [title, category]

@@ -30,6 +30,13 @@ export class FilesController {
     };
   }
 
+  @Get('policies/:category')
+  getPolicy(@Param('category') category: string) {
+    return {
+      data: this.filesService.getPolicy(category),
+    };
+  }
+
   @Get(':ossKey/download-url')
   async getDownloadUrl(@Param('ossKey') ossKey: string) {
     return {

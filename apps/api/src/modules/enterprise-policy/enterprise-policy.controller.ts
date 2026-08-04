@@ -53,5 +53,12 @@ export class EnterprisePolicyController {
   async bindFiles(@Param('id') id: string, @Body() dto: EnterprisePolicyBindFilesDto, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.bindFiles(id, dto, user) };
   }
-}
 
+  @Get(':id/files/:fileId/download-url')
+  async getFileDownloadUrl(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+  ) {
+    return { data: await this.service.getFileDownloadUrl(id, fileId) };
+  }
+}

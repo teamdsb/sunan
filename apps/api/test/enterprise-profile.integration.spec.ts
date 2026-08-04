@@ -18,6 +18,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { EnterpriseProfileModule } from 'src/modules/enterprise-profile/enterprise-profile.module';
+import { OssService } from 'src/modules/files/oss.service';
 
 let currentUser = {
   userId: 'manager-1',
@@ -55,6 +56,7 @@ describe('EnterpriseProfileController integration', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let fileId: string;
+  let ossService: OssService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
@@ -67,6 +69,7 @@ describe('EnterpriseProfileController integration', () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
+    ossService = moduleRef.get(OssService);
     const wecomRepo = dataSource.getRepository(WecomUserEntity);
     await wecomRepo.save([
       wecomRepo.create({
@@ -165,12 +168,39 @@ describe('EnterpriseProfileController integration', () => {
         ?.id,
     ).toBe(fileId);
 
+    const downloadSpy = jest
+      .spyOn(ossService, 'createDownloadSignature')
+      .mockResolvedValue({
+        downloadUrl: 'https://oss.example.test/enterprise-profile-file',
+        expiresAt: '2026-08-04T12:00:00.000Z',
+      });
+    const download = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(`/api/v1/enterprise-profiles/${id}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token');
+    expect(download.status).toBe(200);
+    expect(download.body).toEqual({
+      data: {
+        downloadUrl: 'https://oss.example.test/enterprise-profile-file',
+        expiresAt: '2026-08-04T12:00:00.000Z',
+      },
+    });
+    downloadSpy.mockRestore();
+
     const unbind = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
       .delete(`/api/v1/enterprise-profiles/${id}/files/${fileId}`)
       .set('Authorization', 'Bearer token');
     expect(unbind.status).toBe(204);
+
+    const unboundDownload = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(`/api/v1/enterprise-profiles/${id}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token');
+    expect(unboundDownload.status).toBe(404);
 
     const remove = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

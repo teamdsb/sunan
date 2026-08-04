@@ -57,6 +57,7 @@ describe('FilesController integration', () => {
   interface PresignResponseBody {
     data: {
       ossKey: string;
+      mimeType: string;
     };
   }
 
@@ -208,7 +209,8 @@ describe('FilesController integration', () => {
       .set('Authorization', 'Bearer token')
       .send({
         fileName: 'meeting.docx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        mimeType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         fileSize: 1024,
         category: 'workbench-attachments',
       });
@@ -220,6 +222,50 @@ describe('FilesController integration', () => {
     expect(workbench.status).toBe(201);
     expect((workbench.body as PresignResponseBody).data.ossKey).toMatch(
       /^workbench\/attachments\//,
+    );
+  });
+
+  it('returns upload limits before selection and normalizes an empty mime type', async () => {
+    const policy = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/files/policies/procurement-attachments')
+      .set('Authorization', 'Bearer token');
+
+    expect(policy.status).toBe(200);
+    expect(
+      (policy.body as { data: { extensions: string[]; maxSize: number } }).data,
+    ).toEqual(
+      expect.objectContaining({
+        extensions: expect.arrayContaining([
+          'txt',
+          'csv',
+          'heic',
+          'zip',
+          'rar',
+          'wps',
+          'et',
+          'dps',
+        ]),
+        maxSize: 20 * 1024 * 1024,
+      }),
+    );
+
+    const presign = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/files/presign')
+      .set('Authorization', 'Bearer token')
+      .send({
+        fileName: '说明.txt',
+        mimeType: '',
+        fileSize: 1024,
+        category: 'procurement-attachments',
+      });
+
+    expect(presign.status).toBe(201);
+    expect((presign.body as PresignResponseBody).data.mimeType).toBe(
+      'text/plain',
     );
   });
 

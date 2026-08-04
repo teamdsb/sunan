@@ -24,6 +24,13 @@ export class WecomUserEntity {
   avatarUrl!: string | null;
 
   @Column({
+    name: 'department_ids',
+    type: 'jsonb',
+    default: () => "'[]'::jsonb",
+  })
+  departmentIds!: number[];
+
+  @Column({
     name: 'department_codes',
     type: 'jsonb',
     default: () => "'[]'::jsonb",

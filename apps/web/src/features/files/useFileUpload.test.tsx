@@ -19,11 +19,31 @@ vi.mock('axios', () => ({
       post: vi.fn(),
     })),
     put: vi.fn(),
-    isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean }).isAxiosError),
+    isAxiosError: (error: unknown) =>
+      Boolean((error as { isAxiosError?: boolean }).isAxiosError),
   },
 }));
 
 vi.mock('./filesApi', () => ({
+  useGetFilePolicyQuery: () => ({
+    data: {
+      data: {
+        category: 'certificates',
+        maxSize: 20 * 1024 * 1024,
+        extensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        accept: '.pdf,.jpg,.jpeg,.png',
+        mimeTypes: {
+          pdf: 'application/pdf',
+          jpg: 'image/jpeg',
+          jpeg: 'image/jpeg',
+          png: 'image/png',
+        },
+      },
+    },
+    isLoading: false,
+    error: undefined,
+    refetch: vi.fn(),
+  }),
   useCreateFilePresignMutation: () => [createPresign],
   useCreateFileCallbackMutation: () => [createCallback],
   useCreateFileFromWecomMutation: () => [createFromWecom],
@@ -50,6 +70,7 @@ describe('useFileUpload', () => {
           data: {
             uploadUrl: 'https://oss.example.com/upload',
             ossKey: 'certificates/2026/03/file.pdf',
+            mimeType: 'application/pdf',
             expiresAt: '2026-03-01T00:00:00.000Z',
             headers: { 'Content-Type': 'application/pdf' },
           },
@@ -98,6 +119,7 @@ describe('useFileUpload', () => {
           data: {
             uploadUrl: 'https://oss.example.com/upload',
             ossKey: 'certificates/2026/03/file.pdf',
+            mimeType: 'application/pdf',
             expiresAt: '2026-03-01T00:00:00.000Z',
             headers: { 'Content-Type': 'application/pdf' },
           },
@@ -120,8 +142,27 @@ describe('useFileUpload', () => {
 
     await waitFor(() => {
       expect(result.current.status).toBe('error');
-      expect(result.current.error).toBe('文件直传 OSS 被拒绝，请重新选择文件后重试。');
+      expect(result.current.error).toBe(
+        '文件直传 OSS 被拒绝，请重新选择文件后重试。',
+      );
     });
+  });
+
+  it('rejects a disallowed file before requesting a presign url', async () => {
+    const { result } = renderHook(
+      () => useFileUpload({ category: 'certificates' }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      const uploaded = await result.current.uploadFile(
+        new File(['text'], '说明.txt', { type: 'text/plain' }),
+      );
+      expect(uploaded).toBeNull();
+    });
+
+    expect(createPresign).not.toHaveBeenCalled();
+    expect(result.current.error).toMatch(/支持格式/);
   });
 
   it('uploads through wecom media relay when sdk is ready', async () => {

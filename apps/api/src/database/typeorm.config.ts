@@ -102,6 +102,7 @@ import { Wave4MasterData1710000018000 } from './migrations/1710000018000-wave4-m
 import { Wave5PlanTask1710000019000 } from './migrations/1710000019000-wave5-plan-task';
 import { Wave6InspectionCapa1710000020000 } from './migrations/1710000020000-wave6-inspection-capa';
 import { Wave7LegacySafetyMigration1710000021000 } from './migrations/1710000021000-wave7-legacy-safety-migration';
+import { WecomUserDepartmentIds1710000022000 } from './migrations/1710000022000-wecom-user-department-ids';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -209,6 +210,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave5PlanTask1710000019000,
     Wave6InspectionCapa1710000020000,
     Wave7LegacySafetyMigration1710000021000,
+    WecomUserDepartmentIds1710000022000,
   ],
   synchronize: false,
 });

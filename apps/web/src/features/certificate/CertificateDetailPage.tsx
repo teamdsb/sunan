@@ -1,20 +1,24 @@
-import { Alert, Button, Card, Form, Input, List, Space, Typography } from 'antd';
+import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
+import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import {
   type CertificateItem,
   useBindCertificateFilesMutation,
   useGetCertificateByIdQuery,
+  useLazyGetCertificateFileDownloadUrlQuery,
   useUpdateCertificateMutation,
 } from './certificateApi';
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
-  const [updateCertificate, { isLoading: saving }] = useUpdateCertificateMutation();
+  const [updateCertificate, { isLoading: saving }] =
+    useUpdateCertificateMutation();
   const [bindFiles] = useBindCertificateFilesMutation();
+  const [getFileDownloadUrl] = useLazyGetCertificateFileDownloadUrlQuery();
   const [upload, setUpload] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [form] = Form.useForm<{
@@ -41,10 +45,19 @@ export function CertificateDetailPage() {
         查看并维护证照基础信息、有效期与附件。
       </Typography.Paragraph>
       <Card loading={isLoading}>
-        {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
+        {saveError ? (
+          <Alert
+            type="error"
+            showIcon
+            message={saveError}
+            style={{ marginBottom: 12 }}
+          />
+        ) : null}
         {item ? (
           <>
-            <Typography.Paragraph>持有对象：{item.ownerName}</Typography.Paragraph>
+            <Typography.Paragraph>
+              持有对象：{item.ownerName}
+            </Typography.Paragraph>
             <Form
               form={form}
               layout="vertical"
@@ -57,21 +70,37 @@ export function CertificateDetailPage() {
                     await bindFiles({ id, fileIds: [upload.id] }).unwrap();
                   }
                 } catch (error) {
-                  setSaveError(error instanceof Error ? error.message : '保存失败，请稍后重试');
+                  setSaveError(
+                    error instanceof Error
+                      ? error.message
+                      : '保存失败，请稍后重试',
+                  );
                 }
               }}
             >
               <Form.Item name="title" label="标题" rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
-              <Form.Item name="expiryDate" label="到期日" rules={[{ required: true }]}>
+              <Form.Item
+                name="expiryDate"
+                label="到期日"
+                rules={[{ required: true }]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item name="status" label="状态" rules={[{ required: true }]}>
+              <Form.Item
+                name="status"
+                label="状态"
+                rules={[{ required: true }]}
+              >
                 <Input />
               </Form.Item>
               <Form.Item label="附件上传/预览">
-                <FileUploadField category="certificates" value={upload} onChange={setUpload} />
+                <FileUploadField
+                  category="certificates"
+                  value={upload}
+                  onChange={setUpload}
+                />
               </Form.Item>
               <Space wrap className="detail-action-bar">
                 <Button htmlType="submit" type="primary" loading={saving}>
@@ -82,7 +111,16 @@ export function CertificateDetailPage() {
             <Typography.Title level={5} style={{ marginTop: 16 }}>
               已绑定附件
             </Typography.Title>
-            <List dataSource={item.files} renderItem={(file) => <List.Item>{file.fileName}</List.Item>} />
+            <FileAttachmentList
+              files={item.files}
+              getUrl={async (file) => {
+                const response = await getFileDownloadUrl({
+                  id,
+                  fileId: file.id,
+                }).unwrap();
+                return response.data.downloadUrl;
+              }}
+            />
           </>
         ) : null}
       </Card>

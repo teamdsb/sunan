@@ -85,6 +85,7 @@ import {
 import { Wave5PlanTask1710000019000 } from 'src/database/migrations/1710000019000-wave5-plan-task';
 import { Wave6InspectionCapa1710000020000 } from 'src/database/migrations/1710000020000-wave6-inspection-capa';
 import { Wave7LegacySafetyMigration1710000021000 } from 'src/database/migrations/1710000021000-wave7-legacy-safety-migration';
+import { WecomUserDepartmentIds1710000022000 } from 'src/database/migrations/1710000022000-wecom-user-department-ids';
 import {
   CapaActionEntity,
   CapaActionEvidenceEntity,
@@ -204,6 +205,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave5PlanTask1710000019000,
   Wave6InspectionCapa1710000020000,
   Wave7LegacySafetyMigration1710000021000,
+  WecomUserDepartmentIds1710000022000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

@@ -10,6 +10,7 @@ import { EnterpriseProfileBindFilesDto } from './dto/enterprise-profile-bind-fil
 import { EnterpriseProfileCreateDto } from './dto/enterprise-profile-create.dto';
 import { EnterpriseProfileListQueryDto } from './dto/enterprise-profile-list-query.dto';
 import { EnterpriseProfileUpdateDto } from './dto/enterprise-profile-update.dto';
+import { OssService } from 'src/modules/files/oss.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -24,6 +25,7 @@ export class EnterpriseProfileService {
     private readonly fileRepository: Repository<FileEntity>,
     @InjectRepository(WecomUserEntity)
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
+    private readonly ossService: OssService,
   ) {}
 
   async list(query: EnterpriseProfileListQueryDto, user: CurrentUser) {
@@ -127,6 +129,17 @@ export class EnterpriseProfileService {
     await this.fileRelRepository.delete({ enterpriseProfileId: id, fileId });
   }
 
+  async getFileDownloadUrl(id: string, fileId: string) {
+    await this.findOneOrThrow(id);
+    const relation = await this.fileRelRepository.findOne({
+      where: { enterpriseProfileId: id, fileId },
+    });
+    if (!relation) throw new NotFoundException('enterprise profile file not found');
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    if (!file) throw new NotFoundException('file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
   private ensureManager(user: CurrentUser) {
     if (user.roles.includes('system_admin')) return;
     if (!user.roles.some((role) => MANAGER_ROLES.has(role))) {
@@ -179,4 +192,3 @@ export class EnterpriseProfileService {
     };
   }
 }
-

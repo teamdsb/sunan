@@ -15,7 +15,7 @@ import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { REDIS_CLIENT } from 'src/modules/wecom/wecom.constants';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 
-import { isManagementPosition, resolveRolesFromDepartmentNames } from './reminder.constants';
+import { isManagementPosition, resolveRolesFromDepartments } from './reminder.constants';
 import { ReminderClockService } from './reminder-clock.service';
 import type { ReminderJobEnvelope, ReminderOwnerType, ReminderType } from './reminder.types';
 
@@ -328,7 +328,11 @@ export class CertificateReminderEngineService {
 
   private collectByRoles(target: Set<string>, users: WecomUserEntity[], roleNames: string[]): void {
     for (const user of users) {
-      const roles = resolveRolesFromDepartmentNames(user.departmentNames, user.isSystemAdmin);
+      const roles = resolveRolesFromDepartments(
+        user.departmentIds ?? [],
+        user.departmentNames,
+        user.isSystemAdmin,
+      );
       if (roles.some((role) => roleNames.includes(role))) {
         target.add(user.userId);
       }

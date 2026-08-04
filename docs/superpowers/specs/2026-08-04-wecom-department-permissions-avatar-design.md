@@ -1,5 +1,5 @@
 ---
-status: current-design
+status: current-spec
 owner: auth
 updated: 2026-08-04
 replaces: []

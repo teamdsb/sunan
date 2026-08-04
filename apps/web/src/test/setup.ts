@@ -67,9 +67,12 @@ Object.defineProperty(window, 'matchMedia', {
 
 Object.defineProperty(window, 'getComputedStyle', {
   configurable: true,
-  value: (_elt: Element, _pseudoElt?: string) =>
+  value: () =>
     ({
-      getPropertyValue: (_prop: string) => '',
+      getPropertyValue: (property: string) => {
+        void property;
+        return '';
+      },
       overflow: 'auto',
       overflowX: 'auto',
       overflowY: 'auto',

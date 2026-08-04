@@ -13,7 +13,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import {
@@ -110,37 +110,40 @@ export function ProcurementDictionaryAdminPage() {
     await refetch();
   };
 
-  const handleEdit = async (item: ProcurementDimensionItem) => {
-    const nextName = window.prompt('请输入新的名称', item.dimensionName);
-    if (nextName === null) {
-      return;
-    }
+  const handleEdit = useCallback(
+    async (item: ProcurementDimensionItem) => {
+      const nextName = window.prompt('请输入新的名称', item.dimensionName);
+      if (nextName === null) {
+        return;
+      }
 
-    const nextSortOrderInput = window.prompt(
-      '请输入新的排序值',
-      String(item.sortOrder),
-    );
-    if (nextSortOrderInput === null) {
-      return;
-    }
+      const nextSortOrderInput = window.prompt(
+        '请输入新的排序值',
+        String(item.sortOrder),
+      );
+      if (nextSortOrderInput === null) {
+        return;
+      }
 
-    const nextSortOrder = Number(nextSortOrderInput);
-    if (!Number.isInteger(nextSortOrder) || nextSortOrder < 0) {
-      messageApi.warning('排序值必须是大于等于 0 的整数');
-      return;
-    }
+      const nextSortOrder = Number(nextSortOrderInput);
+      if (!Number.isInteger(nextSortOrder) || nextSortOrder < 0) {
+        messageApi.warning('排序值必须是大于等于 0 的整数');
+        return;
+      }
 
-    await updateDimension({
-      id: item.id,
-      data: {
-        dimensionName: nextName.trim(),
-        sortOrder: nextSortOrder,
-      },
-    }).unwrap();
+      await updateDimension({
+        id: item.id,
+        data: {
+          dimensionName: nextName.trim(),
+          sortOrder: nextSortOrder,
+        },
+      }).unwrap();
 
-    messageApi.success('字典项已更新');
-    await refetch();
-  };
+      messageApi.success('字典项已更新');
+      await refetch();
+    },
+    [messageApi, refetch, updateDimension],
+  );
 
   const columns: ColumnsType<ProcurementDimensionItem> = useMemo(
     () => [
@@ -226,6 +229,7 @@ export function ProcurementDictionaryAdminPage() {
     ],
     [
       disableDimension,
+      handleEdit,
       isDisabling,
       isUpdating,
       messageApi,

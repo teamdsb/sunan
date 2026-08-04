@@ -16,7 +16,10 @@ const mockPrintOrder = vi.fn();
 const mockRefetch = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -26,7 +29,9 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('../../app/hooks', () => ({
   useAppSelector: (
-    selector: (state: { auth: { currentUser: { userId: string; roles: string[] } | null } }) => unknown,
+    selector: (state: {
+      auth: { currentUser: { userId: string; roles: string[] } | null };
+    }) => unknown,
   ) => selector({ auth: { currentUser: mockCurrentUser() } }),
 }));
 
@@ -53,20 +58,58 @@ vi.mock('../files/FileUploadField', () => ({
 }));
 
 vi.mock('./procurementApi', () => ({
-  useGetProcurementOrderQuery: (id: string, options?: unknown) => mockGetOrder(id, options),
-  useGetProcurementOrderApprovalsQuery: (id: string, options?: unknown) => mockGetApprovals(id, options),
-  useUpdateProcurementOrderMutation: () => [mockUpdateOrder, { isLoading: false }],
-  useSubmitProcurementOrderMutation: () => [mockSubmitOrder, { isLoading: false }],
-  useResubmitProcurementOrderMutation: () => [mockResubmitOrder, { isLoading: false }],
-  useBindProcurementOrderAttachmentsMutation: () => [mockBindAttachments, { isLoading: false }],
-  useUnlinkProcurementOrderAttachmentMutation: () => [mockUnlinkAttachment, { isLoading: false }],
-  useLazyGetProcurementOrderAttachmentDownloadUrlQuery: () => [mockGetAttachmentDownloadUrl, { isFetching: false }],
-  usePrintProcurementOrderMutation: () => [mockPrintOrder, { isLoading: false }],
+  useGetProcurementOrderQuery: (id: string, options?: unknown) =>
+    mockGetOrder(id, options),
+  useGetProcurementOrderApprovalsQuery: (id: string, options?: unknown) =>
+    mockGetApprovals(id, options),
+  useUpdateProcurementOrderMutation: () => [
+    mockUpdateOrder,
+    { isLoading: false },
+  ],
+  useSubmitProcurementOrderMutation: () => [
+    mockSubmitOrder,
+    { isLoading: false },
+  ],
+  useResubmitProcurementOrderMutation: () => [
+    mockResubmitOrder,
+    { isLoading: false },
+  ],
+  useBindProcurementOrderAttachmentsMutation: () => [
+    mockBindAttachments,
+    { isLoading: false },
+  ],
+  useUnlinkProcurementOrderAttachmentMutation: () => [
+    mockUnlinkAttachment,
+    { isLoading: false },
+  ],
+  useLazyGetProcurementOrderAttachmentDownloadUrlQuery: () => [
+    mockGetAttachmentDownloadUrl,
+    { isFetching: false },
+  ],
+  usePrintProcurementOrderMutation: () => [
+    mockPrintOrder,
+    { isLoading: false },
+  ],
 }));
 
 describe('ProcurementOrderDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response('pdf', { status: 200 })),
+    );
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:pdf'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
+      () => undefined,
+    );
     mockCurrentUser.mockReturnValue({
       userId: 'creator-1',
       roles: ['all_authenticated', 'business'],
@@ -117,20 +160,39 @@ describe('ProcurementOrderDetailPage', () => {
         }),
     });
     mockPrintOrder.mockReturnValue({
-      unwrap: () => Promise.resolve({ data: { fileId: 'pdf-1', downloadUrl: 'https://oss.example.com/order-1.pdf' } }),
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            fileId: 'pdf-1',
+            downloadUrl: 'https://oss.example.com/order-1.pdf',
+          },
+        }),
     });
   });
 
-  it('prints order PDF and opens the generated download URL', async () => {
+  it('previews an order PDF inside the application without window.open', async () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
+    render(<ProcurementOrderDetailPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '预览 PDF' }));
+
+    expect(await screen.findByTitle('CG202604180001.pdf 预览')).toHaveAttribute(
+      'src',
+      'https://oss.example.com/order-1.pdf',
+    );
+    expect(mockPrintOrder).toHaveBeenCalledWith('order-1');
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('downloads a generated order PDF from the export action', async () => {
     render(<ProcurementOrderDetailPage />);
 
     fireEvent.click(screen.getByRole('button', { name: '导出 PDF' }));
 
     await waitFor(() => {
-      expect(mockPrintOrder).toHaveBeenCalledWith('order-1');
-      expect(openSpy).toHaveBeenCalledWith('https://oss.example.com/order-1.pdf', '_blank', 'noopener,noreferrer');
+      expect(fetch).toHaveBeenCalledWith('https://oss.example.com/order-1.pdf');
+      expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
     });
   });
 
@@ -145,7 +207,9 @@ describe('ProcurementOrderDetailPage', () => {
   it('uploads and binds procurement attachments without manual fileId input', async () => {
     render(<ProcurementOrderDetailPage />);
 
-    expect(screen.queryByPlaceholderText('uuid-1,uuid-2')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('uuid-1,uuid-2'),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '模拟上传附件' }));
 
     await waitFor(() => {
@@ -196,18 +260,17 @@ describe('ProcurementOrderDetailPage', () => {
       isLoading: false,
       refetch: mockRefetch,
     });
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-
     render(<ProcurementOrderDetailPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: '下载' }));
+    fireEvent.click(screen.getByRole('button', { name: '预览' }));
 
-    await waitFor(() => {
-      expect(mockGetAttachmentDownloadUrl).toHaveBeenCalledWith({
-        id: 'order-1',
-        fileId: 'file-1',
-      });
-      expect(openSpy).toHaveBeenCalledWith('https://oss.example.com/attachment.pdf', '_blank', 'noopener,noreferrer');
+    expect(await screen.findByTitle('报价单.pdf 预览')).toHaveAttribute(
+      'src',
+      'https://oss.example.com/attachment.pdf',
+    );
+    expect(mockGetAttachmentDownloadUrl).toHaveBeenCalledWith({
+      id: 'order-1',
+      fileId: 'file-1',
     });
   });
 

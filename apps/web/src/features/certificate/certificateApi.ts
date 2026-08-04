@@ -16,7 +16,13 @@ export interface CertificateItem {
   expiryDate: string;
   advanceDays: number;
   status: 'active' | 'expired' | 'archived';
-  files: Array<{ id: string; fileName: string; ossKey: string }>;
+  files: Array<{
+    id: string;
+    fileName: string;
+    ossKey: string;
+    mimeType: string;
+    fileSize: number;
+  }>;
 }
 
 export interface CertificateGroup {
@@ -72,19 +78,31 @@ export interface UpdateCertificateInput {
 
 export const certificateApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getCertificates: builder.query<ApiEnvelope<CertificateItem[]>, Record<string, unknown> | void>({
+    getCertificates: builder.query<
+      ApiEnvelope<CertificateItem[]>,
+      Record<string, unknown> | void
+    >({
       query: (params) => ({ url: '/certificates', params }),
       providesTags: ['Certificate'],
     }),
-    getGroupedCertificates: builder.query<ApiEnvelope<CertificateGroup[]>, { groupBy: 'owner' | 'type' }>({
+    getGroupedCertificates: builder.query<
+      ApiEnvelope<CertificateGroup[]>,
+      { groupBy: 'owner' | 'type' }
+    >({
       query: (params) => ({ url: '/certificates/grouped', params }),
       providesTags: ['Certificate'],
     }),
-    getCertificateTypes: builder.query<ApiEnvelope<CertificateTypeItem[]>, { ownerType?: CertificateItem['ownerType'] } | void>({
+    getCertificateTypes: builder.query<
+      ApiEnvelope<CertificateTypeItem[]>,
+      { ownerType?: CertificateItem['ownerType'] } | void
+    >({
       query: (params) => ({ url: '/certificate-types', params }),
       providesTags: ['CertificateType'],
     }),
-    getCertificateOwners: builder.query<ApiEnvelope<CertificateOwnerItem[]>, { ownerType: CertificateItem['ownerType'] }>({
+    getCertificateOwners: builder.query<
+      ApiEnvelope<CertificateOwnerItem[]>,
+      { ownerType: CertificateItem['ownerType'] }
+    >({
       query: (params) => ({ url: '/certificate-owners', params }),
       providesTags: ['CertificateOwner'],
     }),
@@ -92,17 +110,49 @@ export const certificateApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/certificates/${id}` }),
       providesTags: (_r, _e, id) => [{ type: 'Certificate', id }],
     }),
-    createCertificate: builder.mutation<ApiEnvelope<CertificateItem>, CreateCertificateInput>({
+    createCertificate: builder.mutation<
+      ApiEnvelope<CertificateItem>,
+      CreateCertificateInput
+    >({
       query: (data) => ({ url: '/certificates', method: 'POST', data }),
       invalidatesTags: ['Certificate', 'ReminderDashboard'],
     }),
-    updateCertificate: builder.mutation<ApiEnvelope<CertificateItem>, { id: string; data: UpdateCertificateInput }>({
-      query: ({ id, data }) => ({ url: `/certificates/${id}`, method: 'PATCH', data }),
-      invalidatesTags: (_r, _e, arg) => [{ type: 'Certificate', id: arg.id }, 'Certificate', 'ReminderDashboard'],
+    updateCertificate: builder.mutation<
+      ApiEnvelope<CertificateItem>,
+      { id: string; data: UpdateCertificateInput }
+    >({
+      query: ({ id, data }) => ({
+        url: `/certificates/${id}`,
+        method: 'PATCH',
+        data,
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'Certificate', id: arg.id },
+        'Certificate',
+        'ReminderDashboard',
+      ],
     }),
-    bindCertificateFiles: builder.mutation<ApiEnvelope<CertificateItem>, { id: string; fileIds: string[] }>({
-      query: ({ id, fileIds }) => ({ url: `/certificates/${id}/files`, method: 'POST', data: { fileIds } }),
-      invalidatesTags: (_r, _e, arg) => [{ type: 'Certificate', id: arg.id }, 'Certificate'],
+    bindCertificateFiles: builder.mutation<
+      ApiEnvelope<CertificateItem>,
+      { id: string; fileIds: string[] }
+    >({
+      query: ({ id, fileIds }) => ({
+        url: `/certificates/${id}/files`,
+        method: 'POST',
+        data: { fileIds },
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'Certificate', id: arg.id },
+        'Certificate',
+      ],
+    }),
+    getCertificateFileDownloadUrl: builder.query<
+      ApiEnvelope<{ downloadUrl: string; expiresAt: string }>,
+      { id: string; fileId: string }
+    >({
+      query: ({ id, fileId }) => ({
+        url: `/certificates/${id}/files/${fileId}/download-url`,
+      }),
     }),
   }),
 });
@@ -116,4 +166,5 @@ export const {
   useCreateCertificateMutation,
   useUpdateCertificateMutation,
   useBindCertificateFilesMutation,
+  useLazyGetCertificateFileDownloadUrlQuery,
 } = certificateApi;

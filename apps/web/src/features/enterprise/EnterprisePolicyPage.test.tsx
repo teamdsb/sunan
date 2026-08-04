@@ -2,7 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { EnterprisePolicyDetailPage, EnterprisePolicyPage } from './EnterprisePolicyPage';
+import {
+  EnterprisePolicyDetailPage,
+  EnterprisePolicyPage,
+} from './EnterprisePolicyPage';
 
 const mockList = vi.fn();
 const mockCreate = vi.fn();
@@ -18,10 +21,25 @@ vi.mock('./enterpriseApi', () => ({
   useGetEnterprisePoliciesQuery: (params: unknown) => mockList(params),
   useCreateEnterprisePolicyMutation: () => [mockCreate, { isLoading: false }],
   usePublishEnterprisePolicyMutation: () => [mockPublish],
-  useGetEnterprisePolicyByIdQuery: () => ({ data: { data: { id: '1', title: '制度A', summary: '', status: 'draft' } }, isLoading: false }),
-  useGetEnterprisePolicyVersionsQuery: () => ({ data: { data: [] }, isLoading: false }),
+  useGetEnterprisePolicyByIdQuery: () => ({
+    data: {
+      data: {
+        id: '1',
+        title: '制度A',
+        summary: '',
+        status: 'draft',
+        files: [],
+      },
+    },
+    isLoading: false,
+  }),
+  useGetEnterprisePolicyVersionsQuery: () => ({
+    data: { data: [] },
+    isLoading: false,
+  }),
   useUpdateEnterprisePolicyMutation: () => [vi.fn(), { isLoading: false }],
   useBindEnterprisePolicyFilesMutation: () => [vi.fn()],
+  useLazyGetEnterprisePolicyFileDownloadUrlQuery: () => [vi.fn()],
 }));
 
 function LocationDisplay() {
@@ -34,7 +52,15 @@ describe('EnterprisePolicyPage', () => {
     vi.clearAllMocks();
     mockList.mockReturnValue({
       data: {
-        data: [{ id: '1', title: '制度A', policyCode: 'P-1', version: 'v1', status: 'draft' }],
+        data: [
+          {
+            id: '1',
+            title: '制度A',
+            policyCode: 'P-1',
+            version: 'v1',
+            status: 'draft',
+          },
+        ],
         meta: { total: 1 },
       },
       isLoading: false,
@@ -45,7 +71,12 @@ describe('EnterprisePolicyPage', () => {
 
   it('keeps keyword drafting local until search is committed', async () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=foo']}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={[
+          '/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=foo',
+        ]}
+      >
         <EnterprisePolicyPage />
         <LocationDisplay />
       </MemoryRouter>,
@@ -85,9 +116,17 @@ describe('EnterprisePolicyPage', () => {
 
   it('does not add a redundant return button to the detail page', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar']}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={[
+          '/my/enterprise-policy/1?backTo=%2Fmy%2Fenterprise-policy%3Fpage%3D1%26pageSize%3D10%26status%3Dpublished%26keyword%3Dbar',
+        ]}
+      >
         <Routes>
-          <Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} />
+          <Route
+            path="/my/enterprise-policy/:id"
+            element={<EnterprisePolicyDetailPage />}
+          />
         </Routes>
       </MemoryRouter>,
     );
@@ -99,11 +138,15 @@ describe('EnterprisePolicyPage', () => {
 
   it('uses a vertical creation form for narrow screens', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <EnterprisePolicyPage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('enterprise-policy-create-form')).not.toHaveClass('ant-form-inline');
+    expect(screen.getByTestId('enterprise-policy-create-form')).not.toHaveClass(
+      'ant-form-inline',
+    );
   });
 });

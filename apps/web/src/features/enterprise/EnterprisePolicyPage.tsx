@@ -1,8 +1,25 @@
-import { Alert, Button, Card, Form, Input, List, Pagination, Select, Space, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Input,
+  List,
+  Pagination,
+  Select,
+  Space,
+  Typography,
+} from 'antd';
 import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
+import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
@@ -13,6 +30,7 @@ import {
   useGetEnterprisePoliciesQuery,
   useGetEnterprisePolicyByIdQuery,
   useGetEnterprisePolicyVersionsQuery,
+  useLazyGetEnterprisePolicyFileDownloadUrlQuery,
   usePublishEnterprisePolicyMutation,
   useUpdateEnterprisePolicyMutation,
 } from './enterpriseApi';
@@ -45,15 +63,27 @@ export function EnterprisePolicyPage() {
   const keyword = searchParams.get('keyword') || '';
   const [keywordDraft, setKeywordDraft] = useState(keyword);
 
-  const { data, isLoading } = useGetEnterprisePoliciesQuery({ page, pageSize, status, keyword: keyword || undefined });
-  const [createPolicy, { isLoading: creating }] = useCreateEnterprisePolicyMutation();
+  const { data, isLoading } = useGetEnterprisePoliciesQuery({
+    page,
+    pageSize,
+    status,
+    keyword: keyword || undefined,
+  });
+  const [createPolicy, { isLoading: creating }] =
+    useCreateEnterprisePolicyMutation();
   const [publishPolicy] = usePublishEnterprisePolicyMutation();
-  const [form] = Form.useForm<{ title: string; policyCode: string; version: string }>();
+  const [form] = Form.useForm<{
+    title: string;
+    policyCode: string;
+    version: string;
+  }>();
   const [showFilters, setShowFilters] = useState(false);
 
   const policies = useMemo(() => data?.data ?? [], [data]);
 
-  const applySearch = (updates: Record<string, string | number | null | undefined>) => {
+  const applySearch = (
+    updates: Record<string, string | number | null | undefined>,
+  ) => {
     setSearchParams(updateSearchParams(location.search, updates));
   };
 
@@ -79,13 +109,26 @@ export function EnterprisePolicyPage() {
               form.resetFields();
             }}
           >
-            <Form.Item name="title" label="制度标题" rules={[{ required: true }]}>
+            <Form.Item
+              name="title"
+              label="制度标题"
+              rules={[{ required: true }]}
+            >
               <Input placeholder="制度标题" />
             </Form.Item>
-            <Form.Item name="policyCode" label="制度编码" rules={[{ required: true }]}>
+            <Form.Item
+              name="policyCode"
+              label="制度编码"
+              rules={[{ required: true }]}
+            >
               <Input placeholder="制度编码" />
             </Form.Item>
-            <Form.Item name="version" label="版本" initialValue="v1" rules={[{ required: true }]}>
+            <Form.Item
+              name="version"
+              label="版本"
+              initialValue="v1"
+              rules={[{ required: true }]}
+            >
               <Input placeholder="版本" />
             </Form.Item>
             <Button htmlType="submit" type="primary" loading={creating}>
@@ -103,7 +146,16 @@ export function EnterprisePolicyPage() {
             {showFilters ? '收起筛选' : '展开筛选'}
           </Button>
           {showFilters ? (
-            <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
+            <Card
+              size="small"
+              className="filter-panel"
+              title={
+                <Space size="small">
+                  <FilterOutlined />
+                  <span>筛选条件</span>
+                </Space>
+              }
+            >
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Input.Search
                   placeholder="关键字"
@@ -148,15 +200,28 @@ export function EnterprisePolicyPage() {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  <Button key="publish" onClick={() => void publishPolicy(item.id)}>
+                  <Button
+                    key="publish"
+                    onClick={() => void publishPolicy(item.id)}
+                  >
                     发布
                   </Button>,
-                  <Link key="detail" to={buildDetailHref(myRouteConfig.enterprisePolicy.path, item.id, location.search)}>
+                  <Link
+                    key="detail"
+                    to={buildDetailHref(
+                      myRouteConfig.enterprisePolicy.path,
+                      item.id,
+                      location.search,
+                    )}
+                  >
                     详情
                   </Link>,
                 ]}
               >
-                <List.Item.Meta title={item.title} description={`${item.policyCode} · ${item.version} · ${formatPolicyStatus(item.status)}`} />
+                <List.Item.Meta
+                  title={item.title}
+                  description={`${item.policyCode} · ${item.version} · ${formatPolicyStatus(item.status)}`}
+                />
               </List.Item>
             )}
           />
@@ -184,10 +249,16 @@ export function EnterprisePolicyPage() {
 
 export function EnterprisePolicyDetailPage() {
   const { id = '' } = useParams();
-  const { data, isLoading } = useGetEnterprisePolicyByIdQuery(id, { skip: !id });
-  const { data: versions } = useGetEnterprisePolicyVersionsQuery(id, { skip: !id });
-  const [updatePolicy, { isLoading: saving }] = useUpdateEnterprisePolicyMutation();
+  const { data, isLoading } = useGetEnterprisePolicyByIdQuery(id, {
+    skip: !id,
+  });
+  const { data: versions } = useGetEnterprisePolicyVersionsQuery(id, {
+    skip: !id,
+  });
+  const [updatePolicy, { isLoading: saving }] =
+    useUpdateEnterprisePolicyMutation();
   const [bindFiles] = useBindEnterprisePolicyFilesMutation();
+  const [getFileDownloadUrl] = useLazyGetEnterprisePolicyFileDownloadUrlQuery();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [form] = Form.useForm<{
@@ -214,7 +285,14 @@ export function EnterprisePolicyDetailPage() {
         查看并维护制度内容、状态、版本和附件。
       </Typography.Paragraph>
       <Card loading={isLoading}>
-        {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
+        {saveError ? (
+          <Alert
+            type="error"
+            showIcon
+            message={saveError}
+            style={{ marginBottom: 12 }}
+          />
+        ) : null}
         <Form
           form={form}
           layout="vertical"
@@ -227,7 +305,9 @@ export function EnterprisePolicyDetailPage() {
                 await bindFiles({ id, fileIds: [uploaded.id] }).unwrap();
               }
             } catch (error) {
-              setSaveError(error instanceof Error ? error.message : '保存失败，请稍后重试');
+              setSaveError(
+                error instanceof Error ? error.message : '保存失败，请稍后重试',
+              );
             }
           }}
         >
@@ -247,7 +327,11 @@ export function EnterprisePolicyDetailPage() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item label="文件上传/预览">
-            <FileUploadField category="enterprise-policies" value={uploaded} onChange={setUploaded} />
+            <FileUploadField
+              category="enterprise-policies"
+              value={uploaded}
+              onChange={setUploaded}
+            />
           </Form.Item>
           <Space wrap className="detail-action-bar">
             <Button htmlType="submit" type="primary" loading={saving}>
@@ -256,13 +340,35 @@ export function EnterprisePolicyDetailPage() {
           </Space>
         </Form>
 
+        {policy ? (
+          <>
+            <Typography.Title level={5} style={{ marginTop: 20 }}>
+              已绑定附件
+            </Typography.Title>
+            <FileAttachmentList
+              files={policy.files}
+              getUrl={async (file) => {
+                const response = await getFileDownloadUrl({
+                  id,
+                  fileId: file.id,
+                }).unwrap();
+                return response.data.downloadUrl;
+              }}
+            />
+          </>
+        ) : null}
+
         <Typography.Title level={5} style={{ marginTop: 20 }}>
           版本历史
         </Typography.Title>
         <List
           size="small"
           dataSource={versions?.data ?? []}
-          renderItem={(item) => <List.Item>{item.version} · {formatPolicyStatus(item.status)}</List.Item>}
+          renderItem={(item) => (
+            <List.Item>
+              {item.version} · {formatPolicyStatus(item.status)}
+            </List.Item>
+          )}
         />
       </Card>
     </section>

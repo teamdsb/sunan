@@ -197,6 +197,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateDetailResponse'
+  '/certificates/{id}/files/{fileId}/download-url':
+    get:
+      tags: [Certificates]
+      summary: 获取已绑定证照附件的短期下载地址
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDownloadUrlResponse'
+        '404':
+          description: 证照、文件或绑定关系不存在
 components:
   securitySchemes:
     bearerAuth:
@@ -230,7 +251,19 @@ components:
     Certificate:
       type: object
       required:
-        [id, certificateTypeId, ownerType, ownerId, title, expiryDate, advanceDays, status, files, createdAt, updatedAt]
+        [
+          id,
+          certificateTypeId,
+          ownerType,
+          ownerId,
+          title,
+          expiryDate,
+          advanceDays,
+          status,
+          files,
+          createdAt,
+          updatedAt,
+        ]
       properties:
         id:
           type: string
@@ -297,9 +330,32 @@ components:
           type: integer
         fileRole:
           type: string
+    FileDownloadUrlResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [downloadUrl, expiresAt]
+          properties:
+            downloadUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
     CertificateType:
       type: object
-      required: [id, code, name, ownerScope, reminderCategory, defaultAdvanceDays, requiresAttachment]
+      required:
+        [
+          id,
+          code,
+          name,
+          ownerScope,
+          reminderCategory,
+          defaultAdvanceDays,
+          requiresAttachment,
+        ]
       properties:
         id:
           type: string

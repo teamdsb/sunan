@@ -3,12 +3,19 @@ import type {
   ApiEnvelope,
   FileCategory,
   FileDownloadPayload,
+  FilePolicy,
   FilePresignPayload,
   FileRecord,
 } from './types';
 
 export const filesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getFilePolicy: builder.query<ApiEnvelope<FilePolicy>, FileCategory>({
+      query: (category) => ({
+        url: `/files/policies/${encodeURIComponent(category)}`,
+      }),
+      providesTags: ['File'],
+    }),
     createFilePresign: builder.mutation<
       ApiEnvelope<FilePresignPayload>,
       {
@@ -66,6 +73,7 @@ export const filesApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetFilePolicyQuery,
   useCreateFileCallbackMutation,
   useCreateFileFromWecomMutation,
   useCreateFilePresignMutation,

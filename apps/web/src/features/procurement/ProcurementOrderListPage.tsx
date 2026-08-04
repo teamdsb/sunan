@@ -113,7 +113,10 @@ export function ProcurementOrderListPage() {
     .sort((left, right) => right.executedAmount - left.executedAmount)
     .slice(0, 3);
   const budgetPercent = budgetSummary?.executionRate;
-  const pendingTasks = pendingResponse?.data ?? [];
+  const pendingTasks = useMemo(
+    () => pendingResponse?.data ?? [],
+    [pendingResponse?.data],
+  );
   const approvalTotal = pendingResponse
     ? pendingTasks.length === 100
       ? '100+'

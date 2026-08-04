@@ -119,6 +119,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+  '/enterprise-policies/{id}/files':
+    post:
+      tags: [EnterprisePolicies]
+      summary: 绑定企业制度附件
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileIds]
+              properties:
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisePolicyDetailResponse'
+  '/enterprise-policies/{id}/files/{fileId}/download-url':
+    get:
+      tags: [EnterprisePolicies]
+      summary: 获取已绑定企业制度附件的短期下载地址
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDownloadUrlResponse'
+        '404':
+          description: 企业制度、文件或绑定关系不存在
 components:
   securitySchemes:
     bearerAuth:
@@ -151,7 +198,8 @@ components:
   schemas:
     EnterprisePolicy:
       type: object
-      required: [id, title, policyCode, version, status, files, createdAt, updatedAt]
+      required:
+        [id, title, policyCode, version, status, files, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -196,6 +244,20 @@ components:
           type: string
         fileSize:
           type: integer
+    FileDownloadUrlResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [downloadUrl, expiresAt]
+          properties:
+            downloadUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
     PolicyVersion:
       type: object
       properties:

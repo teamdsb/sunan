@@ -73,8 +73,8 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
      ?access_token={ACCESS_TOKEN}
      &code={CODE}
    ```
-2. 用 UserId 调用企业微信通讯录 API 获取用户详情（姓名、部门、职务）
-3. 在 `wecom_users` 表中 upsert 用户信息
+2. 用 UserId 调用企业微信通讯录 API 获取用户详情（姓名、头像、部门 ID、职务）
+3. 以部门 ID 解析业务角色和数据范围，在 `wecom_users` 表中 upsert 用户信息
 4. 签发 JWT（payload 包含 userId、corpId、过期时间）
 5. 返回 JWT 和用户基本信息
 
@@ -89,7 +89,8 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
       "userId": "ZhangSan",
       "name": "张三",
       "avatar": "https://...",
-      "department": ["总经办"],
+      "departmentIds": [1, 3, 4],
+      "department": ["公司成员", "总经办", "财务部"],
       "position": "总经理"
     }
   }
@@ -120,7 +121,8 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
     "userId": "ZhangSan",
     "name": "张三",
     "avatar": "https://...",
-    "department": ["总经办"],
+    "departmentIds": [1, 3, 4],
+    "department": ["公司成员", "总经办", "财务部"],
     "position": "总经理",
     "isAdmin": false
   }

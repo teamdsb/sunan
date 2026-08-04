@@ -25,7 +25,9 @@ async function createAuthenticatedStore() {
       user: {
         userId: 'u-navigation',
         name: '导航测试用户',
-        department: ['总经办'],
+        avatar: 'https://avatar.example.com/navigation.png',
+        departmentIds: [1, 3],
+        department: ['公司成员', '总经办'],
         roles: ['all_authenticated', 'system_admin'],
       },
     }),
@@ -72,6 +74,9 @@ describe('AppShell navigation', () => {
     );
 
     expect(screen.getByText('导航测试用户')).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('img', { name: '导航测试用户的头像' }).length,
+    ).toBeGreaterThan(0);
     await user.click(screen.getAllByRole('button', { name: /重新认证/ }).at(-1)!);
     expect(redirectToOAuth).toHaveBeenCalledWith('/my');
     expect(store.getState().auth.token).toBeNull();

@@ -108,14 +108,14 @@ describe('M8 Wave 7 legacy migration and schema audit', () => {
 
   it('runs every registered migration down, up, and repeated up without drift', async () => {
     const initial = await source.query(`SELECT count(*)::int AS count FROM migrations`);
-    expect(initial).toEqual([{ count: 22 }]);
-    for (let remaining = 22; remaining > 0; remaining -= 1) {
+    expect(initial).toEqual([{ count: 23 }]);
+    for (let remaining = 23; remaining > 0; remaining -= 1) {
       await source.undoLastMigration({ transaction: 'each' });
     }
     expect(await source.query(`SELECT to_regclass('public.wecom_users') AS table_name`)).toEqual([{ table_name: null }]);
     const reapplied = await source.runMigrations({ transaction: 'each' });
-    expect(reapplied).toHaveLength(22);
+    expect(reapplied).toHaveLength(23);
     expect(await source.runMigrations({ transaction: 'each' })).toEqual([]);
-    expect(await source.query(`SELECT count(*)::int AS count FROM migrations`)).toEqual([{ count: 22 }]);
+    expect(await source.query(`SELECT count(*)::int AS count FROM migrations`)).toEqual([{ count: 23 }]);
   });
 });

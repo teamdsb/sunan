@@ -6,6 +6,7 @@ import { CertificateDetailPage } from './CertificateDetailPage';
 const mockGet = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockGetFileDownloadUrl = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
@@ -17,13 +18,23 @@ vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
   useUpdateCertificateMutation: () => [mockUpdate, { isLoading: false }],
   useBindCertificateFilesMutation: () => [mockBind],
+  useLazyGetCertificateFileDownloadUrlQuery: () => [mockGetFileDownloadUrl],
 }));
 
 describe('CertificateDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGet.mockReturnValue({
-      data: { data: { id: 'c1', title: 'certificate-a', ownerName: 'vessel-012', expiryDate: '2027-12-31', status: 'active', files: [{ id: 'f1', fileName: 'doc.pdf' }] } },
+      data: {
+        data: {
+          id: 'c1',
+          title: 'certificate-a',
+          ownerName: 'vessel-012',
+          expiryDate: '2027-12-31',
+          status: 'active',
+          files: [{ id: 'f1', fileName: 'doc.pdf' }],
+        },
+      },
       isLoading: false,
     });
     mockUpdate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
@@ -32,13 +43,17 @@ describe('CertificateDetailPage', () => {
 
   it('relies on the global navigation instead of a return button', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={[
           '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
         ]}
       >
         <Routes>
-          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
+          <Route
+            path="/my/certificates/:id"
+            element={<CertificateDetailPage />}
+          />
         </Routes>
       </MemoryRouter>,
     );
@@ -50,9 +65,17 @@ describe('CertificateDetailPage', () => {
 
   it('renders detail, edit and bind file', async () => {
     const { container } = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc']}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={[
+          '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D2%26pageSize%3D20%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
+        ]}
+      >
         <Routes>
-          <Route path="/my/certificates/:id" element={<CertificateDetailPage />} />
+          <Route
+            path="/my/certificates/:id"
+            element={<CertificateDetailPage />}
+          />
         </Routes>
       </MemoryRouter>,
     );
@@ -61,9 +84,13 @@ describe('CertificateDetailPage', () => {
     expect(titleInput.value).toBe('certificate-a');
     expect(screen.getByText('doc.pdf')).toBeInTheDocument();
 
-    fireEvent.change(titleInput, { target: { value: 'certificate-a-updated' } });
+    fireEvent.change(titleInput, {
+      target: { value: 'certificate-a-updated' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'upload' }));
-    fireEvent.click(container.querySelector('button[type="submit"]') as HTMLButtonElement);
+    fireEvent.click(
+      container.querySelector('button[type="submit"]') as HTMLButtonElement,
+    );
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
     await waitFor(() => expect(mockBind).toHaveBeenCalled());

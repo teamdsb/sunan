@@ -78,12 +78,84 @@ describe('FilesService', () => {
     const workbench = await service.createPresign({
       category: 'workbench-attachments',
       fileName: '会议记录.docx',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       fileSize: 1024,
     });
 
-    expect(procurement.ossKey).toMatch(/^procurement\/attachments\/\d{4}\/\d{2}\//);
+    expect(procurement.ossKey).toMatch(
+      /^procurement\/attachments\/\d{4}\/\d{2}\//,
+    );
     expect(workbench.ossKey).toMatch(/^workbench\/attachments\/\d{4}\/\d{2}\//);
+  });
+
+  it.each([
+    ['说明.txt', '', 'text/plain'],
+    ['清单.csv', 'application/octet-stream', 'text/csv'],
+    ['现场照片.heic', 'image/heic', 'image/heic'],
+    ['资料.zip', 'application/x-zip-compressed', 'application/zip'],
+    ['归档.rar', 'application/x-rar-compressed', 'application/vnd.rar'],
+    ['制度.wps', 'application/kswps', 'application/vnd.ms-works'],
+    ['台账.et', 'application/kset', 'application/vnd.ms-excel'],
+    ['演示.dps', 'application/ksdps', 'application/vnd.ms-powerpoint'],
+  ])(
+    'normalizes supported business attachment %s to %s',
+    async (fileName, mimeType, expectedMimeType) => {
+      const result = await service.createPresign({
+        category: 'procurement-attachments',
+        fileName,
+        mimeType,
+        fileSize: 1024,
+      });
+
+      expect(result.mimeType).toBe(expectedMimeType);
+      expect(ossService.createUploadSignature.mock.calls.at(-1)).toEqual([
+        expect.stringMatching(/^procurement\/attachments\//),
+        expectedMimeType,
+        fileName,
+      ]);
+    },
+  );
+
+  it('exposes the effective upload policy for a category', () => {
+    expect(service.getPolicy('enterprise-policies')).toEqual(
+      expect.objectContaining({
+        category: 'enterprise-policies',
+        maxSize: 50 * 1024 * 1024,
+        extensions: expect.arrayContaining([
+          'txt',
+          'csv',
+          'heic',
+          'zip',
+          'rar',
+          'wps',
+          'et',
+          'dps',
+        ]),
+      }),
+    );
+  });
+
+  it('rejects an explicit mime type that conflicts with the extension', async () => {
+    await expect(
+      service.createPresign({
+        category: 'procurement-attachments',
+        fileName: '说明.txt',
+        mimeType: 'image/png',
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('keeps specialist categories restricted to their own formats', async () => {
+    await expect(
+      service.createPresign({
+        category: 'certificates',
+        fileName: '说明.txt',
+        mimeType: 'text/plain',
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects unsupported categories', async () => {
@@ -140,9 +212,9 @@ describe('FilesService', () => {
   it('returns 404 for unknown oss key download', async () => {
     fileRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.getDownloadUrl('missing/file.pdf')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.getDownloadUrl('missing/file.pdf'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('downloads media from wecom and uploads to oss', async () => {

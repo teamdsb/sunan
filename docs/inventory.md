@@ -458,5 +458,7 @@ replaced_by: []
 | [docs/superpowers/specs/2026-07-12-m8-wave6-inspection-capa-design.md](superpowers/specs/2026-07-12-m8-wave6-inspection-capa-design.md) | `current-spec` | `safety` | M8 Wave 6 检查、问题与 CAPA 设计 |
 | [docs/superpowers/specs/2026-08-04-cross-module-layout-spacing-design.md](superpowers/specs/2026-08-04-cross-module-layout-spacing-design.md) | `current-spec` | `frontend` | 跨模块页面边距与控件间距修复设计 |
 | [docs/superpowers/specs/2026-08-04-file-upload-preview-design.md](superpowers/specs/2026-08-04-file-upload-preview-design.md) | `current-spec` | `common` | 文件上传格式扩展、限制提示与统一预览设计 |
+| [docs/superpowers/specs/2026-08-04-global-controls-report-approval-design.md](superpowers/specs/2026-08-04-global-controls-report-approval-design.md) | `current-spec` | `frontend` | 全站控件统一与采购报表审批详情、PDF 优化设计 |
 | [docs/superpowers/specs/2026-08-04-real-backend-integration-design.md](superpowers/specs/2026-08-04-real-backend-integration-design.md) | `current-spec` | `frontend` | 前端真实后端接入设计 |
 | [docs/superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md](superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md) | `current-spec` | `frontend` | UI 与主分支后端能力边界收口设计 |
+| [docs/superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md](superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md) | `current-spec` | `auth` | 企业微信部门权限与用户头像优化设计 |

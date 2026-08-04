@@ -11,6 +11,7 @@ import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateController } from './certificate.controller';
 import { CertificateReferenceController } from './certificate-reference.controller';
 import { CertificateService } from './certificate.service';
+import { OssService } from 'src/modules/files/oss.service';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { CertificateService } from './certificate.service';
     ]),
   ],
   controllers: [CertificateController, CertificateReferenceController],
-  providers: [CertificateService],
+  providers: [CertificateService, OssService],
   exports: [CertificateService],
 })
 export class CertificateModule {}

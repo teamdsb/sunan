@@ -11,7 +11,14 @@ export function MonitorPage() {
   const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
   const isManager = roles.some((role) => MANAGER_ROLES.has(role));
 
-  const listQuery = vesselId ? useGetShipMonitorsByVesselQuery(vesselId) : useGetShipMonitorsQuery({ activeOnly: !isManager });
+  const vesselQuery = useGetShipMonitorsByVesselQuery(vesselId ?? '', {
+    skip: !vesselId,
+  });
+  const allMonitorsQuery = useGetShipMonitorsQuery(
+    { activeOnly: !isManager },
+    { skip: Boolean(vesselId) },
+  );
+  const listQuery = vesselId ? vesselQuery : allMonitorsQuery;
   const { data, isLoading } = listQuery;
 
   const [createMonitor] = useCreateShipMonitorMutation();

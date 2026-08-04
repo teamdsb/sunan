@@ -5,6 +5,7 @@ import {
   useCreateFileCallbackMutation,
   useCreateFileFromWecomMutation,
   useCreateFilePresignMutation,
+  useGetFilePolicyQuery,
   useLazyGetFileDownloadUrlQuery,
 } from './filesApi';
 import type { FileCategory, FileRecord } from './types';
@@ -84,6 +85,12 @@ export function useFileUpload({
   wecomReady = false,
 }: UseFileUploadOptions) {
   const [state, setState] = useState<FileUploadState>(INITIAL_STATE);
+  const {
+    data: policyResponse,
+    isLoading: isPolicyLoading,
+    error: policyQueryError,
+    refetch: refetchPolicy,
+  } = useGetFilePolicyQuery(category);
   const [createPresign] = useCreateFilePresignMutation();
   const [createCallback] = useCreateFileCallbackMutation();
   const [createFromWecom] = useCreateFileFromWecomMutation();
@@ -95,7 +102,39 @@ export function useFileUpload({
     });
   };
 
+  const policy = policyResponse?.data ?? null;
+
+  const validateFileBeforeUpload = (file: File): string | null => {
+    if (!policy) {
+      return '上传限制尚未加载，请稍后重试。';
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!extension || !policy.extensions.includes(extension)) {
+      return `文件格式不符合要求，当前支持格式：${policy.extensions
+        .map((item) => item.toUpperCase())
+        .join('、')}。`;
+    }
+
+    if (file.size > policy.maxSize) {
+      const maxSizeMb = Math.round(policy.maxSize / 1024 / 1024);
+      return `文件大小超出限制，单个文件不能超过 ${maxSizeMb}MB。`;
+    }
+
+    return null;
+  };
+
   const uploadFile = async (file: File): Promise<FileRecord | null> => {
+    const validationError = validateFileBeforeUpload(file);
+    if (validationError) {
+      setPartialState({
+        status: 'error',
+        progress: 0,
+        error: validationError,
+      });
+      return null;
+    }
+
     try {
       setPartialState({
         status: 'uploading',
@@ -114,7 +153,8 @@ export function useFileUpload({
         headers: presign.data.headers,
         onUploadProgress: (event) => {
           const total = event.total ?? file.size;
-          const progress = total > 0 ? Math.round((event.loaded / total) * 100) : 0;
+          const progress =
+            total > 0 ? Math.round((event.loaded / total) * 100) : 0;
           setPartialState({ progress });
         },
       });
@@ -122,7 +162,7 @@ export function useFileUpload({
       const callback = await createCallback({
         ossKey: presign.data.ossKey,
         fileName: file.name,
-        mimeType: file.type,
+        mimeType: presign.data.mimeType,
         fileSize: file.size,
         category,
       }).unwrap();
@@ -190,15 +230,18 @@ export function useFileUpload({
   };
 
   const previewFile = async (file: FileRecord): Promise<void> => {
-    if (!window.wx) {
-      throw new Error('企业微信 JS-SDK 未注入。');
-    }
-
     const response = await getDownloadUrl({ ossKey: file.ossKey }).unwrap();
-    window.wx.previewFile({
-      url: response.data.downloadUrl,
-      name: file.fileName,
-    });
+    if (window.wx) {
+      window.wx.previewFile({
+        url: response.data.downloadUrl,
+        name: file.fileName,
+      });
+    }
+  };
+
+  const getFileDownloadUrl = async (file: FileRecord): Promise<string> => {
+    const response = await getDownloadUrl({ ossKey: file.ossKey }).unwrap();
+    return response.data.downloadUrl;
   };
 
   const reset = () => {
@@ -208,7 +251,12 @@ export function useFileUpload({
   return {
     ...state,
     reset,
+    policy,
+    isPolicyLoading,
+    policyError: policyQueryError ? '上传限制加载失败，请重试。' : null,
+    refetchPolicy,
     previewFile,
+    getFileDownloadUrl,
     uploadFile,
     uploadFromWecom,
   };

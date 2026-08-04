@@ -16,6 +16,7 @@ import { CertificateCreateDto } from './dto/certificate-create.dto';
 import { CertificateGroupQueryDto } from './dto/certificate-group-query.dto';
 import { CertificateListQueryDto } from './dto/certificate-list-query.dto';
 import { CertificateUpdateDto } from './dto/certificate-update.dto';
+import { OssService } from 'src/modules/files/oss.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -38,6 +39,7 @@ export class CertificateService {
     private readonly personnelRepository: Repository<PersonnelEntity>,
     @InjectRepository(SafetyEquipmentEntity)
     private readonly equipmentRepository: Repository<SafetyEquipmentEntity>,
+    private readonly ossService: OssService,
   ) {}
 
   async list(query: CertificateListQueryDto) {
@@ -224,6 +226,17 @@ export class CertificateService {
     );
     if (rows.length) await this.fileRelRepository.save(rows);
     return this.getById(id);
+  }
+
+  async getFileDownloadUrl(id: string, fileId: string) {
+    await this.findOneOrThrow(id);
+    const relation = await this.fileRelRepository.findOne({
+      where: { certificateId: id, fileId },
+    });
+    if (!relation) throw new NotFoundException('certificate file not found');
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    if (!file) throw new NotFoundException('file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
   }
 
   private ensureManager(user: CurrentUser) {

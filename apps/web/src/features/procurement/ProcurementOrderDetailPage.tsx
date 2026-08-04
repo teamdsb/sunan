@@ -1,15 +1,30 @@
-import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, List, Modal, Space, Tag, Typography, message } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Descriptions,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Space,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { FileUploadField } from '../files/FileUploadField';
+import { FileAttachmentList } from '../files/FileAttachmentList';
+import { FilePreviewModal } from '../files/FilePreviewModal';
+import { downloadFileFromUrl } from '../files/fileDownload';
 import type { FileRecord } from '../files/types';
 import {
   ProcurementApprovalRecord,
   ProcurementDepartmentCode,
-  ProcurementFile,
   ProcurementOrderStatus,
   useBindProcurementOrderAttachmentsMutation,
   useUnlinkProcurementOrderAttachmentMutation,
@@ -75,8 +90,12 @@ const externalStatusLabelMap: Record<string, string> = {
   terminated: '审批终止',
 };
 
-function labelFrom(map: Record<string, string>, value: string | null | undefined, fallback: string) {
-  return value ? map[value] ?? fallback : '-';
+function labelFrom(
+  map: Record<string, string>,
+  value: string | null | undefined,
+  fallback: string,
+) {
+  return value ? (map[value] ?? fallback) : '-';
 }
 
 export function ProcurementOrderDetailPage() {
@@ -86,21 +105,46 @@ export function ProcurementOrderDetailPage() {
   const [form] = Form.useForm<ProcurementDraftFormValues>();
 
   const currentUser = useAppSelector((state) => state.auth.currentUser);
-  const { data: orderResponse, isLoading, refetch } = useGetProcurementOrderQuery(id ?? '', { skip: !id });
-  const { data: approvalResponse } = useGetProcurementOrderApprovalsQuery(id ?? '', { skip: !id });
-  const [updateOrder, { isLoading: isUpdating }] = useUpdateProcurementOrderMutation();
-  const [submitOrder, { isLoading: isSubmitting }] = useSubmitProcurementOrderMutation();
-  const [resubmitOrder, { isLoading: isResubmitting }] = useResubmitProcurementOrderMutation();
-  const [bindAttachments, { isLoading: isBinding }] = useBindProcurementOrderAttachmentsMutation();
-  const [unlinkAttachment, { isLoading: isUnlinking }] = useUnlinkProcurementOrderAttachmentMutation();
-  const [getAttachmentDownloadUrl, { isFetching: isPreparingAttachment }] =
+  const {
+    data: orderResponse,
+    isLoading,
+    refetch,
+  } = useGetProcurementOrderQuery(id ?? '', { skip: !id });
+  const { data: approvalResponse } = useGetProcurementOrderApprovalsQuery(
+    id ?? '',
+    { skip: !id },
+  );
+  const [updateOrder, { isLoading: isUpdating }] =
+    useUpdateProcurementOrderMutation();
+  const [submitOrder, { isLoading: isSubmitting }] =
+    useSubmitProcurementOrderMutation();
+  const [resubmitOrder, { isLoading: isResubmitting }] =
+    useResubmitProcurementOrderMutation();
+  const [bindAttachments, { isLoading: isBinding }] =
+    useBindProcurementOrderAttachmentsMutation();
+  const [unlinkAttachment, { isLoading: isUnlinking }] =
+    useUnlinkProcurementOrderAttachmentMutation();
+  const [getAttachmentDownloadUrl] =
     useLazyGetProcurementOrderAttachmentDownloadUrlQuery();
-  const [printOrder, { isLoading: isPrinting }] = usePrintProcurementOrderMutation();
+  const [printOrder] = usePrintProcurementOrderMutation();
+  const [pdfAction, setPdfAction] = useState<'preview' | 'download' | null>(
+    null,
+  );
+  const [pdfPreview, setPdfPreview] = useState<{
+    fileName: string;
+    downloadUrl: string;
+  } | null>(null);
 
   const order = orderResponse?.data;
   const approvals = approvalResponse?.data ?? [];
 
-  const canEditDraft = Boolean(order && order.status === 'draft' && currentUser && (currentUser.userId === order.createdBy || currentUser.roles.includes('system_admin')));
+  const canEditDraft = Boolean(
+    order &&
+    order.status === 'draft' &&
+    currentUser &&
+    (currentUser.userId === order.createdBy ||
+      currentUser.roles.includes('system_admin')),
+  );
 
   useEffect(() => {
     if (!order) {
@@ -120,9 +164,26 @@ export function ProcurementOrderDetailPage() {
 
   const approvalColumns: ColumnsType<ProcurementApprovalRecord> = useMemo(
     () => [
-      { title: '节点', dataIndex: 'approvalLevel', key: 'approvalLevel', width: 120 },
-      { title: '动作', dataIndex: 'action', key: 'action', width: 120, render: (value: string) => labelFrom(approvalActionLabelMap, value, '其他操作') },
-      { title: '审批人', dataIndex: 'approvedBy', key: 'approvedBy', width: 160 },
+      {
+        title: '节点',
+        dataIndex: 'approvalLevel',
+        key: 'approvalLevel',
+        width: 120,
+      },
+      {
+        title: '动作',
+        dataIndex: 'action',
+        key: 'action',
+        width: 120,
+        render: (value: string) =>
+          labelFrom(approvalActionLabelMap, value, '其他操作'),
+      },
+      {
+        title: '审批人',
+        dataIndex: 'approvedBy',
+        key: 'approvedBy',
+        width: 160,
+      },
       {
         title: '时间',
         dataIndex: 'approvedAt',
@@ -130,8 +191,20 @@ export function ProcurementOrderDetailPage() {
         width: 180,
         render: (value: string) => new Date(value).toLocaleString('zh-CN'),
       },
-      { title: '意见', dataIndex: 'comment', key: 'comment', render: (value: string | null) => value || '-' },
-      { title: '来源', dataIndex: 'source', key: 'source', width: 120, render: (value: string) => labelFrom(approvalSourceLabelMap, value, '其他来源') },
+      {
+        title: '意见',
+        dataIndex: 'comment',
+        key: 'comment',
+        render: (value: string | null) => value || '-',
+      },
+      {
+        title: '来源',
+        dataIndex: 'source',
+        key: 'source',
+        width: 120,
+        render: (value: string) =>
+          labelFrom(approvalSourceLabelMap, value, '其他来源'),
+      },
     ],
     [],
   );
@@ -181,50 +254,55 @@ export function ProcurementOrderDetailPage() {
     await refetch();
   };
 
-  const handleOpenAttachment = async (
-    file: ProcurementFile,
-    mode: 'preview' | 'download',
-  ) => {
+  const handlePrint = async (mode: 'preview' | 'download') => {
     if (!id) {
       return;
     }
 
-    const response = await getAttachmentDownloadUrl({
-      id,
-      fileId: file.id,
-    }).unwrap();
-
-    if (mode === 'preview' && window.wx) {
-      window.wx.previewFile({
-        url: response.data.downloadUrl,
-        name: file.fileName,
-      });
-      return;
+    setPdfAction(mode);
+    try {
+      const result = await printOrder(id).unwrap();
+      const fileName = `${order?.orderNo ?? '采购单'}.pdf`;
+      if (mode === 'preview') {
+        setPdfPreview({ fileName, downloadUrl: result.data.downloadUrl });
+        messageApi.success('PDF 已生成并打开预览');
+      } else {
+        await downloadFileFromUrl(result.data.downloadUrl, fileName);
+        messageApi.success('PDF 已生成并开始下载');
+      }
+    } catch (error) {
+      messageApi.error(
+        error instanceof Error ? error.message : 'PDF 生成失败，请稍后重试',
+      );
+    } finally {
+      setPdfAction(null);
     }
-
-    window.open(response.data.downloadUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handlePrint = async () => {
-    if (!id) {
-      return;
-    }
-
-    const result = await printOrder(id).unwrap();
-    window.open(result.data.downloadUrl, '_blank', 'noopener,noreferrer');
-    messageApi.success('PDF 已生成');
-  };
-
-  const handleUnlinkAttachment = (file: ProcurementFile) => {
+  const handleUnlinkAttachment = (file: { id: string }) => {
     if (!id) return;
     let reason = '';
     Modal.confirm({
       title: '解除附件关联',
-      content: <Input autoFocus placeholder="请输入解除原因" onChange={(event) => { reason = event.target.value; }} />,
-      okText: '确认解除', cancelText: '取消', okButtonProps: { danger: true, loading: isUnlinking },
+      content: (
+        <Input
+          autoFocus
+          placeholder="请输入解除原因"
+          onChange={(event) => {
+            reason = event.target.value;
+          }}
+        />
+      ),
+      okText: '确认解除',
+      cancelText: '取消',
+      okButtonProps: { danger: true, loading: isUnlinking },
       onOk: async () => {
         if (!reason.trim()) throw new Error('请输入解除原因');
-        await unlinkAttachment({ id, fileId: file.id, reason: reason.trim() }).unwrap();
+        await unlinkAttachment({
+          id,
+          fileId: file.id,
+          reason: reason.trim(),
+        }).unwrap();
         messageApi.success('附件关联已解除，原文件未被删除');
         await refetch();
       },
@@ -246,27 +324,66 @@ export function ProcurementOrderDetailPage() {
         </Typography.Paragraph>
         <Space wrap>
           <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
-          <Button onClick={() => navigate('/procurement/approvals')}>进入审批页</Button>
-          <Button loading={isPrinting} onClick={() => void handlePrint()}>
+          <Button onClick={() => navigate('/procurement/approvals')}>
+            进入审批页
+          </Button>
+          <Button
+            loading={pdfAction === 'preview'}
+            disabled={pdfAction !== null}
+            onClick={() => void handlePrint('preview')}
+          >
+            预览 PDF
+          </Button>
+          <Button
+            loading={pdfAction === 'download'}
+            disabled={pdfAction !== null}
+            onClick={() => void handlePrint('download')}
+          >
             导出 PDF
           </Button>
         </Space>
       </section>
 
       <section className="page-card-grid">
-        <Card variant="borderless" className="placeholder-card" loading={isLoading}>
+        <Card
+          variant="borderless"
+          className="placeholder-card"
+          loading={isLoading}
+        >
           {order ? (
             <Descriptions bordered column={1} size="small" title={order.title}>
               <Descriptions.Item label="状态">
-                <Tag color={statusColor[order.status]}>{labelFrom(statusLabelMap, order.status, '未知状态')}</Tag>
+                <Tag color={statusColor[order.status]}>
+                  {labelFrom(statusLabelMap, order.status, '未知状态')}
+                </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="单号">{order.orderNo}</Descriptions.Item>
-              <Descriptions.Item label="部门">{labelFrom(departmentLabel, order.departmentCode, '未配置部门')}</Descriptions.Item>
-              <Descriptions.Item label="细分">{order.dimensionKey || '-'}</Descriptions.Item>
-              <Descriptions.Item label="金额">¥{order.amount.toFixed(2)}</Descriptions.Item>
-              <Descriptions.Item label="摘要">{order.summary}</Descriptions.Item>
-              <Descriptions.Item label="提交时间">{order.submittedAt ? new Date(order.submittedAt).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
-              <Descriptions.Item label="外部流程状态">{labelFrom(externalStatusLabelMap, order.externalStatus, '外部状态')}</Descriptions.Item>
+              <Descriptions.Item label="单号">
+                {order.orderNo}
+              </Descriptions.Item>
+              <Descriptions.Item label="部门">
+                {labelFrom(departmentLabel, order.departmentCode, '未配置部门')}
+              </Descriptions.Item>
+              <Descriptions.Item label="细分">
+                {order.dimensionKey || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="金额">
+                ¥{order.amount.toFixed(2)}
+              </Descriptions.Item>
+              <Descriptions.Item label="摘要">
+                {order.summary}
+              </Descriptions.Item>
+              <Descriptions.Item label="提交时间">
+                {order.submittedAt
+                  ? new Date(order.submittedAt).toLocaleString('zh-CN')
+                  : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="外部流程状态">
+                {labelFrom(
+                  externalStatusLabelMap,
+                  order.externalStatus,
+                  '外部状态',
+                )}
+              </Descriptions.Item>
             </Descriptions>
           ) : (
             <Alert type="warning" showIcon message="采购单不存在或无权限查看" />
@@ -276,25 +393,44 @@ export function ProcurementOrderDetailPage() {
 
       {order && canEditDraft ? (
         <section className="page-card-grid">
-          <Card variant="borderless" className="placeholder-card" title="草稿编辑">
+          <Card
+            variant="borderless"
+            className="placeholder-card"
+            title="草稿编辑"
+          >
             <Form form={form} layout="vertical">
               <Form.Item name="title" label="标题" rules={[{ required: true }]}>
                 <Input maxLength={128} />
               </Form.Item>
-              <Form.Item name="summary" label="摘要/事由" rules={[{ required: true }]}>
+              <Form.Item
+                name="summary"
+                label="摘要/事由"
+                rules={[{ required: true }]}
+              >
                 <Input.TextArea rows={4} />
               </Form.Item>
-              <Form.Item name="amount" label="金额" rules={[{ required: true }]}>
+              <Form.Item
+                name="amount"
+                label="金额"
+                rules={[{ required: true }]}
+              >
                 <InputNumber min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
               <Form.Item name="expenseDate" label="费用日期（可选）">
                 <Input type="date" />
               </Form.Item>
               <Space wrap>
-                <Button loading={isUpdating} onClick={() => void handleSaveDraft()}>
+                <Button
+                  loading={isUpdating}
+                  onClick={() => void handleSaveDraft()}
+                >
                   保存草稿
                 </Button>
-                <Button type="primary" loading={isSubmitting || isResubmitting} onClick={() => void handleSubmit()}>
+                <Button
+                  type="primary"
+                  loading={isSubmitting || isResubmitting}
+                  onClick={() => void handleSubmit()}
+                >
                   {order.submittedAt ? '重新提交' : '提交审批'}
                 </Button>
               </Space>
@@ -305,7 +441,11 @@ export function ProcurementOrderDetailPage() {
 
       {order && canEditDraft ? (
         <section className="page-card-grid">
-          <Card variant="borderless" className="placeholder-card" title="附件上传">
+          <Card
+            variant="borderless"
+            className="placeholder-card"
+            title="附件上传"
+          >
             <FileUploadField
               category="procurement-attachments"
               onChange={(file) => void handleUploadedAttachment(file)}
@@ -319,47 +459,71 @@ export function ProcurementOrderDetailPage() {
 
       {order ? (
         <section className="page-card-grid">
-          <Card variant="borderless" className="placeholder-card" title="已绑定附件">
-            <List
-              dataSource={order.files ?? []}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      key="preview"
-                      type="link"
-                      loading={isPreparingAttachment}
-                      onClick={() => void handleOpenAttachment(item, 'preview')}
-                    >
-                      预览
-                    </Button>,
-                    <Button
-                      key="download"
-                      type="link"
-                      loading={isPreparingAttachment}
-                      onClick={() => void handleOpenAttachment(item, 'download')}
-                    >
-                      下载
-                    </Button>,
-                    ...(canEditDraft ? [
-                      <Button key="unlink" danger type="link" loading={isUnlinking} onClick={() => handleUnlinkAttachment(item)}>解除关联</Button>,
-                    ] : []),
-                  ]}
-                >
-                  <List.Item.Meta title={item.fileName} description={`${item.mimeType} · ${item.fileSize} bytes`} />
-                </List.Item>
-              )}
-              locale={{ emptyText: '暂无附件' }}
+          <Card
+            variant="borderless"
+            className="placeholder-card"
+            title="已绑定附件"
+          >
+            <FileAttachmentList
+              files={order.files ?? []}
+              getUrl={async (file) => {
+                const response = await getAttachmentDownloadUrl({
+                  id,
+                  fileId: file.id,
+                }).unwrap();
+                return response.data.downloadUrl;
+              }}
+              extraActions={(file) =>
+                canEditDraft
+                  ? [
+                      <Button
+                        key="unlink"
+                        danger
+                        type="link"
+                        loading={isUnlinking}
+                        onClick={() => handleUnlinkAttachment(file)}
+                      >
+                        解除关联
+                      </Button>,
+                    ]
+                  : []
+              }
             />
           </Card>
         </section>
       ) : null}
 
       <section className="page-card-grid">
-        <Card variant="borderless" className="placeholder-card" title="审批轨迹">
-          <ResponsiveTable rowKey="id" columns={approvalColumns} dataSource={approvals} pagination={false} />
+        <Card
+          variant="borderless"
+          className="placeholder-card"
+          title="审批轨迹"
+        >
+          <ResponsiveTable
+            rowKey="id"
+            columns={approvalColumns}
+            dataSource={approvals}
+            pagination={false}
+          />
         </Card>
       </section>
+      <FilePreviewModal
+        open={Boolean(pdfPreview)}
+        file={
+          pdfPreview
+            ? {
+                fileName: pdfPreview.fileName,
+                mimeType: 'application/pdf',
+                fileSize: 0,
+              }
+            : null
+        }
+        getUrl={() => {
+          if (!pdfPreview) return Promise.reject(new Error('PDF 尚未生成'));
+          return Promise.resolve(pdfPreview.downloadUrl);
+        }}
+        onClose={() => setPdfPreview(null)}
+      />
     </>
   );
 }

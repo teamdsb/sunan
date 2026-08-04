@@ -16,18 +16,37 @@ const ROLE_BY_DEPARTMENT_NAME = new Map<string, string>([
   ['后勤部', 'logistics'],
 ]);
 
-export function resolveRolesFromDepartmentNames(
+const ROLE_BY_DEPARTMENT_ID = new Map<number, string>([
+  [3, 'general_office'],
+  [4, 'finance'],
+  [5, 'business'],
+  [6, 'shipping'],
+  [7, 'logistics'],
+  [8, 'crew'],
+]);
+
+export function resolveRolesFromDepartments(
+  departmentIds: number[],
   departmentNames: string[],
   isSystemAdmin: boolean,
 ): string[] {
   const roles = new Set<string>(['all_authenticated']);
 
-  departmentNames.forEach((departmentName) => {
-    const role = ROLE_BY_DEPARTMENT_NAME.get(departmentName);
-    if (role) {
-      roles.add(role);
-    }
-  });
+  if (departmentIds.length > 0) {
+    departmentIds.forEach((departmentId) => {
+      const role = ROLE_BY_DEPARTMENT_ID.get(departmentId);
+      if (role) {
+        roles.add(role);
+      }
+    });
+  } else {
+    departmentNames.forEach((departmentName) => {
+      const role = ROLE_BY_DEPARTMENT_NAME.get(departmentName);
+      if (role) {
+        roles.add(role);
+      }
+    });
+  }
 
   if (isSystemAdmin) {
     roles.add('system_admin');

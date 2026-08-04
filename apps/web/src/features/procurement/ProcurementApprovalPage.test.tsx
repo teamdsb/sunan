@@ -7,7 +7,10 @@ const mockPending = vi.fn();
 const mockAction = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -15,8 +18,12 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('./procurementApi', () => ({
-  useGetProcurementPendingApprovalsQuery: (params: unknown) => mockPending(params),
-  useActionProcurementOrderApprovalMutation: () => [mockAction, { isLoading: false }],
+  useGetProcurementPendingApprovalsQuery: (params: unknown) =>
+    mockPending(params),
+  useActionProcurementOrderApprovalMutation: () => [
+    mockAction,
+    { isLoading: false },
+  ],
 }));
 
 describe('ProcurementApprovalPage', () => {
@@ -40,5 +47,10 @@ describe('ProcurementApprovalPage', () => {
       entityType: 'order',
       departmentCode: undefined,
     });
+    expect(
+      screen
+        .getByRole('button', { name: '返回采购首页' })
+        .closest('.procurement-approval-toolbar'),
+    ).toBeInTheDocument();
   });
 });

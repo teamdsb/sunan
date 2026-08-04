@@ -99,6 +99,17 @@ export class WorkbenchController {
     return { data: await this.service.uploadAttachment(recordId, dto, user) };
   }
 
+  @Get('records/:recordId/attachments/:fileId/download-url')
+  async getAttachmentDownloadUrl(
+    @Param('recordId') recordId: string,
+    @Param('fileId') fileId: string,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return {
+      data: await this.service.getAttachmentDownloadUrl(recordId, fileId, user),
+    };
+  }
+
   @Get('records/:recordId/print')
   async getPrintSnapshot(
     @Param('recordId') recordId: string,

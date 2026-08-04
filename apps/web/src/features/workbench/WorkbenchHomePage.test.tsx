@@ -1,9 +1,21 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkbenchHomePage } from './WorkbenchHomePage';
 
-vi.mock('../files/FileUploadField', () => ({ FileUploadField: () => <button type="button">上传文件</button> }));
-vi.mock('../files/useFileUpload', () => ({ useFileUpload: () => ({ uploadFile: vi.fn().mockResolvedValue({ id: 'signature-file' }) }) }));
+vi.mock('../files/FileUploadField', () => ({
+  FileUploadField: () => <button type="button">上传文件</button>,
+}));
+vi.mock('../files/useFileUpload', () => ({
+  useFileUpload: () => ({
+    uploadFile: vi.fn().mockResolvedValue({ id: 'signature-file' }),
+  }),
+}));
 
 const mockNavigate = vi.fn();
 const mockGetWorkbenchDashboardQuery = vi.fn();
@@ -24,7 +36,10 @@ const mockScrollTo = vi.fn();
 const mockScrollIntoView = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -35,19 +50,45 @@ vi.mock('./workbenchApi', () => ({
   useGetWorkbenchDashboardQuery: () => mockGetWorkbenchDashboardQuery(),
   useGetWorkbenchRecordsQuery: (params: unknown, options: unknown) =>
     mockGetWorkbenchRecordsQuery(params, options),
-  useGetWorkbenchRecordQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordQuery(recordId, options),
-  useGetWorkbenchRecordIssuesQuery: (recordId: string, options: unknown) => mockGetWorkbenchRecordIssuesQuery(recordId, options),
+  useGetWorkbenchRecordQuery: (recordId: string, options: unknown) =>
+    mockGetWorkbenchRecordQuery(recordId, options),
+  useGetWorkbenchRecordIssuesQuery: (recordId: string, options: unknown) =>
+    mockGetWorkbenchRecordIssuesQuery(recordId, options),
   useGetWorkbenchModuleSchemaQuery: (moduleCode: string, options: unknown) =>
     mockGetWorkbenchModuleSchemaQuery(moduleCode, options),
-  useGetWorkbenchAttendanceStatisticsQuery: (params: unknown, options: unknown) =>
-    mockGetWorkbenchAttendanceStatisticsQuery(params, options),
-  useLazyGetWorkbenchPrintSnapshotQuery: () => [mockTriggerPrintSnapshot, { isFetching: false }],
-  useCreateWorkbenchRecordMutation: () => [mockCreateWorkbenchRecord, { isLoading: false }],
-  usePerformWorkbenchRecordActionMutation: () => [mockPerformWorkbenchRecordAction, { isLoading: false }],
-  useLaunchWorkbenchApprovalMutation: () => [mockLaunchWorkbenchApproval, { isLoading: false }],
-  useUploadWorkbenchRecordAttachmentMutation: () => [mockUploadWorkbenchRecordAttachment, { isLoading: false }],
-  useCreateWorkbenchSignatureEvidenceMutation: () => [mockCreateSignatureEvidence, { isLoading: false }],
-  useCreateWorkbenchLocationEvidenceMutation: () => [mockCreateLocationEvidence, { isLoading: false }],
+  useGetWorkbenchAttendanceStatisticsQuery: (
+    params: unknown,
+    options: unknown,
+  ) => mockGetWorkbenchAttendanceStatisticsQuery(params, options),
+  useLazyGetWorkbenchPrintSnapshotQuery: () => [
+    mockTriggerPrintSnapshot,
+    { isFetching: false },
+  ],
+  useLazyGetWorkbenchAttachmentDownloadUrlQuery: () => [vi.fn()],
+  useCreateWorkbenchRecordMutation: () => [
+    mockCreateWorkbenchRecord,
+    { isLoading: false },
+  ],
+  usePerformWorkbenchRecordActionMutation: () => [
+    mockPerformWorkbenchRecordAction,
+    { isLoading: false },
+  ],
+  useLaunchWorkbenchApprovalMutation: () => [
+    mockLaunchWorkbenchApproval,
+    { isLoading: false },
+  ],
+  useUploadWorkbenchRecordAttachmentMutation: () => [
+    mockUploadWorkbenchRecordAttachment,
+    { isLoading: false },
+  ],
+  useCreateWorkbenchSignatureEvidenceMutation: () => [
+    mockCreateSignatureEvidence,
+    { isLoading: false },
+  ],
+  useCreateWorkbenchLocationEvidenceMutation: () => [
+    mockCreateLocationEvidence,
+    { isLoading: false },
+  ],
 }));
 
 vi.mock('../../hooks/useWecomJsSdk', () => ({
@@ -63,7 +104,9 @@ describe('WorkbenchHomePage', () => {
       return 0;
     };
     Element.prototype.scrollIntoView = mockScrollIntoView;
-    mockWxInvoke.mockImplementation((_api, _config, callback) => callback({ err_msg: 'thirdPartyOpenPage:ok' }));
+    mockWxInvoke.mockImplementation((_api, _config, callback) =>
+      callback({ err_msg: 'thirdPartyOpenPage:ok' }),
+    );
     window.wx = {
       config: vi.fn(),
       ready: vi.fn(),
@@ -74,8 +117,16 @@ describe('WorkbenchHomePage', () => {
       invoke: mockWxInvoke,
       previewFile: vi.fn(),
     };
-    mockTriggerPrintSnapshot.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { paperSize: 'A4', renderedFormat: 'pdf' } }) });
-    mockUploadWorkbenchRecordAttachment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ data: { id: 'att-1' } }) });
+    mockTriggerPrintSnapshot.mockReturnValue({
+      unwrap: vi
+        .fn()
+        .mockResolvedValue({
+          data: { paperSize: 'A4', renderedFormat: 'pdf' },
+        }),
+    });
+    mockUploadWorkbenchRecordAttachment.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({ data: { id: 'att-1' } }),
+    });
     mockGetWorkbenchDashboardQuery.mockReturnValue({
       data: {
         data: {
@@ -187,11 +238,17 @@ describe('WorkbenchHomePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /考勤统计/ }));
     fireEvent.click(screen.getByRole('button', { name: /审批看板/ }));
     fireEvent.click(screen.getAllByRole('button', { name: /海图更新/ })[0]);
-    fireEvent.click(screen.getAllByRole('button', { name: /海图批次 2026-04/ })[0]);
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /海图批次 2026-04/ })[0],
+    );
 
-    expect(mockNavigate).toHaveBeenCalledWith('/workbench/statistics/attendance');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/workbench/statistics/attendance',
+    );
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/approvals');
-    expect(mockNavigate).toHaveBeenCalledWith('/workbench/modules/shipping_chart_update');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/workbench/modules/shipping_chart_update',
+    );
     expect(mockNavigate).toHaveBeenCalledWith('/workbench/records/record-1');
   });
 
@@ -252,7 +309,9 @@ describe('WorkbenchHomePage', () => {
       .closest('section');
     expect(moduleSection).not.toBeNull();
     expect(within(moduleSection!).queryByText('会议管理')).toBeNull();
-    fireEvent.click(within(moduleSection!).getByRole('button', { name: /查看全部/ }));
+    fireEvent.click(
+      within(moduleSection!).getByRole('button', { name: /查看全部/ }),
+    );
     expect(within(moduleSection!).getByText('会议管理')).toBeInTheDocument();
 
     const recordSection = screen
@@ -260,19 +319,30 @@ describe('WorkbenchHomePage', () => {
       .closest('section');
     expect(recordSection).not.toBeNull();
     expect(within(recordSection!).queryByText('海图记录 4')).toBeNull();
-    fireEvent.click(within(recordSection!).getByRole('button', { name: /展开本页/ }));
+    fireEvent.click(
+      within(recordSection!).getByRole('button', { name: /展开本页/ }),
+    );
     expect(within(recordSection!).getByText('海图记录 4')).toBeInTheDocument();
   });
 
   it('anchors direct module entries to their selected module card', () => {
-    render(<WorkbenchHomePage routeAware initialModuleCode="business_signin_desk" />);
+    render(
+      <WorkbenchHomePage routeAware initialModuleCode="business_signin_desk" />,
+    );
 
-    expect(screen.getByText('签到台').closest('.workbench-module-card')).toHaveClass('is-selected');
+    expect(
+      screen.getByText('签到台').closest('.workbench-module-card'),
+    ).toHaveClass('is-selected');
     expect(mockScrollIntoView).toHaveBeenCalledWith({ block: 'center' });
   });
 
   it('adds return actions for direct module, approval and attendance entries', () => {
-    const { rerender } = render(<WorkbenchHomePage routeAware initialModuleCode="shipping_chart_update" />);
+    const { rerender } = render(
+      <WorkbenchHomePage
+        routeAware
+        initialModuleCode="shipping_chart_update"
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '返回工作台首页' }));
     expect(mockNavigate).toHaveBeenCalledWith('/workbench');
@@ -311,25 +381,26 @@ describe('WorkbenchHomePage', () => {
     }));
     mockGetWorkbenchRecordsQuery.mockImplementation(
       (params: { status?: string }) => ({
-        data: params?.status === 'approval_pending'
-          ? {
-              data: [
-                {
-                  id: 'older-approval',
-                  moduleCode: 'business_signin_desk',
-                  title: '较早的待审批记录',
-                  status: 'approval_pending',
-                  vesselId: null,
-                  occurredAt: '2026-03-01T10:00:00.000+08:00',
-                  approvalChannel: 'internal',
-                },
-              ],
-              pagination: { page: 1, pageSize: 100, total: 1 },
-            }
-          : {
-              data: recentClosedRecords,
-              pagination: { page: 1, pageSize: 20, total: 20 },
-            },
+        data:
+          params?.status === 'approval_pending'
+            ? {
+                data: [
+                  {
+                    id: 'older-approval',
+                    moduleCode: 'business_signin_desk',
+                    title: '较早的待审批记录',
+                    status: 'approval_pending',
+                    vesselId: null,
+                    occurredAt: '2026-03-01T10:00:00.000+08:00',
+                    approvalChannel: 'internal',
+                  },
+                ],
+                pagination: { page: 1, pageSize: 100, total: 1 },
+              }
+            : {
+                data: recentClosedRecords,
+                pagination: { page: 1, pageSize: 20, total: 20 },
+              },
         isLoading: false,
         isError: false,
       }),
@@ -341,7 +412,9 @@ describe('WorkbenchHomePage', () => {
       .getByRole('heading', { name: '优先处理' })
       .closest('section');
     expect(prioritySection).not.toBeNull();
-    expect(within(prioritySection!).getByText('较早的待审批记录')).toBeInTheDocument();
+    expect(
+      within(prioritySection!).getByText('较早的待审批记录'),
+    ).toBeInTheDocument();
     expect(mockGetWorkbenchRecordsQuery).toHaveBeenCalledWith(
       { status: 'approval_pending', page: 1, pageSize: 100 },
       { skip: false },
@@ -388,8 +461,14 @@ describe('WorkbenchHomePage', () => {
     fireEvent.click(screen.getByRole('button', { name: '打印 A3' }));
 
     await waitFor(() => {
-      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({ recordId: 'record-1', paperSize: 'A4' });
-      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({ recordId: 'record-1', paperSize: 'A3' });
+      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({
+        recordId: 'record-1',
+        paperSize: 'A4',
+      });
+      expect(mockTriggerPrintSnapshot).toHaveBeenCalledWith({
+        recordId: 'record-1',
+        paperSize: 'A3',
+      });
     });
   });
 
@@ -431,8 +510,12 @@ describe('WorkbenchHomePage', () => {
     expect(screen.getByText('签到台')).toBeInTheDocument();
     expect(screen.getAllByText('燃油加注审批').length).toBeGreaterThan(0);
     expect(screen.getByText('审批相关记录')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '燃油加注 2026-04' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '海图批次 2026-04' })).toBeNull();
+    expect(
+      screen.getByRole('button', { name: '燃油加注 2026-04' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '海图批次 2026-04' }),
+    ).toBeNull();
 
     await waitFor(() => {
       expect(mockGetWorkbenchRecordsQuery).toHaveBeenCalledWith(
@@ -489,7 +572,9 @@ describe('WorkbenchHomePage', () => {
       isFetching: false,
     });
 
-    render(<WorkbenchHomePage routeAware initialRecordId="record-approval-1" />);
+    render(
+      <WorkbenchHomePage routeAware initialRecordId="record-approval-1" />,
+    );
     fireEvent.click(screen.getByRole('button', { name: '发起企业微信审批' }));
 
     await waitFor(() => {
@@ -504,7 +589,10 @@ describe('WorkbenchHomePage', () => {
       });
       expect(mockWxInvoke).toHaveBeenCalledWith(
         'thirdPartyOpenPage',
-        expect.objectContaining({ templateId: 'tpl-1', thirdNo: 'ww-approval-1' }),
+        expect.objectContaining({
+          templateId: 'tpl-1',
+          thirdNo: 'ww-approval-1',
+        }),
         expect.any(Function),
       );
     });
@@ -520,9 +608,9 @@ describe('WorkbenchHomePage', () => {
     expect(screen.getByTestId('workbench-attendance-stat-grid')).toHaveClass(
       'workbench-attendance-stat-grid',
     );
-    expect(screen.getAllByTestId('workbench-attendance-stat-card')).toHaveLength(
-      8,
-    );
+    expect(
+      screen.getAllByTestId('workbench-attendance-stat-card'),
+    ).toHaveLength(8);
     expect(mockGetWorkbenchAttendanceStatisticsQuery).toHaveBeenCalledWith(
       { month: currentMonth },
       { skip: false },

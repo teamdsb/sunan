@@ -13,7 +13,7 @@ import {
   Typography,
   message,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { canManageOffice } from './officePermissions';
@@ -90,7 +90,10 @@ function formatAuditAction(action: string) {
 export function OfficeAdminPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const { data: categoryResponse } = useGetOfficeCategoriesQuery();
-  const categories = categoryResponse?.data ?? [];
+  const categories = useMemo(
+    () => categoryResponse?.data ?? [],
+    [categoryResponse?.data],
+  );
   const [query, setQuery] = useState<{
     keyword?: string;
     categoryCode?: string;
@@ -131,6 +134,42 @@ export function OfficeAdminPage() {
     .filter((category) => category.canManage)
     .map((category) => ({ label: category.name, value: category.code }));
   const audits = auditResponse?.data ?? [];
+
+  const handleEdit = useCallback(
+    (entry: OfficeAdminEntry) => {
+      setEditingEntry(entry);
+      form.setFieldsValue({
+        categoryCode: entry.categoryCode,
+        title: entry.title,
+        summary: entry.summary,
+        iconType: entry.iconType,
+        targetType: entry.targetType,
+        targetValue: entry.targetValue,
+        openMode: entry.openMode,
+        visibilityRoles: entry.visibilityRoles,
+        managerRoles: entry.managerRoles,
+        sortOrder: entry.sortOrder,
+      });
+      setOpen(true);
+    },
+    [form],
+  );
+
+  const handlePublish = useCallback(
+    async (id: string) => {
+      await publishEntry(id).unwrap();
+      messageApi.success('办事入口已发布');
+    },
+    [messageApi, publishEntry],
+  );
+
+  const handleDisable = useCallback(
+    async (id: string) => {
+      await disableEntry(id).unwrap();
+      messageApi.success('办事入口已停用');
+    },
+    [disableEntry, messageApi],
+  );
 
   const columns: ColumnsType<OfficeAdminEntry> = useMemo(
     () => [
@@ -195,7 +234,14 @@ export function OfficeAdminPage() {
         ),
       },
     ],
-    [categories, isDisabling, isPublishing],
+    [
+      categories,
+      handleDisable,
+      handleEdit,
+      handlePublish,
+      isDisabling,
+      isPublishing,
+    ],
   );
 
   const auditColumns: ColumnsType<OfficeAuditRecord> = useMemo(
@@ -234,23 +280,6 @@ export function OfficeAdminPage() {
     setOpen(true);
   };
 
-  const handleEdit = (entry: OfficeAdminEntry) => {
-    setEditingEntry(entry);
-    form.setFieldsValue({
-      categoryCode: entry.categoryCode,
-      title: entry.title,
-      summary: entry.summary,
-      iconType: entry.iconType,
-      targetType: entry.targetType,
-      targetValue: entry.targetValue,
-      openMode: entry.openMode,
-      visibilityRoles: entry.visibilityRoles,
-      managerRoles: entry.managerRoles,
-      sortOrder: entry.sortOrder,
-    });
-    setOpen(true);
-  };
-
   const handleSave = async () => {
     const values = await form.validateFields();
     if (editingEntry) {
@@ -261,16 +290,6 @@ export function OfficeAdminPage() {
       messageApi.success('办事入口已创建');
     }
     setOpen(false);
-  };
-
-  const handlePublish = async (id: string) => {
-    await publishEntry(id).unwrap();
-    messageApi.success('办事入口已发布');
-  };
-
-  const handleDisable = async (id: string) => {
-    await disableEntry(id).unwrap();
-    messageApi.success('办事入口已停用');
   };
 
   if (!manageable) {

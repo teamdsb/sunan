@@ -7,6 +7,15 @@ const uploadFile = vi.fn();
 const uploadFromWecom = vi.fn();
 const previewFile = vi.fn();
 const reset = vi.fn();
+const refetchPolicy = vi.fn();
+const getFileDownloadUrl = vi.fn();
+const filePolicy = {
+  category: 'procurement-attachments',
+  maxSize: 20 * 1024 * 1024,
+  extensions: ['pdf', 'txt', 'csv', 'heic', 'zip', 'rar', 'wps', 'et', 'dps'],
+  accept: '.pdf,.txt,.csv,.heic,.zip,.rar,.wps,.et,.dps',
+  mimeTypes: { pdf: 'application/pdf', txt: 'text/plain' },
+};
 type MockUploadState = {
   status: 'idle' | 'uploading' | 'success' | 'error';
   progress: number;
@@ -27,12 +36,18 @@ vi.mock('./useFileUpload', () => ({
     uploadFile,
     uploadFromWecom,
     previewFile,
+    refetchPolicy,
+    getFileDownloadUrl,
+    policy: filePolicy,
+    isPolicyLoading: false,
+    policyError: null,
   }),
 }));
 
 describe('FileUploadField', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getFileDownloadUrl.mockResolvedValue('https://oss.example.com/download');
     uploadState = {
       status: 'idle',
       progress: 0,
@@ -67,6 +82,17 @@ describe('FileUploadField', () => {
       expect(uploadFile).toHaveBeenCalled();
       expect(onChange).toHaveBeenCalled();
     });
+  });
+
+  it('shows the effective limits before the upload action', () => {
+    render(<FileUploadField category="procurement-attachments" />);
+
+    expect(screen.getByText(/支持格式/)).toHaveTextContent('TXT');
+    expect(screen.getByText(/单个文件/)).toHaveTextContent('20MB');
+    expect(screen.getByTestId('file-input')).toHaveAttribute(
+      'accept',
+      filePolicy.accept,
+    );
   });
 
   it('invokes wecom upload when capture is enabled', async () => {
@@ -115,9 +141,10 @@ describe('FileUploadField', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '预览文件' }));
 
-    await waitFor(() => {
-      expect(previewFile).toHaveBeenCalled();
-    });
+    expect(await screen.findByTitle('证书.pdf 预览')).toHaveAttribute(
+      'src',
+      'https://oss.example.com/download',
+    );
   });
 
   it('keeps a retry path after native upload fails', async () => {

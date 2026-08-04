@@ -30,8 +30,13 @@ const iconMap = {
   other: AppstoreOutlined,
 } as const;
 
-function formatCategoryName(categories: Array<{ code: string; name: string }>, code: string) {
-  return categories.find((category) => category.code === code)?.name ?? '未分类';
+function formatCategoryName(
+  categories: Array<{ code: string; name: string }>,
+  code: string,
+) {
+  return (
+    categories.find((category) => category.code === code)?.name ?? '未分类'
+  );
 }
 
 export function OfficeHomePage() {
@@ -57,7 +62,9 @@ export function OfficeHomePage() {
     if (!normalized) {
       return rows;
     }
-    return rows.filter((entry) => `${entry.title} ${entry.summary}`.toLowerCase().includes(normalized));
+    return rows.filter((entry) =>
+      `${entry.title} ${entry.summary}`.toLowerCase().includes(normalized),
+    );
   }, [entryResponse?.data, keyword]);
 
   const categoryOptions = [
@@ -67,7 +74,10 @@ export function OfficeHomePage() {
       .map((category) => ({ label: category.name, value: category.code })),
   ];
 
-  const updateParams = (nextValues: { keyword?: string; categoryCode?: string }) => {
+  const updateParams = (nextValues: {
+    keyword?: string;
+    categoryCode?: string;
+  }) => {
     const next = new URLSearchParams(searchParams);
     if (nextValues.keyword !== undefined) {
       const nextKeyword = nextValues.keyword.trim();
@@ -85,7 +95,9 @@ export function OfficeHomePage() {
     const search = new URLSearchParams();
     if (keyword.trim()) search.set('keyword', keyword.trim());
     if (categoryCode !== 'all') search.set('categoryCode', categoryCode);
-    navigate(`${officeRouteConfig.officeSearch.path}${search.toString() ? `?${search.toString()}` : ''}`);
+    navigate(
+      `${officeRouteConfig.officeSearch.path}${search.toString() ? `?${search.toString()}` : ''}`,
+    );
   };
 
   const handleOpen = async (entry: OfficeEntry) => {
@@ -105,14 +117,15 @@ export function OfficeHomePage() {
           description="请检查网络后刷新页面。"
         />
       ) : null}
-      <section className="office-mobile-hero" aria-labelledby="office-home-title">
+      <section
+        className="office-mobile-hero"
+        aria-labelledby="office-home-title"
+      >
         <div className="office-mobile-hero-copy">
           <Typography.Title level={1} id="office-home-title">
             办事中心
           </Typography.Title>
-          <Typography.Paragraph>
-            搜索并打开办事入口
-          </Typography.Paragraph>
+          <Typography.Paragraph>搜索并打开办事入口</Typography.Paragraph>
         </div>
         <div className="office-mobile-hero-action">
           {canManageOffice(categories) ? (
@@ -129,20 +142,22 @@ export function OfficeHomePage() {
       </section>
 
       <section className="office-search-panel office-mobile-search-panel">
-        <Input
+        <Input.Search
           value={keyword}
           onChange={(event) => updateParams({ keyword: event.target.value })}
-          onPressEnter={handleSearch}
+          onSearch={handleSearch}
           placeholder="搜索办事入口"
           prefix={<SearchOutlined />}
+          enterButton="搜索"
         />
-        <Button type="primary" onClick={handleSearch}>
-          搜索
-        </Button>
       </section>
 
       <section className="office-filter-panel office-mobile-filter-panel">
-        <Segmented options={categoryOptions} value={categoryCode} onChange={(value) => updateParams({ categoryCode: String(value) })} />
+        <Segmented
+          options={categoryOptions}
+          value={categoryCode}
+          onChange={(value) => updateParams({ categoryCode: String(value) })}
+        />
       </section>
 
       <section className="office-dashboard office-mobile-dashboard">
@@ -160,7 +175,9 @@ export function OfficeHomePage() {
               </div>
             ) : (
               featuredEntries.map((entry) => {
-                const Icon = iconMap[entry.categoryCode as keyof typeof iconMap] ?? AppstoreOutlined;
+                const Icon =
+                  iconMap[entry.categoryCode as keyof typeof iconMap] ??
+                  AppstoreOutlined;
 
                 return (
                   <button
@@ -176,19 +193,27 @@ export function OfficeHomePage() {
                     </span>
                     <span className="office-mobile-entry-copy">
                       <span className="office-mobile-entry-title">
-                        <Typography.Title level={3}>{entry.title}</Typography.Title>
-                        <em>{formatCategoryName(categories, entry.categoryCode)}</em>
+                        <Typography.Title level={3}>
+                          {entry.title}
+                        </Typography.Title>
+                        <em>
+                          {formatCategoryName(categories, entry.categoryCode)}
+                        </em>
                       </span>
-                      <Typography.Paragraph>{entry.summary}</Typography.Paragraph>
+                      <Typography.Paragraph>
+                        {entry.summary}
+                      </Typography.Paragraph>
                     </span>
-                    <RightOutlined className="office-mobile-row-chevron" aria-hidden="true" />
+                    <RightOutlined
+                      className="office-mobile-row-chevron"
+                      aria-hidden="true"
+                    />
                   </button>
                 );
               })
             )}
           </div>
         </div>
-
       </section>
     </div>
   );

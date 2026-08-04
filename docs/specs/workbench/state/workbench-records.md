@@ -1,10 +1,11 @@
 ---
 status: current-spec
 owner: workbench
-updated: 2026-05-04
+updated: 2026-08-04
 replaces: []
 replaced_by: []
 ---
+
 # 工作平台记录状态规格
 
 ## 1. 目标
@@ -112,6 +113,8 @@ M5 新增 `record_source` 概念，前端至少要能识别：
   - `print_export`
   - `export_file`
 - 若上传失败，失败态必须保留在 `attachmentQueue` 中，允许用户重试。
+- 文件选择前展示后端策略返回的允许格式和单文件大小限制；长传文件默认上限 20MB。
+- 已绑定附件必须通过记录级附件下载接口获取短期 URL，并在应用内统一预览弹窗展示 PDF、图片、HEIC、TXT 和 CSV；其他格式展示下载回退。
 
 ## 6. 打印预览
 

@@ -21,8 +21,17 @@ export interface FileRecord {
 export interface FilePresignPayload {
   uploadUrl: string;
   ossKey: string;
+  mimeType: string;
   expiresAt: string;
   headers: Record<string, string>;
+}
+
+export interface FilePolicy {
+  category: FileCategory;
+  maxSize: number;
+  extensions: string[];
+  accept: string;
+  mimeTypes: Record<string, string>;
 }
 
 export interface FileDownloadPayload {

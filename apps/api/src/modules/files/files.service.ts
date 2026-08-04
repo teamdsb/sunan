@@ -15,6 +15,8 @@ import { FileFromWecomDto } from 'src/modules/files/dto/file-from-wecom.dto';
 import { FilePresignDto } from 'src/modules/files/dto/file-presign.dto';
 import {
   FILE_CATEGORY_RULES,
+  FILE_EXTENSION_RULES,
+  GENERIC_FILE_MIME_TYPES,
   MIME_EXTENSION_MAP,
 } from 'src/modules/files/files.constants';
 import { OssService } from 'src/modules/files/oss.service';
@@ -52,15 +54,37 @@ export class FilesService {
     const ossKey = this.buildOssKey(dto.category, normalized.extension);
     const signature = await this.ossService.createUploadSignature(
       ossKey,
-      dto.mimeType,
+      normalized.mimeType,
       dto.fileName,
     );
 
     return {
       uploadUrl: signature.uploadUrl,
       ossKey,
+      mimeType: normalized.mimeType,
       expiresAt: signature.expiresAt,
       headers: signature.headers,
+    };
+  }
+
+  getPolicy(category: string) {
+    const rule = FILE_CATEGORY_RULES[category];
+    if (!rule) {
+      throw new BadRequestException('不支持的文件分类');
+    }
+
+    return {
+      category,
+      maxSize: rule.maxSize,
+      extensions: [...rule.extensions],
+      accept: rule.extensions.map((extension) => `.${extension}`).join(','),
+      mimeTypes: Object.fromEntries(
+        rule.extensions.map((extension) => [
+          extension,
+          FILE_EXTENSION_RULES[extension]?.mimeType ??
+            'application/octet-stream',
+        ]),
+      ),
     };
   }
 
@@ -68,7 +92,12 @@ export class FilesService {
     dto: FileCallbackDto,
     currentUser?: CurrentUser,
   ): Promise<FileResponse> {
-    this.validateFileRequest(dto.category, dto.fileName, dto.mimeType, dto.fileSize);
+    const normalized = this.validateFileRequest(
+      dto.category,
+      dto.fileName,
+      dto.mimeType,
+      dto.fileSize,
+    );
     this.validateOssKeyBelongsToCategory(dto.ossKey, dto.category);
 
     const existing = await this.fileRepository.findOne({
@@ -81,7 +110,7 @@ export class FilesService {
     const entity = this.fileRepository.create({
       ossKey: dto.ossKey,
       fileName: dto.fileName,
-      mimeType: dto.mimeType,
+      mimeType: normalized.mimeType,
       fileSize: dto.fileSize,
       category: dto.category,
       uploadedBy: currentUser?.userId ?? null,
@@ -91,7 +120,9 @@ export class FilesService {
     return this.toFileResponse(saved);
   }
 
-  async getDownloadUrl(ossKey: string): Promise<{ downloadUrl: string; expiresAt: string }> {
+  async getDownloadUrl(
+    ossKey: string,
+  ): Promise<{ downloadUrl: string; expiresAt: string }> {
     const file = await this.fileRepository.findOne({ where: { ossKey } });
     if (!file) {
       throw new NotFoundException('文件不存在');
@@ -108,13 +139,18 @@ export class FilesService {
     const existing = await this.fileRepository
       .createQueryBuilder('file')
       .where('file.category = :category', { category: dto.category })
-      .andWhere('file.file_name LIKE :fileName', { fileName: `${idempotentNamePrefix}%` })
+      .andWhere('file.file_name LIKE :fileName', {
+        fileName: `${idempotentNamePrefix}%`,
+      })
       .getOne();
     if (existing) {
       return this.toFileResponse(existing);
     }
     const accessToken = await this.wecomTokenService.getAccessToken();
-    const media = await this.wecomHttpGateway.getMedia(accessToken, dto.mediaId);
+    const media = await this.wecomHttpGateway.getMedia(
+      accessToken,
+      dto.mediaId,
+    );
     const mimeType = media.contentType.toLowerCase();
     const extension = MIME_EXTENSION_MAP[mimeType];
 
@@ -122,7 +158,7 @@ export class FilesService {
       throw new BadRequestException('不支持的企业微信媒体类型');
     }
 
-    this.validateFileRequest(
+    const normalized = this.validateFileRequest(
       dto.category,
       `wecom-${dto.mediaId}.${extension}`,
       mimeType,
@@ -132,12 +168,17 @@ export class FilesService {
     const ossKey = this.buildOssKey(dto.category, extension);
     const fileName = `wecom-${dto.mediaId}.${extension}`;
 
-    await this.ossService.uploadBuffer(ossKey, media.buffer, mimeType, fileName);
+    await this.ossService.uploadBuffer(
+      ossKey,
+      media.buffer,
+      normalized.mimeType,
+      fileName,
+    );
 
     const entity = this.fileRepository.create({
       ossKey,
       fileName,
-      mimeType,
+      mimeType: normalized.mimeType,
       fileSize: media.buffer.length,
       category: dto.category,
       uploadedBy: currentUser?.userId ?? null,
@@ -152,7 +193,7 @@ export class FilesService {
     fileName: string,
     mimeType: string,
     fileSize: number,
-  ): { extension: string } {
+  ): { extension: string; mimeType: string } {
     const rule = FILE_CATEGORY_RULES[category];
     if (!rule) {
       throw new BadRequestException('不支持的文件分类');
@@ -163,7 +204,21 @@ export class FilesService {
       throw new BadRequestException('文件扩展名不符合要求');
     }
 
-    if (!rule.mimeTypes.includes(mimeType.toLowerCase())) {
+    const extensionRule = FILE_EXTENSION_RULES[extension];
+    if (!extensionRule) {
+      throw new BadRequestException('文件类型不符合要求');
+    }
+
+    const normalizedMimeType = mimeType.trim().toLowerCase();
+    const compatibleMimeTypes = new Set([
+      extensionRule.mimeType,
+      ...(extensionRule.compatibleMimeTypes ?? []),
+    ]);
+
+    if (
+      !GENERIC_FILE_MIME_TYPES.has(normalizedMimeType) &&
+      !compatibleMimeTypes.has(normalizedMimeType)
+    ) {
       throw new BadRequestException('文件类型不符合要求');
     }
 
@@ -171,7 +226,7 @@ export class FilesService {
       throw new BadRequestException('文件大小超出限制');
     }
 
-    return { extension };
+    return { extension, mimeType: extensionRule.mimeType };
   }
 
   private buildOssKey(category: string, extension: string): string {
@@ -183,7 +238,10 @@ export class FilesService {
     return `${rule?.storagePrefix ?? category}/${year}/${month}/${randomUUID()}.${extension}`;
   }
 
-  private validateOssKeyBelongsToCategory(ossKey: string, category: string): void {
+  private validateOssKeyBelongsToCategory(
+    ossKey: string,
+    category: string,
+  ): void {
     const rule = FILE_CATEGORY_RULES[category];
     const prefixes = [category, rule?.storagePrefix].filter(Boolean);
 
@@ -193,7 +251,9 @@ export class FilesService {
   }
 
   private async toFileResponse(file: FileEntity): Promise<FileResponse> {
-    const signature = await this.ossService.createDownloadSignature(file.ossKey);
+    const signature = await this.ossService.createDownloadSignature(
+      file.ossKey,
+    );
 
     return {
       id: file.id,

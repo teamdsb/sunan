@@ -17,7 +17,14 @@ paths:
           name: departmentCode
           schema:
             type: string
-            enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+            enum:
+              [
+                general_office,
+                business_dept,
+                finance_dept,
+                shipping_dept,
+                logistics_dept,
+              ]
         - in: query
           name: dimensionType
           schema:
@@ -223,6 +230,35 @@ paths:
           description: 采购单或订单—文件关联不存在
         '422':
           description: 采购单不是草稿或解除原因无效
+  /api/v1/procurement/orders/{id}/attachments/{fileId}/download-url:
+    get:
+      summary: 获取已绑定采购单附件的短期下载地址
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 仅在采购单查看权限和附件绑定关系校验通过后返回
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDownloadUrlResponse'
+        '403':
+          description: 无采购单查看权限
+        '404':
+          description: 采购单、文件或订单—文件关联不存在
   /api/v1/procurement/orders/{id}/print:
     post:
       summary: 生成采购单 A4 PDF
@@ -244,6 +280,20 @@ paths:
                 $ref: '#/components/schemas/ProcurementOrderPrintResponse'
 components:
   schemas:
+    FileDownloadUrlResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [downloadUrl, expiresAt]
+          properties:
+            downloadUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
     PaginationMeta:
       type: object
       required: [total, page, pageSize, totalPages]
@@ -285,7 +335,14 @@ components:
           type: string
         departmentCode:
           type: string
-          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+          enum:
+            [
+              general_office,
+              business_dept,
+              finance_dept,
+              shipping_dept,
+              logistics_dept,
+            ]
         dimensionType:
           type: string
           enum: [none, vessel, logistics_category]
@@ -394,7 +451,14 @@ components:
       properties:
         departmentCode:
           type: string
-          enum: [general_office, business_dept, finance_dept, shipping_dept, logistics_dept]
+          enum:
+            [
+              general_office,
+              business_dept,
+              finance_dept,
+              shipping_dept,
+              logistics_dept,
+            ]
         dimensionType:
           type: string
           enum: [none, vessel, logistics_category]

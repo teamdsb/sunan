@@ -13,8 +13,10 @@ vi.mock('../../app/hooks', () => ({
 }));
 
 vi.mock('./monitorApi', () => ({
-  useGetShipMonitorsQuery: () => mockList(),
-  useGetShipMonitorsByVesselQuery: () => mockByVessel(),
+  useGetShipMonitorsQuery: (params: unknown, options: unknown) =>
+    mockList(params, options),
+  useGetShipMonitorsByVesselQuery: (vesselId: unknown, options: unknown) =>
+    mockByVessel(vesselId, options),
   useCreateShipMonitorMutation: () => [mockCreate],
 }));
 
@@ -50,7 +52,25 @@ describe('MonitorPage', () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(mockByVessel).toHaveBeenCalled();
+    expect(mockByVessel).toHaveBeenCalledWith('vessel-1', { skip: false });
+    expect(mockList).toHaveBeenCalledWith(
+      { activeOnly: false },
+      { skip: true },
+    );
+  });
+
+  it('keeps both query hooks stable and skips the vessel query without a route parameter', () => {
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <MonitorPage />
+      </MemoryRouter>,
+    );
+
+    expect(mockByVessel).toHaveBeenCalledWith('', { skip: true });
+    expect(mockList).toHaveBeenCalledWith(
+      { activeOnly: false },
+      { skip: false },
+    );
   });
 
   it('uses a vertical monitor creation form for mobile-friendly entry', () => {

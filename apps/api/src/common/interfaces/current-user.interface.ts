@@ -3,6 +3,7 @@ export interface CurrentUser {
   corpId: string;
   name: string;
   avatar: string | null;
+  departmentIds?: number[];
   departments: string[];
   position: string | null;
   roles: string[];

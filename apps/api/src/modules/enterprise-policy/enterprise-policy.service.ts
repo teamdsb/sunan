@@ -10,6 +10,7 @@ import { EnterprisePolicyBindFilesDto } from './dto/enterprise-policy-bind-files
 import { EnterprisePolicyCreateDto } from './dto/enterprise-policy-create.dto';
 import { EnterprisePolicyListQueryDto } from './dto/enterprise-policy-list-query.dto';
 import { EnterprisePolicyUpdateDto } from './dto/enterprise-policy-update.dto';
+import { OssService } from 'src/modules/files/oss.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -24,6 +25,7 @@ export class EnterprisePolicyService {
     private readonly fileRepository: Repository<FileEntity>,
     @InjectRepository(WecomUserEntity)
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
+    private readonly ossService: OssService,
   ) {}
 
   async list(query: EnterprisePolicyListQueryDto, user: CurrentUser) {
@@ -178,6 +180,17 @@ export class EnterprisePolicyService {
     return this.getById(id);
   }
 
+  async getFileDownloadUrl(id: string, fileId: string) {
+    await this.findOneOrThrow(id);
+    const relation = await this.fileRelRepository.findOne({
+      where: { enterprisePolicyId: id, fileId },
+    });
+    if (!relation) throw new NotFoundException('enterprise policy file not found');
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    if (!file) throw new NotFoundException('file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
   private ensureManager(user: CurrentUser) {
     if (user.roles.includes('system_admin')) return;
     if (!user.roles.some((role) => MANAGER_ROLES.has(role))) {
@@ -229,4 +242,3 @@ export class EnterprisePolicyService {
     };
   }
 }
-

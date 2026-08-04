@@ -49,12 +49,16 @@ export class AuthService {
       throw new ForbiddenException('用户不在企业通讯录中');
     }
 
+    const departmentIds = this.roleResolver.normalizeDepartmentIds(
+      detail.department ?? [],
+    );
     const departments = await this.resolveDepartmentNames(
       accessToken,
-      detail.department ?? [],
+      departmentIds,
     );
     const isSystemAdmin = this.adminService.isSystemAdmin(detail.userid);
     const roles = this.roleResolver.resolveRoles({
+      departmentIds,
       departmentNames: departments,
       position: detail.position ?? null,
       isSystemAdmin,
@@ -70,8 +74,12 @@ export class AuthService {
       corpId: appEnv.WECOM_CORP_ID,
       name: detail.name,
       avatarUrl: detail.avatar ?? null,
+      departmentIds,
       departmentNames: departments,
-      departmentCodes: this.roleResolver.resolveDepartmentCodes(departments),
+      departmentCodes: this.roleResolver.resolveDepartmentCodes({
+        departmentIds,
+        departmentNames: departments,
+      }),
       position: detail.position ?? null,
       isSystemAdmin,
       rawProfile: detail as unknown as Record<string, unknown>,
@@ -117,11 +125,7 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在');
     }
 
-    const roles = this.roleResolver.resolveRoles({
-      departmentNames: user.departmentNames,
-      position: user.position,
-      isSystemAdmin: user.isSystemAdmin,
-    });
+    const roles = this.resolveRolesForUser(user);
 
     return {
       accessToken: await this.jwtService.signAsync({
@@ -140,17 +144,14 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在');
     }
 
-    const roles = this.roleResolver.resolveRoles({
-      departmentNames: user.departmentNames,
-      position: user.position,
-      isSystemAdmin: user.isSystemAdmin,
-    });
+    const roles = this.resolveRolesForUser(user);
 
     return {
       userId: user.userId,
       corpId: user.corpId,
       name: user.name,
       avatar: user.avatarUrl,
+      departmentIds: this.normalizedDepartmentIdsForUser(user),
       departments: user.departmentNames,
       position: user.position,
       roles,
@@ -166,6 +167,7 @@ export class AuthService {
       userId: user.userId,
       name: user.name,
       avatar: user.avatarUrl,
+      departmentIds: this.normalizedDepartmentIdsForUser(user),
       department: user.departmentNames,
       position: user.position,
       roles,
@@ -186,8 +188,23 @@ export class AuthService {
       departments.department.map((department) => [department.id, department.name]),
     );
 
-    return departmentIds
-      .map((departmentId) => nameById.get(departmentId))
-      .filter((value): value is string => Boolean(value));
+    return departmentIds.map(
+      (departmentId) =>
+        nameById.get(departmentId) ??
+        this.roleResolver.resolveFallbackDepartmentName(departmentId),
+    );
+  }
+
+  private resolveRolesForUser(user: WecomUserEntity): string[] {
+    return this.roleResolver.resolveRoles({
+      departmentIds: this.normalizedDepartmentIdsForUser(user),
+      departmentNames: user.departmentNames,
+      position: user.position,
+      isSystemAdmin: this.adminService.isSystemAdmin(user.userId),
+    });
+  }
+
+  private normalizedDepartmentIdsForUser(user: WecomUserEntity): number[] {
+    return this.roleResolver.normalizeDepartmentIds(user.departmentIds ?? []);
   }
 }

@@ -5,7 +5,13 @@ interface ApiEnvelope<T> {
   meta?: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
-export interface EnterpriseFile { id: string; fileName: string; ossKey: string; mimeType: string; fileSize: number }
+export interface EnterpriseFile {
+  id: string;
+  fileName: string;
+  ossKey: string;
+  mimeType: string;
+  fileSize: number;
+}
 export interface EnterpriseProfile {
   id: string;
   title: string;
@@ -34,27 +40,47 @@ export interface EnterprisePolicy {
 
 export const enterpriseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEnterpriseProfiles: builder.query<ApiEnvelope<EnterpriseProfile[]>, Record<string, unknown> | void>({
+    getEnterpriseProfiles: builder.query<
+      ApiEnvelope<EnterpriseProfile[]>,
+      Record<string, unknown> | void
+    >({
       query: (params) => ({ url: '/enterprise-profiles', params }),
       providesTags: ['EnterpriseProfile'],
     }),
-    getEnterpriseProfileById: builder.query<ApiEnvelope<EnterpriseProfile>, string>({
+    getEnterpriseProfileById: builder.query<
+      ApiEnvelope<EnterpriseProfile>,
+      string
+    >({
       query: (id) => ({ url: `/enterprise-profiles/${id}` }),
       providesTags: (_r, _e, id) => [{ type: 'EnterpriseProfile', id }],
     }),
-    createEnterpriseProfile: builder.mutation<ApiEnvelope<EnterpriseProfile>, Partial<EnterpriseProfile>>({
+    createEnterpriseProfile: builder.mutation<
+      ApiEnvelope<EnterpriseProfile>,
+      Partial<EnterpriseProfile>
+    >({
       query: (data) => ({ url: '/enterprise-profiles', method: 'POST', data }),
       invalidatesTags: ['EnterpriseProfile'],
     }),
-    updateEnterpriseProfile: builder.mutation<ApiEnvelope<EnterpriseProfile>, { id: string; data: Partial<EnterpriseProfile> }>({
-      query: ({ id, data }) => ({ url: `/enterprise-profiles/${id}`, method: 'PATCH', data }),
+    updateEnterpriseProfile: builder.mutation<
+      ApiEnvelope<EnterpriseProfile>,
+      { id: string; data: Partial<EnterpriseProfile> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/enterprise-profiles/${id}`,
+        method: 'PATCH',
+        data,
+      }),
       async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
         const patch = dispatch(
-          enterpriseApi.util.updateQueryData('getEnterpriseProfileById', id, (draft) => {
-            if (draft.data) {
-              Object.assign(draft.data, data);
-            }
-          }),
+          enterpriseApi.util.updateQueryData(
+            'getEnterpriseProfileById',
+            id,
+            (draft) => {
+              if (draft.data) {
+                Object.assign(draft.data, data);
+              }
+            },
+          ),
         );
         try {
           await queryFulfilled;
@@ -62,51 +88,112 @@ export const enterpriseApi = baseApi.injectEndpoints({
           patch.undo();
         }
       },
-      invalidatesTags: (_r, _e, arg) => [{ type: 'EnterpriseProfile', id: arg.id }, 'EnterpriseProfile'],
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'EnterpriseProfile', id: arg.id },
+        'EnterpriseProfile',
+      ],
     }),
-    bindEnterpriseProfileFiles: builder.mutation<ApiEnvelope<EnterpriseProfile>, { id: string; fileIds: string[] }>({
+    bindEnterpriseProfileFiles: builder.mutation<
+      ApiEnvelope<EnterpriseProfile>,
+      { id: string; fileIds: string[] }
+    >({
       query: ({ id, fileIds }) => ({
         url: `/enterprise-profiles/${id}/files`,
         method: 'POST',
         data: { fileIds },
       }),
-      invalidatesTags: (_r, _e, arg) => [{ type: 'EnterpriseProfile', id: arg.id }, 'EnterpriseProfile'],
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'EnterpriseProfile', id: arg.id },
+        'EnterpriseProfile',
+      ],
+    }),
+    getEnterpriseProfileFileDownloadUrl: builder.query<
+      ApiEnvelope<{ downloadUrl: string; expiresAt: string }>,
+      { id: string; fileId: string }
+    >({
+      query: ({ id, fileId }) => ({
+        url: `/enterprise-profiles/${id}/files/${fileId}/download-url`,
+      }),
     }),
     deleteEnterpriseProfile: builder.mutation<void, string>({
       query: (id) => ({ url: `/enterprise-profiles/${id}`, method: 'DELETE' }),
       invalidatesTags: ['EnterpriseProfile'],
     }),
 
-    getEnterprisePolicies: builder.query<ApiEnvelope<EnterprisePolicy[]>, Record<string, unknown> | void>({
+    getEnterprisePolicies: builder.query<
+      ApiEnvelope<EnterprisePolicy[]>,
+      Record<string, unknown> | void
+    >({
       query: (params) => ({ url: '/enterprise-policies', params }),
       providesTags: ['EnterprisePolicy'],
     }),
-    getEnterprisePolicyById: builder.query<ApiEnvelope<EnterprisePolicy>, string>({
+    getEnterprisePolicyById: builder.query<
+      ApiEnvelope<EnterprisePolicy>,
+      string
+    >({
       query: (id) => ({ url: `/enterprise-policies/${id}` }),
       providesTags: (_r, _e, id) => [{ type: 'EnterprisePolicy', id }],
     }),
-    getEnterprisePolicyVersions: builder.query<ApiEnvelope<Array<{ id: string; version: string; status: string }>>, string>({
+    getEnterprisePolicyVersions: builder.query<
+      ApiEnvelope<Array<{ id: string; version: string; status: string }>>,
+      string
+    >({
       query: (id) => ({ url: `/enterprise-policies/${id}/versions` }),
       providesTags: ['PolicyVersion'],
     }),
-    createEnterprisePolicy: builder.mutation<ApiEnvelope<EnterprisePolicy>, Partial<EnterprisePolicy>>({
+    createEnterprisePolicy: builder.mutation<
+      ApiEnvelope<EnterprisePolicy>,
+      Partial<EnterprisePolicy>
+    >({
       query: (data) => ({ url: '/enterprise-policies', method: 'POST', data }),
       invalidatesTags: ['EnterprisePolicy', 'PolicyVersion'],
     }),
-    updateEnterprisePolicy: builder.mutation<ApiEnvelope<EnterprisePolicy>, { id: string; data: Partial<EnterprisePolicy> }>({
-      query: ({ id, data }) => ({ url: `/enterprise-policies/${id}`, method: 'PATCH', data }),
-      invalidatesTags: (_r, _e, arg) => [{ type: 'EnterprisePolicy', id: arg.id }, 'EnterprisePolicy', 'PolicyVersion'],
+    updateEnterprisePolicy: builder.mutation<
+      ApiEnvelope<EnterprisePolicy>,
+      { id: string; data: Partial<EnterprisePolicy> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/enterprise-policies/${id}`,
+        method: 'PATCH',
+        data,
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'EnterprisePolicy', id: arg.id },
+        'EnterprisePolicy',
+        'PolicyVersion',
+      ],
     }),
-    bindEnterprisePolicyFiles: builder.mutation<ApiEnvelope<EnterprisePolicy>, { id: string; fileIds: string[] }>({
+    bindEnterprisePolicyFiles: builder.mutation<
+      ApiEnvelope<EnterprisePolicy>,
+      { id: string; fileIds: string[] }
+    >({
       query: ({ id, fileIds }) => ({
         url: `/enterprise-policies/${id}/files`,
         method: 'POST',
         data: { fileIds },
       }),
-      invalidatesTags: (_r, _e, arg) => [{ type: 'EnterprisePolicy', id: arg.id }, 'EnterprisePolicy', 'PolicyVersion'],
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'EnterprisePolicy', id: arg.id },
+        'EnterprisePolicy',
+        'PolicyVersion',
+      ],
     }),
-    publishEnterprisePolicy: builder.mutation<ApiEnvelope<EnterprisePolicy>, string>({
-      query: (id) => ({ url: `/enterprise-policies/${id}/publish`, method: 'POST' }),
+    getEnterprisePolicyFileDownloadUrl: builder.query<
+      ApiEnvelope<{ downloadUrl: string; expiresAt: string }>,
+      { id: string; fileId: string }
+    >({
+      query: ({ id, fileId }) => ({
+        url: `/enterprise-policies/${id}/files/${fileId}/download-url`,
+      }),
+    }),
+    publishEnterprisePolicy: builder.mutation<
+      ApiEnvelope<EnterprisePolicy>,
+      string
+    >({
+      query: (id) => ({
+        url: `/enterprise-policies/${id}/publish`,
+        method: 'POST',
+      }),
       invalidatesTags: ['EnterprisePolicy', 'PolicyVersion'],
     }),
     deleteEnterprisePolicy: builder.mutation<void, string>({
@@ -122,6 +209,7 @@ export const {
   useCreateEnterpriseProfileMutation,
   useUpdateEnterpriseProfileMutation,
   useBindEnterpriseProfileFilesMutation,
+  useLazyGetEnterpriseProfileFileDownloadUrlQuery,
   useDeleteEnterpriseProfileMutation,
   useGetEnterprisePoliciesQuery,
   useGetEnterprisePolicyByIdQuery,
@@ -129,6 +217,7 @@ export const {
   useCreateEnterprisePolicyMutation,
   useUpdateEnterprisePolicyMutation,
   useBindEnterprisePolicyFilesMutation,
+  useLazyGetEnterprisePolicyFileDownloadUrlQuery,
   usePublishEnterprisePolicyMutation,
   useDeleteEnterprisePolicyMutation,
 } = enterpriseApi;

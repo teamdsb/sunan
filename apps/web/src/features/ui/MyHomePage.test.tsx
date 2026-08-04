@@ -34,8 +34,10 @@ vi.mock('../workbench/workbenchApi', () => ({
 }));
 
 vi.mock('../enterprise/enterpriseApi', () => ({
-  useGetEnterpriseProfilesQuery: (params: unknown) => mockEnterpriseProfiles(params),
-  useGetEnterprisePoliciesQuery: (params: unknown) => mockEnterprisePolicies(params),
+  useGetEnterpriseProfilesQuery: (params: unknown) =>
+    mockEnterpriseProfiles(params),
+  useGetEnterprisePoliciesQuery: (params: unknown) =>
+    mockEnterprisePolicies(params),
 }));
 
 describe('MyHomePage', () => {
@@ -43,8 +45,11 @@ describe('MyHomePage', () => {
     vi.clearAllMocks();
     mockSelector.mockReturnValue({
       name: '王工',
-      department: ['船务部'],
+      avatar: 'https://avatar.example.com/wang.png',
+      departmentIds: [1, 6, 4, 2],
+      department: ['公司成员', '船务部', '财务部', '待设置部门'],
       position: '经理',
+      roles: ['all_authenticated', 'shipping', 'finance'],
     });
     mockEnterpriseProfiles.mockReturnValue({
       data: { data: [{ id: 'profile-1' }], meta: { total: 3 } },
@@ -135,7 +140,9 @@ describe('MyHomePage', () => {
         data: {
           pendingTotal: 3,
           approvalPendingTotal: 2,
-          alerts: [{ code: 'approval_pending', message: '当前有 2 条审批待处理。' }],
+          alerts: [
+            { code: 'approval_pending', message: '当前有 2 条审批待处理。' },
+          ],
           modules: [],
         },
       },
@@ -146,42 +153,77 @@ describe('MyHomePage', () => {
 
   it('renders six grid entries including reminders', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('my-home-entry-my-enterprise-profile')).toHaveAttribute('href', '/my/enterprise-profile');
-    expect(screen.getByTestId('my-home-entry-my-enterprise-policy')).toHaveAttribute('href', '/my/enterprise-policy');
-    expect(screen.getByTestId('my-home-entry-my-certificates')).toHaveAttribute('href', '/my/certificates');
-    expect(screen.getByTestId('my-home-entry-my-reminders')).toHaveAttribute('href', '/my/reminders');
-    expect(screen.getByTestId('my-home-entry-my-monitors')).toHaveAttribute('href', '/my/monitors');
-    expect(screen.getByTestId('my-home-entry-my-settings')).toHaveAttribute('href', '/my/settings');
+    expect(
+      screen.getByTestId('my-home-entry-my-enterprise-profile'),
+    ).toHaveAttribute('href', '/my/enterprise-profile');
+    expect(
+      screen.getByTestId('my-home-entry-my-enterprise-policy'),
+    ).toHaveAttribute('href', '/my/enterprise-policy');
+    expect(screen.getByTestId('my-home-entry-my-certificates')).toHaveAttribute(
+      'href',
+      '/my/certificates',
+    );
+    expect(screen.getByTestId('my-home-entry-my-reminders')).toHaveAttribute(
+      'href',
+      '/my/reminders',
+    );
+    expect(screen.getByTestId('my-home-entry-my-monitors')).toHaveAttribute(
+      'href',
+      '/my/monitors',
+    );
+    expect(screen.getByTestId('my-home-entry-my-settings')).toHaveAttribute(
+      'href',
+      '/my/settings',
+    );
   });
 
   it('renders the blue enterprise card grid hooks', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
     expect(screen.getByTestId('my-home-page')).toHaveClass('my-home-page');
-    expect(screen.getByTestId('my-home-grid')).toHaveClass('my-home-grid', 'my-home-card-grid');
+    expect(screen.getByTestId('my-home-grid')).toHaveClass(
+      'my-home-grid',
+      'my-home-card-grid',
+    );
     expect(screen.getAllByRole('link')).toHaveLength(6);
   });
 
   it('renders the refreshed command dashboard copy', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: '王工 · 船务部' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '王工 · 船务部 / 财务部' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '王工的头像' })).toHaveAttribute(
+      'src',
+      'https://avatar.example.com/wang.png',
+    );
     expect(screen.getByText('欢迎使用船舶管理工作台')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '当前重点' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '常用入口' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '当前重点' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '常用入口' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('待办审批')).toBeInTheDocument();
     expect(screen.getByText('工作平台审批待处理')).toBeInTheDocument();
     expect(screen.getAllByText('证照预警').length).toBeGreaterThan(0);
@@ -189,7 +231,9 @@ describe('MyHomePage', () => {
 
   it('does not count overdue pending reminders twice', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -206,29 +250,33 @@ describe('MyHomePage', () => {
   });
 
   it('does not display acknowledged overdue reminders as active warnings', () => {
-    mockReminderList.mockImplementation((params: { reminderType?: string }) => ({
-      data: {
-        data:
-          params?.reminderType === 'overdue'
-            ? [
-                {
-                  id: 'r-acknowledged',
-                  certificateTitle: '已确认消防证书',
-                  ownerName: '苏南018',
-                  scheduledDate: '2026-06-16',
-                  reminderType: 'overdue',
-                  status: 'acknowledged',
-                  daysBeforeExpiry: -2,
-                },
-              ]
-            : [],
-      },
-      isLoading: false,
-      isError: false,
-    }));
+    mockReminderList.mockImplementation(
+      (params: { reminderType?: string }) => ({
+        data: {
+          data:
+            params?.reminderType === 'overdue'
+              ? [
+                  {
+                    id: 'r-acknowledged',
+                    certificateTitle: '已确认消防证书',
+                    ownerName: '苏南018',
+                    scheduledDate: '2026-06-16',
+                    reminderType: 'overdue',
+                    status: 'acknowledged',
+                    daysBeforeExpiry: -2,
+                  },
+                ]
+              : [],
+        },
+        isLoading: false,
+        isError: false,
+      }),
+    );
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -236,9 +284,45 @@ describe('MyHomePage', () => {
     expect(screen.queryByText('已确认消防证书')).toBeNull();
   });
 
+  it('hides certificate warning sections when there are no active warnings', () => {
+    mockReminderDashboard.mockReturnValue({
+      data: {
+        data: {
+          totalPending: 0,
+          totalOverdue: 0,
+          totalAcknowledged: 8,
+          byOwnerType: [],
+          byCertificateType: [],
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
+    mockReminderList.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <MyHomePage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByRole('heading', { name: '证照预警' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('0 条需复核')).not.toBeInTheDocument();
+  });
+
   it('renders dashboard values from real API hooks instead of hardcoded demo data', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -247,14 +331,24 @@ describe('MyHomePage', () => {
       expect.objectContaining({ status: 'active' }),
     );
     expect(mockMonitors).toHaveBeenCalledWith({ activeOnly: true });
-    expect(mockEnterpriseProfiles).toHaveBeenCalledWith({ page: 1, pageSize: 1 });
-    expect(mockEnterprisePolicies).toHaveBeenCalledWith({ page: 1, pageSize: 1 });
+    expect(mockEnterpriseProfiles).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 1,
+    });
+    expect(mockEnterprisePolicies).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 1,
+    });
     expect(screen.getByText('企业资料 3 项')).toBeInTheDocument();
     expect(screen.getByText('制度文档 7 份')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '王工 · 船务部' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '王工 · 船务部 / 财务部' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('消防证书')).toBeInTheDocument();
     expect(screen.getAllByText('船检证书').length).toBeGreaterThan(0);
-    expect(screen.queryByText('苏南 16 号船检证书复核')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('苏南 16 号船检证书复核'),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('284')).not.toBeInTheDocument();
     expect(screen.queryByText('92%')).not.toBeInTheDocument();
   });
@@ -267,7 +361,9 @@ describe('MyHomePage', () => {
     });
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -278,7 +374,9 @@ describe('MyHomePage', () => {
 
   it('renders the mobile status card instead of the old command hero artwork', () => {
     const { container } = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
@@ -291,34 +389,49 @@ describe('MyHomePage', () => {
 
   it('renders enterprise shortcut cards with stable labels', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: '企业资料' })).toHaveClass('my-home-shortcut');
-    expect(screen.getByRole('link', { name: '电子证照' })).toHaveClass('my-home-shortcut');
+    expect(screen.getByRole('link', { name: '企业资料' })).toHaveClass(
+      'my-home-shortcut',
+    );
+    expect(screen.getByRole('link', { name: '电子证照' })).toHaveClass(
+      'my-home-shortcut',
+    );
   });
 
   it('renders shortcuts with blue icon plates', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
     expect(screen.getAllByTestId('my-home-shortcut-icon')).toHaveLength(6);
-    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass('my-home-shortcut-icon', 'my-home-shortcut-icon-blue');
+    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass(
+      'my-home-shortcut-icon',
+      'my-home-shortcut-icon-blue',
+    );
   });
 
   it('uses the whole shortcut card as the action without rendering redundant view labels', () => {
     const { container } = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <MyHomePage />
       </MemoryRouter>,
     );
 
-    expect(container.querySelectorAll('.my-home-shortcut-action')).toHaveLength(0);
+    expect(container.querySelectorAll('.my-home-shortcut-action')).toHaveLength(
+      0,
+    );
     expect(screen.queryByText('查看')).not.toBeInTheDocument();
   });
 });

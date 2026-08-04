@@ -36,7 +36,7 @@ export function ReminderDetailPage() {
   }, [data]);
 
   const reminder = localReminder ?? data?.data ?? null;
-  const roles = currentUser?.roles ?? [];
+  const roles = useMemo(() => currentUser?.roles ?? [], [currentUser?.roles]);
   const canAcknowledge = useMemo(
     () => (reminder ? canAcknowledgeReminder(currentUser?.userId, roles, reminder) : false),
     [currentUser?.userId, reminder, roles],

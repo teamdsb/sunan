@@ -1,7 +1,8 @@
 export interface CurrentUser {
   userId: string;
   name: string;
-  avatar?: string;
+  avatar?: string | null;
+  departmentIds?: number[];
   department: string[];
   position?: string;
   roles: string[];

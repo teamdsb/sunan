@@ -7,7 +7,7 @@ import { CertificateReminderEntity } from 'src/database/entities/certificate-rem
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 
-import { isManagementPosition, resolveRolesFromDepartmentNames } from './reminder.constants';
+import { isManagementPosition, resolveRolesFromDepartments } from './reminder.constants';
 import { ReminderClockService } from './reminder-clock.service';
 import type { ReminderAcknowledgeDto } from './dto/reminder-acknowledge.dto';
 import type { ReminderListQueryDto } from './dto/reminder-list-query.dto';
@@ -131,7 +131,11 @@ export class ReminderService {
     const roles = new Set(user.roles);
 
     if (viewer) {
-      for (const role of resolveRolesFromDepartmentNames(viewer.departmentNames, viewer.isSystemAdmin)) {
+      for (const role of resolveRolesFromDepartments(
+        viewer.departmentIds ?? [],
+        viewer.departmentNames,
+        viewer.isSystemAdmin,
+      )) {
         roles.add(role);
       }
     }

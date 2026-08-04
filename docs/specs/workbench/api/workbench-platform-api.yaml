@@ -62,7 +62,15 @@ paths:
           name: templateType
           schema:
             type: string
-            enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+            enum:
+              [
+                ledger_form,
+                operation_flow,
+                inspection_rectification,
+                attendance_statistics,
+                service_asset,
+                wecom_approval,
+              ]
         - in: query
           name: requiresApproval
           schema:
@@ -197,6 +205,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkbenchAttachmentResponse'
+  /workbench/records/{recordId}/attachments/{fileId}/download-url:
+    get:
+      summary: 获取已绑定工作台附件的短期下载地址
+      tags: [Workbench]
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 仅在记录可见且附件绑定关系存在时返回
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDownloadUrlResponse'
+        '403':
+          description: 当前用户不可读取该记录
+        '404':
+          description: 记录、附件或绑定关系不存在
   /workbench/records/{recordId}/print:
     get:
       summary: 获取工作平台记录的打印快照
@@ -345,7 +380,17 @@ components:
     WorkbenchModuleSummary:
       type: object
       required:
-        [moduleCode, moduleName, departmentCode, templateType, pendingCount, requiresApproval, supportsPrint, supportsStatistics, mobileFirst]
+        [
+          moduleCode,
+          moduleName,
+          departmentCode,
+          templateType,
+          pendingCount,
+          requiresApproval,
+          supportsPrint,
+          supportsStatistics,
+          mobileFirst,
+        ]
       properties:
         moduleCode:
           type: string
@@ -355,7 +400,15 @@ components:
           type: string
         templateType:
           type: string
-          enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+          enum:
+            [
+              ledger_form,
+              operation_flow,
+              inspection_rectification,
+              attendance_statistics,
+              service_asset,
+              wecom_approval,
+            ]
         pendingCount:
           type: integer
         requiresApproval:
@@ -400,7 +453,15 @@ components:
           type: string
         templateType:
           type: string
-          enum: [ledger_form, operation_flow, inspection_rectification, attendance_statistics, service_asset, wecom_approval]
+          enum:
+            [
+              ledger_form,
+              operation_flow,
+              inspection_rectification,
+              attendance_statistics,
+              service_asset,
+              wecom_approval,
+            ]
         sections:
           type: array
           items:
@@ -466,7 +527,16 @@ components:
           type: integer
     WorkbenchRecordSummary:
       type: object
-      required: [id, moduleCode, title, status, occurredAt, approvalChannel, recordSource]
+      required:
+        [
+          id,
+          moduleCode,
+          title,
+          status,
+          occurredAt,
+          approvalChannel,
+          recordSource,
+        ]
       properties:
         id:
           type: string
@@ -570,9 +640,28 @@ components:
           type: string
         fileName:
           type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+          minimum: 0
         uploadedAt:
           type: string
           format: date-time
+    FileDownloadUrlResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [downloadUrl, expiresAt]
+          properties:
+            downloadUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
     WorkbenchActionLog:
       type: object
       properties:
@@ -605,7 +694,20 @@ components:
         actionType:
           type: string
           enum:
-            [submit, assign, start, complete_step, submit_review, request_rework, close_record, archive, retry_export, reconcile_record, refresh_print_snapshot, update_payload]
+            [
+              submit,
+              assign,
+              start,
+              complete_step,
+              submit_review,
+              request_rework,
+              close_record,
+              archive,
+              retry_export,
+              reconcile_record,
+              refresh_print_snapshot,
+              update_payload,
+            ]
         comment:
           type: string
         payload:
@@ -626,7 +728,16 @@ components:
       properties:
         category:
           type: string
-          enum: [before_rectification, after_rectification, meeting_photo, evidence, document, print_export, export_file]
+          enum:
+            [
+              before_rectification,
+              after_rectification,
+              meeting_photo,
+              evidence,
+              document,
+              print_export,
+              export_file,
+            ]
         stepCode:
           type: string
         fileId:

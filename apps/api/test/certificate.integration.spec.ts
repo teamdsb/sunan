@@ -20,6 +20,7 @@ import { FileEntity } from 'src/database/entities/file.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateModule } from 'src/modules/certificate/certificate.module';
+import { OssService } from 'src/modules/files/oss.service';
 
 const currentUser = {
   userId: 'manager-1',
@@ -60,6 +61,7 @@ describe('CertificateController integration', () => {
   let vehicleId: string;
   let typeId: string;
   let fileId: string;
+  let ossService: OssService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
@@ -72,6 +74,7 @@ describe('CertificateController integration', () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
+    ossService = moduleRef.get(OssService);
     const vesselRepo = dataSource.getRepository(VesselEntity);
     const vehicleRepo = dataSource.getRepository(VehicleEntity);
     const typeRepo = dataSource.getRepository(CertificateTypeEntity);
@@ -138,7 +141,9 @@ describe('CertificateController integration', () => {
       .get('/api/v1/certificate-types?ownerType=vessel')
       .set('Authorization', 'Bearer token');
     expect(types.status).toBe(200);
-    expect((types.body as { data: Array<{ id: string; name: string }> }).data).toEqual(
+    expect(
+      (types.body as { data: Array<{ id: string; name: string }> }).data,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: typeId, name: '国籍证书-证书测试' }),
       ]),
@@ -150,7 +155,9 @@ describe('CertificateController integration', () => {
       .get('/api/v1/certificate-owners?ownerType=vessel')
       .set('Authorization', 'Bearer token');
     expect(owners.status).toBe(200);
-    expect((owners.body as { data: Array<{ id: string; name: string }> }).data).toEqual(
+    expect(
+      (owners.body as { data: Array<{ id: string; name: string }> }).data,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: vesselId, name: '苏南012-证书测试' }),
       ]),
@@ -230,6 +237,35 @@ describe('CertificateController integration', () => {
       .set('Authorization', 'Bearer token')
       .send({ fileIds: [fileId] });
     expect(bind.status).toBe(201);
+
+    const downloadSpy = jest
+      .spyOn(ossService, 'createDownloadSignature')
+      .mockResolvedValue({
+        downloadUrl: 'https://oss.example.test/certificate-file',
+        expiresAt: '2026-08-04T12:00:00.000Z',
+      });
+    const download = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(`/api/v1/certificates/${id1}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token');
+    expect(download.status).toBe(200);
+    expect(download.body).toEqual({
+      data: {
+        downloadUrl: 'https://oss.example.test/certificate-file',
+        expiresAt: '2026-08-04T12:00:00.000Z',
+      },
+    });
+    downloadSpy.mockRestore();
+
+    const unboundDownload = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(
+        `/api/v1/certificates/${id1}/files/00000000-0000-0000-0000-000000000001/download-url`,
+      )
+      .set('Authorization', 'Bearer token');
+    expect(unboundDownload.status).toBe(404);
 
     const patch = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

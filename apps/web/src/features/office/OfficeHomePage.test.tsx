@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OfficeHomePage } from './OfficeHomePage';
@@ -10,17 +16,62 @@ const mockOpen = vi.fn();
 const mockLaunch = vi.fn();
 
 const officeCategories = [
-  { code: 'maritime', name: '海事', sortOrder: 10, isEnabled: true, canManage: true },
-  { code: 'customs', name: '海关', sortOrder: 20, isEnabled: true, canManage: false },
-  { code: 'border_inspection', name: '边检', sortOrder: 30, isEnabled: true, canManage: false },
-  { code: 'vessel_inspection', name: '船检', sortOrder: 40, isEnabled: true, canManage: false },
-  { code: 'environment', name: '环保', sortOrder: 50, isEnabled: true, canManage: false },
-  { code: 'other', name: '其他', sortOrder: 60, isEnabled: true, canManage: false },
-  { code: 'petrochemical_park', name: '石化园区', sortOrder: 70, isEnabled: true, canManage: false },
+  {
+    code: 'maritime',
+    name: '海事',
+    sortOrder: 10,
+    isEnabled: true,
+    canManage: true,
+  },
+  {
+    code: 'customs',
+    name: '海关',
+    sortOrder: 20,
+    isEnabled: true,
+    canManage: false,
+  },
+  {
+    code: 'border_inspection',
+    name: '边检',
+    sortOrder: 30,
+    isEnabled: true,
+    canManage: false,
+  },
+  {
+    code: 'vessel_inspection',
+    name: '船检',
+    sortOrder: 40,
+    isEnabled: true,
+    canManage: false,
+  },
+  {
+    code: 'environment',
+    name: '环保',
+    sortOrder: 50,
+    isEnabled: true,
+    canManage: false,
+  },
+  {
+    code: 'other',
+    name: '其他',
+    sortOrder: 60,
+    isEnabled: true,
+    canManage: false,
+  },
+  {
+    code: 'petrochemical_park',
+    name: '石化园区',
+    sortOrder: 70,
+    isEnabled: true,
+    canManage: false,
+  },
 ];
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -67,43 +118,58 @@ describe('OfficeHomePage', () => {
       isError: false,
     });
     mockOpen.mockReturnValue({
-      unwrap: () => Promise.resolve({
-        data: {
-          id: 'office-1',
-          title: '海事入口',
-          targetType: 'external_url',
-          targetValue: 'https://example.com',
-          openMode: 'current_webview',
-        },
-      }),
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            id: 'office-1',
+            title: '海事入口',
+            targetType: 'external_url',
+            targetValue: 'https://example.com',
+            openMode: 'current_webview',
+          },
+        }),
     });
   });
 
   it('renders entries and opens the admin page for managers', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <OfficeHomePage />
       </MemoryRouter>,
     );
 
     expect(screen.getByText('海事入口')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '办事中心' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '办事中心' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('搜索并打开办事入口')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: '我的办理' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: '我的办理' }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('暂未提供办理统计')).not.toBeInTheDocument();
     expect(screen.queryByText('继续办理')).not.toBeInTheDocument();
     expect(screen.queryByText('查看审批进度')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '办事入口' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '办事入口' }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: '审批链路' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '进入治理台' }));
     expect(mockNavigate).toHaveBeenCalledWith('/office/admin');
   });
 
   it('shows an error when the office catalog cannot be loaded', () => {
-    mockEntries.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    mockEntries.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -113,7 +179,9 @@ describe('OfficeHomePage', () => {
 
   it('records open action before launching the target', async () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -126,7 +194,10 @@ describe('OfficeHomePage', () => {
 
   it('restores category and keyword from the URL', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/office?categoryCode=customs&keyword=港口']}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={['/office?categoryCode=customs&keyword=港口']}
+      >
         <OfficeHomePage />
       </MemoryRouter>,
     );
@@ -135,21 +206,62 @@ describe('OfficeHomePage', () => {
     expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' });
   });
 
-  it('renders all office categories and keeps category switches in the URL state', async () => {
+  it('renders search as one integrated input and button control', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <OfficeHomePage />
       </MemoryRouter>,
     );
 
-    const categoryFilter = screen.getByRole('radiogroup', { name: 'segmented control' });
-    ['全部', '海事', '海关', '边检', '船检', '环保', '石化园区'].forEach((label) => {
-      expect(within(categoryFilter).getByText(label)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('搜索办事入口').closest('.ant-input-search'),
+    ).toBeInTheDocument();
+  });
+
+  it('opens the search result page from the integrated search button', async () => {
+    render(
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <OfficeHomePage />
+      </MemoryRouter>,
+    );
+
+    const input = screen.getByPlaceholderText('搜索办事入口');
+    fireEvent.change(input, { target: { value: '港口' } });
+    await waitFor(() => expect(input).toHaveValue('港口'));
+    fireEvent.click(screen.getByRole('button', { name: /搜\s*索/ }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/office/search?keyword=%E6%B8%AF%E5%8F%A3',
+    );
+  });
+
+  it('renders all office categories and keeps category switches in the URL state', async () => {
+    render(
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <OfficeHomePage />
+      </MemoryRouter>,
+    );
+
+    const categoryFilter = screen.getByRole('radiogroup', {
+      name: 'segmented control',
     });
+    ['全部', '海事', '海关', '边检', '船检', '环保', '石化园区'].forEach(
+      (label) => {
+        expect(within(categoryFilter).getByText(label)).toBeInTheDocument();
+      },
+    );
     expect(within(categoryFilter).queryByText('其他')).not.toBeInTheDocument();
 
     fireEvent.click(within(categoryFilter).getByText('海关'));
 
-    await waitFor(() => expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' }));
+    await waitFor(() =>
+      expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' }),
+    );
   });
 });

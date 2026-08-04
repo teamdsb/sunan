@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { PDFDocument } from 'pdf-lib';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -38,7 +39,10 @@ const wecomMessageMock = {
 };
 
 const ossMock = {
-  uploadBuffer: jest.fn(async () => undefined),
+  uploadBuffer: jest.fn<
+    Promise<void>,
+    [string, Buffer, string, string]
+  >(async () => undefined),
   createDownloadSignature: jest.fn(async (ossKey: string) => ({
     downloadUrl: `https://files.test/${encodeURIComponent(ossKey)}`,
     expiresAt: new Date(Date.now() + 300_000).toISOString(),
@@ -138,6 +142,8 @@ describe('Procurement Wave4 integration', () => {
 
   beforeEach(() => {
     wecomMessageMock.sendTextCard.mockClear();
+    ossMock.uploadBuffer.mockClear();
+    ossMock.uploadBuffer.mockImplementation(async () => undefined);
   });
 
   it('supports dictionary governance with permission control', async () => {
@@ -292,6 +298,27 @@ describe('Procurement Wave4 integration', () => {
       departments: ['船务部'],
     };
 
+    const fileRepository = dataSource.getRepository(FileEntity);
+    const orderNo = (
+      createOrderResponse.body as { data: { orderNo: string } }
+    ).data.orderNo;
+    const exportCountBeforeFailure = await fileRepository.countBy({
+      fileName: `${orderNo}.pdf`,
+    });
+    ossMock.uploadBuffer.mockRejectedValueOnce(
+      new Error('OSS temporarily unavailable'),
+    );
+    const failedPrintOrderResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(`/api/v1/procurement/orders/${orderId}/print`)
+      .set('Authorization', 'Bearer token');
+
+    expect(failedPrintOrderResponse.status).toBe(500);
+    await expect(
+      fileRepository.countBy({ fileName: `${orderNo}.pdf` }),
+    ).resolves.toBe(exportCountBeforeFailure);
+
     const printOrderResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post(`/api/v1/procurement/orders/${orderId}/print`)
       .set('Authorization', 'Bearer token');
@@ -299,7 +326,6 @@ describe('Procurement Wave4 integration', () => {
     expect(printOrderResponse.status).toBe(201);
     const printedOrderFileId = (printOrderResponse.body as { data: { fileId: string } }).data.fileId;
 
-    const fileRepository = dataSource.getRepository(FileEntity);
     const printedOrderFile = await fileRepository.findOneByOrFail({ id: printedOrderFileId });
     expect(printedOrderFile.category).toBe('procurement_exports');
     expect(printedOrderFile.mimeType).toBe('application/pdf');
@@ -372,6 +398,32 @@ describe('Procurement Wave4 integration', () => {
       departments: ['船务部'],
     };
 
+    const reportRepository = dataSource.getRepository(
+      ProcurementReportEntity,
+    );
+    const reportBeforePrint = await reportRepository.findOneByOrFail({
+      id: reportId,
+    });
+    const reportExportCountBeforeFailure = await fileRepository.countBy({
+      fileName: `${reportBeforePrint.reportNo}.pdf`,
+    });
+    ossMock.uploadBuffer.mockRejectedValueOnce(
+      new Error('OSS temporarily unavailable'),
+    );
+    const failedPrintReportResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(`/api/v1/procurement/report-requests/${reportId}/print`)
+      .set('Authorization', 'Bearer token');
+
+    expect(failedPrintReportResponse.status).toBe(500);
+    await expect(
+      fileRepository.countBy({ fileName: `${reportBeforePrint.reportNo}.pdf` }),
+    ).resolves.toBe(reportExportCountBeforeFailure);
+    await expect(
+      reportRepository.findOneByOrFail({ id: reportId }),
+    ).resolves.toEqual(expect.objectContaining({ exportPdfFileId: null }));
+
     const printReportResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .post(`/api/v1/procurement/report-requests/${reportId}/print`)
       .set('Authorization', 'Bearer token');
@@ -379,9 +431,37 @@ describe('Procurement Wave4 integration', () => {
     expect(printReportResponse.status).toBe(201);
     const printedReportFileId = (printReportResponse.body as { data: { fileId: string } }).data.fileId;
 
-    const reportRepository = dataSource.getRepository(ProcurementReportEntity);
     const report = await reportRepository.findOneByOrFail({ id: reportId });
     expect(report.exportPdfFileId).toBe(printedReportFileId);
+
+    const reportPdfUpload = ossMock.uploadBuffer.mock.calls.find(
+      ([, , mimeType, fileName]) =>
+        mimeType === 'application/pdf' && fileName === `${report.reportNo}.pdf`,
+    );
+    expect(reportPdfUpload).toBeDefined();
+    const uploadedReportPdf = reportPdfUpload?.[1];
+    if (!uploadedReportPdf) {
+      throw new Error('expected the generated report PDF to be uploaded');
+    }
+    expect(uploadedReportPdf.subarray(0, 4).toString()).toBe('%PDF');
+    const reportPdfDocument = await PDFDocument.load(uploadedReportPdf);
+    expect(reportPdfDocument.getPageCount()).toBeGreaterThan(0);
+    expect(reportPdfDocument.getTitle()).toContain('采购月报');
+
+    const uploadCountAfterReportPrint = ossMock.uploadBuffer.mock.calls.length;
+    const cachedPrintReportResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post(`/api/v1/procurement/report-requests/${reportId}/print`)
+      .set('Authorization', 'Bearer token');
+    expect(cachedPrintReportResponse.status).toBe(201);
+    expect(
+      (cachedPrintReportResponse.body as { data: { fileId: string } }).data
+        .fileId,
+    ).toBe(printedReportFileId);
+    expect(ossMock.uploadBuffer.mock.calls.length).toBe(
+      uploadCountAfterReportPrint,
+    );
 
     expect(wecomMessageMock.sendTextCard).toHaveBeenCalled();
     expect(wecomMessageMock.sendTextCard.mock.calls.length).toBeGreaterThanOrEqual(7);

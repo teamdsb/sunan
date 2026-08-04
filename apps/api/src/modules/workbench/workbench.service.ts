@@ -87,6 +87,8 @@ interface WorkbenchAttachment {
   category: string;
   fileId: string;
   fileName: string;
+  mimeType: string;
+  fileSize: number;
   uploadedAt: string;
 }
 
@@ -2216,8 +2218,26 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       category: attachment.category,
       fileId: attachment.fileId,
       fileName: attachment.fileName,
+      mimeType: attachment.mimeType,
+      fileSize: file.fileSize,
       uploadedAt: attachment.uploadedAt.toISOString(),
     };
+  }
+
+  async getAttachmentDownloadUrl(
+    recordId: string,
+    fileId: string,
+    user: CurrentUser,
+  ) {
+    const record = await this.mustGetRecord(recordId);
+    await this.assertRecordVisible(record, user);
+    const attachment = await this.attachmentRepository.findOne({
+      where: { businessRecordId: recordId, fileId },
+    });
+    if (!attachment) throw new NotFoundException('attachment not found');
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    if (!file) throw new NotFoundException('file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
   }
 
   async getPrintSnapshot(recordId: string, user: CurrentUser, paperSize: PrintPaperSize = 'A4') {
@@ -3855,6 +3875,13 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       this.attachmentRepository.find({ where: { businessRecordId: record.id }, order: { uploadedAt: 'DESC', createdAt: 'DESC' } }),
       this.actionLogRepository.find({ where: { businessRecordId: record.id }, order: { createdAt: 'DESC' } }),
     ]);
+    const attachmentFileIds = attachments.map((item) => item.fileId);
+    const attachmentFiles = attachmentFileIds.length
+      ? await this.fileRepository.find({ where: { id: In(attachmentFileIds) } })
+      : [];
+    const attachmentFileById = new Map(
+      attachmentFiles.map((file) => [file.id, file]),
+    );
 
     return this.toRecordModel(
       record,
@@ -3870,6 +3897,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         category: item.category,
         fileId: item.fileId,
         fileName: item.fileName,
+        mimeType: item.mimeType,
+        fileSize: attachmentFileById.get(item.fileId)?.fileSize ?? 0,
         uploadedAt: item.uploadedAt.toISOString(),
       })),
       actionLogs.map((item) => ({

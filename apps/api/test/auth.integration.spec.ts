@@ -12,9 +12,11 @@ import {
   shutdownPgTestDatabase,
 } from 'test/pg-test-container';
 import request from 'supertest';
+import { DataSource } from 'typeorm';
 
 import { configureApp } from 'src/app.bootstrap';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { HealthController } from 'src/health/health.controller';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { FilesModule } from 'src/modules/files/files.module';
@@ -69,12 +71,16 @@ describe('AuthController integration', () => {
         userid: 'admin-user',
         name: '寮犱笁',
         avatar: 'https://avatar.example.com/u.png',
-        department: [1],
+        department: [1, 3, 4, 3],
         position: 'General Manager',
       };
     }),
     listDepartments: jest.fn(() => ({
-      department: [{ id: 1, name: '总经办' }],
+      department: [
+        { id: 1, name: '钦州市苏南船舶服务有限公司' },
+        { id: 3, name: '总经办' },
+        { id: 4, name: '财务部' },
+      ],
     })),
   };
 
@@ -171,10 +177,23 @@ describe('AuthController integration', () => {
       expect.arrayContaining([
         'all_authenticated',
         'general_office',
+        'finance',
         'system_admin',
       ]),
     );
     expect(body.data.user.isAdmin).toBe(true);
+
+    const savedUser = await app
+      .get(DataSource)
+      .getRepository(WecomUserEntity)
+      .findOneByOrFail({ userId: 'admin-user' });
+    expect(savedUser).toMatchObject({
+      avatarUrl: 'https://avatar.example.com/u.png',
+      departmentIds: [1, 3, 4],
+      departmentNames: ['钦州市苏南船舶服务有限公司', '总经办', '财务部'],
+      departmentCodes: ['general_office', 'finance_dept'],
+      isSystemAdmin: true,
+    });
   });
 
   it('returns 401 when code is expired', async () => {
@@ -217,6 +236,11 @@ describe('AuthController integration', () => {
       .query({ code: 'valid-code' });
     const loginBody = login.body as { data: { accessToken: string } };
 
+    await app
+      .get(DataSource)
+      .getRepository(WecomUserEntity)
+      .update({ userId: 'admin-user' }, { isSystemAdmin: false });
+
     const response = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
@@ -227,7 +251,9 @@ describe('AuthController integration', () => {
         userId: string;
         name: string;
         avatar: string;
+        departmentIds: number[];
         department: string[];
+        roles: string[];
         isAdmin: boolean;
       };
     };
@@ -237,7 +263,9 @@ describe('AuthController integration', () => {
       userId: 'admin-user',
       name: '寮犱笁',
       avatar: 'https://avatar.example.com/u.png',
-      department: ['总经办'],
+      departmentIds: [1, 3, 4],
+      department: ['钦州市苏南船舶服务有限公司', '总经办', '财务部'],
+      roles: expect.arrayContaining(['system_admin']),
       isAdmin: true,
     });
   });

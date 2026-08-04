@@ -8,7 +8,6 @@ import {
   RightOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
-  UserOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
 import { Alert, Typography } from 'antd';
@@ -16,6 +15,8 @@ import type { ComponentType } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { myRouteNavItems } from '../../router/myRouteConfig';
+import { UserAvatar } from '../auth/UserAvatar';
+import { formatDepartmentNames } from '../auth/userPresentation';
 import { useGetCertificatesQuery } from '../certificate/certificateApi';
 import {
   useGetEnterprisePoliciesQuery,
@@ -93,24 +94,6 @@ function formatShortcutDescription(
   return descriptions[path] ?? '快速进入';
 }
 
-function formatDepartmentLabel(user: { department?: string[]; roles?: string[] } | null) {
-  const department = user?.department?.[0];
-
-  if (department && department !== '苏南船舶管理') {
-    return department;
-  }
-
-  if (user?.roles?.includes('general_office')) {
-    return '总经办';
-  }
-
-  if (user?.roles?.includes('shipping')) {
-    return '船务部';
-  }
-
-  return department ?? '总经办';
-}
-
 export function MyHomePage() {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const enterpriseProfileQuery = useGetEnterpriseProfilesQuery({
@@ -158,14 +141,17 @@ export function MyHomePage() {
       ? reminderDashboard.totalPending + workbenchDashboard.pendingTotal
       : undefined;
   const warningTotal = reminderDashboard?.totalPending;
+  const hasCertificateWarnings = warningTotal !== undefined && warningTotal > 0;
   const certificateTotal = certificateQuery.data
-    ? certificateQuery.data.meta?.total ?? certificates.length
+    ? (certificateQuery.data.meta?.total ?? certificates.length)
     : undefined;
   const profileTotal = enterpriseProfileQuery.data
-    ? enterpriseProfileQuery.data.meta?.total ?? enterpriseProfileQuery.data.data.length
+    ? (enterpriseProfileQuery.data.meta?.total ??
+      enterpriseProfileQuery.data.data.length)
     : undefined;
   const policyTotal = enterprisePolicyQuery.data
-    ? enterprisePolicyQuery.data.meta?.total ?? enterprisePolicyQuery.data.data.length
+    ? (enterprisePolicyQuery.data.meta?.total ??
+      enterprisePolicyQuery.data.data.length)
     : undefined;
   const hasOverviewError = [
     enterpriseProfileQuery,
@@ -178,7 +164,7 @@ export function MyHomePage() {
     workbenchDashboardQuery,
   ].some((query) => query.isError);
   const displayName = currentUser?.name ?? '当前账号';
-  const departmentLabel = formatDepartmentLabel(currentUser);
+  const departmentLabel = formatDepartmentNames(currentUser);
 
   const heroStats = [
     { label: '在线船舶', value: formatCount(onlineVesselCount) },
@@ -188,7 +174,9 @@ export function MyHomePage() {
   ];
   const warningRows = [
     ...overdueReminders,
-    ...pendingReminders.filter((reminder) => reminder.reminderType !== 'overdue'),
+    ...pendingReminders.filter(
+      (reminder) => reminder.reminderType !== 'overdue',
+    ),
   ].slice(0, 5);
   const todayFocusItems = [
     {
@@ -207,7 +195,7 @@ export function MyHomePage() {
       tone: 'warning',
       icon: WarningOutlined,
     },
-  ];
+  ].filter((task) => task.key !== 'certificate' || hasCertificateWarnings);
 
   return (
     <div className="my-home-page" data-testid="my-home-page">
@@ -221,11 +209,18 @@ export function MyHomePage() {
       ) : null}
       <section className="my-home-status-card" aria-labelledby="my-home-title">
         <div className="my-home-profile">
-          <span className="my-home-profile-avatar" aria-hidden="true">
-            <UserOutlined />
-          </span>
+          <UserAvatar
+            className="my-home-profile-avatar"
+            name={displayName}
+            avatar={currentUser?.avatar}
+            size={56}
+          />
           <div className="my-home-profile-copy">
-            <Typography.Title level={1} id="my-home-title" className="my-home-title">
+            <Typography.Title
+              level={1}
+              id="my-home-title"
+              className="my-home-title"
+            >
               {displayName} · {departmentLabel}
             </Typography.Title>
             <Typography.Paragraph className="my-home-subtitle">
@@ -239,7 +234,13 @@ export function MyHomePage() {
           {heroStats.slice(0, 3).map((stat, index) => (
             <div className="my-home-stat" key={stat.label}>
               <span className="my-home-stat-icon" aria-hidden="true">
-                {index === 0 ? <MonitorOutlined /> : index === 1 ? <SafetyCertificateOutlined /> : <CalendarOutlined />}
+                {index === 0 ? (
+                  <MonitorOutlined />
+                ) : index === 1 ? (
+                  <SafetyCertificateOutlined />
+                ) : (
+                  <CalendarOutlined />
+                )}
               </span>
               <span>{stat.label}</span>
               <strong>{stat.value}</strong>
@@ -249,7 +250,10 @@ export function MyHomePage() {
       </section>
 
       <div className="my-home-dashboard">
-        <section className="my-home-focus-panel" aria-labelledby="current-focus-title">
+        <section
+          className="my-home-focus-panel"
+          aria-labelledby="current-focus-title"
+        >
           <div className="sunan-panel-heading">
             <Typography.Title level={2} id="current-focus-title">
               当前重点
@@ -260,7 +264,10 @@ export function MyHomePage() {
               const Icon = task.icon;
 
               return (
-                <article className={`my-home-task-item is-${task.tone}`} key={task.key}>
+                <article
+                  className={`my-home-task-item is-${task.tone}`}
+                  key={task.key}
+                >
                   <span className="my-home-task-icon" aria-hidden="true">
                     <Icon />
                   </span>
@@ -269,20 +276,29 @@ export function MyHomePage() {
                     <small>{task.meta}</small>
                   </span>
                   <em>{task.count}</em>
-                  <RightOutlined className="my-home-row-chevron" aria-hidden="true" />
+                  <RightOutlined
+                    className="my-home-row-chevron"
+                    aria-hidden="true"
+                  />
                 </article>
               );
             })}
           </div>
         </section>
 
-        <section className="my-home-main-panel" aria-labelledby="my-home-modules-title">
+        <section
+          className="my-home-main-panel"
+          aria-labelledby="my-home-modules-title"
+        >
           <div className="sunan-panel-heading">
             <Typography.Title level={2} id="my-home-modules-title">
               常用入口
             </Typography.Title>
           </div>
-          <div className="my-home-grid my-home-card-grid" data-testid="my-home-grid">
+          <div
+            className="my-home-grid my-home-card-grid"
+            data-testid="my-home-grid"
+          >
             {entries.map((entry) => {
               const Icon = entryIcons[entry.path] ?? FileSearchOutlined;
               const description = formatShortcutDescription(entry.path, {
@@ -317,30 +333,38 @@ export function MyHomePage() {
                       {description}
                     </Typography.Text>
                   </span>
-                  <RightOutlined className="my-home-row-chevron" aria-hidden="true" />
+                  <RightOutlined
+                    className="my-home-row-chevron"
+                    aria-hidden="true"
+                  />
                 </Link>
               );
             })}
           </div>
         </section>
 
-        <section className="my-home-warning-panel" aria-labelledby="warning-title">
-          <div className="sunan-panel-heading">
-            <Typography.Title level={2} id="warning-title">
-              证照预警
-            </Typography.Title>
-            <Typography.Text>按风险等级排序</Typography.Text>
-          </div>
-          <div className="my-home-warning-table">
-            {warningRows.map((row) => (
-              <div className="my-home-warning-row" key={row.id}>
-                <span>{row.certificateTitle}</span>
-                <strong>{formatWarningDue(row)}</strong>
-                <em>{formatWarningRisk(row)}</em>
-              </div>
-            ))}
-          </div>
-        </section>
+        {hasCertificateWarnings && warningRows.length > 0 ? (
+          <section
+            className="my-home-warning-panel"
+            aria-labelledby="warning-title"
+          >
+            <div className="sunan-panel-heading">
+              <Typography.Title level={2} id="warning-title">
+                证照预警
+              </Typography.Title>
+              <Typography.Text>按风险等级排序</Typography.Text>
+            </div>
+            <div className="my-home-warning-table">
+              {warningRows.map((row) => (
+                <div className="my-home-warning-row" key={row.id}>
+                  <span>{row.certificateTitle}</span>
+                  <strong>{formatWarningDue(row)}</strong>
+                  <em>{formatWarningRisk(row)}</em>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

@@ -49,5 +49,12 @@ export class EnterpriseProfileController {
   async unbindFile(@Param('id') id: string, @Param('fileId') fileId: string, @CurrentUserDecorator() user: CurrentUser) {
     await this.service.unbindFile(id, fileId, user);
   }
-}
 
+  @Get(':id/files/:fileId/download-url')
+  async getFileDownloadUrl(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+  ) {
+    return { data: await this.service.getFileDownloadUrl(id, fileId) };
+  }
+}

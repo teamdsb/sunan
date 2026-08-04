@@ -76,7 +76,39 @@ describe('dashboard layout CSS', () => {
       /\.office-search-panel\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto\s+auto;[^}]*gap:\s*8px;/s,
     );
     expect(css).toMatch(
-      /\.office-search-panel\s+\.ant-input-affix-wrapper\s*\{[^}]*min-height:\s*44px;[^}]*box-shadow:\s*none;/s,
+      /\.office-search-panel\s+\.ant-input-affix-wrapper\s*\{[^}]*min-height:\s*var\(--sunan-control-height\);[^}]*box-shadow:\s*none;/s,
+    );
+  });
+
+  it('uses one 46px geometry for query, filter, and toolbar controls', () => {
+    expect(css).toContain('--sunan-control-height: 46px;');
+    expect(css).toContain('/* Unified enterprise control system */');
+    expect(css).toMatch(
+      /\.sunan-query-grid[^}]*\.ant-input-affix-wrapper[^}]*min-height:\s*var\(--sunan-control-height\)/s,
+    );
+    expect(css).toMatch(
+      /\.sunan-query-grid[^}]*\.ant-select-selector[^}]*height:\s*var\(--sunan-control-height\)/s,
+    );
+    expect(css).toMatch(
+      /\.ant-input-search[^}]*\.ant-input-group-addon[^}]*\.ant-btn[^}]*height:\s*var\(--sunan-control-height\)/s,
+    );
+    expect(css).toMatch(
+      /\.shell-layout-enterprise:not\(\.shell-layout-my-home\)\s+\.ant-input,[\s\S]*min-height:\s*var\(--sunan-control-height\);/s,
+    );
+    expect(css).toMatch(
+      /\.stacked-form\s+\.ant-btn\s*\{[^}]*min-height:\s*var\(--sunan-control-height\);/s,
+    );
+    expect(css).toMatch(
+      /\.ant-input-affix-wrapper\s*>\s*\.ant-input\s*\{[^}]*min-height:\s*0;/s,
+    );
+  });
+
+  it('stacks unified query controls on mobile without changing their height', () => {
+    expect(css).toMatch(
+      /@media\s*\(max-width:\s*768px\)[\s\S]*\.sunan-query-grid[^{]*\{[^}]*grid-template-columns:\s*1fr;/s,
+    );
+    expect(css).toMatch(
+      /@media\s*\(max-width:\s*768px\)[\s\S]*\.sunan-form-grid[^{]*\{[^}]*grid-template-columns:\s*1fr;/s,
     );
   });
 

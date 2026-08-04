@@ -1,12 +1,23 @@
-﻿import { Alert, Button, Card, Form, Input, Select, Space, Typography } from 'antd';
+﻿import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Input,
+  Select,
+  Space,
+  Typography,
+} from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
+import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import {
   type EnterpriseProfile,
   useBindEnterpriseProfileFilesMutation,
   useGetEnterpriseProfileByIdQuery,
+  useLazyGetEnterpriseProfileFileDownloadUrlQuery,
   useUpdateEnterpriseProfileMutation,
 } from './enterpriseApi';
 
@@ -23,9 +34,14 @@ const statusOptions = [
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
-  const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, { skip: !id });
-  const [updateProfile, { isLoading: saving }] = useUpdateEnterpriseProfileMutation();
+  const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, {
+    skip: !id,
+  });
+  const [updateProfile, { isLoading: saving }] =
+    useUpdateEnterpriseProfileMutation();
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
+  const [getFileDownloadUrl] =
+    useLazyGetEnterpriseProfileFileDownloadUrlQuery();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [form] = Form.useForm<{
@@ -57,7 +73,14 @@ export function EnterpriseProfileDetailPage() {
         查看并维护企业资料内容、状态和附件。
       </Typography.Paragraph>
       <Card loading={isLoading}>
-        {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
+        {saveError ? (
+          <Alert
+            type="error"
+            showIcon
+            message={saveError}
+            style={{ marginBottom: 12 }}
+          />
+        ) : null}
         <Form
           form={form}
           layout="vertical"
@@ -70,21 +93,54 @@ export function EnterpriseProfileDetailPage() {
                 await bindFiles({ id, fileIds: [currentUpload.id] }).unwrap();
               }
             } catch (error) {
-              setSaveError(error instanceof Error ? error.message : '保存失败，请稍后重试');
+              setSaveError(
+                error instanceof Error ? error.message : '保存失败，请稍后重试',
+              );
             }
           }}
         >
-          <Form.Item name="title" label="标题" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="category" label="分类" rules={[{ required: true }]}><Select options={categoryOptions} /></Form.Item>
-          <Form.Item name="status" label="状态" rules={[{ required: true }]}><Select options={statusOptions} /></Form.Item>
-          <Form.Item name="description" label="描述"><Input.TextArea rows={3} /></Form.Item>
+          <Form.Item name="title" label="标题" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="category" label="分类" rules={[{ required: true }]}>
+            <Select options={categoryOptions} />
+          </Form.Item>
+          <Form.Item name="status" label="状态" rules={[{ required: true }]}>
+            <Select options={statusOptions} />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={3} />
+          </Form.Item>
           <Form.Item label="附件上传/预览">
-            <FileUploadField category="enterprise-profiles" value={currentUpload} onChange={setUploaded} />
+            <FileUploadField
+              category="enterprise-profiles"
+              value={currentUpload}
+              onChange={setUploaded}
+            />
           </Form.Item>
           <Space wrap className="detail-action-bar">
-            <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
+            <Button htmlType="submit" type="primary" loading={saving}>
+              保存
+            </Button>
           </Space>
         </Form>
+        {profile ? (
+          <>
+            <Typography.Title level={5} style={{ marginTop: 20 }}>
+              已绑定附件
+            </Typography.Title>
+            <FileAttachmentList
+              files={profile.files}
+              getUrl={async (file) => {
+                const response = await getFileDownloadUrl({
+                  id,
+                  fileId: file.id,
+                }).unwrap();
+                return response.data.downloadUrl;
+              }}
+            />
+          </>
+        ) : null}
       </Card>
     </section>
   );

@@ -18,20 +18,22 @@ replaced_by: []
 
 ## RBAC 权限模型
 
-系统采用基于**职务/角色**的访问控制（RBAC）。用户角色由企业微信通讯录中的**部门**和**职务**字段决定，无需在系统内单独维护角色表。
+系统采用基于**职务/角色**的访问控制（RBAC）。业务角色优先由企业微信通讯录返回的**部门 ID**决定；系统管理员由独立的企业微信 UserID 白名单决定，不从部门推导。
 
 ### 内置角色定义
 
 | 角色 | 判定条件 | 权限范围 |
 |---|---|---|
-| `system_admin` | 企业微信通讯录管理员 | 全部功能 + 系统设置 |
-| `general_office` | 部门 = 总经办 | 总经办所有模块 + 全局查询 |
-| `finance` | 部门 = 财务部 | 财务部模块 |
-| `business` | 部门 = 业务部 | 业务部模块 |
-| `shipping` | 部门 = 船务部 | 船务部模块 + 船员操作 |
-| `logistics` | 部门 = 后勤部 | 后勤部模块 |
-| `crew` | 职务含"船员"或"船长"等 | 船务相关操作（限所属船只） |
+| `system_admin` | UserID 位于 `WECOM_SYSTEM_ADMIN_USER_IDS` | 全部功能 + 系统设置 |
+| `general_office` | 部门 ID = 3（总经办） | 总经办所有模块 + 全局查询 |
+| `finance` | 部门 ID = 4（财务部） | 财务部模块 |
+| `business` | 部门 ID = 5（业务部） | 业务部模块 |
+| `shipping` | 部门 ID = 6（船务部） | 船务部模块 + 船员操作 |
+| `logistics` | 部门 ID = 7（后勤部） | 后勤部模块 |
+| `crew` | 部门 ID = 8（船员）；职务匹配仅作旧数据兼容 | 船务相关操作（限所属船只） |
 | `all_authenticated` | 任意已登录用户 | "我的"模块（只读） |
+
+部门 ID 1（公司成员）和 2（待设置部门）不授予额外业务角色。成员同时属于多个部门时，业务角色和部门数据范围取并集并去重；`system_admin` 始终独立判定。
 
 ### 里程碑1（"我的"模块）权限矩阵
 
@@ -61,6 +63,7 @@ interface CurrentUserDto {
   userId: string;       // 企业微信 UserId
   corpId: string;
   name: string;
+  departmentIds: number[];
   departments: string[];
   position: string;
   roles: string[];      // 推断出的角色列表

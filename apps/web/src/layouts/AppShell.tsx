@@ -8,7 +8,6 @@ import HomeOutlined from '@ant-design/icons/HomeOutlined';
 import LeftOutlined from '@ant-design/icons/LeftOutlined';
 import ProjectOutlined from '@ant-design/icons/ProjectOutlined';
 import ShoppingCartOutlined from '@ant-design/icons/ShoppingCartOutlined';
-import Avatar from 'antd/es/avatar';
 import Button from 'antd/es/button';
 import Drawer from 'antd/es/drawer';
 import Layout from 'antd/es/layout';
@@ -21,6 +20,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useGetCurrentUserQuery } from '../features/auth/authApi';
 import { logout, setCurrentUser } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
+import { UserAvatar } from '../features/auth/UserAvatar';
 import { moduleNavGroups, moduleNavItems, resolveActiveNavGroupKey, resolveActiveNavItemKey } from '../router/moduleNav';
 
 const groupIconMap = {
@@ -174,7 +174,16 @@ export function AppShell() {
               aria-label="更多"
               onClick={() => setMobileNavOpen(true)}
             >
-              {user ? user.name.slice(0, 1) : <MenuOutlined />}
+              {user ? (
+                <UserAvatar
+                  className="shell-mobile-user-avatar"
+                  name={user.name}
+                  avatar={user.avatar}
+                  size={32}
+                />
+              ) : (
+                <MenuOutlined />
+              )}
             </Button>
           </div>
           <div className="shell-brand">
@@ -193,7 +202,7 @@ export function AppShell() {
           <Space wrap size="middle" className="shell-desktop-actions">
             {user ? (
               <Space className="shell-user-card">
-                <Avatar>{user.name.slice(0, 1)}</Avatar>
+                <UserAvatar name={user.name} avatar={user.avatar} />
                 <div>
                   <Typography.Text strong>{user.name}</Typography.Text>
                   <br />
@@ -277,7 +286,7 @@ export function AppShell() {
             {user ? (
               <div className="shell-mobile-drawer-user">
                 <Space>
-                  <Avatar>{user.name.slice(0, 1)}</Avatar>
+                  <UserAvatar name={user.name} avatar={user.avatar} />
                   <div>
                     <Typography.Text strong>{user.name}</Typography.Text>
                     <br />

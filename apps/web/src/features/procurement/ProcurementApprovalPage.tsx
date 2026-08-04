@@ -9,7 +9,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import {
@@ -71,25 +71,28 @@ export function ProcurementApprovalPage() {
 
   const rows = response?.data ?? [];
 
-  const handleAction = async (
-    task: ProcurementPendingTask,
-    action: 'approve' | 'reject' | 'return',
-  ) => {
-    const comment =
-      window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
-    if (action !== 'approve' && !comment.trim()) {
-      messageApi.warning('退回和驳回需要审批意见');
-      return;
-    }
+  const handleAction = useCallback(
+    async (
+      task: ProcurementPendingTask,
+      action: 'approve' | 'reject' | 'return',
+    ) => {
+      const comment =
+        window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
+      if (action !== 'approve' && !comment.trim()) {
+        messageApi.warning('退回和驳回需要审批意见');
+        return;
+      }
 
-    await actionApproval({
-      id: task.entityId,
-      action,
-      comment: comment.trim() || undefined,
-    }).unwrap();
-    messageApi.success('审批操作已提交');
-    await refetch();
-  };
+      await actionApproval({
+        id: task.entityId,
+        action,
+        comment: comment.trim() || undefined,
+      }).unwrap();
+      messageApi.success('审批操作已提交');
+      await refetch();
+    },
+    [actionApproval, messageApi, refetch],
+  );
 
   const columns: ColumnsType<ProcurementPendingTask> = useMemo(
     () => [
@@ -163,7 +166,7 @@ export function ProcurementApprovalPage() {
         ),
       },
     ],
-    [isActing, navigate],
+    [handleAction, isActing, navigate],
   );
 
   return (
@@ -174,15 +177,17 @@ export function ProcurementApprovalPage() {
         <Typography.Paragraph type="secondary">
           处理待审批采购单，支持通过、退回、驳回。
         </Typography.Paragraph>
-        <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
-        <div className="sunan-query-grid">
-          <Select
-            allowClear
-            placeholder="按部门过滤"
-            options={departmentOptions}
-            value={departmentCode}
-            onChange={(value) => setDepartmentCode(value)}
-          />
+        <div className="procurement-approval-toolbar">
+          <Button onClick={() => navigate('/procurement')}>返回采购首页</Button>
+          <div className="sunan-query-grid">
+            <Select
+              allowClear
+              placeholder="按部门过滤"
+              options={departmentOptions}
+              value={departmentCode}
+              onChange={(value) => setDepartmentCode(value)}
+            />
+          </div>
         </div>
       </section>
 

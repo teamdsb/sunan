@@ -65,6 +65,7 @@ export class AuthController {
         userId: result.userId,
         name: result.name,
         avatar: result.avatar,
+        departmentIds: result.departmentIds ?? [],
         department: result.departments,
         position: result.position,
         roles: result.roles,
