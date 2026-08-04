@@ -88,9 +88,11 @@ describe('OfficeHomePage', () => {
 
     expect(screen.getByText('海事入口')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '办事中心' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '我的办理' })).toBeInTheDocument();
-    expect(screen.getByText('暂未提供办理统计')).toBeInTheDocument();
-    expect(screen.getByText('后端当前仅提供办事入口目录，尚无个人办理实例接口')).toBeInTheDocument();
+    expect(screen.getByText('搜索并打开办事入口')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '我的办理' })).not.toBeInTheDocument();
+    expect(screen.queryByText('暂未提供办理统计')).not.toBeInTheDocument();
+    expect(screen.queryByText('继续办理')).not.toBeInTheDocument();
+    expect(screen.queryByText('查看审批进度')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '办事入口' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: '审批链路' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '进入治理台' }));
@@ -129,7 +131,7 @@ describe('OfficeHomePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByPlaceholderText('搜索办事入口、表单或审批事项')).toHaveValue('港口');
+    expect(screen.getByPlaceholderText('搜索办事入口')).toHaveValue('港口');
     expect(mockEntries).toHaveBeenLastCalledWith({ categoryCode: 'customs' });
   });
 

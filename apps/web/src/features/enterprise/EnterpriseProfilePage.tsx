@@ -141,9 +141,9 @@ export function EnterpriseProfilePage() {
                   <Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>
                     删除
                   </Button>,
-                  <Button key="detail" type="link">
-                    <Link to={buildDetailHref(myRouteConfig.enterpriseProfile.path, item.id, location.search)}>详情</Link>
-                  </Button>,
+                  <Link key="detail" to={buildDetailHref(myRouteConfig.enterpriseProfile.path, item.id, location.search)}>
+                    详情
+                  </Link>,
                 ]}
               >
                 <List.Item.Meta title={item.title} description={`${labelFrom(categoryLabelMap, item.category, '未分类')} · ${labelFrom(statusLabelMap, item.status, '未知状态')}`} />

@@ -151,9 +151,9 @@ export function EnterprisePolicyPage() {
                   <Button key="publish" onClick={() => void publishPolicy(item.id)}>
                     发布
                   </Button>,
-                  <Button key="detail" type="link">
-                    <Link to={buildDetailHref(myRouteConfig.enterprisePolicy.path, item.id, location.search)}>详情</Link>
-                  </Button>,
+                  <Link key="detail" to={buildDetailHref(myRouteConfig.enterprisePolicy.path, item.id, location.search)}>
+                    详情
+                  </Link>,
                 ]}
               >
                 <List.Item.Meta title={item.title} description={`${item.policyCode} · ${item.version} · ${formatPolicyStatus(item.status)}`} />

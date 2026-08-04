@@ -1,7 +1,6 @@
 import {
   AppstoreOutlined,
   CompassOutlined,
-  FolderOpenOutlined,
   GlobalOutlined,
   ReconciliationOutlined,
   RightOutlined,
@@ -112,7 +111,7 @@ export function OfficeHomePage() {
             办事中心
           </Typography.Title>
           <Typography.Paragraph>
-            搜索入口、继续办理、查看审批进度
+            搜索并打开办事入口
           </Typography.Paragraph>
         </div>
         <div className="office-mobile-hero-action">
@@ -134,7 +133,7 @@ export function OfficeHomePage() {
           value={keyword}
           onChange={(event) => updateParams({ keyword: event.target.value })}
           onPressEnter={handleSearch}
-          placeholder="搜索办事入口、表单或审批事项"
+          placeholder="搜索办事入口"
           prefix={<SearchOutlined />}
         />
         <Button type="primary" onClick={handleSearch}>
@@ -144,21 +143,6 @@ export function OfficeHomePage() {
 
       <section className="office-filter-panel office-mobile-filter-panel">
         <Segmented options={categoryOptions} value={categoryCode} onChange={(value) => updateParams({ categoryCode: String(value) })} />
-      </section>
-
-      <section className="office-mobile-status-card" aria-labelledby="office-status-title">
-        <div className="office-mobile-card-heading">
-          <Typography.Title level={2} id="office-status-title">
-            我的办理
-          </Typography.Title>
-        </div>
-        <div className="office-mobile-stats-unavailable" role="status">
-          <FolderOpenOutlined aria-hidden="true" />
-          <span>
-            <strong>暂未提供办理统计</strong>
-            <small>后端当前仅提供办事入口目录，尚无个人办理实例接口</small>
-          </span>
-        </div>
       </section>
 
       <section className="office-dashboard office-mobile-dashboard">

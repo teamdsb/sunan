@@ -3004,8 +3004,7 @@ body {
 .my-home-status-list,
 .my-home-task-list,
 .workbench-schedule-list,
-.workbench-priority-list,
-.office-approval-list {
+.workbench-priority-list {
   display: grid;
   gap: 10px;
 }
@@ -3042,8 +3041,7 @@ body {
 .my-home-status-item small,
 .my-home-task-item small,
 .workbench-priority-item small,
-.workbench-schedule-item small,
-.office-approval-item small {
+.workbench-schedule-item small {
   display: block;
   margin-top: 3px;
   color: var(--sunan-ink-soft);
@@ -3255,8 +3253,7 @@ body {
   gap: 18px;
 }
 
-.office-entry-panel,
-.office-approval-panel {
+.office-entry-panel {
   min-width: 0;
   padding: 18px;
   border: 1px solid var(--sunan-line);
@@ -3369,33 +3366,6 @@ body {
   margin: 0;
   color: var(--sunan-ink-soft);
   font-weight: 650;
-}
-
-.office-approval-item {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 13px;
-  border: 1px solid var(--sunan-line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.74);
-}
-
-.office-approval-item > span:first-child {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  color: var(--sunan-blue-deep);
-  font-weight: 860;
-  border-radius: 8px;
-  background: rgba(232, 243, 255, 0.92);
-}
-
-.office-approval-item strong {
-  display: block;
-  color: var(--sunan-ink);
 }
 
 /* Procurement dashboard */
@@ -4555,7 +4525,6 @@ body {
   .my-home-main-panel,
   .my-home-right-rail > section,
   .office-entry-panel,
-  .office-approval-panel,
   .procurement-budget-card,
   .procurement-process-card,
   .procurement-supplier-panel,
@@ -5026,7 +4995,6 @@ body {
 
 .shell-layout-module-office .office-search-panel.office-mobile-search-panel,
 .shell-layout-module-office .office-filter-panel.office-mobile-filter-panel,
-.shell-layout-module-office .office-mobile-status-card,
 .shell-layout-module-office .office-dashboard.office-mobile-dashboard {
   width: 100%;
   margin: 0 0 14px;
@@ -5137,9 +5105,7 @@ body {
   text-align: center;
 }
 
-.shell-layout-module-office .office-mobile-status-card,
-.shell-layout-module-office .office-mobile-entry-panel,
-.shell-layout-module-office .office-mobile-approval-panel {
+.shell-layout-module-office .office-mobile-entry-panel {
   overflow: hidden;
   border: 1px solid rgba(29, 99, 214, 0.14);
   border-radius: 10px;
@@ -5147,9 +5113,7 @@ body {
   box-shadow: 0 8px 20px rgba(15, 39, 66, 0.05);
 }
 
-.shell-layout-module-office .office-mobile-card-heading,
-.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading,
-.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading {
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5160,9 +5124,7 @@ body {
   border-bottom: 1px solid rgba(29, 99, 214, 0.09);
 }
 
-.shell-layout-module-office .office-mobile-card-heading h2.ant-typography,
-.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading h2.ant-typography,
-.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading h2.ant-typography {
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading h2.ant-typography {
   margin: 0;
   color: #102a43;
   font-size: 18px;
@@ -5171,50 +5133,12 @@ body {
   letter-spacing: 0;
 }
 
-.shell-layout-module-office .office-mobile-card-heading .ant-btn,
-.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading .ant-btn,
-.shell-layout-module-office .office-mobile-approval-panel .sunan-panel-heading .ant-btn {
+.shell-layout-module-office .office-mobile-entry-panel .sunan-panel-heading .ant-btn {
   height: 34px;
   padding: 0;
   color: #65748a;
   font-size: 14px;
   font-weight: 700;
-}
-
-.shell-layout-module-office .office-mobile-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 9px 0;
-}
-
-.shell-layout-module-office .office-mobile-stats-unavailable {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 76px;
-  padding: 14px 16px;
-  color: #64748b;
-}
-
-.shell-layout-module-office .office-mobile-stats-unavailable > .anticon {
-  color: #1769e0;
-  font-size: 24px;
-}
-
-.shell-layout-module-office .office-mobile-stats-unavailable span {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.shell-layout-module-office .office-mobile-stats-unavailable strong {
-  color: #102a43;
-  font-size: 14px;
-}
-
-.shell-layout-module-office .office-mobile-stats-unavailable small {
-  font-size: 12px;
-  line-height: 1.45;
 }
 
 .my-home-page > .ant-alert,
@@ -5224,67 +5148,13 @@ body {
   margin-bottom: 12px;
 }
 
-.shell-layout-module-office .office-mobile-stat {
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: center;
-  align-items: center;
-  column-gap: 9px;
-  row-gap: 6px;
-  min-width: 0;
-  border-right: 1px solid rgba(29, 99, 214, 0.11);
-  color: #102a43;
-}
-
-.shell-layout-module-office .office-mobile-stat:last-child {
-  border-right: 0;
-}
-
-.shell-layout-module-office .office-mobile-stat .anticon {
-  color: #f08a00;
-  font-size: 18px;
-}
-
-.shell-layout-module-office .office-mobile-stat.is-review .anticon {
-  color: #116fe8;
-}
-
-.shell-layout-module-office .office-mobile-stat.is-done .anticon {
-  color: #11a260;
-}
-
-.shell-layout-module-office .office-mobile-stat span {
-  color: #102a43;
-  font-size: 13px;
-  line-height: 1.2;
-  font-weight: 760;
-}
-
-.shell-layout-module-office .office-mobile-stat strong {
-  grid-column: 1 / -1;
-  color: #f08a00;
-  font-size: 23px;
-  line-height: 1;
-  font-weight: 880;
-  text-align: center;
-}
-
-.shell-layout-module-office .office-mobile-stat.is-review strong {
-  color: #116fe8;
-}
-
-.shell-layout-module-office .office-mobile-stat.is-done strong {
-  color: #11a260;
-}
-
 .shell-layout-module-office .office-dashboard.office-mobile-dashboard {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
-.shell-layout-module-office .office-mobile-entry-panel,
-.shell-layout-module-office .office-mobile-approval-panel {
+.shell-layout-module-office .office-mobile-entry-panel {
   padding: 0;
 }
 
@@ -5397,101 +5267,6 @@ body {
   text-align: center;
 }
 
-.shell-layout-module-office .office-mobile-approval-panel .office-approval-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  padding: 8px 12px 9px;
-}
-
-.shell-layout-module-office .office-mobile-approval-panel .office-approval-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-  align-content: start;
-  justify-items: center;
-  gap: 3px;
-  min-width: 0;
-  padding: 0;
-  text-align: center;
-  border: 0;
-  background: transparent;
-}
-
-.shell-layout-module-office .office-mobile-approval-panel .office-approval-item > div {
-  width: 100%;
-  min-width: 0;
-}
-
-.shell-layout-module-office .office-approval-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  color: #0f68e8;
-  font-size: 16px;
-  border: 1px solid rgba(29, 99, 214, 0.12);
-  border-radius: 50%;
-  background: #f7fbff;
-}
-
-.shell-layout-module-office .office-approval-icon em {
-  position: absolute;
-  right: -7px;
-  bottom: 4px;
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  color: #ffffff;
-  font-size: 10px;
-  line-height: 1;
-  font-style: normal;
-  font-weight: 820;
-  border-radius: 50%;
-  background: #0f68e8;
-}
-
-.shell-layout-module-office .office-mobile-approval-panel .office-approval-item strong {
-  display: block;
-  margin-bottom: 2px;
-  color: #102a43;
-  font-size: 12.5px;
-  line-height: 1.2;
-  font-weight: 820;
-  white-space: nowrap;
-}
-
-.shell-layout-module-office .office-mobile-approval-panel .office-approval-item small {
-  display: block;
-  color: #63748b;
-  font-size: 10px;
-  line-height: 1.16;
-  font-weight: 650;
-}
-
-.shell-layout-module-office .office-approval-connector {
-  position: absolute;
-  top: 17px;
-  left: calc(50% + 34px);
-  width: calc(100% - 68px);
-  height: 1px;
-  border-top: 1px dashed rgba(75, 103, 140, 0.42);
-}
-
-.shell-layout-module-office .office-approval-connector::after {
-  position: absolute;
-  right: -4px;
-  top: -4px;
-  width: 8px;
-  height: 8px;
-  border-top: 2px solid rgba(75, 103, 140, 0.52);
-  border-right: 2px solid rgba(75, 103, 140, 0.52);
-  transform: rotate(45deg);
-  content: '';
-}
 
 @media (hover: hover) and (pointer: fine) {
   .shell-layout-module-office .office-mobile-hero-action .ant-btn:hover,

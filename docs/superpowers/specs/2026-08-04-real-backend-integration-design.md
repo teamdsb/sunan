@@ -1,5 +1,5 @@
 ---
-status: approved-design
+status: current-spec
 owner: frontend
 updated: 2026-08-04
 replaces: []
