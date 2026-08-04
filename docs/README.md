@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-07-14
+updated: 2026-08-05
 replaces: []
 replaced_by: []
 ---
@@ -34,7 +34,7 @@ replaced_by: []
 | Claude Code 上下文 | [../CLAUDE.md](../CLAUDE.md) |
 | 项目概览 | [../README.md](../README.md) |
 | 原始产品基线 | [需求文档.md](需求文档.md) |
-| 苏南平台操作手册（0.0.5，2026-08-04 核对） | [handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) |
+| 苏南平台操作手册（0.0.5，2026-08-05 核对） | [Markdown](handbook/苏南船舶管理系统操作手册.md) · [Word](handbook/苏南船舶管理系统操作手册.docx) |
 | M8 安全管理上线培训 | [handbook/M8-安全管理上线培训材料.md](handbook/M8-安全管理上线培训材料.md) |
 | 平台功能对比与升级建议 | [handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md](handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md) |
 | 执行计划入口 | [execplans.md](execplans.md) |

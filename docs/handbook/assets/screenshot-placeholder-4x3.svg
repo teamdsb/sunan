@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">4 比 3 截图占位图</title>
+  <desc id="desc">用于苏南船舶管理系统操作手册，后续替换为实际系统截图。</desc>
+  <rect width="1200" height="900" fill="#f7f9fc"/>
+  <rect x="18" y="18" width="1164" height="864" rx="20" fill="none" stroke="#8aa4c4" stroke-width="4" stroke-dasharray="18 12"/>
+  <path d="M420 500l105-105 78 78 112-142 165 169H420z" fill="#dce8f5" stroke="#6c8fb8" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="465" cy="325" r="44" fill="#dce8f5" stroke="#6c8fb8" stroke-width="6"/>
+  <text x="600" y="620" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="48" font-weight="700" fill="#284d78">4:3 截图占位</text>
+  <text x="600" y="686" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="28" fill="#5f7590">请替换为对应页面的真实截图</text>
+  <text x="600" y="735" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="22" fill="#8292a6">建议脱敏后保留完整页面边界</text>
+</svg>
