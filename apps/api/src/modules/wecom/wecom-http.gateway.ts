@@ -18,6 +18,7 @@ import type {
   WecomTokenResponse,
   WecomUserDetailResponse,
   WecomUserInfoResponse,
+  WecomUserSensitiveDetailResponse,
 } from 'src/modules/wecom/wecom.types';
 
 @Injectable()
@@ -65,6 +66,17 @@ export class WecomHttpGateway {
       access_token: accessToken,
       userid: userId,
     });
+  }
+
+  async getUserSensitiveDetail(
+    accessToken: string,
+    userTicket: string,
+  ): Promise<WecomUserSensitiveDetailResponse> {
+    return this.post<WecomUserSensitiveDetailResponse>(
+      '/cgi-bin/auth/getuserdetail',
+      accessToken,
+      { user_ticket: userTicket },
+    );
   }
 
   async listDepartments(accessToken: string): Promise<WecomDepartmentListResponse> {

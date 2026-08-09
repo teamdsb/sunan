@@ -124,12 +124,18 @@ describe('inspection and CAPA integration', () => {
     await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/verifications`).set('Idempotency-Key', key('failed-verification')).send({ result: 'failed', conclusion: '需复核安装质量', effectivenessEvaluation: '暂不通过', reworkReason: '补充现场复核照片' }).expect(201);
     currentUser = makeUser('plan-owner');
     await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/request-verification`).set('Idempotency-Key', key('requeue')).expect(200);
+    await request(app.getHttpServer()).put(`/api/v1/capas/${capaId}/root-cause`).set('Idempotency-Key', key('root-pending')).send({ method: 'five_whys', conclusion: '不应覆盖待验证根因' }).expect(409);
+    await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/actions`).set('Idempotency-Key', key('action-pending')).send({ actionType: 'corrective', title: '不应新增待验证措施', responsibleUserId: 'inspector-a', dueAt: '2026-07-22T00:00:00.000Z' }).expect(409);
     currentUser = makeUser('verifier', ['all_authenticated', 'verifier']);
     await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/verifications`).set('Idempotency-Key', key('passed-verification')).send({ result: 'passed', conclusion: '现场复核通过', effectivenessEvaluation: '三个月内无重复问题' }).expect(201);
+    currentUser = makeUser('plan-owner');
+    await request(app.getHttpServer()).put(`/api/v1/capas/${capaId}/root-cause`).set('Idempotency-Key', key('root-verified')).send({ method: 'five_whys', conclusion: '不应覆盖已验证根因' }).expect(409);
     currentUser = makeUser('inspector-a');
     await request(app.getHttpServer()).post(`/api/v1/issues/${issueId}/close`).set('Idempotency-Key', key('forbidden-close')).send({ comment: '尝试关闭' }).expect(403);
     currentUser = makeUser('verifier', ['all_authenticated', 'verifier']);
     await request(app.getHttpServer()).post(`/api/v1/issues/${issueId}/close`).set('Idempotency-Key', key('close')).send({ comment: '闭环完成' }).expect(200);
+    currentUser = makeUser('plan-owner');
+    await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/actions`).set('Idempotency-Key', key('action-closed')).send({ actionType: 'preventive', title: '不应新增已关闭措施', responsibleUserId: 'inspector-a', dueAt: '2026-07-23T00:00:00.000Z' }).expect(409);
   });
 
   it('links each existing inspection-rectification source in both directions', async () => {

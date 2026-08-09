@@ -47,3 +47,12 @@ export function formatDepartmentNames(
 
   return fallback ?? '未设置部门';
 }
+
+export function formatUserScopeLabel(
+  user: Pick<CurrentUser, 'department' | 'departmentIds' | 'roles'>,
+): string {
+  const departmentNames = formatDepartmentNames(user);
+  return user.roles.includes('system_admin')
+    ? `${departmentNames} / 系统管理员`
+    : departmentNames;
+}

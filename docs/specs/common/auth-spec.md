@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: common
-updated: 2026-05-04
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
@@ -34,6 +34,8 @@ replaced_by: []
 | `all_authenticated` | 任意已登录用户 | "我的"模块（只读） |
 
 部门 ID 1（公司成员）和 2（待设置部门）不授予额外业务角色。成员同时属于多个部门时，业务角色和部门数据范围取并集并去重；`system_admin` 始终独立判定。
+
+`WECOM_SYSTEM_ADMIN_USER_IDS` 是运行时管理员权限的唯一真源。数据库中的历史 `is_system_admin` 字段不得用于恢复接口权限、全量数据范围或通知收件资格；从环境变量移除 UserID 并重启 API 后，后续请求和收件人计算立即按撤销后的权限执行。
 
 ### 里程碑1（"我的"模块）权限矩阵
 

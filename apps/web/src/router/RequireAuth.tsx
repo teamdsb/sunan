@@ -4,7 +4,10 @@ import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { setAuthStatus } from '../features/auth/authSlice';
-import { redirectToOAuth } from '../features/auth/oauth';
+import {
+  hasCurrentOauthPermissionVersion,
+  redirectToOAuth,
+} from '../features/auth/oauth';
 
 export function RequireAuth() {
   const authStatus = useAppSelector((state) => state.auth.authStatus);
@@ -13,7 +16,7 @@ export function RequireAuth() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !hasCurrentOauthPermissionVersion()) {
       dispatch(setAuthStatus('authorizing'));
       redirectToOAuth(location.pathname + location.search + location.hash);
       return;
@@ -22,7 +25,11 @@ export function RequireAuth() {
     dispatch(setAuthStatus('authenticated'));
   }, [dispatch, location.hash, location.pathname, location.search, token]);
 
-  if (!token || authStatus === 'authorizing') {
+  if (
+    !token ||
+    !hasCurrentOauthPermissionVersion() ||
+    authStatus === 'authorizing'
+  ) {
     return (
       <Result
         icon={<Spin size="large" />}

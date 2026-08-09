@@ -36,6 +36,7 @@ import { ProcurementReportApprovalEntity } from 'src/database/entities/procureme
 import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { OssService } from 'src/modules/files/oss.service';
+import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 import { ProcurementApprovalActionDto } from './dto/procurement-approval-action.dto';
 import { ProcurementApprovalListQueryDto } from './dto/procurement-approval-list-query.dto';
@@ -219,6 +220,7 @@ export class ProcurementService {
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly ossService: OssService,
     private readonly wecomMessageService: WecomMessageService,
+    private readonly wecomAdminService: WecomAdminService,
   ) {}
 
   async getBudgetSummary(year: number, user: CurrentUser) {
@@ -2274,7 +2276,8 @@ export class ProcurementService {
     const userIds = rows
       .filter(
         (row) =>
-          row.departmentCodes.includes(departmentCode) || row.isSystemAdmin,
+          row.departmentCodes.includes(departmentCode) ||
+          this.wecomAdminService.isSystemAdmin(row.userId),
       )
       .map((row) => row.userId);
 
@@ -2286,7 +2289,8 @@ export class ProcurementService {
     const userIds = rows
       .filter(
         (row) =>
-          row.departmentCodes.includes('finance_dept') || row.isSystemAdmin,
+          row.departmentCodes.includes('finance_dept') ||
+          this.wecomAdminService.isSystemAdmin(row.userId),
       )
       .map((row) => row.userId);
 
@@ -2298,7 +2302,8 @@ export class ProcurementService {
     const userIds = rows
       .filter(
         (row) =>
-          row.departmentCodes.includes('general_office') || row.isSystemAdmin,
+          row.departmentCodes.includes('general_office') ||
+          this.wecomAdminService.isSystemAdmin(row.userId),
       )
       .map((row) => row.userId);
 

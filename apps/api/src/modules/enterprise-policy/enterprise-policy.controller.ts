@@ -19,8 +19,8 @@ export class EnterprisePolicyController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return { data: await this.service.getById(id) };
+  async getById(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.getById(id, user) };
   }
 
   @Post()

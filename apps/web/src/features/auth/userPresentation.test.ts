@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { formatDepartmentNames } from './userPresentation';
+import {
+  formatDepartmentNames,
+  formatUserScopeLabel,
+} from './userPresentation';
 
 describe('formatDepartmentNames', () => {
   it('shows all specific departments and hides generic memberships', () => {
@@ -49,5 +52,15 @@ describe('formatDepartmentNames', () => {
         roles: ['all_authenticated', 'business', 'finance'],
       }),
     ).toBe('业务部');
+  });
+
+  it('keeps system administrator status separate from department membership', () => {
+    expect(
+      formatUserScopeLabel({
+        departmentIds: [1, 4],
+        department: ['公司成员', '财务部'],
+        roles: ['all_authenticated', 'finance', 'system_admin'],
+      }),
+    ).toBe('财务部 / 系统管理员');
   });
 });

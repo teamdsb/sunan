@@ -21,6 +21,7 @@ import { useGetCurrentUserQuery } from '../features/auth/authApi';
 import { logout, setCurrentUser } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
 import { UserAvatar } from '../features/auth/UserAvatar';
+import { formatUserScopeLabel } from '../features/auth/userPresentation';
 import { moduleNavGroups, moduleNavItems, resolveActiveNavGroupKey, resolveActiveNavItemKey } from '../router/moduleNav';
 
 const groupIconMap = {
@@ -45,21 +46,6 @@ const moduleRootPathMap = {
 } as const;
 
 type ModuleRootKey = keyof typeof moduleRootPathMap;
-
-const roleLabelMap: Record<string, string> = {
-  all_authenticated: '全体成员',
-  system_admin: '系统管理员',
-  general_office: '总经办',
-  finance: '财务部',
-  business: '业务部',
-  shipping: '船务部',
-  logistics: '后勤部',
-  crew: '船员',
-};
-
-function formatRoleLabels(roles: string[]) {
-  return roles.map((role) => roleLabelMap[role] ?? '自定义角色').join(' / ') || '员工';
-}
 
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
@@ -206,7 +192,7 @@ export function AppShell() {
                 <div>
                   <Typography.Text strong>{user.name}</Typography.Text>
                   <br />
-                  <Tag color="cyan">{formatRoleLabels(user.roles)}</Tag>
+                  <Tag color="cyan">{formatUserScopeLabel(user)}</Tag>
                 </div>
               </Space>
             ) : null}
@@ -290,7 +276,7 @@ export function AppShell() {
                   <div>
                     <Typography.Text strong>{user.name}</Typography.Text>
                     <br />
-                    <Tag color="cyan">{formatRoleLabels(user.roles)}</Tag>
+                    <Tag color="cyan">{formatUserScopeLabel(user)}</Tag>
                   </div>
                 </Space>
               </div>

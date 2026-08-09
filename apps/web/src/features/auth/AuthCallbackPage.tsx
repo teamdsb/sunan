@@ -4,7 +4,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../../app/hooks';
 import { useLazyGetCurrentUserQuery, useLazyWecomCallbackQuery } from './authApi';
 import { loginSucceeded, logout, setCurrentUser } from './authSlice';
-import { consumeRedirectTarget, verifyOauthState } from './oauth';
+import {
+  consumeRedirectTarget,
+  markCurrentOauthPermissionVersion,
+  scheduleOauthPermissionRetry,
+  verifyOauthState,
+} from './oauth';
 
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -36,6 +41,11 @@ export function AuthCallbackPage() {
         dispatch(loginSucceeded(callbackResponse.data));
         const currentUserResponse = await triggerCurrentUser().unwrap();
         dispatch(setCurrentUser(currentUserResponse.data));
+        if (callbackResponse.data.privateInfoAuthorized === true) {
+          markCurrentOauthPermissionVersion();
+        } else {
+          scheduleOauthPermissionRetry();
+        }
         navigate(consumeRedirectTarget(), { replace: true });
       } catch {
         dispatch(logout());

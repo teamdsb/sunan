@@ -35,6 +35,7 @@ describe('EnterpriseProfileDetailPage', () => {
           status: 'draft',
           description: '',
           files: [],
+          canManage: true,
         },
       },
       isLoading: false,

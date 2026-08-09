@@ -4,12 +4,10 @@ import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { useCreateShipMonitorMutation, useGetShipMonitorsByVesselQuery, useGetShipMonitorsQuery } from './monitorApi';
 
-const MANAGER_ROLES = new Set(['system_admin', 'general_office', 'finance', 'business', 'shipping', 'logistics']);
-
 export function MonitorPage() {
   const { vesselId } = useParams();
   const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
-  const isManager = roles.some((role) => MANAGER_ROLES.has(role));
+  const isManager = roles.includes('system_admin');
 
   const vesselQuery = useGetShipMonitorsByVesselQuery(vesselId ?? '', {
     skip: !vesselId,
@@ -29,7 +27,7 @@ export function MonitorPage() {
     <section className="page-hero">
       <Typography.Title level={2}>船舶监控</Typography.Title>
       <Typography.Paragraph type="secondary">
-        {isManager ? '管理员可新增与配置监控入口。' : '普通用户仅可查看启用中的监控入口。'}
+        {isManager ? '系统管理员可新增与配置监控入口。' : '当前账号仅可查看启用中的监控入口。'}
       </Typography.Paragraph>
       <Space direction="vertical" style={{ width: '100%' }}>
         {isManager ? (

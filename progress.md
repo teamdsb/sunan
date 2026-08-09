@@ -1,11 +1,39 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-05
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
 # 进度日志
+
+## 会话：2026-08-09（企业微信头像、多部门与权限收口）
+
+### 阶段 17：测试修复与最终验收
+- **状态：** completed
+- **开始时间：** 2026-08-09
+- 执行的操作：
+  - 恢复仓库持久化计划，核对实际 diff 与未跟踪测试文件。
+  - 运行 `RequireAuth.auth.test.tsx` 和 `AppRoutes.test.tsx`，稳定复现 34 个失败。
+  - 确认根因为测试 mock 缺失 `persistToken` 以及路由测试会话缺失 OAuth 授权版本标记，生产迁移逻辑无需回退。
+  - 将 `RequireAuth` 测试改为部分 mock，并在 `AppRoutes` 测试中初始化当前授权版本。
+  - 重跑两个定向测试文件：2 files / 39 tests 全部通过。
+  - 根据官方文档复核 `snsapi_privateinfo -> user_ticket -> /cgi-bin/auth/getuserdetail -> avatar` 链路；确认部署配置未设置会阻断企业微信头像域名的 CSP。
+  - 自审发现已签认检查参与人仍可能收到保存/提交动作；新增纯领域动作解析并按个人提交状态转为只读。
+  - 定向回归通过：API 5 suites / 26 tests，Web 8 files / 68 tests。
+  - 全量 Web 60 files / 257 tests 与 API unit 21 suites / 114 tests 通过；API integration 首次因 Docker Desktop 未启动而在容器创建前失败。
+  - 启动 Docker Desktop 并确认服务端 `29.6.1`，重跑 API integration，18 suites / 80 tests 全部通过。
+  - API/Web 生产构建和 API lint 通过；`git diff --check` 通过。
+  - 文档索引首次校验发现头像/权限设计稿使用未允许的 `current-design` 并漏入 inventory；改用 `current-spec` 并准备重新生成索引。
+  - 重建并校验文档索引：278 份 Markdown 全部通过；3 份变更 OpenAPI 均通过 `swagger-cli validate`。
+  - 顶层全量测试首跑仅证照集成套件的 3 个 HTTP 用例超时；单套件带 `--detectOpenHandles` 重跑为 3/3 通过、无句柄报告，后续 API integration 全量 18 suites / 80 tests 通过，确认为一次性 Docker/Testcontainers 请求卡顿。
+  - 首轮最终顶层 `CI=1 pnpm test` 完整退出 0：Web 60 files / 257 tests，API unit 21 suites / 114 tests，API integration 18 suites / 80 tests，合计 451 tests。
+  - 独立代码审查发现管理员撤权仍可能读取旧数据库标记、监控写权限过宽、CAPA 生命周期接口可绕过、制度发布可跨部门废弃记录、头像失败被永久标记等 5 项重要问题；均先补红灯回归再实施最小修复。
+  - 管理员权限和采购通知收件人统一以 `WECOM_SYSTEM_ADMIN_USER_IDS` 为真源；监控配置仅系统管理员可写；CAPA 非 `in_progress` 写操作返回 409；制度旧版本只在同部门废弃；敏感资料失败采用 24 小时冷却后自动重试。
+  - 修复后新鲜顶层 `CI=1 pnpm test` 完整退出 0：Web 60 files / 260 tests，API unit 22 suites / 116 tests，API integration 18 suites / 81 tests，合计 457 tests。
+  - 再次执行 API/Web build、API lint、4 份相关 OpenAPI、278 份 Markdown 索引和 `git diff --check`，全部退出 0；仅保留仓库要求 Node 20.x 而当前为 Node 24.18.0 的环境警告。
+  - 同步 Markdown 与 Word 操作手册中的监控权限口径；DOCX 为 16 章、75 张嵌入图，压缩包、OOXML 和关键文本校验通过。
+  - 完成全量 diff 自审，确认未生成新的非预期源文件，并按用户要求保留所有改动为未提交状态。
 
 ## 会话：2026-08-05（升级版操作手册与 Word 交付）
 

@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-05
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
@@ -11,7 +11,7 @@ replaced_by: []
 完成 M8 Wave 5 的可复用计划任务中心、统一待办、真实日历与企业微信任务消息，并在其验收基础上完成 Wave 6 检查、统一问题和 CAPA 验证关闭闭环；在此基础上将平台全局版本升级为 `0.0.4` 并发布到生产。
 
 ## 当前阶段
-阶段 16
+阶段 17
 
 ## 各阶段
 
@@ -145,6 +145,16 @@ replaced_by: []
 - [x] 更新文档导航、inventory、发现和进度记录
 - **状态：** completed（0.0.5；16 章；74 个正式截图位；Markdown 与 132 页 A4 Word 双格式交付；全部校验通过）
 
+### 阶段 17：企业微信头像、多部门与权限显隐收口
+- [x] 复核企业微信头像授权、部门映射、多部门展示与系统管理员配置
+- [x] 完成后端头像获取与保底、前端头像统一展示和旧会话重新授权
+- [x] 按部门和可用动作收紧新建/编辑入口，保留全体成员与船员的采购创建权限
+- [x] 修复 OAuth 授权版本迁移导致的前端测试夹具失败
+- [x] 执行 API/Web 全量测试、构建、lint、OpenAPI 和 diff 校验
+- [x] 完成独立代码审查，修复管理员撤权、监控写权限、CAPA 状态绕过、制度跨部门发布和头像失败重试问题
+- [x] 完成全量 diff 自审并保留未提交工作区
+- **状态：** complete
+
 ## 关键问题
 1. 用户最新确认：M1-M6 修复应作为新的 M7；原 M7/M8 整体后移。
 2. 新 M7 使用 6 个 Wave，对应上传/我的、办事、采购、工作台、企业微信直达和最终门禁。
@@ -190,6 +200,10 @@ replaced_by: []
 | DOCX 校验器的 Python 依赖不在同一运行时 | 2 | 系统 Python 有 `defusedxml` 但版本 3.9 不支持校验器的 `match` 语法；bundled Python 3.12 有 `lxml` 但缺 `defusedxml`。用临时只读依赖目录把系统中的纯 Python `defusedxml` 暴露给 3.12，避免 3.9 的 `lxml` 覆盖 3.12 扩展，校验全部通过 |
 | 动态目录在 LibreOffice 渲染时为空 | 1 | Word 的目录域未被 LibreOffice 自动展开；改为正文真源驱动的 16 章静态可见目录，并在最终 A4 渲染后回填、复核当前页码 |
 | docx-js 多书签生成重复数字 ID | 1 | 内部跳转书签触发 30 项唯一性错误；目录不依赖书签，移除内部链接后保留章节名和页码，OOXML 再次全部通过 |
+| OAuth 授权版本迁移后前端定向测试失败 | 1 | `RequireAuth` 完整 mock 丢失 `persistToken`；`AppRoutes` 测试会话缺少当前授权版本标记。仅修正测试初始化，不回退生产授权迁移。 |
+| API 全量集成测试无法启动 testcontainer | 1 | Docker Desktop 未运行，所有集成套件在 PostgreSQL 容器启动前统一失败。启动 Docker，确认服务端 `29.6.1` 后重跑，18 suites / 80 tests 通过。 |
+| 顶层全量测试首跑时证照集成套件 3 项超时 | 1 | 同进程其余 17 个集成套件通过，无业务断言失败；单独以 `--detectOpenHandles` 重现时 3/3 在 11 秒内通过且无句柄报告，随后全量 API integration 18 suites / 80 tests 和顶层 `CI=1 pnpm test` 均完整退出 0，确认为一次性 Docker/Testcontainers 请求卡顿。 |
+| 文档索引校验拒绝头像/权限设计稿 | 1 | 设计稿使用了仓库未定义的 `current-design` 状态，且新文件未进入 `docs/inventory.md`。改为现有 `current-spec` 并重新生成 inventory。 |
 
 ## 备注
 - 所有新增文档默认使用仓库现有 YAML front matter 风格。

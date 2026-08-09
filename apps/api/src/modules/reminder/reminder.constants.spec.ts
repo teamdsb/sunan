@@ -6,7 +6,6 @@ describe('resolveRolesFromDepartments', () => {
       resolveRolesFromDepartments(
         [1, 4, 6],
         ['公司成员', '已改名财务', '已改名船务'],
-        false,
       ),
     ).toEqual(['all_authenticated', 'finance', 'shipping']);
   });
@@ -16,16 +15,14 @@ describe('resolveRolesFromDepartments', () => {
       resolveRolesFromDepartments(
         [1, 2],
         ['公司成员', '待设置部门'],
-        false,
       ),
     ).toEqual(['all_authenticated']);
   });
 
   it('keeps name fallback for records that predate department id storage', () => {
-    expect(resolveRolesFromDepartments([], ['总经办'], true)).toEqual([
+    expect(resolveRolesFromDepartments([], ['总经办'])).toEqual([
       'all_authenticated',
       'general_office',
-      'system_admin',
     ]);
   });
 });

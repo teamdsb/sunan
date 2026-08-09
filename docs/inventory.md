@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：277 个 Markdown 文件。
+总数：278 个 Markdown 文件。
 
 ## repository-root
 
@@ -463,3 +463,4 @@ replaced_by: []
 | [docs/superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md](superpowers/specs/2026-08-04-ui-backend-contract-cleanup-design.md) | `current-spec` | `frontend` | UI 与主分支后端能力边界收口设计 |
 | [docs/superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md](superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md) | `current-spec` | `auth` | 企业微信部门权限与用户头像优化设计 |
 | [docs/superpowers/specs/2026-08-05-handbook-md-docx-design.md](superpowers/specs/2026-08-05-handbook-md-docx-design.md) | `current-spec` | `docs` | 升级版操作手册 Markdown 与 Word 交付设计 |
+| [docs/superpowers/specs/2026-08-09-wecom-avatar-permission-display-design.md](superpowers/specs/2026-08-09-wecom-avatar-permission-display-design.md) | `current-spec` | `auth-and-authorization` | 企业微信头像与权限展示设计 |

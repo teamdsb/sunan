@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
+import { useAppSelector } from '../../app/hooks';
+import { canManageCompanyContent } from '../auth/permissions';
 import { FileUploadField } from '../files/FileUploadField';
 import type { FileRecord } from '../files/types';
 import {
@@ -65,6 +67,8 @@ function toErrorMessage(error: unknown) {
 
 export function CertificateListPage() {
   const location = useLocation();
+  const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
+  const canManage = canManageCompanyContent(roles);
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: settings } = useGetSettingsQuery();
   const [messageApi, contextHolder] = message.useMessage();
@@ -281,12 +285,12 @@ export function CertificateListPage() {
           />
         </Card>
 
-        <Button type="primary" className="page-primary-action" onClick={openCreateDrawer}>
+        {canManage ? <Button type="primary" className="page-primary-action" onClick={openCreateDrawer}>
           新增证照
-        </Button>
+        </Button> : null}
       </Space>
 
-      <Drawer
+      {canManage ? <Drawer
         title="新增电子证照"
         placement="right"
         width={520}
@@ -378,7 +382,7 @@ export function CertificateListPage() {
             <FileUploadField category="certificates" value={upload} onChange={setUpload} />
           </Form.Item>
         </Form>
-      </Drawer>
+      </Drawer> : null}
     </section>
   );
 }

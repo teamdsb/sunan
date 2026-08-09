@@ -1,11 +1,22 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-05
+updated: 2026-08-09
 replaces: []
 replaced_by: []
 ---
 # 发现与决策
+
+## 2026-08-09：企业微信头像、多部门与权限收口
+- OAuth 已升级为 `snsapi_privateinfo`，已有 JWT 但缺少 `snsapi_privateinfo-v1` 标记的旧会话需重新授权一次，才能获得 `user_ticket` 并调用敏感成员信息接口刷新头像。
+- 定向测试已稳定复现：`RequireAuth.auth.test.tsx` 完整 mock OAuth 模块，使 `loginSucceeded` 调用的 `persistToken` 不存在；`AppRoutes.test.tsx` 只写入 token，未写入新授权版本，因此受保护路由正确进入 OAuth 重新授权页。
+- 修复边界固定为测试初始化：部分 mock OAuth 模块并保留真实存储函数；路由测试在 `beforeEach` 写入导出的当前授权版本常量。
+- 自审发现多人检查的动作集未区分“当前用户已签认”；此时接口会拒绝再次保存/提交，但前端仍可能显示入口。将在后端 `availableActions` 中按个人提交状态收口，其他未提交参与人不受影响。
+- 独立审查确认数据库 `is_system_admin` 不能继续作为权限或通知收件依据；运行时管理员唯一真源固定为 `WECOM_SYSTEM_ADMIN_USER_IDS`，撤销配置后重启 API 即生效。
+- 监控端口属于系统配置，权限矩阵明确只允许 `system_admin` 写；部门内容管理角色只读启用入口，不能复用证照/资料/制度的管理 helper。
+- CAPA 的 `availableActions` 与写接口必须使用同一状态机：只有 `in_progress` 可改根因、新增措施或请求验证，待验证、已验证、已关闭均返回 409。
+- 企业制度的版本废弃范围必须包含 `department_code`，否则部门管理员发布同编码新版本会修改其他部门记录；版本历史同步按同部门读取。
+- `privateInfoAuthorized` 用于区分“OAuth 登录成功”和“敏感资料实际获取成功”；失败不再永久标记授权完成，而是在 24 小时冷却后自动重试，避免立即循环和永久缺头像。
 
 ## 2026-08-05：升级版操作手册与 Word 交付
 - 用户确认系统再次升级，要求基于当前项目完善操作手册，同时参考外部《应用软件说明书-匠芯云链小程序》并交付 Markdown 与 DOCX 两种格式。

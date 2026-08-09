@@ -12,6 +12,10 @@ import { baseApi } from '../app/baseApi';
 import { officeRouteConfig } from './officeRouteConfig';
 import { procurementRouteConfig } from './procurementRouteConfig';
 import { workbenchRouteConfig } from './workbenchRouteConfig';
+import {
+  CURRENT_OAUTH_PERMISSION_VERSION,
+  OAUTH_PERMISSION_VERSION_STORAGE_KEY,
+} from '../features/auth/oauth';
 
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
@@ -208,6 +212,10 @@ function renderBackHref(path: string) {
 describe('AppRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.setItem(
+      OAUTH_PERMISSION_VERSION_STORAGE_KEY,
+      CURRENT_OAUTH_PERMISSION_VERSION,
+    );
   });
 
   it('renders the my home page at /my', async () => {

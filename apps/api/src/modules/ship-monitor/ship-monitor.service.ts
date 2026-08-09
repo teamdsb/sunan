@@ -8,8 +8,6 @@ import { ShipMonitorCreateDto } from './dto/ship-monitor-create.dto';
 import { ShipMonitorListQueryDto } from './dto/ship-monitor-list-query.dto';
 import { ShipMonitorUpdateDto } from './dto/ship-monitor-update.dto';
 
-const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
-
 @Injectable()
 export class ShipMonitorService {
   constructor(
@@ -23,7 +21,7 @@ export class ShipMonitorService {
     const qb = this.repository.createQueryBuilder('m').where('m.deletedAt IS NULL');
     if (query.vesselId) qb.andWhere('m.vesselId = :vesselId', { vesselId: query.vesselId });
 
-    const isAdminView = user.roles.includes('system_admin') || user.roles.some((role) => MANAGER_ROLES.has(role));
+    const isAdminView = user.roles.includes('system_admin');
     if (query.activeOnly !== false || !isAdminView) {
       qb.andWhere('m.isActive = true');
     }
@@ -90,7 +88,7 @@ export class ShipMonitorService {
   }
 
   private ensureManager(user: CurrentUser) {
-    if (user.roles.includes('system_admin') || user.roles.some((role) => MANAGER_ROLES.has(role))) return;
+    if (user.roles.includes('system_admin')) return;
     throw new ForbiddenException('forbidden');
   }
 
@@ -112,4 +110,3 @@ export class ShipMonitorService {
     };
   }
 }
-

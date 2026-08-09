@@ -36,6 +36,7 @@ describe('EnterprisePolicyDetailPage', () => {
           status: 'draft',
           summary: '',
           files: [],
+          canManage: true,
         },
       },
       isLoading: false,

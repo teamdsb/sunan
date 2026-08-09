@@ -187,7 +187,7 @@ components:
   schemas:
     EnterpriseProfile:
       type: object
-      required: [id, title, category, status, files, createdAt, updatedAt]
+      required: [id, title, category, status, files, createdAt, updatedAt, canManage]
       properties:
         id:
           type: string
@@ -220,6 +220,9 @@ components:
         updatedAt:
           type: string
           format: date-time
+        canManage:
+          type: boolean
+          description: 当前用户是否可维护、删除或绑定该资料；由后端按系统管理员、管理角色和任一所属部门范围计算。
     FileAttachment:
       type: object
       required: [id, fileName, ossKey, mimeType, fileSize]

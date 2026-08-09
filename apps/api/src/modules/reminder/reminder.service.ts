@@ -134,13 +134,12 @@ export class ReminderService {
       for (const role of resolveRolesFromDepartments(
         viewer.departmentIds ?? [],
         viewer.departmentNames,
-        viewer.isSystemAdmin,
       )) {
         roles.add(role);
       }
     }
 
-    if (user.roles.includes('system_admin') || viewer?.isSystemAdmin) {
+    if (user.roles.includes('system_admin')) {
       roles.add('system_admin');
     }
 

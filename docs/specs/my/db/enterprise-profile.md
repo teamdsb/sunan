@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: my
-updated: 2026-05-04
+updated: 2026-08-09
 replaces: []
 replaced_by: []
 ---
@@ -22,6 +22,7 @@ replaced_by: []
 | `status` | varchar(16) | NOT NULL, DEFAULT `draft` | `draft` / `published` / `archived` |
 | `effective_date` | date | NULL | 生效日期 |
 | `published_at` | timestamptz | NULL | 发布时间 |
+| `department_code` | varchar(64) | NULL | 创建者首个业务部门代码；用于记录级管理范围 |
 | `created_by` | varchar(64) | NOT NULL | 创建人 UserId |
 | `updated_by` | varchar(64) | NOT NULL | 更新人 UserId |
 | `created_at` | timestamptz | NOT NULL | 创建时间 |
@@ -50,3 +51,4 @@ replaced_by: []
 1. 资料至少允许无附件保存草稿，但发布时必须存在至少一个附件或完整正文。
 2. `status = archived` 的资料默认不在列表展示，仅管理员可查看。
 3. 附件排序由 `sort_order` 控制，同一资料内不得重复。
+4. 非系统管理员可管理其任一 `department_code` 与资料 `department_code` 相同的资料；空部门编码仅系统管理员可管理。

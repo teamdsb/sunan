@@ -1,6 +1,8 @@
 import { Alert, Button, Card, Form, Input, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAppSelector } from '../../app/hooks';
+import { canManageCompanyContent } from '../auth/permissions';
 import { FileUploadField } from '../files/FileUploadField';
 import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
@@ -14,6 +16,8 @@ import {
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
+  const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
+  const canManage = canManageCompanyContent(roles);
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
   const [updateCertificate, { isLoading: saving }] =
     useUpdateCertificateMutation();
@@ -58,7 +62,7 @@ export function CertificateDetailPage() {
             <Typography.Paragraph>
               持有对象：{item.ownerName}
             </Typography.Paragraph>
-            <Form
+            {canManage ? <Form
               form={form}
               layout="vertical"
               onFinish={async (values) => {
@@ -107,7 +111,7 @@ export function CertificateDetailPage() {
                   保存
                 </Button>
               </Space>
-            </Form>
+            </Form> : <Alert type="info" showIcon message="你没有维护证照的权限。" />}
             <Typography.Title level={5} style={{ marginTop: 16 }}>
               已绑定附件
             </Typography.Title>

@@ -28,7 +28,6 @@ const ROLE_BY_DEPARTMENT_ID = new Map<number, string>([
 export function resolveRolesFromDepartments(
   departmentIds: number[],
   departmentNames: string[],
-  isSystemAdmin: boolean,
 ): string[] {
   const roles = new Set<string>(['all_authenticated']);
 
@@ -46,10 +45,6 @@ export function resolveRolesFromDepartments(
         roles.add(role);
       }
     });
-  }
-
-  if (isSystemAdmin) {
-    roles.add('system_admin');
   }
 
   return [...roles];

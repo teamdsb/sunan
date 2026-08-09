@@ -86,3 +86,82 @@ export function transitionVerification(input: {
   }
   return { capaStatus: 'verified', verificationStatus: 'passed', reworkReason: null };
 }
+
+export function resolveInspectionAvailableActions(input: {
+  canRead: boolean;
+  canExecute: boolean;
+  alreadySubmitted: boolean;
+  status: string;
+  canSummarize: boolean;
+}): string[] {
+  if (!input.canRead) return [];
+
+  const actions = ['read'];
+  const isTerminal = ['completed', 'cancelled'].includes(input.status);
+  if (input.canExecute && !input.alreadySubmitted && !isTerminal) {
+    actions.push('save_result', 'submit');
+  }
+  if (input.canSummarize && input.status === 'submitted') {
+    actions.push('summarize');
+  }
+
+  return actions;
+}
+
+export function resolveIssueAvailableActions(input: {
+  canRead: boolean;
+  canManage: boolean;
+  issueStatus: string;
+  hasCapa: boolean;
+  capaStatus: string | null;
+  verificationReady: boolean;
+  canVerify: boolean;
+  canClose: boolean;
+}): string[] {
+  if (!input.canRead) return [];
+
+  const actions = ['read'];
+  if (input.issueStatus === 'closed') return actions;
+
+  if (!input.hasCapa) {
+    if (input.canManage) actions.push('create_capa');
+    return actions;
+  }
+
+  if (input.canManage && input.capaStatus === 'in_progress') {
+    actions.push('save_root_cause', 'create_action');
+    if (input.verificationReady) actions.push('request_verification');
+  }
+  if (input.canVerify && input.capaStatus === 'pending_verification') {
+    actions.push('verify');
+  }
+  if (input.canClose && input.capaStatus === 'verified') {
+    actions.push('close');
+  }
+
+  return actions;
+}
+
+export function resolveCapaActionAvailableActions(input: {
+  status: string;
+  isResponsible: boolean;
+  isAdmin: boolean;
+  isVerifier: boolean;
+  isReviewer: boolean;
+}): string[] {
+  const actions: string[] = [];
+  if (
+    (input.isResponsible || input.isAdmin) &&
+    ['draft', 'assigned', 'in_progress', 'returned'].includes(input.status)
+  ) {
+    actions.push('submit');
+  }
+  if (
+    input.status === 'submitted' &&
+    !input.isResponsible &&
+    (input.isVerifier || input.isAdmin || input.isReviewer)
+  ) {
+    actions.push('accept');
+  }
+  return actions;
+}

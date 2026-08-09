@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
+import { useAppSelector } from '../../app/hooks';
+import { canManageCompanyContent } from '../auth/permissions';
 import {
   useCreateEnterpriseProfileMutation,
   useDeleteEnterpriseProfileMutation,
@@ -37,6 +39,8 @@ function labelFrom(map: Record<string, string>, value: string | null | undefined
 
 export function EnterpriseProfilePage() {
   const location = useLocation();
+  const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
+  const canCreate = canManageCompanyContent(roles);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = readPageValue(searchParams.get('page'), 1);
   const pageSize = readPageValue(searchParams.get('pageSize'), 10);
@@ -62,7 +66,7 @@ export function EnterpriseProfilePage() {
         创建、筛选和维护企业资料，集中管理分类、状态与附件。
       </Typography.Paragraph>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card>
+        {canCreate ? <Card>
           <Form
             form={form}
             data-testid="enterprise-profile-create-form"
@@ -85,7 +89,7 @@ export function EnterpriseProfilePage() {
               新建资料
             </Button>
           </Form>
-        </Card>
+        </Card> : null}
 
         <Card loading={isLoading}>
           <Button
@@ -138,9 +142,9 @@ export function EnterpriseProfilePage() {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  <Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>
+                  ...(item.canManage ? [<Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>
                     删除
-                  </Button>,
+                  </Button>] : []),
                   <Link key="detail" to={buildDetailHref(myRouteConfig.enterpriseProfile.path, item.id, location.search)}>
                     详情
                   </Link>,

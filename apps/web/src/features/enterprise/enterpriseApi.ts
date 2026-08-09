@@ -23,6 +23,7 @@ export interface EnterpriseProfile {
   files: EnterpriseFile[];
   createdAt: string;
   updatedAt: string;
+  canManage: boolean;
 }
 export interface EnterprisePolicy {
   id: string;
@@ -36,6 +37,7 @@ export interface EnterprisePolicy {
   files: EnterpriseFile[];
   createdAt: string;
   updatedAt: string;
+  canManage: boolean;
 }
 
 export const enterpriseApi = baseApi.injectEndpoints({

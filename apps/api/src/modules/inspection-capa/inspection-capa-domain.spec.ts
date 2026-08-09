@@ -2,6 +2,9 @@ import {
   buildIssueTransferKey,
   canCloseIssue,
   canSummarizeInspection,
+  resolveCapaActionAvailableActions,
+  resolveInspectionAvailableActions,
+  resolveIssueAvailableActions,
   snapshotTemplateVersion,
   transitionVerification,
 } from './inspection-capa-domain';
@@ -85,5 +88,97 @@ describe('inspection and CAPA domain rules', () => {
       verificationStatus: 'passed',
       reworkReason: null,
     });
+  });
+
+  it('returns only issue actions that match authorization, responsibility and state', () => {
+    const base = {
+      canRead: true,
+      canManage: false,
+      issueStatus: 'action_in_progress',
+      hasCapa: true,
+      capaStatus: 'in_progress',
+      verificationReady: false,
+      canVerify: false,
+      canClose: false,
+    };
+
+    expect(resolveIssueAvailableActions(base)).toEqual(['read']);
+    expect(resolveIssueAvailableActions({
+      ...base,
+      canManage: true,
+      verificationReady: true,
+    })).toEqual([
+      'read',
+      'save_root_cause',
+      'create_action',
+      'request_verification',
+    ]);
+    expect(resolveIssueAvailableActions({
+      ...base,
+      capaStatus: 'pending_verification',
+      canVerify: true,
+    })).toEqual(['read', 'verify']);
+    expect(resolveIssueAvailableActions({
+      ...base,
+      capaStatus: 'verified',
+      canClose: true,
+    })).toEqual(['read', 'close']);
+    expect(resolveIssueAvailableActions({
+      ...base,
+      hasCapa: false,
+      capaStatus: null,
+      canManage: true,
+    })).toEqual(['read', 'create_capa']);
+  });
+
+  it('makes an inspection read-only for a participant after personal submission', () => {
+    const base = {
+      canRead: true,
+      canExecute: true,
+      alreadySubmitted: false,
+      status: 'in_progress',
+      canSummarize: false,
+    };
+
+    expect(resolveInspectionAvailableActions(base)).toEqual([
+      'read',
+      'save_result',
+      'submit',
+    ]);
+    expect(resolveInspectionAvailableActions({
+      ...base,
+      alreadySubmitted: true,
+      status: 'submitted',
+    })).toEqual(['read']);
+    expect(resolveInspectionAvailableActions({
+      ...base,
+      canExecute: false,
+      status: 'submitted',
+      canSummarize: true,
+    })).toEqual(['read', 'summarize']);
+  });
+
+  it('separates CAPA action submission from independent acceptance', () => {
+    expect(resolveCapaActionAvailableActions({
+      status: 'assigned',
+      isResponsible: true,
+      isAdmin: false,
+      isVerifier: false,
+      isReviewer: false,
+    })).toEqual(['submit']);
+    expect(resolveCapaActionAvailableActions({
+      status: 'submitted',
+      isResponsible: false,
+      isAdmin: false,
+      isVerifier: true,
+      isReviewer: false,
+    })).toEqual(['accept']);
+    expect(resolveCapaActionAvailableActions({
+      status: 'submitted',
+      isResponsible: true,
+      isAdmin: false,
+      isVerifier: true,
+      isReviewer: false,
+    })).toEqual([]);
   });
 });

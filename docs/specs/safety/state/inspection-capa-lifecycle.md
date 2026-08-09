@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: safety
-updated: 2026-07-12
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
@@ -47,6 +47,10 @@ pending | in_progress -> cancelled
 | reopen | issue `closed` | `open` | reviewer/system_admin；必须写原因，保留原 CAPA/验证历史。 |
 
 验证人不得是任一 active CAPA action 的责任人；普通 executor 永远没有 `close` 动作。`availableActions` 是后端 ABAC、责任范围、参与关系、状态与职责隔离的交集，前端只消费该字段。
+
+根因保存、措施新增和请求验证只能在 CAPA 为 `in_progress` 且问题未关闭时执行。`pending_verification`、`verified` 或 `closed` 状态即使由原负责人直接调用写接口，也必须返回 409，不能把 CAPA 隐式退回 `in_progress`。
+
+问题详情的 `availableActions` 使用 `create_capa`、`save_root_cause`、`create_action`、`request_verification`、`verify`、`close`；每条 CAPA 措施另行返回 `submit` 或 `accept`。无对应动作时，前端不渲染输入框、上传控件或命令按钮。
 
 ## 关闭与返工门槛
 

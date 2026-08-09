@@ -17,7 +17,16 @@ import {
   AcceptCapaActionDto, CloseIssueDto, CreateCapaActionDto, CreateCapaDto, CreateInspectionPlanDto, CreateIssueDto, CreateTemplateDto, CreateTemplateVersionDto,
   InspectionGenerationDto, InspectionListQueryDto, IssueListQueryDto, RootCauseDto, SaveInspectionResultDto, SubmitCapaActionDto, SubmitInspectionDto, VerificationDto,
 } from './dto/inspection-capa.dto';
-import { buildIssueTransferKey, canCloseIssue, canSummarizeInspection, snapshotTemplateVersion, transitionVerification } from './inspection-capa-domain';
+import {
+  buildIssueTransferKey,
+  canCloseIssue,
+  canSummarizeInspection,
+  resolveCapaActionAvailableActions,
+  resolveInspectionAvailableActions,
+  resolveIssueAvailableActions,
+  snapshotTemplateVersion,
+  transitionVerification,
+} from './inspection-capa-domain';
 
 const SOURCE_MODULES = new Set(['goa_safety_hazard', 'shipping_self_inspection', 'shipping_vessel_inspection', 'shipping_maritime_safety_check']);
 const MANAGER_ROLES = new Set(['system_admin', 'safety_manager', 'shipping']);
@@ -193,7 +202,9 @@ export class InspectionCapaService {
   }
 
   async listIssues(user: CurrentUser, query: IssueListQueryDto) {
-    const candidates = await this.issues.find({ where: { deletedAt: IsNull() }, order: { dueAt: 'asc' } }); const visible = candidates.filter((issue) => this.canReadIssue(issue, user)).filter((issue) => (!query.status || issue.status === query.status) && (!query.issueType || issue.issueType === query.issueType) && (!query.severity || issue.severity === query.severity) && (!query.vesselId || issue.vesselId === query.vesselId));
+    const candidates = await this.issues.find({ where: { deletedAt: IsNull() }, order: { dueAt: 'asc' } });
+    const visibleIssueIds = await this.visibleIssueIds(candidates, user);
+    const visible = candidates.filter((issue) => visibleIssueIds.has(issue.id)).filter((issue) => (!query.status || issue.status === query.status) && (!query.issueType || issue.issueType === query.issueType) && (!query.severity || issue.severity === query.severity) && (!query.vesselId || issue.vesselId === query.vesselId));
     return { data: await Promise.all(visible.map((issue) => this.issueDto(issue, user))) };
   }
 
@@ -205,39 +216,39 @@ export class InspectionCapaService {
     await this.audit('issue', issue.id, 'create', user.userId, requestId, null, { title: issue.title }); return this.issueDto(issue, user);
   }
 
-  async getIssue(issueId: string, user: CurrentUser) { const issue = await this.mustIssue(issueId); this.assertReadIssue(issue, user); return this.issueDto(issue, user); }
+  async getIssue(issueId: string, user: CurrentUser) { const issue = await this.mustIssue(issueId); await this.assertReadIssue(issue, user); return this.issueDto(issue, user); }
   async issueStatistics(user: CurrentUser) { const data = (await this.listIssues(user, {})).data; return { data: { total: data.length, bySeverity: data.reduce<Record<string, number>>((sum, issue: { severity: string }) => ({ ...sum, [issue.severity]: (sum[issue.severity] ?? 0) + 1 }), {}), drillDown: data } }; }
   async reconcileIssueTransfers(user: CurrentUser, requestId: string) { this.assertManager(user); const jobs = await this.transferJobs.find({ where: { status: In(['queued', 'failed']) }, order: { createdAt: 'ASC' } }); let succeeded = 0; for (const job of jobs) { await this.processIssueTransfer(job.id, user.userId); const refreshed = await this.transferJobs.findOneBy({ id: job.id }); if (refreshed?.status === 'succeeded') succeeded += 1; } await this.audit('issue_transfer_job', jobs[0]?.id ?? '00000000-0000-0000-0000-000000000000', 'reconcile', user.userId, requestId, null, { processed: jobs.length, succeeded }); return { processed: jobs.length, succeeded, failed: jobs.length - succeeded }; }
 
   async createCapa(issueId: string, user: CurrentUser, input: CreateCapaDto, requestId: string) {
-    const issue = await this.mustIssue(issueId); this.assertIssueManager(issue, user); if (await this.capas.exists({ where: { issueId, deletedAt: IsNull() } })) throw new ConflictException('Issue already has CAPA'); await this.assertActivePersonnel(input.verifierUserId);
-    const capa = await this.capas.save(this.capas.create({ issueId, status: 'in_progress', verifierUserId: input.verifierUserId, effectivenessRequired: input.effectivenessRequired, closedAt: null, closedBy: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); issue.status = 'analyzing'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa', capa.id, 'create', user.userId, requestId, null, { issueId }); return this.capaDto(capa);
+    const issue = await this.mustIssue(issueId); this.assertIssueManager(issue, user); if (issue.status === 'closed') throw new ConflictException('Closed issue cannot create CAPA'); if (await this.capas.exists({ where: { issueId, deletedAt: IsNull() } })) throw new ConflictException('Issue already has CAPA'); await this.assertActivePersonnel(input.verifierUserId);
+    const capa = await this.capas.save(this.capas.create({ issueId, status: 'in_progress', verifierUserId: input.verifierUserId, effectivenessRequired: input.effectivenessRequired, closedAt: null, closedBy: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); issue.status = 'analyzing'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa', capa.id, 'create', user.userId, requestId, null, { issueId }); return this.capaDto(capa, user);
   }
 
   async saveRootCause(capaId: string, user: CurrentUser, input: RootCauseDto, requestId: string) {
-    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); let rootCause = await this.rootCauses.findOne({ where: { capaId, deletedAt: IsNull() } });
+    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); this.assertCapaInProgress(capa, issue); let rootCause = await this.rootCauses.findOne({ where: { capaId, deletedAt: IsNull() } });
     if (!rootCause) rootCause = this.rootCauses.create({ capaId, method: input.method, conclusion: input.conclusion.trim(), analysis: input.analysis ?? {}, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }); else { rootCause.method = input.method; rootCause.conclusion = input.conclusion.trim(); rootCause.analysis = input.analysis ?? {}; rootCause.updatedBy = user.userId; }
-    await this.rootCauses.save(rootCause); capa.status = 'in_progress'; capa.updatedBy = user.userId; await this.capas.save(capa); await this.audit('capa', capa.id, 'root_cause', user.userId, requestId, null, { method: rootCause.method }); return this.capaDto(capa);
+    await this.rootCauses.save(rootCause); capa.updatedBy = user.userId; await this.capas.save(capa); await this.audit('capa', capa.id, 'root_cause', user.userId, requestId, null, { method: rootCause.method }); return this.capaDto(capa, user);
   }
 
   async createCapaAction(capaId: string, user: CurrentUser, input: CreateCapaActionDto, requestId: string) {
-    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); await this.assertActivePersonnel(input.responsibleUserId);
-    const action = await this.capaActions.save(this.capaActions.create({ capaId, actionType: input.actionType, title: input.title.trim(), responsibleUserId: input.responsibleUserId, dueAt: new Date(input.dueAt), status: 'assigned', completionStatement: null, submittedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); capa.status = 'in_progress'; capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'action_in_progress'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa_action', action.id, 'create', user.userId, requestId, null, { actionType: action.actionType }); return this.capaActionDto(action);
+    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); this.assertCapaInProgress(capa, issue); await this.assertActivePersonnel(input.responsibleUserId);
+    const action = await this.capaActions.save(this.capaActions.create({ capaId, actionType: input.actionType, title: input.title.trim(), responsibleUserId: input.responsibleUserId, dueAt: new Date(input.dueAt), status: 'assigned', completionStatement: null, submittedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'action_in_progress'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa_action', action.id, 'create', user.userId, requestId, null, { actionType: action.actionType }); return this.capaActionDto(action, user, capa);
   }
 
   async submitCapaAction(actionId: string, user: CurrentUser, input: SubmitCapaActionDto, requestId: string) {
     const action = await this.mustAction(actionId); if (action.responsibleUserId !== user.userId && !this.isAdmin(user)) throw new ForbiddenException('Only the action owner may submit completion'); if (!['draft', 'assigned', 'in_progress', 'returned'].includes(action.status)) throw new ConflictException('Action cannot be submitted');
     for (const fileId of input.evidenceFileIds) { await this.assertFile(fileId); if (!(await this.capaEvidence.exists({ where: { capaActionId: action.id, fileId, deletedAt: IsNull() } }))) await this.capaEvidence.save(this.capaEvidence.create({ capaActionId: action.id, fileId, status: 'active', withdrawReason: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); }
-    action.status = 'submitted'; action.completionStatement = input.completionStatement.trim(); action.submittedAt = new Date(); action.updatedBy = user.userId; await this.capaActions.save(action); await this.audit('capa_action', action.id, 'submit', user.userId, requestId, null, { evidenceCount: input.evidenceFileIds.length }); return this.capaActionDto(action);
+    action.status = 'submitted'; action.completionStatement = input.completionStatement.trim(); action.submittedAt = new Date(); action.updatedBy = user.userId; await this.capaActions.save(action); await this.audit('capa_action', action.id, 'submit', user.userId, requestId, null, { evidenceCount: input.evidenceFileIds.length }); return this.capaActionDto(action, user, await this.mustCapa(action.capaId));
   }
 
   async acceptCapaAction(actionId: string, user: CurrentUser, input: AcceptCapaActionDto, requestId: string) {
     const action = await this.mustAction(actionId); const capa = await this.mustCapa(action.capaId); if (action.responsibleUserId === user.userId) throw new ForbiddenException('Action owner cannot accept their own action'); if (capa.verifierUserId !== user.userId && !this.isAdmin(user) && !user.roles.includes('reviewer')) throw new ForbiddenException('Only the verifier may accept an action'); if (action.status !== 'submitted') throw new ConflictException('Only submitted actions can be accepted');
-    const evidence = await this.capaEvidence.count({ where: { capaActionId: action.id, status: 'active', deletedAt: IsNull() } }); if (!evidence) throw new UnprocessableEntityException('Submitted action requires evidence'); action.status = 'accepted'; action.updatedBy = user.userId; await this.capaActions.save(action); await this.updateVerificationReadiness(capa, user.userId); await this.audit('capa_action', action.id, 'accept', user.userId, requestId, null, { comment: input.comment.trim() }); return this.capaActionDto(action);
+    const evidence = await this.capaEvidence.count({ where: { capaActionId: action.id, status: 'active', deletedAt: IsNull() } }); if (!evidence) throw new UnprocessableEntityException('Submitted action requires evidence'); action.status = 'accepted'; action.updatedBy = user.userId; await this.capaActions.save(action); await this.updateVerificationReadiness(capa, user.userId); await this.audit('capa_action', action.id, 'accept', user.userId, requestId, null, { comment: input.comment.trim() }); return this.capaActionDto(action, user, capa);
   }
 
   async requestVerification(capaId: string, user: CurrentUser, requestId: string) {
-    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); if (!['in_progress', 'pending_verification'].includes(capa.status)) throw new ConflictException('CAPA cannot request verification'); await this.ensureVerificationReady(capa); capa.status = 'pending_verification'; capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'pending_verification'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa', capa.id, 'request_verification', user.userId, requestId, null, { status: capa.status }); return this.capaDto(capa);
+    const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); this.assertCapaInProgress(capa, issue); await this.ensureVerificationReady(capa); capa.status = 'pending_verification'; capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'pending_verification'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa', capa.id, 'request_verification', user.userId, requestId, null, { status: capa.status }); return this.capaDto(capa, user);
   }
 
   async verifyCapa(capaId: string, user: CurrentUser, input: VerificationDto, requestId: string) {
@@ -258,7 +269,7 @@ export class InspectionCapaService {
 
   async listRecordIssues(recordId: string, user: CurrentUser) {
     const record = await this.workbenchRecords.findOne({ where: { id: recordId, deletedAt: IsNull() } }); if (!record) throw new NotFoundException('Workbench record not found'); if (record.ownerUserId !== user.userId && !this.isManager(user)) throw new ForbiddenException('Workbench record is not visible'); if (!SOURCE_MODULES.has(record.moduleCode)) return { data: [] };
-    const links = await this.issueSources.find({ where: { sourceType: 'workbench_record', sourceId: recordId } }); const issues = await this.issues.find({ where: { id: In(links.map((link) => link.issueId)), deletedAt: IsNull() } }); return { data: await Promise.all(issues.filter((issue) => this.canReadIssue(issue, user)).map((issue) => this.issueDto(issue, user))) };
+    const links = await this.issueSources.find({ where: { sourceType: 'workbench_record', sourceId: recordId } }); const issues = await this.issues.find({ where: { id: In(links.map((link) => link.issueId)), deletedAt: IsNull() } }); const visibleIssueIds = await this.visibleIssueIds(issues, user); return { data: await Promise.all(issues.filter((issue) => visibleIssueIds.has(issue.id)).map((issue) => this.issueDto(issue, user))) };
   }
 
   private async processIssueTransfer(jobId: string, actorUserId: string) {
@@ -294,8 +305,10 @@ export class InspectionCapaService {
   private async assertReadInspection(inspection: InspectionEntity, user: CurrentUser) { if (!(await this.canReadInspection(inspection, user))) throw new ForbiddenException('Inspection is not visible'); }
   private async assertInspectionExecutor(inspection: InspectionEntity, user: CurrentUser) { const task = await this.tasks.findOneBy({ id: inspection.taskId, deletedAt: IsNull() }); if (!task) throw new NotFoundException('Task not found'); if (task.responsibleUserId === user.userId) return; const participant = await this.participants.findOne({ where: { taskId: task.id, userId: user.userId, status: 'active', deletedAt: IsNull() } }); if (!participant || !['executor', 'collaborator'].includes(participant.role)) throw new ForbiddenException('Only an active inspection participant may submit results'); }
   private canReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { return this.isManager(user) || issue.createdBy === user.userId || issue.responsibleUserId === user.userId; }
-  private assertReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { if (!this.canReadIssue(issue, user)) throw new ForbiddenException('Issue is not visible'); }
+  private async assertReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { if (this.canReadIssue(issue, user)) return; const isVerifier = await this.capas.exists({ where: { issueId: issue.id, verifierUserId: user.userId, deletedAt: IsNull() } }); if (!isVerifier) throw new ForbiddenException('Issue is not visible'); }
+  private async visibleIssueIds(issues: SafetyIssueEntity[], user: CurrentUser) { const visible = new Set(issues.filter((issue) => this.canReadIssue(issue, user)).map((issue) => issue.id)); const hiddenIds = issues.filter((issue) => !visible.has(issue.id)).map((issue) => issue.id); if (hiddenIds.length) { const verified = await this.capas.find({ where: { issueId: In(hiddenIds), verifierUserId: user.userId, deletedAt: IsNull() } }); verified.forEach((capa) => visible.add(capa.issueId)); } return visible; }
   private assertIssueManager(issue: SafetyIssueEntity, user: CurrentUser) { if (!this.isManager(user) && issue.createdBy !== user.userId && issue.responsibleUserId !== user.userId) throw new ForbiddenException('Issue cannot be managed by caller'); }
+  private assertCapaInProgress(capa: SafetyCapaEntity, issue: SafetyIssueEntity) { if (issue.status === 'closed' || capa.status !== 'in_progress') throw new ConflictException('CAPA is not editable in its current state'); }
   private assertManager(user: CurrentUser) { if (!this.isManager(user)) throw new ForbiddenException('Safety management permission is required'); }
   private isManager(user: CurrentUser) { return this.isAdmin(user) || user.roles.some((role) => MANAGER_ROLES.has(role)); }
   private isAdmin(user: CurrentUser) { return user.isAdmin || user.roles.includes('system_admin'); }
@@ -305,10 +318,140 @@ export class InspectionCapaService {
   private async versionDto(version: InspectionTemplateVersionEntity) { const items = await this.templateItems.find({ where: { versionId: version.id, deletedAt: IsNull() }, order: { sequenceNo: 'ASC' } }); return { id: version.id, templateId: version.templateId, versionNo: version.versionNo, status: version.status, importSource: version.importSource, items: items.map((item) => ({ itemCode: item.itemCode, title: item.title, clauseRef: item.clauseRef, resultRequired: item.resultRequired, evidenceRequiredOnFailure: item.evidenceRequiredOnFailure, sequenceNo: item.sequenceNo })) }; }
   private inspectionPlanDto(plan: InspectionPlanEntity) { return { id: plan.id, title: plan.title, planId: plan.planId, planItemId: plan.planItemId, templateVersionId: plan.templateVersionId }; }
   private resultDto(row: InspectionResultEntity) { return { id: row.id, inspectorUserId: row.inspectorUserId, templateItemSnapshotKey: row.templateItemSnapshotKey, conclusion: row.conclusion, remark: row.remark, status: row.status, signedAt: row.signedAt }; }
-  private async inspectionDto(inspection: InspectionEntity, user: CurrentUser) { const results = await this.results.find({ where: { inspectionId: inspection.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } }); return { id: inspection.id, taskId: inspection.taskId, status: inspection.status, templateVersionId: inspection.templateVersionId, templateSnapshot: inspection.templateSnapshot, results: results.map((row) => this.resultDto(row)), availableActions: await this.inspectionActions(inspection, user) }; }
-  private async inspectionActions(inspection: InspectionEntity, user: CurrentUser) { const actions: string[] = []; if (await this.canReadInspection(inspection, user)) actions.push('read'); try { await this.assertInspectionExecutor(inspection, user); if (!['completed', 'cancelled'].includes(inspection.status)) actions.push('save_result', 'submit'); } catch { /* read-only caller */ } if (this.isManager(user) && inspection.status === 'submitted') actions.push('summarize'); return actions; }
-  private async issueDto(issue: SafetyIssueEntity, user: CurrentUser) { const sources = await this.issueSources.find({ where: { issueId: issue.id } }); const capa = await this.capas.findOne({ where: { issueId: issue.id, deletedAt: IsNull() } }); return { id: issue.id, title: issue.title, issueType: issue.issueType, severity: issue.severity, status: issue.status, vesselId: issue.vesselId, responsibleUserId: issue.responsibleUserId, dueAt: issue.dueAt, sources: sources.map((source) => { const inspectionId = typeof source.sourceSnapshot.inspectionId === 'string' ? source.sourceSnapshot.inspectionId : source.sourceId; return { sourceType: source.sourceType, sourceId: source.sourceId, sourceItemKey: source.sourceItemKey, sourceHref: source.sourceType === 'workbench_record' ? `/workbench/records/${source.sourceId}` : `/workbench/inspections/${inspectionId}` }; }), capa: capa ? await this.capaDto(capa) : null, availableActions: this.canReadIssue(issue, user) ? ['read', ...(this.isManager(user) || issue.responsibleUserId === user.userId ? ['manage'] : [])] : [] }; }
-  private async capaDto(capa: SafetyCapaEntity) { const root = await this.rootCauses.findOne({ where: { capaId: capa.id, deletedAt: IsNull() } }); const actions = await this.capaActions.find({ where: { capaId: capa.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } }); return { id: capa.id, issueId: capa.issueId, status: capa.status, verifierUserId: capa.verifierUserId, rootCause: root ? { method: root.method, conclusion: root.conclusion, analysis: root.analysis } : null, actions: await Promise.all(actions.map((action) => this.capaActionDto(action))) }; }
-  private async capaActionDto(action: CapaActionEntity) { const evidence = await this.capaEvidence.find({ where: { capaActionId: action.id, status: 'active', deletedAt: IsNull() } }); return { id: action.id, actionType: action.actionType, title: action.title, responsibleUserId: action.responsibleUserId, dueAt: action.dueAt, status: action.status, evidenceFileIds: evidence.map((row) => row.fileId) }; }
+  private async inspectionDto(inspection: InspectionEntity, user: CurrentUser) { const results = await this.results.find({ where: { inspectionId: inspection.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } }); return { id: inspection.id, taskId: inspection.taskId, status: inspection.status, templateVersionId: inspection.templateVersionId, templateSnapshot: inspection.templateSnapshot, results: results.map((row) => this.resultDto(row)), availableActions: await this.inspectionActions(inspection, user, results) }; }
+  private async inspectionActions(
+    inspection: InspectionEntity,
+    user: CurrentUser,
+    results: InspectionResultEntity[],
+  ) {
+    const canRead = await this.canReadInspection(inspection, user);
+    let canExecute = false;
+    try {
+      await this.assertInspectionExecutor(inspection, user);
+      canExecute = true;
+    } catch (error) {
+      if (!(error instanceof ForbiddenException) && !(error instanceof NotFoundException)) {
+        throw error;
+      }
+    }
+
+    return resolveInspectionAvailableActions({
+      canRead,
+      canExecute,
+      alreadySubmitted: results.some(
+        (result) =>
+          result.inspectorUserId === user.userId && result.status === 'submitted',
+      ),
+      status: inspection.status,
+      canSummarize: this.isManager(user),
+    });
+  }
+  private async issueDto(issue: SafetyIssueEntity, user: CurrentUser) {
+    const sources = await this.issueSources.find({ where: { issueId: issue.id } });
+    const capa = await this.capas.findOne({ where: { issueId: issue.id, deletedAt: IsNull() } });
+    const capaDetail = capa ? await this.capaDto(capa, user) : null;
+    return {
+      id: issue.id,
+      title: issue.title,
+      issueType: issue.issueType,
+      severity: issue.severity,
+      status: issue.status,
+      vesselId: issue.vesselId,
+      responsibleUserId: issue.responsibleUserId,
+      dueAt: issue.dueAt,
+      sources: sources.map((source) => {
+        const inspectionId = typeof source.sourceSnapshot.inspectionId === 'string' ? source.sourceSnapshot.inspectionId : source.sourceId;
+        return { sourceType: source.sourceType, sourceId: source.sourceId, sourceItemKey: source.sourceItemKey, sourceHref: source.sourceType === 'workbench_record' ? `/workbench/records/${source.sourceId}` : `/workbench/inspections/${inspectionId}` };
+      }),
+      capa: capaDetail,
+      availableActions: await this.issueActions(issue, capa, capaDetail, user),
+    };
+  }
+
+  private async issueActions(
+    issue: SafetyIssueEntity,
+    capa: SafetyCapaEntity | null,
+    capaDetail: {
+      rootCause: { conclusion: string } | null;
+      actions: Array<{
+        actionType: string;
+        responsibleUserId: string;
+        status: string;
+        evidenceFileIds: string[];
+      }>;
+    } | null,
+    user: CurrentUser,
+  ) {
+    const canRead = this.canReadIssue(issue, user) || capa?.verifierUserId === user.userId;
+    const canManage = this.isManager(user) || issue.createdBy === user.userId || issue.responsibleUserId === user.userId;
+    const corrective = capaDetail?.actions.find((action) => action.actionType === 'corrective');
+    const preventive = capaDetail?.actions.find((action) => action.actionType === 'preventive');
+    const verificationReady = Boolean(
+      capaDetail?.rootCause &&
+      corrective?.status === 'accepted' && corrective.evidenceFileIds.length > 0 &&
+      preventive?.status === 'accepted' && preventive.evidenceFileIds.length > 0,
+    );
+    const canVerify = Boolean(
+      capa &&
+      (capa.verifierUserId === user.userId || this.isAdmin(user)) &&
+      !capaDetail?.actions.some((action) => action.responsibleUserId === user.userId),
+    );
+    let canClose = false;
+    if (capa?.status === 'verified' && capaDetail) {
+      const latest = await this.verifications.findOne({ where: { capaId: capa.id }, order: { createdAt: 'DESC' } });
+      canClose = canCloseIssue({
+        severity: issue.severity as 'minor' | 'major' | 'critical',
+        actorRoles: [...user.roles, ...(capa.verifierUserId === user.userId ? ['verifier'] : [])],
+        hasRootCause: Boolean(capaDetail.rootCause),
+        corrective: corrective ? { accepted: corrective.status === 'accepted', evidenceCount: corrective.evidenceFileIds.length } : null,
+        preventive: preventive ? { accepted: preventive.status === 'accepted', evidenceCount: preventive.evidenceFileIds.length } : null,
+        latestVerification: latest?.result === 'passed' ? 'passed' : latest?.result === 'failed' ? 'failed' : null,
+        effectivenessEvaluation: latest?.effectivenessEvaluation ?? '',
+      }).allowed;
+    }
+    return resolveIssueAvailableActions({
+      canRead,
+      canManage,
+      issueStatus: issue.status,
+      hasCapa: Boolean(capa),
+      capaStatus: capa?.status ?? null,
+      verificationReady,
+      canVerify,
+      canClose,
+    });
+  }
+
+  private async capaDto(capa: SafetyCapaEntity, user: CurrentUser) {
+    const root = await this.rootCauses.findOne({ where: { capaId: capa.id, deletedAt: IsNull() } });
+    const actions = await this.capaActions.find({ where: { capaId: capa.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } });
+    return {
+      id: capa.id,
+      issueId: capa.issueId,
+      status: capa.status,
+      verifierUserId: capa.verifierUserId,
+      rootCause: root ? { method: root.method, conclusion: root.conclusion, analysis: root.analysis } : null,
+      actions: await Promise.all(actions.map((action) => this.capaActionDto(action, user, capa))),
+    };
+  }
+
+  private async capaActionDto(action: CapaActionEntity, user: CurrentUser, capa: SafetyCapaEntity) {
+    const evidence = await this.capaEvidence.find({ where: { capaActionId: action.id, status: 'active', deletedAt: IsNull() } });
+    return {
+      id: action.id,
+      actionType: action.actionType,
+      title: action.title,
+      responsibleUserId: action.responsibleUserId,
+      dueAt: action.dueAt,
+      status: action.status,
+      evidenceFileIds: evidence.map((row) => row.fileId),
+      availableActions: resolveCapaActionAvailableActions({
+        status: action.status,
+        isResponsible: action.responsibleUserId === user.userId,
+        isAdmin: this.isAdmin(user),
+        isVerifier: capa.verifierUserId === user.userId,
+        isReviewer: user.roles.includes('reviewer'),
+      }),
+    };
+  }
   private verificationDto(verification: CapaVerificationEntity) { return { id: verification.id, result: verification.result, verifierUserId: verification.verifierUserId, conclusion: verification.conclusion, effectivenessEvaluation: verification.effectivenessEvaluation }; }
 }

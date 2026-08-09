@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: wecom
-updated: 2026-05-04
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
@@ -9,7 +9,7 @@ replaced_by: []
 
 ## 概述
 
-本系统使用企业微信 OAuth2 静默授权（`snsapi_base`）实现用户身份认证。用户在企业微信内打开应用时，系统自动获取其 UserId，无需用户手动登录。
+本系统使用企业微信 OAuth2 的敏感成员信息授权（`snsapi_privateinfo`）实现用户身份认证与头像同步。首次授权或授权状态变化时，企业微信可能要求成员确认头像等敏感字段；后续进入仍使用 OAuth 回调刷新系统登录资料。
 
 ## 认证流程
 
@@ -29,7 +29,7 @@ React SPA 初始化，检查 localStorage 中的 JWT
           ?appid={CORPID}
           &redirect_uri={REDIRECT_URI}
           &response_type=code
-          &scope=snsapi_base
+          &scope=snsapi_privateinfo
           &state={STATE}
           &agentid={AGENTID}
           #wechat_redirect
@@ -43,7 +43,10 @@ React SPA 初始化，检查 localStorage 中的 JWT
         前端提取 code，调用后端 /api/v1/auth/wecom/callback
                 │
                 ↓
-        后端换取用户身份（UserId）
+        后端换取用户身份（UserId、短期 user_ticket）
+                │
+                ↓
+        后端用 user_ticket 获取敏感成员资料（真实头像）
                 │
                 ↓
         生成 JWT，返回前端
@@ -73,10 +76,13 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
      ?access_token={ACCESS_TOKEN}
      &code={CODE}
    ```
-2. 用 UserId 调用企业微信通讯录 API 获取用户详情（姓名、头像、部门 ID、职务）
-3. 以部门 ID 解析业务角色和数据范围，在 `wecom_users` 表中 upsert 用户信息
-4. 签发 JWT（payload 包含 userId、corpId、过期时间）
-5. 返回 JWT 和用户基本信息
+2. 用 UserId 调用企业微信通讯录 API 获取用户详情（姓名、部门 ID、职务）
+3. 当 `getuserinfo` 返回 `user_ticket` 时，调用 `POST /cgi-bin/auth/getuserdetail` 获取真实头像；票据仅在本次请求中使用，不持久化、不记录日志
+4. 以部门 ID 解析业务角色和数据范围，在 `wecom_users` 表中 upsert 用户信息；敏感头像授权暂时不可用时保留已有头像，不中断登录
+5. 签发 JWT（payload 包含 userId、corpId、过期时间）
+6. 返回 JWT、用户基本信息和本次敏感资料授权结果 `privateInfoAuthorized`
+
+前端维护 `snsapi_privateinfo` 授权版本标记。已有 JWT 但缺少当前标记的旧会话在升级部署后自动重新授权一次。只有 `getuserdetail` 成功时才永久写入当前版本；缺少 `user_ticket` 或敏感接口失败时允许本次登录继续，并设置 24 小时重试冷却。冷却结束后的下一次受保护页面访问会再次发起授权，既避免立即 OAuth 循环，也避免一次失败后永久跳过头像获取；用户仍可通过“重新认证”立即重试。
 
 **响应体：**
 
@@ -85,6 +91,7 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
   "data": {
     "accessToken": "eyJhbGc...",
     "expiresIn": 7200,
+    "privateInfoAuthorized": true,
     "user": {
       "userId": "ZhangSan",
       "name": "张三",
@@ -100,6 +107,7 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
 **错误情况：**
 - `code` 已使用或过期：返回 `401 Unauthorized`
 - 用户不在企业通讯录：返回 `403 Forbidden`
+- 敏感头像授权未完成、成员不在应用可见范围或 `user_ticket` 已过期：认证继续，返回既有头像或首字回退，并返回 `privateInfoAuthorized: false` 触发限时重试
 
 ### POST /api/v1/auth/refresh
 
@@ -107,7 +115,7 @@ OAuth2 回调接口，用 code 换取用户身份并签发 JWT。
 
 **请求头：** `Authorization: Bearer <expired_or_valid_jwt>`
 
-**响应体：** 同上，返回新的 `accessToken`
+**响应体：** 返回新的 `accessToken` 和当前用户；刷新不重新调用敏感资料接口，也不改变浏览器授权版本标记。
 
 ### GET /api/v1/auth/me
 
@@ -163,3 +171,12 @@ JWT 使用 HS256 算法，密钥通过环境变量 `JWT_SECRET` 注入。
 | `WECOM_REDIRECT_URI` | OAuth2 回调地址（须在企业微信后台配置） |
 | `JWT_SECRET` | JWT 签名密钥（至少32字符随机字符串） |
 | `JWT_EXPIRES_IN` | JWT 有效期（默认 `7200s`） |
+| `WECOM_SYSTEM_ADMIN_USER_IDS` | 系统管理员的企业微信 UserID，逗号分隔；与部门无关 |
+
+## 企业微信后台前置配置
+
+1. 在自建应用详情中启用敏感字段“头像”。
+2. 确保成员位于应用可见范围内，且网页授权可信域名与 `WECOM_REDIRECT_URI` 的域名匹配。
+3. 发布本次变更后，让成员重新进入应用完成一次 `snsapi_privateinfo` 授权。
+
+企业微信官方接口说明：[获取访问用户身份](https://developer.work.weixin.qq.com/document/path/96442)、[获取访问用户敏感信息](https://developer.work.weixin.qq.com/document/path/96443)。

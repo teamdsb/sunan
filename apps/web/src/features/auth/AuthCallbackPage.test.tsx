@@ -57,6 +57,7 @@ describe('AuthCallbackPage', () => {
           data: {
             accessToken: 'token-1',
             expiresIn: 7200,
+            privateInfoAuthorized: true,
             user: {
               userId: 'u1',
               name: '张三',
@@ -84,6 +85,45 @@ describe('AuthCallbackPage', () => {
       expect(screen.getByText('MY_PAGE')).toBeInTheDocument();
     });
     expect(window.localStorage.getItem('sunan_token')).toBe('token-1');
+    expect(
+      window.localStorage.getItem('sunan_oauth_permission_version'),
+    ).toBe('snsapi_privateinfo-v1');
+  });
+
+  it('schedules another private-information attempt when avatar authorization fails', async () => {
+    mockCallback.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            accessToken: 'token-1',
+            expiresIn: 7200,
+            privateInfoAuthorized: false,
+            user: {
+              userId: 'u1',
+              name: '张三',
+              department: ['总经办'],
+              roles: ['all_authenticated'],
+            },
+          },
+        }),
+    });
+    mockGetCurrentUser.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            userId: 'u1',
+            name: '张三',
+            department: ['总经办'],
+            roles: ['all_authenticated'],
+          },
+        }),
+    });
+
+    renderPage('/auth/callback?code=abc&state=safe-state');
+
+    await waitFor(() => expect(screen.getByText('MY_PAGE')).toBeInTheDocument());
+    expect(window.localStorage.getItem('sunan_oauth_permission_version')).toBeNull();
+    expect(window.localStorage.getItem('sunan_oauth_permission_retry_at')).not.toBeNull();
   });
 
   it('restores the exact task deep link after OAuth', async () => {

@@ -9,6 +9,15 @@ const mockSettings = vi.fn();
 const mockTypes = vi.fn();
 const mockOwners = vi.fn();
 const mockCreate = vi.fn();
+const mockCurrentUser = vi.fn();
+
+vi.mock('../../app/hooks', () => ({
+  useAppSelector: (
+    selector: (state: {
+      auth: { currentUser: { userId: string; roles: string[] } | null };
+    }) => unknown,
+  ) => selector({ auth: { currentUser: mockCurrentUser() } }),
+}));
 
 vi.mock('./certificateApi', () => ({
   useGetCertificatesQuery: (params: unknown) => mockGet(params),
@@ -76,6 +85,10 @@ describe('CertificateListPage', () => {
       isLoading: false,
     });
     mockCreate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    mockCurrentUser.mockReturnValue({
+      userId: 'manager-1',
+      roles: ['all_authenticated', 'shipping'],
+    });
   });
 
   it('syncs the route query to list filters and preserves it in detail links', async () => {

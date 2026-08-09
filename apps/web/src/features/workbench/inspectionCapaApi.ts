@@ -6,7 +6,7 @@ export type SnapshotItem = { snapshotKey: string; title: string; resultRequired:
 export type Inspection = { id: string; taskId: string; status: string; templateVersionId: string; templateSnapshot: { items: SnapshotItem[] }; results: Array<{ id: string; inspectorUserId: string; templateItemSnapshotKey: string; conclusion: string; remark?: string | null; status: string }>; availableActions: string[] };
 export type Issue = { id: string; title: string; issueType: string; severity: string; status: string; responsibleUserId: string; dueAt: string; sources: Array<{ sourceType: string; sourceId: string; sourceItemKey?: string | null; sourceHref?: string | null }>; capa?: Capa | null; availableActions: string[] };
 export type Capa = { id: string; issueId: string; status: string; verifierUserId: string; rootCause?: { method: string; conclusion: string } | null; actions: CapaAction[] };
-export type CapaAction = { id: string; actionType: string; title: string; responsibleUserId: string; dueAt: string; status: string; evidenceFileIds: string[] };
+export type CapaAction = { id: string; actionType: string; title: string; responsibleUserId: string; dueAt: string; status: string; evidenceFileIds: string[]; availableActions: string[] };
 
 const mutationHeaders = () => ({ 'Idempotency-Key': crypto.randomUUID() });
 

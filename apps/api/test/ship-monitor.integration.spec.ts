@@ -19,14 +19,14 @@ import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { ShipMonitorModule } from 'src/modules/ship-monitor/ship-monitor.module';
 
 let currentUser = {
-  userId: 'manager-1',
+  userId: 'system-admin',
   corpId: 'ww-test',
-  name: 'Manager',
+  name: 'System admin',
   avatar: null,
   departments: ['船务部'],
   position: '经理',
-  roles: ['all_authenticated', 'shipping'],
-  isAdmin: false,
+  roles: ['all_authenticated', 'system_admin'],
+  isAdmin: true,
 };
 
 const authGuard: CanActivate = {
@@ -85,7 +85,7 @@ describe('ShipMonitorController integration', () => {
     await shutdownPgTestDatabase();
   });
 
-  it('supports manager CRUD and employee readonly(active only)', async () => {
+  it('allows only system administrators to manage monitors', async () => {
     const create1 = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
@@ -119,9 +119,10 @@ describe('ShipMonitorController integration', () => {
 
     currentUser = {
       ...currentUser,
-      userId: 'employee-1',
-      roles: ['all_authenticated'],
-      position: '员工',
+      userId: 'shipping-manager',
+      roles: ['all_authenticated', 'shipping'],
+      position: '经理',
+      isAdmin: false,
     };
     const employeeList = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -136,23 +137,24 @@ describe('ShipMonitorController integration', () => {
       (employeeList.body as { data: Array<{ id: string }> }).data[0]?.id,
     ).toBe(id1);
 
-    const employeeCreate = await request(
+    const departmentManagerCreate = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
       .post('/api/v1/ship-monitors')
       .set('Authorization', 'Bearer token')
       .send({
         vesselId,
-        monitorName: '员工创建',
+        monitorName: '部门管理员创建',
         endpointUrl: 'https://monitor3.example.com',
       });
-    expect(employeeCreate.status).toBe(403);
+    expect(departmentManagerCreate.status).toBe(403);
 
     currentUser = {
       ...currentUser,
-      userId: 'manager-1',
-      roles: ['all_authenticated', 'shipping'],
-      position: '经理',
+      userId: 'system-admin',
+      roles: ['all_authenticated', 'system_admin'],
+      position: '管理员',
+      isAdmin: true,
     };
     const del = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

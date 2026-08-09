@@ -41,13 +41,16 @@ export class EnterpriseProfileService {
 
     const [items, total] = await qb.orderBy('p.updatedAt', 'DESC').skip((page - 1) * pageSize).take(pageSize).getManyAndCount();
 
-    const data = await Promise.all(items.map((item) => this.toDetail(item)));
+    const departmentCodes = await this.getManageableDepartmentCodes(user);
+    const data = await Promise.all(
+      items.map((item) => this.toDetail(item, user, departmentCodes)),
+    );
     return { data, meta: { page, pageSize, total } };
   }
 
-  async getById(id: string) {
+  async getById(id: string, user: CurrentUser) {
     const entity = await this.findOneOrThrow(id);
-    return this.toDetail(entity);
+    return this.toDetail(entity, user);
   }
 
   async create(dto: EnterpriseProfileCreateDto, user: CurrentUser) {
@@ -66,7 +69,7 @@ export class EnterpriseProfileService {
     });
     const saved = await this.repository.save(entity);
     if (dto.fileIds?.length) await this.bindFiles(saved.id, { fileIds: dto.fileIds }, user);
-    return this.getById(saved.id);
+    return this.getById(saved.id, user);
   }
 
   async update(id: string, dto: EnterpriseProfileUpdateDto, user: CurrentUser) {
@@ -91,7 +94,7 @@ export class EnterpriseProfileService {
       await this.fileRelRepository.delete({ enterpriseProfileId: id });
       await this.bindFiles(id, { fileIds: dto.fileIds }, user);
     }
-    return this.getById(id);
+    return this.getById(id, user);
   }
 
   async remove(id: string, user: CurrentUser): Promise<void> {
@@ -119,7 +122,7 @@ export class EnterpriseProfileService {
       this.fileRelRepository.create({ enterpriseProfileId: id, fileId, sortOrder: existing.length + index }),
     );
     if (rows.length) await this.fileRelRepository.save(rows);
-    return this.getById(id);
+    return this.getById(id, user);
   }
 
   async unbindFile(id: string, fileId: string, user: CurrentUser): Promise<void> {
@@ -149,15 +152,34 @@ export class EnterpriseProfileService {
 
   private async ensureDepartmentAccess(entity: EnterpriseProfileEntity, user: CurrentUser) {
     if (user.roles.includes('system_admin')) return;
-    const dept = await this.getPrimaryDepartmentCode(user.userId);
-    if (!dept || entity.departmentCode !== dept) {
+    const departmentCodes = await this.getDepartmentCodes(user.userId);
+    if (
+      !entity.departmentCode ||
+      !departmentCodes.includes(entity.departmentCode)
+    ) {
       throw new ForbiddenException('department scope denied');
     }
   }
 
   private async getPrimaryDepartmentCode(userId: string): Promise<string | null> {
+    return (await this.getDepartmentCodes(userId))[0] ?? null;
+  }
+
+  private async getDepartmentCodes(userId: string): Promise<string[]> {
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
-    return user?.departmentCodes?.[0] ?? null;
+    return user?.departmentCodes ?? [];
+  }
+
+  private async getManageableDepartmentCodes(
+    user: CurrentUser,
+  ): Promise<string[]> {
+    if (
+      user.roles.includes('system_admin') ||
+      !user.roles.some((role) => MANAGER_ROLES.has(role))
+    ) {
+      return [];
+    }
+    return this.getDepartmentCodes(user.userId);
   }
 
   private async findOneOrThrow(id: string) {
@@ -166,7 +188,11 @@ export class EnterpriseProfileService {
     return entity;
   }
 
-  private async toDetail(entity: EnterpriseProfileEntity) {
+  private async toDetail(
+    entity: EnterpriseProfileEntity,
+    user: CurrentUser,
+    departmentCodes?: string[],
+  ) {
     const rels = await this.fileRelRepository.find({ where: { enterpriseProfileId: entity.id }, order: { sortOrder: 'ASC' } });
     const fileIds = rels.map((item) => item.fileId);
     const files = fileIds.length ? await this.fileRepository.find({ where: { id: In(fileIds) } }) : [];
@@ -189,6 +215,26 @@ export class EnterpriseProfileService {
       })),
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
+      canManage: await this.canManageEntity(entity, user, departmentCodes),
     };
+  }
+
+  private async canManageEntity(
+    entity: EnterpriseProfileEntity,
+    user: CurrentUser,
+    departmentCodes?: string[],
+  ): Promise<boolean> {
+    if (user.roles.includes('system_admin')) {
+      return true;
+    }
+    if (!user.roles.some((role) => MANAGER_ROLES.has(role))) {
+      return false;
+    }
+    const manageableDepartmentCodes =
+      departmentCodes ?? (await this.getDepartmentCodes(user.userId));
+    return Boolean(
+      entity.departmentCode &&
+        manageableDepartmentCodes.includes(entity.departmentCode),
+    );
   }
 }

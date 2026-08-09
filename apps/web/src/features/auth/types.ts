@@ -19,6 +19,7 @@ export interface AuthState {
 export interface AuthSuccessPayload {
   accessToken: string;
   expiresIn: number;
+  privateInfoAuthorized?: boolean;
   user: CurrentUser;
 }
 

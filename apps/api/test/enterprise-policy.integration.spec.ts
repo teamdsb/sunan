@@ -16,6 +16,7 @@ import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { EnterprisePolicyModule } from 'src/modules/enterprise-policy/enterprise-policy.module';
 import { OssService } from 'src/modules/files/oss.service';
@@ -249,5 +250,61 @@ describe('EnterprisePolicyController integration', () => {
       .set('Authorization', 'Bearer token')
       .send({ title: '跨部门修改' });
     expect(update.status).toBe(403);
+  });
+
+  it('publishes versions without deprecating another department record', async () => {
+    const policyCode = `SHARED-${crypto.randomUUID()}`;
+    currentUser = {
+      ...currentUser,
+      userId: 'manager-1',
+      roles: ['all_authenticated', 'business'],
+    };
+    const business = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/enterprise-policies')
+      .set('Authorization', 'Bearer token')
+      .send({ title: '业务部制度', policyCode, version: 'v1' });
+    const businessId = (business.body as { data: { id: string } }).data.id;
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/enterprise-policies/${businessId}/publish`)
+      .set('Authorization', 'Bearer token')
+      .expect(201);
+
+    currentUser = {
+      ...currentUser,
+      userId: 'manager-2',
+      roles: ['all_authenticated', 'finance'],
+    };
+    const finance = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/enterprise-policies')
+      .set('Authorization', 'Bearer token')
+      .send({ title: '财务部制度', policyCode, version: 'v2' })
+      .expect(201);
+    const financeId = (finance.body as { data: { id: string } }).data.id;
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/enterprise-policies/${financeId}/publish`)
+      .set('Authorization', 'Bearer token')
+      .expect(201);
+
+    const policies = await dataSource.getRepository(EnterprisePolicyEntity).find({
+      where: [{ id: businessId }, { id: financeId }],
+    });
+    expect(policies).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: businessId,
+          departmentCode: 'business_dept',
+          status: 'published',
+        }),
+        expect.objectContaining({
+          id: financeId,
+          departmentCode: 'finance_dept',
+          status: 'published',
+        }),
+      ]),
+    );
   });
 });

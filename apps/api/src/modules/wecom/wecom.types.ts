@@ -1,6 +1,14 @@
 export interface WecomUserInfoResponse {
   UserId?: string;
   userid?: string;
+  user_ticket?: string;
+  errcode?: number;
+  errmsg?: string;
+}
+
+export interface WecomUserSensitiveDetailResponse {
+  userid: string;
+  avatar?: string;
   errcode?: number;
   errmsg?: string;
 }

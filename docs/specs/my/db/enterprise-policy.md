@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: my
-updated: 2026-05-04
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
@@ -23,6 +23,7 @@ replaced_by: []
 | `status` | varchar(16) | NOT NULL, DEFAULT `draft` | `draft` / `published` / `deprecated` |
 | `effective_date` | date | NULL | 生效日期 |
 | `published_at` | timestamptz | NULL | 发布时间 |
+| `department_code` | varchar(64) | NULL | 创建者首个业务部门代码；用于记录级管理范围 |
 | `created_by` | varchar(64) | NOT NULL | 创建人 UserId |
 | `updated_by` | varchar(64) | NOT NULL | 更新人 UserId |
 | `created_at` | timestamptz | NOT NULL | 创建时间 |
@@ -43,8 +44,8 @@ replaced_by: []
 
 ## 版本管理规则
 
-1. 同一 `policy_code` 可存在多个版本，但仅允许一个 `published` 版本。
-2. 发布新版本时，上一发布版本自动转为 `deprecated`。
+1. 同一 `policy_code` 可存在多个版本；每个 `department_code` 范围内仅保留一个 `published` 版本。
+2. 发布新版本时，仅将同部门范围内的上一发布版本自动转为 `deprecated`。
 3. 历史版本保持只读，不允许覆盖附件。
 
 ## 索引
@@ -58,3 +59,4 @@ replaced_by: []
 1. 制度详情页必须能返回版本历史摘要。
 2. 删除制度仅删除指定版本，不级联删除同编码的其他版本。
 3. `published` 制度必须有主附件。
+4. 非系统管理员可管理其任一 `department_code` 与制度 `department_code` 相同的制度；空部门编码仅系统管理员可管理。

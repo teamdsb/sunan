@@ -52,6 +52,7 @@ export function EnterpriseProfileDetailPage() {
   }>();
 
   const profile = data?.data;
+  const canManage = profile?.canManage ?? false;
 
   useEffect(() => {
     if (profile) {
@@ -81,7 +82,7 @@ export function EnterpriseProfileDetailPage() {
             style={{ marginBottom: 12 }}
           />
         ) : null}
-        <Form
+        {canManage ? <Form
           form={form}
           layout="vertical"
           onFinish={async (values) => {
@@ -123,7 +124,7 @@ export function EnterpriseProfileDetailPage() {
               保存
             </Button>
           </Space>
-        </Form>
+        </Form> : <Alert type="info" showIcon message="你没有维护此企业资料的权限。" />}
         {profile ? (
           <>
             <Typography.Title level={5} style={{ marginTop: 20 }}>

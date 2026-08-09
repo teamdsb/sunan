@@ -356,7 +356,7 @@ components:
     Inspection:
       type: object
       required: [id, taskId, status, templateVersionId, templateSnapshot, results, availableActions]
-      properties: {id: {type: string, format: uuid}, taskId: {type: string, format: uuid}, status: {type: string, enum: [pending, in_progress, submitted, completed, cancelled]}, templateVersionId: {type: string, format: uuid}, templateSnapshot: {type: object, additionalProperties: true}, results: {type: array, items: {$ref: '#/components/schemas/InspectionResult'}}, availableActions: {type: array, items: {type: string}}}
+      properties: {id: {type: string, format: uuid}, taskId: {type: string, format: uuid}, status: {type: string, enum: [pending, in_progress, submitted, completed, cancelled]}, templateVersionId: {type: string, format: uuid}, templateSnapshot: {type: object, additionalProperties: true}, results: {type: array, items: {$ref: '#/components/schemas/InspectionResult'}}, availableActions: {type: array, items: {type: string, enum: [read, save_result, submit, summarize]}}}
     IssueSource:
       type: object
       required: [sourceType, sourceId]
@@ -364,11 +364,11 @@ components:
     Issue:
       type: object
       required: [id, title, issueType, severity, status, responsibleUserId, dueAt, sources, availableActions]
-      properties: {id: {type: string, format: uuid}, title: {type: string}, issueType: {type: string}, severity: {type: string}, status: {type: string}, vesselId: {type: string, format: uuid, nullable: true}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, sources: {type: array, items: {$ref: '#/components/schemas/IssueSource'}}, capa: {$ref: '#/components/schemas/Capa'}, availableActions: {type: array, items: {type: string}}}
+      properties: {id: {type: string, format: uuid}, title: {type: string}, issueType: {type: string}, severity: {type: string}, status: {type: string}, vesselId: {type: string, format: uuid, nullable: true}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, sources: {type: array, items: {$ref: '#/components/schemas/IssueSource'}}, capa: {$ref: '#/components/schemas/Capa'}, availableActions: {type: array, items: {type: string, enum: [read, create_capa, save_root_cause, create_action, request_verification, verify, close]}}}
     CapaAction:
       type: object
-      required: [id, actionType, title, responsibleUserId, dueAt, status]
-      properties: {id: {type: string, format: uuid}, actionType: {type: string}, title: {type: string}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, status: {type: string}, evidenceFileIds: {type: array, items: {type: string, format: uuid}}}
+      required: [id, actionType, title, responsibleUserId, dueAt, status, evidenceFileIds, availableActions]
+      properties: {id: {type: string, format: uuid}, actionType: {type: string}, title: {type: string}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, status: {type: string}, evidenceFileIds: {type: array, items: {type: string, format: uuid}}, availableActions: {type: array, items: {type: string, enum: [submit, accept]}}}
     Capa:
       type: object
       nullable: true

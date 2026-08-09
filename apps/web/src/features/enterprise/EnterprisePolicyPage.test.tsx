@@ -10,6 +10,15 @@ import {
 const mockList = vi.fn();
 const mockCreate = vi.fn();
 const mockPublish = vi.fn();
+const mockCurrentUser = vi.fn();
+
+vi.mock('../../app/hooks', () => ({
+  useAppSelector: (
+    selector: (state: {
+      auth: { currentUser: { userId: string; roles: string[] } | null };
+    }) => unknown,
+  ) => selector({ auth: { currentUser: mockCurrentUser() } }),
+}));
 
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: (props: { onChange?: (v: unknown) => void }) => (
@@ -29,6 +38,7 @@ vi.mock('./enterpriseApi', () => ({
         summary: '',
         status: 'draft',
         files: [],
+        canManage: true,
       },
     },
     isLoading: false,
@@ -59,6 +69,7 @@ describe('EnterprisePolicyPage', () => {
             policyCode: 'P-1',
             version: 'v1',
             status: 'draft',
+            canManage: true,
           },
         ],
         meta: { total: 1 },
@@ -67,6 +78,10 @@ describe('EnterprisePolicyPage', () => {
     });
     mockCreate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockPublish.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    mockCurrentUser.mockReturnValue({
+      userId: 'manager-1',
+      roles: ['all_authenticated', 'finance'],
+    });
   });
 
   it('keeps keyword drafting local until search is committed', async () => {

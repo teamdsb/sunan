@@ -10,17 +10,39 @@ function firstCharacter(value: string): string {
   return Array.from(value.trim())[0] ?? '?';
 }
 
+function normalizeAvatarUrl(avatar: string | null | undefined): string | null {
+  if (!avatar) {
+    return null;
+  }
+
+  try {
+    const url = new URL(avatar);
+    const isWecomAvatarHost =
+      url.hostname === 'qpic.cn' ||
+      url.hostname.endsWith('.qpic.cn') ||
+      url.hostname === 'qlogo.cn' ||
+      url.hostname.endsWith('.qlogo.cn');
+    if (url.protocol === 'http:' && isWecomAvatarHost) {
+      url.protocol = 'https:';
+    }
+    return url.toString();
+  } catch {
+    return avatar;
+  }
+}
+
 export function UserAvatar({ name, avatar, ...avatarProps }: UserAvatarProps) {
   const [imageFailed, setImageFailed] = useState(false);
+  const avatarUrl = normalizeAvatarUrl(avatar);
 
   useEffect(() => {
     setImageFailed(false);
-  }, [avatar]);
+  }, [avatarUrl]);
 
   const image =
-    avatar && !imageFailed ? (
+    avatarUrl && !imageFailed ? (
       <img
-        src={avatar}
+        src={avatarUrl}
         alt={`${name}的头像`}
         referrerPolicy="no-referrer"
         onError={() => setImageFailed(true)}

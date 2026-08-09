@@ -5,6 +5,12 @@ export const TOKEN_EXPIRES_AT_KEY = 'sunan_token_expires_at';
 export const OAUTH_STATE_STORAGE_KEY = 'sunan_oauth_state';
 export const REDIRECT_TARGET_STORAGE_KEY = 'sunan_post_auth_redirect';
 export const INITIAL_URL_STORAGE_KEY = 'sunan_initial_url';
+export const OAUTH_PERMISSION_VERSION_STORAGE_KEY =
+  'sunan_oauth_permission_version';
+export const OAUTH_PERMISSION_RETRY_AT_STORAGE_KEY =
+  'sunan_oauth_permission_retry_at';
+export const CURRENT_OAUTH_PERMISSION_VERSION = 'snsapi_privateinfo-v1';
+const OAUTH_PERMISSION_RETRY_DELAY_MS = 24 * 60 * 60 * 1000;
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -53,6 +59,43 @@ export function getStoredTokenExpiresAt(): string | null {
   return getLocalStorage()?.getItem(TOKEN_EXPIRES_AT_KEY) ?? null;
 }
 
+export function hasCurrentOauthPermissionVersion(now = Date.now()): boolean {
+  const storage = getLocalStorage();
+  if (
+    storage?.getItem(OAUTH_PERMISSION_VERSION_STORAGE_KEY) ===
+    CURRENT_OAUTH_PERMISSION_VERSION
+  ) {
+    return true;
+  }
+
+  const retryAt = Number(
+    storage?.getItem(OAUTH_PERMISSION_RETRY_AT_STORAGE_KEY),
+  );
+  if (Number.isFinite(retryAt) && retryAt > now) {
+    return true;
+  }
+  storage?.removeItem(OAUTH_PERMISSION_RETRY_AT_STORAGE_KEY);
+  return false;
+}
+
+export function markCurrentOauthPermissionVersion(): void {
+  const storage = getLocalStorage();
+  storage?.setItem(
+    OAUTH_PERMISSION_VERSION_STORAGE_KEY,
+    CURRENT_OAUTH_PERMISSION_VERSION,
+  );
+  storage?.removeItem(OAUTH_PERMISSION_RETRY_AT_STORAGE_KEY);
+}
+
+export function scheduleOauthPermissionRetry(now = Date.now()): void {
+  const storage = getLocalStorage();
+  storage?.removeItem(OAUTH_PERMISSION_VERSION_STORAGE_KEY);
+  storage?.setItem(
+    OAUTH_PERMISSION_RETRY_AT_STORAGE_KEY,
+    String(now + OAUTH_PERMISSION_RETRY_DELAY_MS),
+  );
+}
+
 export function setRedirectTarget(target: string): void {
   getSessionStorage()?.setItem(REDIRECT_TARGET_STORAGE_KEY, sanitizeRedirectTarget(target));
 }
@@ -81,7 +124,7 @@ export function buildWecomOAuthUrl(targetPath: string): string {
   setRedirectTarget(targetPath);
   const state = createOauthState();
   const redirectUri = encodeURIComponent(env.wecomRedirectUri);
-  return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${env.wecomCorpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&state=${state}&agentid=${env.wecomAgentId}#wechat_redirect`;
+  return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${env.wecomCorpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_privateinfo&state=${state}&agentid=${env.wecomAgentId}#wechat_redirect`;
 }
 
 export function redirectToOAuth(targetPath: string): void {

@@ -199,7 +199,7 @@ components:
     EnterprisePolicy:
       type: object
       required:
-        [id, title, policyCode, version, status, files, createdAt, updatedAt]
+        [id, title, policyCode, version, status, files, createdAt, updatedAt, canManage]
       properties:
         id:
           type: string
@@ -230,6 +230,9 @@ components:
         updatedAt:
           type: string
           format: date-time
+        canManage:
+          type: boolean
+          description: 当前用户是否可维护、发布或删除该制度；由后端按系统管理员、管理角色和任一所属部门范围计算。
     FileAttachment:
       type: object
       properties:

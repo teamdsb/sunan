@@ -23,6 +23,8 @@ import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
+import { useAppSelector } from '../../app/hooks';
+import { canManageCompanyContent } from '../auth/permissions';
 import {
   type EnterprisePolicy,
   useBindEnterprisePolicyFilesMutation,
@@ -56,6 +58,8 @@ function formatPolicyStatus(status: string) {
 
 export function EnterprisePolicyPage() {
   const location = useLocation();
+  const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
+  const canCreate = canManageCompanyContent(roles);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = readPageValue(searchParams.get('page'), 1);
   const pageSize = readPageValue(searchParams.get('pageSize'), 10);
@@ -98,7 +102,7 @@ export function EnterprisePolicyPage() {
         创建、发布和查询企业制度，统一维护版本与附件。
       </Typography.Paragraph>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card>
+        {canCreate ? <Card>
           <Form
             form={form}
             data-testid="enterprise-policy-create-form"
@@ -135,7 +139,7 @@ export function EnterprisePolicyPage() {
               新建制度
             </Button>
           </Form>
-        </Card>
+        </Card> : null}
 
         <Card loading={isLoading}>
           <Button
@@ -200,12 +204,12 @@ export function EnterprisePolicyPage() {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  <Button
+                  ...(item.canManage ? [<Button
                     key="publish"
                     onClick={() => void publishPolicy(item.id)}
                   >
                     发布
-                  </Button>,
+                  </Button>] : []),
                   <Link
                     key="detail"
                     to={buildDetailHref(
@@ -267,6 +271,7 @@ export function EnterprisePolicyDetailPage() {
     status: EnterprisePolicy['status'];
   }>();
   const policy = data?.data;
+  const canManage = policy?.canManage ?? false;
 
   useEffect(() => {
     if (policy) {
@@ -293,7 +298,7 @@ export function EnterprisePolicyDetailPage() {
             style={{ marginBottom: 12 }}
           />
         ) : null}
-        <Form
+        {canManage ? <Form
           form={form}
           layout="vertical"
           onFinish={async (values) => {
@@ -338,7 +343,7 @@ export function EnterprisePolicyDetailPage() {
               保存
             </Button>
           </Space>
-        </Form>
+        </Form> : <Alert type="info" showIcon message="你没有维护此企业制度的权限。" />}
 
         {policy ? (
           <>

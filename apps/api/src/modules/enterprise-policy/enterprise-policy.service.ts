@@ -38,13 +38,16 @@ export class EnterprisePolicyService {
     if (!user.roles.includes('system_admin')) qb.andWhere('p.status != :deprecated', { deprecated: 'deprecated' });
 
     const [items, total] = await qb.orderBy('p.updatedAt', 'DESC').skip((page - 1) * pageSize).take(pageSize).getManyAndCount();
-    const data = await Promise.all(items.map((item) => this.toDetail(item)));
+    const departmentCodes = await this.getManageableDepartmentCodes(user);
+    const data = await Promise.all(
+      items.map((item) => this.toDetail(item, user, departmentCodes)),
+    );
     return { data, meta: { page, pageSize, total } };
   }
 
-  async getById(id: string) {
+  async getById(id: string, user: CurrentUser) {
     const entity = await this.findOneOrThrow(id);
-    return this.toDetail(entity);
+    return this.toDetail(entity, user);
   }
 
   async create(dto: EnterprisePolicyCreateDto, user: CurrentUser) {
@@ -64,17 +67,12 @@ export class EnterprisePolicyService {
     });
 
     if (entity.status === 'published') {
-      await this.repository
-        .createQueryBuilder()
-        .update(EnterprisePolicyEntity)
-        .set({ status: 'deprecated' })
-        .where('policy_code = :policyCode AND status = :published AND deleted_at IS NULL', { policyCode: entity.policyCode, published: 'published' })
-        .execute();
+      await this.deprecatePublishedVersions(entity);
     }
 
     const saved = await this.repository.save(entity);
     if (dto.fileIds?.length) await this.bindFiles(saved.id, { fileIds: dto.fileIds }, user);
-    return this.getById(saved.id);
+    return this.getById(saved.id, user);
   }
 
   async update(id: string, dto: EnterprisePolicyUpdateDto, user: CurrentUser) {
@@ -96,16 +94,7 @@ export class EnterprisePolicyService {
       updatedBy: user.userId,
     });
     if (dto.status === 'published') {
-      await this.repository
-        .createQueryBuilder()
-        .update(EnterprisePolicyEntity)
-        .set({ status: 'deprecated' })
-        .where('policy_code = :policyCode AND id != :id AND status = :published AND deleted_at IS NULL', {
-          policyCode: entity.policyCode,
-          id,
-          published: 'published',
-        })
-        .execute();
+      await this.deprecatePublishedVersions(entity, id);
       entity.publishedAt = new Date();
     }
 
@@ -116,7 +105,7 @@ export class EnterprisePolicyService {
       await this.bindFiles(id, { fileIds: dto.fileIds }, user);
     }
 
-    return this.getById(id);
+    return this.getById(id, user);
   }
 
   async remove(id: string, user: CurrentUser): Promise<void> {
@@ -133,27 +122,18 @@ export class EnterprisePolicyService {
     const entity = await this.findOneOrThrow(id);
     await this.ensureDepartmentAccess(entity, user);
 
-    await this.repository
-      .createQueryBuilder()
-      .update(EnterprisePolicyEntity)
-      .set({ status: 'deprecated' })
-      .where('policy_code = :policyCode AND id != :id AND status = :published AND deleted_at IS NULL', {
-        policyCode: entity.policyCode,
-        id,
-        published: 'published',
-      })
-      .execute();
+    await this.deprecatePublishedVersions(entity, id);
 
     entity.status = 'published';
     entity.publishedAt = new Date();
     entity.updatedBy = user.userId;
     await this.repository.save(entity);
-    return this.getById(id);
+    return this.getById(id, user);
   }
 
   async versions(id: string) {
     const entity = await this.findOneOrThrow(id);
-    const rows = await this.repository.find({ where: { policyCode: entity.policyCode, deletedAt: IsNull() }, order: { createdAt: 'DESC' } });
+    const rows = await this.repository.find({ where: { policyCode: entity.policyCode, departmentCode: entity.departmentCode ?? IsNull(), deletedAt: IsNull() }, order: { createdAt: 'DESC' } });
     return rows.map((row) => ({
       id: row.id,
       version: row.version,
@@ -177,7 +157,7 @@ export class EnterprisePolicyService {
       this.fileRelRepository.create({ enterprisePolicyId: id, fileId, sortOrder: existing.length + index }),
     );
     if (rows.length) await this.fileRelRepository.save(rows);
-    return this.getById(id);
+    return this.getById(id, user);
   }
 
   async getFileDownloadUrl(id: string, fileId: string) {
@@ -200,13 +180,57 @@ export class EnterprisePolicyService {
 
   private async ensureDepartmentAccess(entity: EnterprisePolicyEntity, user: CurrentUser) {
     if (user.roles.includes('system_admin')) return;
-    const dept = await this.getPrimaryDepartmentCode(user.userId);
-    if (!dept || entity.departmentCode !== dept) throw new ForbiddenException('department scope denied');
+    const departmentCodes = await this.getDepartmentCodes(user.userId);
+    if (!entity.departmentCode || !departmentCodes.includes(entity.departmentCode)) throw new ForbiddenException('department scope denied');
   }
 
   private async getPrimaryDepartmentCode(userId: string): Promise<string | null> {
+    return (await this.getDepartmentCodes(userId))[0] ?? null;
+  }
+
+  private async getDepartmentCodes(userId: string): Promise<string[]> {
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
-    return user?.departmentCodes?.[0] ?? null;
+    return user?.departmentCodes ?? [];
+  }
+
+  private async getManageableDepartmentCodes(
+    user: CurrentUser,
+  ): Promise<string[]> {
+    if (
+      user.roles.includes('system_admin') ||
+      !user.roles.some((role) => MANAGER_ROLES.has(role))
+    ) {
+      return [];
+    }
+    return this.getDepartmentCodes(user.userId);
+  }
+
+  private async deprecatePublishedVersions(
+    entity: EnterprisePolicyEntity,
+    excludedId?: string,
+  ): Promise<void> {
+    const builder = this.repository
+      .createQueryBuilder()
+      .update(EnterprisePolicyEntity)
+      .set({ status: 'deprecated' })
+      .where(
+        `policy_code = :policyCode${excludedId ? ' AND id != :excludedId' : ''} AND status = :published AND deleted_at IS NULL`,
+        {
+          policyCode: entity.policyCode,
+          excludedId,
+          published: 'published',
+        },
+      );
+
+    if (entity.departmentCode) {
+      builder.andWhere('department_code = :departmentCode', {
+        departmentCode: entity.departmentCode,
+      });
+    } else {
+      builder.andWhere('department_code IS NULL');
+    }
+
+    await builder.execute();
   }
 
   private async findOneOrThrow(id: string) {
@@ -215,7 +239,11 @@ export class EnterprisePolicyService {
     return entity;
   }
 
-  private async toDetail(entity: EnterprisePolicyEntity) {
+  private async toDetail(
+    entity: EnterprisePolicyEntity,
+    user: CurrentUser,
+    departmentCodes?: string[],
+  ) {
     const rels = await this.fileRelRepository.find({ where: { enterprisePolicyId: entity.id }, order: { sortOrder: 'ASC' } });
     const fileIds = rels.map((item) => item.fileId);
     const files = fileIds.length ? await this.fileRepository.find({ where: { id: In(fileIds) } }) : [];
@@ -239,6 +267,22 @@ export class EnterprisePolicyService {
       })),
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
+      canManage: await this.canManageEntity(entity, user, departmentCodes),
     };
+  }
+
+  private async canManageEntity(
+    entity: EnterprisePolicyEntity,
+    user: CurrentUser,
+    departmentCodes?: string[],
+  ): Promise<boolean> {
+    if (user.roles.includes('system_admin')) return true;
+    if (!user.roles.some((role) => MANAGER_ROLES.has(role))) return false;
+    const manageableDepartmentCodes =
+      departmentCodes ?? (await this.getDepartmentCodes(user.userId));
+    return Boolean(
+      entity.departmentCode &&
+        manageableDepartmentCodes.includes(entity.departmentCode),
+    );
   }
 }

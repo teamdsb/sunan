@@ -6,6 +6,15 @@ import { EnterpriseProfilePage } from './EnterpriseProfilePage';
 const mockList = vi.fn();
 const mockCreate = vi.fn();
 const mockDelete = vi.fn();
+const mockCurrentUser = vi.fn();
+
+vi.mock('../../app/hooks', () => ({
+  useAppSelector: (
+    selector: (state: {
+      auth: { currentUser: { userId: string; roles: string[] } | null };
+    }) => unknown,
+  ) => selector({ auth: { currentUser: mockCurrentUser() } }),
+}));
 
 vi.mock('./enterpriseApi', () => ({
   useGetEnterpriseProfilesQuery: (params: unknown) => mockList(params),
@@ -23,13 +32,17 @@ describe('EnterpriseProfilePage', () => {
     vi.clearAllMocks();
     mockList.mockReturnValue({
       data: {
-        data: [{ id: '1', title: 'profile-a', category: 'license', status: 'draft', files: [] }],
+        data: [{ id: '1', title: 'profile-a', category: 'license', status: 'draft', files: [], canManage: true }],
         meta: { total: 20 },
       },
       isLoading: false,
     });
     mockCreate.mockReturnValue({ unwrap: () => Promise.resolve({ data: { id: '2' } }) });
     mockDelete.mockReturnValue({ unwrap: () => Promise.resolve() });
+    mockCurrentUser.mockReturnValue({
+      userId: 'member-1',
+      roles: ['all_authenticated', 'finance'],
+    });
   });
 
   it('syncs the list query to the URL and preserves it in detail links', async () => {
@@ -71,5 +84,28 @@ describe('EnterpriseProfilePage', () => {
     );
 
     expect(screen.getByTestId('enterprise-profile-create-form')).not.toHaveClass('ant-form-inline');
+  });
+
+  it('hides management controls from an authenticated member without management permission', () => {
+    mockCurrentUser.mockReturnValue({
+      userId: 'member-1',
+      roles: ['all_authenticated'],
+    });
+    mockList.mockReturnValue({
+      data: {
+        data: [{ id: '1', title: 'profile-a', category: 'license', status: 'draft', files: [], canManage: false }],
+        meta: { total: 20 },
+      },
+      isLoading: false,
+    });
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <EnterpriseProfilePage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByTestId('enterprise-profile-create-form')).toBeNull();
+    expect(screen.queryByRole('button', { name: '删除' })).toBeNull();
   });
 });

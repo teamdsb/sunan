@@ -17,6 +17,20 @@ describe('UserAvatar', () => {
     );
   });
 
+  it('upgrades WeCom qpic avatar URLs to HTTPS to avoid mixed-content blocking', () => {
+    render(
+      <UserAvatar
+        name="王工"
+        avatar="http://shp.qpic.cn/bizmp/wang/0"
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: '王工的头像' })).toHaveAttribute(
+      'src',
+      'https://shp.qpic.cn/bizmp/wang/0',
+    );
+  });
+
   it('falls back to the first name character when the image fails', () => {
     render(
       <UserAvatar

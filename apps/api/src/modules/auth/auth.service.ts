@@ -34,6 +34,7 @@ export class AuthService {
   async exchangeCode(code: string): Promise<{
     accessToken: string;
     expiresIn: number;
+    privateInfoAuthorized: boolean;
     user: AuthenticatedUserResponse;
   }> {
     const accessToken = await this.tokenService.getAccessToken();
@@ -67,13 +68,20 @@ export class AuthService {
     const existingUser = await this.wecomUserRepository.findOne({
       where: { userId: detail.userid },
     });
+    const sensitiveDetail = userInfo.user_ticket
+      ? await this.getSensitiveUserDetail(accessToken, userInfo.user_ticket)
+      : null;
 
     const entity = this.wecomUserRepository.create({
       ...(existingUser ?? {}),
       userId: detail.userid,
       corpId: appEnv.WECOM_CORP_ID,
       name: detail.name,
-      avatarUrl: detail.avatar ?? null,
+      avatarUrl:
+        sensitiveDetail?.avatar?.trim() ||
+        existingUser?.avatarUrl ||
+        detail.avatar ||
+        null,
       departmentIds,
       departmentNames: departments,
       departmentCodes: this.roleResolver.resolveDepartmentCodes({
@@ -98,6 +106,7 @@ export class AuthService {
         name: savedUser.name,
       } satisfies JwtPayload),
       expiresIn: 7200,
+      privateInfoAuthorized: sensitiveDetail !== null,
       user: this.toAuthenticatedUser(savedUser, roles),
     };
   }
@@ -193,6 +202,23 @@ export class AuthService {
         nameById.get(departmentId) ??
         this.roleResolver.resolveFallbackDepartmentName(departmentId),
     );
+  }
+
+  private async getSensitiveUserDetail(
+    accessToken: string,
+    userTicket: string,
+  ) {
+    try {
+      return await this.wecomHttpGateway.getUserSensitiveDetail(
+        accessToken,
+        userTicket,
+      );
+    } catch {
+      // Sensitive-field authorization is optional for authentication. Do not
+      // discard an already persisted avatar merely because this short-lived
+      // ticket has expired or the member has not confirmed the authorization.
+      return null;
+    }
   }
 
   private resolveRolesForUser(user: WecomUserEntity): string[] {
