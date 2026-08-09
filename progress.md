@@ -7,6 +7,45 @@ replaced_by: []
 ---
 # 进度日志
 
+## 会话：2026-08-10（0.0.6 生产发布）
+
+### 阶段 18：部署调查与发布
+- **状态：** completed
+- **开始时间：** 2026-08-10
+- 执行的操作：
+  - 完整读取 `planning-with-files-zh` 技能，恢复现有规划文件和历史发布线索。
+  - 新增阶段 18，固定 `0.0.6` 版本、不新增前端显示、系统管理员增补与生产发布范围。
+  - 检查 Git 状态、部署文件、版本号引用和系统管理员实现。
+  - 确认当前完整应用提交为 `6645b51`、本地 `main` 比 `origin/main` ahead 1；管理员真源为生产 `WECOM_SYSTEM_ADMIN_USER_IDS` 白名单。
+  - 通读部署索引、开发运维规范、标准发布手册、服务器清单、环境变量、备份恢复、排障和企业微信切换 runbook。
+  - 对比 `b245d9e..HEAD`，确认本次业务代码无新数据库 migration，发布主体是 API/Web/Nginx 新镜像与 API 管理员环境变量更新。
+  - 完成生产只读预检：现网 `0.0.5`、全部服务健康、23 条 migration 完整、目标管理员不存在，最近可用备份为 2026-08-04。
+  - 确认 Let's Encrypt 证书已自动续期至 2026-10-16，`certbot.timer` active/enabled。
+  - 通过 `apply_patch` 将 11 个版本和部署文件统一升级为 `0.0.6`，并将运维清单日期更新为 2026-08-10。
+  - 版本残留、前端页面展示和 `git diff --check` 首轮检查通过。
+  - 首轮全量测试：Web 60 files / 260 tests 全部通过；API unit 22 suites 中 21 通过，`certificate-reminder-job.service.spec.ts` 的锁续期失败重入队用例超过 5 秒，总计 115/116 通过。因 unit 失败，integration 尚未开始，生产无变更。
+  - 按 `systematic-debugging` 技能读取完整错误、测试、service、Jest 配置和历史变更；确认失败文件不在本次发布代码 diff 中。
+  - 单文件 `--runInBand --detectOpenHandles` 9/9 通过；失败用例单独连续 3 次通过，用时 0.85-0.93 秒。初步归因为首轮 Jest 并行资源争用造成的一次性超时，待全量 unit 复验。
+  - 全量 API unit 新鲜复验通过：22 suites / 116 tests，无需修改业务或测试代码。
+  - API integration 首轮独立运行在 18 个套件中统一报本机无容器运行时，81 项未进入业务断言；准备启动 Docker Desktop 后重跑。
+  - 启动 Docker Desktop 并确认 daemon 29.6.1；integration 重跑为 15/18 suites、72/81 tests 通过。两个套件因刚启动后并发 PostgreSQL 容器端口绑定超时失败，证照套件有 1 个 401，准备对三个失败套件串行隔离复验。
+  - 三个失败套件串行 `--detectOpenHandles` 复验通过：3 suites / 11 tests。
+  - 全量 integration 再跑为 17/18 suites、80/81 tests 通过，仅 `ship-monitor` 在 120 秒超时，且 Jest 子进程未正常退出。终止本轮遗留测试进程后，单套件带 `--detectOpenHandles` 在 6.06 秒通过，业务用例耗时 86 ms。
+  - 清理本轮失败遗留进程后，标准 API integration 全量复验完整通过：18 suites / 81 tests，用时 72.627 秒。
+  - 完成 Web/API 生产构建、API lint、21/21 OpenAPI、278 份 Markdown 索引、版本一致性和 `git diff --check`；全部通过。
+  - 备份远程脚本首次在本地 JS 模板字符串解析失败，未与生产建立连接；转义 shell 参数展开后成功执行。
+  - 生产备份批次 `20260810022219` 已验证：DB dump 273,797 bytes / 565 entries，配置归档 12,871 bytes，Redis RDB 1,878 bytes，SHA-256 全部通过。
+  - 源码首次流式上传因远端 heredoc 和 tar 管道共用 stdin 失败，原子切换未执行；核对现网仍为 0.0.5 并健康后，移除 0 文件的失败上传目录。
+  - 修正为单一 stdin 解包后，源码批次 `20260810022504` 已完成版本/哈希/敏感文件校验和原子切换；回滚源为 `/dev/sunan/sunan-source/backup-20260810022504`。
+  - 生产配置批次 `20260810022733` 已保留 `.env`/Compose 回滚文件，将版本更新为 0.0.6，管理员白名单由 3 增为 4 并确认 `DaFaShiDuDaXue` 存在，Compose 校验通过。
+  - 服务器以 Node 20 Dockerfile 完成 API/Web/Nginx 0.0.6 镜像构建，三个 OCI 版本标签验证通过，构建日志为 `sunan-build-0.0.6-20260810022801.log`。
+  - 分阶段切换 API 至 0.0.6：healthy、OCI/进程版本、23 条 migration、公网 live/ready 和近 5 分钟错误检查均通过，自动回切未触发。
+  - 确认 API 容器内管理员白名单为 4 个、目标存在，且 `wecom_users` 已存在 1 条 `DaFaShiDuDaXue` 记录；角色真源已生效。
+  - 分阶段切换 Web 和 Nginx 至 0.0.6；8 条直达路由、5 个版本化资源、Nginx 配置、鉴权 401 边界和近期错误计数全部通过。
+  - 按 `verification-before-completion` 执行独立新鲜复验：本地版本/前端显示/文档/diff，生产容器/标签/源码哈希/备份/迁移/管理员/日志/证书/timer，以及本机外部公网 smoke 均通过。
+  - 生产发布结果：API/Web/Nginx 均为 `0.0.6`，API healthy，PostgreSQL 23 migrations，DB/Redis/OSS ready，自动回滚未触发。
+  - 回滚点：源码 `backup-20260810022504`，`.env`/Compose `bak-20260810022733`，DB/配置/Redis 备份批次 `20260810022219`。
+
 ## 会话：2026-08-09（企业微信头像、多部门与权限收口）
 
 ### 阶段 17：测试修复与最终验收

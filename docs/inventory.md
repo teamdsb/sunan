@@ -31,7 +31,7 @@ replaced_by: []
 | [deploy/wecom-operations.md](../deploy/wecom-operations.md) | `operations` | `operations` | 企业微信运维手册 |
 | [findings.md](../findings.md) | `operations` | `planning` | 发现与决策 |
 | [progress.md](../progress.md) | `operations` | `planning` | 进度日志 |
-| [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：M7 审计与 M8 Wave 5-6 安全闭环 |
+| [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：苏南平台开发与发布 |
 
 ## docs-root
 

@@ -5,13 +5,13 @@ updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
-# 任务计划：M7 审计与 M8 Wave 5-6 安全闭环
+# 任务计划：苏南平台开发与发布
 
 ## 目标
-完成 M8 Wave 5 的可复用计划任务中心、统一待办、真实日历与企业微信任务消息，并在其验收基础上完成 Wave 6 检查、统一问题和 CAPA 验证关闭闭环；在此基础上将平台全局版本升级为 `0.0.4` 并发布到生产。
+持续完成苏南平台开发、文档、验收与发布任务。当前任务是依据部署文档将完整新版本发布到生产，将全局版本从 `0.0.5` 升级为 `0.0.6`（不新增前端页面版本展示），并新增系统管理员 `DaFaShiDuDaXue`。
 
 ## 当前阶段
-阶段 17
+阶段 18
 
 ## 各阶段
 
@@ -155,6 +155,16 @@ replaced_by: []
 - [x] 完成全量 diff 自审并保留未提交工作区
 - **状态：** complete
 
+### 阶段 18：0.0.6 生产发布与系统管理员增补
+- [x] 阅读当前部署、上线、迁移、回滚和验收文档，确认生产入口与当前状态
+- [x] 审计工作树、版本真源、管理员配置方式、密钥与备份前置
+- [x] 将全局版本更新为 `0.0.6`，保持前端不新增版本号显示
+- [x] 按实际管理员真源增加 `DaFaShiDuDaXue`，并保留现有管理员
+- [x] 执行发布前质量门禁，生成 `0.0.6` 所需文件或 Docker 镜像
+- [x] 按 runbook 备份、迁移、切换和验证生产，保留可执行回滚点
+- [x] 核验容器、健康检查、公网页面、关键接口、版本证据和管理员生效情况
+- **状态：** completed（生产 API/Web/Nginx 均为 `0.0.6`，`DaFaShiDuDaXue` 已进入管理员白名单且存在用户记录；自动门禁和公网 smoke 通过）
+
 ## 关键问题
 1. 用户最新确认：M1-M6 修复应作为新的 M7；原 M7/M8 整体后移。
 2. 新 M7 使用 6 个 Wave，对应上传/我的、办事、采购、工作台、企业微信直达和最终门禁。
@@ -178,6 +188,8 @@ replaced_by: []
 | 采用源码同步、服务器构建和分阶段切流 | 仓库唯一运维入口明确不使用镜像归档/registry；先构建新镜像、再迁移、最后按 API→Web→Nginx 切换可缩小故障半径 |
 | 生产迁移前执行备份与临时库恢复演练 | 日常部署手册缺少备份步骤，但架构和最新切换 runbook 将其列为硬门禁；本次已生成并校验 DB/配置/Redis 备份并完成非破坏恢复 |
 | 不把自动化 smoke 写成企业微信三端真机通过 | Codex 可验证 HTTP、直达路由、鉴权边界、容器和依赖，不能替代用户在 iOS/Android/桌面企业微信中的真实登录与业务操作 |
+| 0.0.6 无新 migration，仍采用备份后分阶段切流 | 本次变更集为 OAuth/头像/权限，数据库保持 23 条 migration；先备份再 API→Web→Nginx 切换，能保留清晰回滚点并减小故障面 |
+| 新管理员通过现有 UserID 白名单增补 | 认证规格和当前代码明确 `WECOM_SYSTEM_ADMIN_USER_IDS` 是唯一真源；保留现有 3 个值后追加 `DaFaShiDuDaXue`，不写历史数据库管理员字段 |
 
 ## 遇到的错误
 | 错误 | 尝试次数 | 解决方案 |
@@ -201,6 +213,11 @@ replaced_by: []
 | 动态目录在 LibreOffice 渲染时为空 | 1 | Word 的目录域未被 LibreOffice 自动展开；改为正文真源驱动的 16 章静态可见目录，并在最终 A4 渲染后回填、复核当前页码 |
 | docx-js 多书签生成重复数字 ID | 1 | 内部跳转书签触发 30 项唯一性错误；目录不依赖书签，移除内部链接后保留章节名和页码，OOXML 再次全部通过 |
 | OAuth 授权版本迁移后前端定向测试失败 | 1 | `RequireAuth` 完整 mock 丢失 `persistToken`；`AppRoutes` 测试会话缺少当前授权版本标记。仅修正测试初始化，不回退生产授权迁移。 |
+| 0.0.6 首轮 API 单元测试单用例超时 | 1 | `certificate-reminder-job.service.spec.ts` 的锁续期失败重入队用例超过 5 秒，115/116 通过；按系统化调试单独复现并核对 fake timer/并发时序，尚未进入生产变更。 |
+| 0.0.6 API integration 无可用容器运行时 | 1 | 18 个套件全部在 Testcontainers `pgContainer.start()` 前报 `Could not find a working container runtime strategy`，未进入业务断言；启动本机 Docker Desktop 并确认 daemon 后重跑。 |
+| Docker 刚启动后 integration 并发容器/证照用例失败 | 1 | daemon 恢复后 15/18 suites、72/81 tests 通过；`enterprise-policy`/`master-data` 等待端口绑定超过 10 秒，`certificate` 单用例收到 401。将三个失败套件 `--runInBand` 隔离复现，判断环境并发抖动与实际认证回归。 |
+| 备份远程脚本首次在 JS 模板字符串解析失败 | 1 | shell 参数展开 `\${...}` 被 JS 误识别为模板插值，工具在本地解析阶段退出，未连接或修改生产；对 shell 展开进行显式转义后执行成功。 |
+| 0.0.6 源码首次流式上传的 stdin 冲突 | 1 | 远端同时使用 `bash -s` heredoc 与 tar 管道，压缩数据被 shell 误读；管道在原子切换前失败，生产容器/current 仍为 0.0.5。核对后用 `rmdir` 删除 0 字节/0 文件的失败目录，改为直接远端 `tar -xzf -` 单一 stdin 后成功。 |
 | API 全量集成测试无法启动 testcontainer | 1 | Docker Desktop 未运行，所有集成套件在 PostgreSQL 容器启动前统一失败。启动 Docker，确认服务端 `29.6.1` 后重跑，18 suites / 80 tests 通过。 |
 | 顶层全量测试首跑时证照集成套件 3 项超时 | 1 | 同进程其余 17 个集成套件通过，无业务断言失败；单独以 `--detectOpenHandles` 重现时 3/3 在 11 秒内通过且无句柄报告，随后全量 API integration 18 suites / 80 tests 和顶层 `CI=1 pnpm test` 均完整退出 0，确认为一次性 Docker/Testcontainers 请求卡顿。 |
 | 文档索引校验拒绝头像/权限设计稿 | 1 | 设计稿使用了仓库未定义的 `current-design` 状态，且新文件未进入 `docs/inventory.md`。改为现有 `current-spec` 并重新生成 inventory。 |

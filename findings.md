@@ -1,11 +1,47 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-09
+updated: 2026-08-10
 replaces: []
 replaced_by: []
 ---
 # 发现与决策
+
+## 2026-08-10：0.0.6 生产发布（初始）
+- 用户明确授权阅读部署文档、重建所需文件或 Docker 镜像并发布新版本。
+- 目标全局版本为 `0.0.6`；不增加前端页面版本展示。
+- 需将 `DaFaShiDuDaXue` 加入系统管理员真源，实际形式待从当前代码和生产配置确认。
+- 历史 `0.0.4` 发布采用源码同步、服务器构建、数据库/配置/Redis 备份、恢复演练和 API→Web→Nginx 分阶段切流；本次需以当前部署文档和生产实况重新核验。
+- 当前 Git 为 `main`，HEAD `6645b51` (`feat(auth): implement WeCom avatar and permission controls`)，相对 `origin/main` ahead 1；除本次三份规划文件外无其他未提交改动。
+- 当前全局版本真源是根/API/Web `package.json`、`apps/api/src/config/env.ts`、`deploy/.env.example`、`apps/api/.env.example`，另有两份 Compose 的 OCI label 默认值和运维文档现网标识需同步审核。
+- 系统管理员权限唯一真源是生产 `WECOM_SYSTEM_ADMIN_USER_IDS` 逗号分隔白名单，数据库 `is_system_admin` 历史字段不得用于授权。`DaFaShiDuDaXue` 应追加且保留现有值，API 重启后生效。
+- 部署唯一运维入口是 `deploy/README.md` 和服务器 `/dev/sunan/deploy/docker-compose.yml`；交付物是源码 + Compose，镜像应在服务器以 `SUNAN_VERSION` tag 构建。
+- 发布安全边界要求生产 `.env` 修改前备份、发布前 PostgreSQL 备份、配置备份和源码回滚点；不允许暴露密钥或删除持久化目录。
+- 从当前已部署基线 `b245d9e` 到 HEAD 的业务变更不包含新 migration；主要是企业微信头像/OAuth、多部门展示、权限收紧和手册更新。生产仍需核对 migrations 表，但本次预期不产生新 schema 迁移。
+- 2026-08-10 01:57 生产只读预检：`SUNAN_VERSION=0.0.5`，API/Web/Nginx 均为 `0.0.5`，API/DB/Redis 健康，公网 live/ready/Web 200，Compose 有效，23 条 migrations 已执行到 `WecomUserDepartmentIds1710000022000`。
+- 生产管理员白名单已设置 3 个 UserID，`DaFaShiDuDaXue` 尚不存在；操作时只输出数量和目标存在性，未泄露现有值。
+- 生产当前源码的 auth/OAuth 文件哈希与本地 HEAD 不同，Compose 哈希相同；证明需发布新代码，且本地部署结构未产生非预期漂移。
+- 生产证书真实路径为 `/etc/letsencrypt/live/qzssncb.com/fullchain.pem`，有效期至 2026-10-16，`certbot.timer` active/enabled；运维清单中 2026-08-17 的旧日期已被自动续签覆盖，不是本次上线阻断项。
+- 11 个已验证的版本/部署文件已统一更新为 `0.0.6`；`apps/web/src` 不包含 `SUNAN_VERSION` 或 `0.0.6`，未增加前端页面版本显示。
+- 首轮 Web 60 files / 260 tests 通过；API unit 只有 `certificate-reminder-job.service.spec.ts` 的拒绝锁续期用例超过 Jest 5 秒上限，其余115 项通过。
+- 系统化调试确认该 service/spec 从已发布基线到 HEAD 没有代码变更；单文件带 `--detectOpenHandles` 为 9/9 通过，失败用例连续 3 次独立运行均在 0.85-0.93 秒通过。当前证据支持首轮 Jest 并行 worker 资源争用导致的一次性墙钟超时，不支持业务回归；仍需全量 unit 新鲜复验确认。
+- 全量 API unit 复验为 22/22 suites、116/116 tests 通过，证实首轮单用例超时为一次性测试资源抖动，无需改业务代码或放宽超时。
+- API integration 首轮独立运行的 18 个套件统一在 Testcontainers 容器启动前失败，错误为本机无可用 Docker runtime，81 个业务用例均未执行；这是环境门禁，不是业务失败。
+- 启动 Docker Desktop 并确认 server 29.6.1 后重跑 integration：15/18 suites、72/81 tests 通过。`enterprise-policy` 和 `master-data` 在并发启动 PostgreSQL 时等待主机端口绑定超过 Testcontainers 10 秒；`certificate` 的列表筛选请求单次返回 401。需对这 3 个套件串行隔离复现，不应将容器启动失败误当业务断言。
+- 上述 3 个失败 integration 套件串行 `--detectOpenHandles` 为 3/3 suites、11/11 tests 通过，证照 401 未复现，不支持认证回归。
+- 下一轮全量 integration 为 17/18 suites、80/81 tests 通过，仅 `ship-monitor` 用例在 120 秒超时；该用例在上一轮已通过。结束后发现其 Jest 子进程未随 pnpm 退出，且仍持有 Testcontainers 异步资源；终止该本轮遗留测试进程后，单套件 `--detectOpenHandles` 在 6.06 秒内通过，业务用例自身仅 86 ms。
+- 清理本轮遗留测试进程、Docker 充分就绪后，标准 API integration 全量命令新鲜通过：18/18 suites、81/81 tests，用时 72.627 秒。系统化调试结论是本机 Docker 冷启动和失败套件遗留异步资源导致的环境/时序抖动，无业务回归证据。
+- 发布前门禁最终结果：Web 60 files / 260 tests、API unit 22 suites / 116 tests、API integration 18 suites / 81 tests，合计 457 tests；Web/API build、API lint、21/21 OpenAPI、278 份 Markdown 索引和 `git diff --check` 均通过。
+- 生产发布前备份批次 `20260810022219` 已完成：PostgreSQL custom dump（565 个 list entries）、生产配置归档、Redis 时间点 RDB；三份均非空、mode 600、SHA-256 清单校验通过。
+- 首次源码流式上传因远端 stdin 同时用于 heredoc 和 tar 而在解包前失败；失败上传目录为 0 字节/0 文件，现网容器、健康检查和 `current` 0.0.5 全部未变。精确空目录已用 `rmdir` 移除。
+- 改用单一 stdin 后，`0.0.6` 源码已于批次 `20260810022504` 完成版本、敏感环境文件排除和 auth/OAuth/Compose 哈希校验，并原子切换为新构建上下文。旧源码保留为 `/dev/sunan/sunan-source/backup-20260810022504`；运行容器仍是 0.0.5。
+- 生产配置批次 `20260810022733` 已原子更新：`SUNAN_VERSION=0.0.6`，管理员白名单从 3 个增为 4 个且目标 UserID 存在；现有值未输出。`.env` 与 Compose 回滚文件均已保留，Compose 校验通过，运行容器仍是 0.0.5。
+- 生产镜像批次 `20260810022801` 构建成功：`sunan-api:0.0.6` (169,484,385 bytes)、`sunan-web:0.0.6` (27,021,122 bytes)、`sunan-nginx:0.0.6` (26,054,032 bytes)，三个 OCI version label 均为 `0.0.6`。远端构建使用 Dockerfile 固定 Node 20，日志已保存。
+- API 已分阶段切换到 `sunan-api:0.0.6`：容器 healthy，OCI/进程版本均为 0.0.6，公网 live/ready 通过，migrations 保持 23 且最新名称不变，近 5 分钟 API 错误计数为 0，自动回切未触发。
+- API 容器内管理员白名单为 4 个且目标 UserID 存在；生产 `wecom_users` 中 `DaFaShiDuDaXue` 已有 1 条用户记录，因此配置重启后已具备系统管理员角色判定条件，无需伪造或修改历史 `is_system_admin` 字段。
+- Web 与 Nginx 已分阶段切换到 0.0.6；Nginx 配置检查、8 条 SPA 直达路由、5 个公网版本化 JS/CSS 资源、受保护 API 401 边界、API ready 和近期 API/Nginx 错误计数均通过，自动回滚未触发。
+- 按 `verification-before-completion` 完成独立新鲜复验：三个应用容器均运行 0.0.6，API healthy，源码和运行 Compose 哈希与本地匹配，备份清单复验通过，无 upload 目录或一次性容器残留，证书至 2026-10-16，certbot/企微 IP timer 均 active。
+- 完整回滚点：源码 `/dev/sunan/sunan-source/backup-20260810022504`，环境 `/dev/sunan/deploy/.env.bak-20260810022733`，Compose `/dev/sunan/deploy/docker-compose.yml.bak-20260810022733`，数据/配置/Redis 备份批次 `20260810022219`。
 
 ## 2026-08-09：企业微信头像、多部门与权限收口
 - OAuth 已升级为 `snsapi_privateinfo`，已有 JWT 但缺少 `snsapi_privateinfo-v1` 标记的旧会话需重新授权一次，才能获得 `user_ticket` 并调用敏感成员信息接口刷新头像。
