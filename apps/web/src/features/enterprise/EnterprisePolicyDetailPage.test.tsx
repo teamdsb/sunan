@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { EnterprisePolicyDetailPage } from './EnterprisePolicyPage';
 
 const mockGetById = vi.fn();
@@ -33,8 +33,11 @@ describe('EnterprisePolicyDetailPage', () => {
         data: {
           id: '1',
           title: 'policy-a',
+          policyCode: 'POLICY-001',
+          version: 'v1',
           status: 'draft',
           summary: '',
+          publishedAt: '2026-08-12T09:30:00.000+08:00',
           files: [],
           canManage: true,
         },
@@ -48,7 +51,7 @@ describe('EnterprisePolicyDetailPage', () => {
     mockBind.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
 
-  it('relies on the global navigation instead of a return button', () => {
+  it('shows publish time and returns to the preserved list state', () => {
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -61,13 +64,16 @@ describe('EnterprisePolicyDetailPage', () => {
             path="/my/enterprise-policy/:id"
             element={<EnterprisePolicyDetailPage />}
           />
+          <Route path="/my/enterprise-policy" element={<LocationDisplay />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(
-      screen.queryByRole('button', { name: '返回列表' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText('2026/8/12 09:30:00')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /返回制度列表/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/my/enterprise-policy?page=3&pageSize=20&status=published&keyword=demo',
+    );
   });
 
   it('supports edit and file bind', async () => {
@@ -94,6 +100,11 @@ describe('EnterprisePolicyDetailPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
     await waitFor(() => expect(mockBind).toHaveBeenCalled());
-    expect(screen.getByText(/v1/)).toBeInTheDocument();
+    expect(screen.getAllByText(/v1/).length).toBeGreaterThan(0);
   });
 });
+
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}{location.search}</div>;
+}

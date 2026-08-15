@@ -8,15 +8,18 @@ import {
   Typography,
   message,
 } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { resolveProcurementReportBackHref } from '../../router/procurementRouteConfig';
 import { FilePreviewModal } from '../files/FilePreviewModal';
 import { downloadFileFromUrl } from '../files/fileDownload';
 import {
   ProcurementApprovalRecord,
+  ProcurementReportRequest,
   ProcurementReportRequestStatus,
   useGetProcurementReportApprovalsQuery,
   useGetProcurementReportRequestQuery,
@@ -89,8 +92,34 @@ function labelFrom(
   return value ? (map[value] ?? fallback) : '-';
 }
 
+function buildPdfSourceVersion(
+  report: ProcurementReportRequest,
+  approvals: ProcurementApprovalRecord[],
+) {
+  return JSON.stringify({
+    report: {
+      id: report.id,
+      reportNo: report.reportNo,
+      reportType: report.reportType,
+      periodYear: report.periodYear,
+      periodMonth: report.periodMonth,
+      departmentCode: report.departmentCode,
+      snapshotParams: report.snapshotParams,
+      snapshotSummary: report.snapshotSummary,
+      status: report.status,
+      approvalChannel: report.approvalChannel,
+      submittedAt: report.submittedAt,
+      finalApprovedAt: report.finalApprovedAt,
+      createdBy: report.createdBy,
+      createdAt: report.createdAt,
+    },
+    approvals,
+  });
+}
+
 export function ProcurementReportRequestDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -113,6 +142,12 @@ export function ProcurementReportRequestDetailPage() {
   const [pdfPreview, setPdfPreview] = useState<{
     fileName: string;
     downloadUrl: string;
+  } | null>(null);
+  const [pdfExport, setPdfExport] = useState<{
+    fileName: string;
+    downloadUrl: string;
+    sourceVersion: string;
+    createdAt: number;
   } | null>(null);
 
   const report = detailResponse?.data;
@@ -256,14 +291,32 @@ export function ProcurementReportRequestDetailPage() {
 
     setPdfAction(mode);
     try {
-      const result = await printReportRequest(id).unwrap();
-      const fileName = `${report?.reportNo ?? '报表审批单'}.pdf`;
+      const sourceVersion = report
+        ? buildPdfSourceVersion(report, approvals)
+        : id;
+      const canReusePdf =
+        pdfExport?.sourceVersion === sourceVersion &&
+        Date.now() - pdfExport.createdAt < 2 * 60 * 1000;
+      const currentPdf = canReusePdf
+        ? pdfExport
+        : await printReportRequest(id)
+            .unwrap()
+            .then((result) => {
+              const nextPdf = {
+                fileName: `${report?.reportNo ?? '报表审批单'}.pdf`,
+                downloadUrl: result.data.downloadUrl,
+                sourceVersion,
+                createdAt: Date.now(),
+              };
+              setPdfExport(nextPdf);
+              return nextPdf;
+            });
       if (mode === 'preview') {
-        setPdfPreview({ fileName, downloadUrl: result.data.downloadUrl });
-        messageApi.success('PDF 已生成并打开预览');
+        setPdfPreview(currentPdf);
+        messageApi.success('PDF 已打开预览');
       } else {
-        await downloadFileFromUrl(result.data.downloadUrl, fileName);
-        messageApi.success('PDF 已生成并开始下载');
+        await downloadFileFromUrl(currentPdf.downloadUrl, currentPdf.fileName);
+        messageApi.success('PDF 已开始下载');
       }
     } catch (error) {
       messageApi.error(
@@ -299,8 +352,13 @@ export function ProcurementReportRequestDetailPage() {
             </Typography.Paragraph>
           </div>
           <Space wrap className="procurement-report-detail-actions">
-            <Button onClick={() => navigate('/procurement')}>
-              返回采购首页
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() =>
+                navigate(resolveProcurementReportBackHref(location.search))
+              }
+            >
+              返回上一页
             </Button>
             <Button
               onClick={() => navigate('/procurement/report-approvals')}

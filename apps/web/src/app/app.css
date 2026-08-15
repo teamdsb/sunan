@@ -5327,7 +5327,7 @@ body {
 
 .shell-layout-module-office .office-mobile-search-panel .ant-input-group {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 76px;
+  grid-template-columns: minmax(0, 1fr) 76px !important;
   width: 100%;
 }
 

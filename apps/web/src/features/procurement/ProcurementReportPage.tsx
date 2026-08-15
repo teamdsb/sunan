@@ -12,8 +12,9 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { buildProcurementReportRequestHref } from '../../router/procurementRouteConfig';
 import {
   ProcurementDepartmentCode,
   ProcurementReportRequest,
@@ -67,6 +68,7 @@ function labelFrom(
 
 export function ProcurementReportPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [messageApi, contextHolder] = message.useMessage();
   const currentYear = new Date().getFullYear();
 
@@ -181,14 +183,21 @@ export function ProcurementReportPage() {
         render: (_, row) => (
           <Button
             type="link"
-            onClick={() => navigate(`/procurement/report-requests/${row.id}`)}
+            onClick={() =>
+              navigate(
+                buildProcurementReportRequestHref(
+                  row.id,
+                  `${location.pathname}${location.search}`,
+                ),
+              )
+            }
           >
             查看详情
           </Button>
         ),
       },
     ],
-    [navigate],
+    [location.pathname, location.search, navigate],
   );
 
   const handleCreateMonthlyRequest = async () => {
@@ -199,7 +208,12 @@ export function ProcurementReportPage() {
       departmentCode,
     }).unwrap();
     messageApi.success('月报审批单草稿已创建');
-    navigate(`/procurement/report-requests/${created.data.id}`);
+    navigate(
+      buildProcurementReportRequestHref(
+        created.data.id,
+        `${location.pathname}${location.search}`,
+      ),
+    );
   };
 
   const handleCreateYearlyRequest = async () => {
@@ -209,7 +223,12 @@ export function ProcurementReportPage() {
       departmentCode,
     }).unwrap();
     messageApi.success('年报审批单草稿已创建');
-    navigate(`/procurement/report-requests/${created.data.id}`);
+    navigate(
+      buildProcurementReportRequestHref(
+        created.data.id,
+        `${location.pathname}${location.search}`,
+      ),
+    );
   };
 
   return (

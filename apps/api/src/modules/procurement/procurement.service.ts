@@ -10,9 +10,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
 import fontkit from '@pdf-lib/fontkit';
 import {
   PDFDocument,
@@ -57,6 +54,7 @@ import { ProcurementReportRequestCreateDto } from './dto/procurement-report-requ
 import { ProcurementReportRequestListQueryDto } from './dto/procurement-report-request-list-query.dto';
 import { ProcurementReportYearlyQueryDto } from './dto/procurement-report-yearly-query.dto';
 import { buildProcurementReportPdf } from './procurement-report-pdf';
+import { createProcurementPdfFont } from './procurement-pdf-font';
 import {
   DEPARTMENT_ROLE_MAP,
   PROCUREMENT_APPROVAL_CHANNELS,
@@ -99,30 +97,6 @@ const PDF_MARGIN_LEFT = 56;
 const PDF_MARGIN_BOTTOM = 56;
 const PDF_CONTENT_RIGHT = PDF_PAGE_WIDTH - PDF_MARGIN_LEFT;
 const PDF_CONTENT_WIDTH = PDF_CONTENT_RIGHT - PDF_MARGIN_LEFT;
-const requireFromHere = createRequire(__filename);
-const NOTO_SANS_SC_ENTRY = requireFromHere.resolve(
-  '@expo-google-fonts/noto-sans-sc',
-);
-const NOTO_SANS_SC_DIR = dirname(NOTO_SANS_SC_ENTRY);
-const PROCUREMENT_PDF_REGULAR_FONT_PATH = join(
-  NOTO_SANS_SC_DIR,
-  '400Regular',
-  'NotoSansSC_400Regular.ttf',
-);
-
-let procurementPdfFontBytes:
-  | {
-      regular: Uint8Array;
-    }
-  | undefined;
-
-function loadProcurementPdfFontBytes() {
-  procurementPdfFontBytes ??= {
-    regular: readFileSync(PROCUREMENT_PDF_REGULAR_FONT_PATH),
-  };
-  return procurementPdfFontBytes;
-}
-
 interface NormalizedDimension {
   dimensionType: ProcurementDimensionType;
   dimensionKey: string | null;
@@ -2442,8 +2416,9 @@ export class ProcurementService {
   }): Promise<Buffer> {
     const pdfDoc = await PDFDocument.create();
     pdfDoc.registerFontkit(fontkit);
-    const fontBytes = loadProcurementPdfFontBytes();
-    const regularFont = await pdfDoc.embedFont(fontBytes.regular);
+    const regularFont = await pdfDoc.embedFont(
+      await createProcurementPdfFont(input),
+    );
     const latinFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const latinBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const mediumFont = regularFont;

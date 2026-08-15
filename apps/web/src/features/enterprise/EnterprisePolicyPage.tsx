@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   Card,
+  Descriptions,
   Form,
   Input,
   List,
@@ -10,11 +11,12 @@ import {
   Space,
   Typography,
 } from 'antd';
-import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Link,
   useLocation,
+  useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
@@ -22,7 +24,7 @@ import { FileUploadField } from '../files/FileUploadField';
 import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
-import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
+import { buildDetailHref, resolveBackHref, updateSearchParams } from '../../router/myRouteState';
 import { useAppSelector } from '../../app/hooks';
 import { canManageCompanyContent } from '../auth/permissions';
 import {
@@ -253,6 +255,8 @@ export function EnterprisePolicyPage() {
 
 export function EnterprisePolicyDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterprisePolicyByIdQuery(id, {
     skip: !id,
   });
@@ -285,7 +289,24 @@ export function EnterprisePolicyDetailPage() {
 
   return (
     <section className="page-hero">
-      <Typography.Title level={2}>企业制度详情</Typography.Title>
+      <Space align="center" wrap className="detail-header-actions">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() =>
+            navigate(
+              resolveBackHref(
+                myRouteConfig.enterprisePolicy.path,
+                location.search,
+              ),
+            )
+          }
+        >
+          返回制度列表
+        </Button>
+        <Typography.Title level={2} style={{ marginBottom: 0 }}>
+          企业制度详情
+        </Typography.Title>
+      </Space>
       <Typography.Paragraph type="secondary">
         查看并维护制度内容、状态、版本和附件。
       </Typography.Paragraph>
@@ -297,6 +318,26 @@ export function EnterprisePolicyDetailPage() {
             message={saveError}
             style={{ marginBottom: 12 }}
           />
+        ) : null}
+        {policy ? (
+          <Descriptions
+            bordered
+            size="small"
+            column={{ xs: 1, sm: 3 }}
+            style={{ marginBottom: 20 }}
+          >
+            <Descriptions.Item label="制度编号">
+              {policy.policyCode}
+            </Descriptions.Item>
+            <Descriptions.Item label="版本">
+              {policy.version}
+            </Descriptions.Item>
+            <Descriptions.Item label="发布时间">
+              {policy.publishedAt
+                ? new Date(policy.publishedAt).toLocaleString('zh-CN')
+                : '尚未发布'}
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
         {canManage ? <Form
           form={form}

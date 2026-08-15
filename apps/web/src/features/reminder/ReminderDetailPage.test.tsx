@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ReminderDetailPage } from './ReminderDetailPage';
 
 const mockCurrentUser = vi.fn();
@@ -125,22 +125,26 @@ describe('ReminderDetailPage', () => {
     expect(screen.getAllByText('已确认').length).toBeGreaterThan(0);
   });
 
-  it('relies on the global navigation instead of return buttons', () => {
+  it('returns to the reminder list state that opened the detail', () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         initialEntries={['/my/reminders/r1?backTo=%2Fmy%2Freminders%3Fview%3Dlist%26status%3Dpending%26page%3D2']}
       >
         <Routes>
           <Route path="/my/reminders/:id" element={<ReminderDetailPage />} />
+          <Route path="/my/reminders" element={<LocationDisplay />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(
-      screen.queryByRole('button', { name: '返回看板' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '返回列表' }),
-    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /返回提醒列表/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/my/reminders?view=list&status=pending&page=2',
+    );
   });
 });
+
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}{location.search}</div>;
+}

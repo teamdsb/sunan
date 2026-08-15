@@ -35,8 +35,11 @@ vi.mock('./enterpriseApi', () => ({
       data: {
         id: '1',
         title: '制度A',
+        policyCode: 'P-1',
+        version: 'v1',
         summary: '',
         status: 'draft',
+        publishedAt: '2026-08-12T09:30:00.000+08:00',
         files: [],
         canManage: true,
       },
@@ -54,7 +57,12 @@ vi.mock('./enterpriseApi', () => ({
 
 function LocationDisplay() {
   const location = useLocation();
-  return <div data-testid="location-search">{location.search}</div>;
+  return (
+    <>
+      <div data-testid="location-search">{location.search}</div>
+      <div data-testid="location-path">{location.pathname}{location.search}</div>
+    </>
+  );
 }
 
 describe('EnterprisePolicyPage', () => {
@@ -129,7 +137,7 @@ describe('EnterprisePolicyPage', () => {
     );
   });
 
-  it('does not add a redundant return button to the detail page', () => {
+  it('returns from detail to the filtered policy list', () => {
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -142,13 +150,16 @@ describe('EnterprisePolicyPage', () => {
             path="/my/enterprise-policy/:id"
             element={<EnterprisePolicyDetailPage />}
           />
+          <Route path="/my/enterprise-policy" element={<LocationDisplay />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(
-      screen.queryByRole('button', { name: '返回列表' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText('2026/8/12 09:30:00')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /返回制度列表/ }));
+    expect(screen.getByTestId('location-path')).toHaveTextContent(
+      '/my/enterprise-policy?page=1&pageSize=10&status=published&keyword=bar',
+    );
   });
 
   it('uses a vertical creation form for narrow screens', () => {

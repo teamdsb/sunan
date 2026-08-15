@@ -10,8 +10,9 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { buildProcurementReportRequestHref } from '../../router/procurementRouteConfig';
 import {
   ProcurementDepartmentCode,
   ProcurementPendingTask,
@@ -55,6 +56,7 @@ function formatStatus(value: string) {
 
 export function ProcurementReportApprovalPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [messageApi, contextHolder] = message.useMessage();
   const [departmentCode, setDepartmentCode] = useState<
     ProcurementDepartmentCode | undefined
@@ -139,7 +141,12 @@ export function ProcurementReportApprovalPage() {
             <Button
               type="link"
               onClick={() =>
-                navigate(`/procurement/report-requests/${record.entityId}`)
+                navigate(
+                  buildProcurementReportRequestHref(
+                    record.entityId,
+                    `${location.pathname}${location.search}`,
+                  ),
+                )
               }
             >
               查看详情
@@ -170,7 +177,7 @@ export function ProcurementReportApprovalPage() {
         ),
       },
     ],
-    [handleAction, isActing, navigate],
+    [handleAction, isActing, location.pathname, location.search, navigate],
   );
 
   return (

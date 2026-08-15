@@ -1,5 +1,5 @@
 import { Button, Card, Col, List, Pagination, Row, Select, Space, Tag, Typography, message } from 'antd';
-import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
@@ -234,6 +234,21 @@ export function ReminderDashboardPage() {
           </>
         ) : (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() =>
+                applySearch({
+                  view: 'dashboard',
+                  status: null,
+                  reminderType: null,
+                  ownerType: null,
+                  page: null,
+                  pageSize: null,
+                })
+              }
+            >
+              返回提醒看板
+            </Button>
             <Button
               className="filter-panel-toggle"
               icon={showFilters ? <UpOutlined /> : <DownOutlined />}

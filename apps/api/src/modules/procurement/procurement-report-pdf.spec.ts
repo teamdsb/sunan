@@ -176,7 +176,7 @@ describe('procurement report PDF', () => {
     });
 
     expect(buffer.subarray(0, 4).toString()).toBe('%PDF');
-    expect(buffer.byteLength).toBeLessThan(7 * 1024 * 1024);
+    expect(buffer.byteLength).toBeLessThan(1024 * 1024);
     expect(document.getPageCount()).toBeGreaterThanOrEqual(1);
     expect(normalized.totalAmount).toBeNull();
     expect(normalized.totalOrderCount).toBeNull();

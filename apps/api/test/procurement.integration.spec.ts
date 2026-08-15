@@ -331,7 +331,8 @@ describe('ProcurementController integration', () => {
     const firstPageSize = generatedPdf.getPage(0).getSize();
     expect(String(ossKey)).toMatch(/^procurement\/exports\//);
     expect(pdfBuffer.subarray(0, 5).toString('utf8')).toBe('%PDF-');
-    expect(pdfBuffer.length).toBeGreaterThan(1024 * 1024);
+    expect(pdfBuffer.length).toBeGreaterThan(1024);
+    expect(pdfBuffer.length).toBeLessThan(1024 * 1024);
     expect(generatedPdf.getPageCount()).toBeGreaterThanOrEqual(1);
     expect(firstPageSize.width).toBe(595);
     expect(firstPageSize.height).toBe(842);

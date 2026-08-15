@@ -134,6 +134,12 @@ export function ProcurementOrderDetailPage() {
     fileName: string;
     downloadUrl: string;
   } | null>(null);
+  const [pdfExport, setPdfExport] = useState<{
+    fileName: string;
+    downloadUrl: string;
+    sourceVersion: string;
+    createdAt: number;
+  } | null>(null);
 
   const order = orderResponse?.data;
   const approvals = approvalResponse?.data ?? [];
@@ -261,14 +267,30 @@ export function ProcurementOrderDetailPage() {
 
     setPdfAction(mode);
     try {
-      const result = await printOrder(id).unwrap();
-      const fileName = `${order?.orderNo ?? '采购单'}.pdf`;
+      const sourceVersion = `${id}:${order?.updatedAt ?? ''}`;
+      const canReusePdf =
+        pdfExport?.sourceVersion === sourceVersion &&
+        Date.now() - pdfExport.createdAt < 2 * 60 * 1000;
+      const currentPdf = canReusePdf
+        ? pdfExport
+        : await printOrder(id)
+            .unwrap()
+            .then((result) => {
+              const nextPdf = {
+                fileName: `${order?.orderNo ?? '采购单'}.pdf`,
+                downloadUrl: result.data.downloadUrl,
+                sourceVersion,
+                createdAt: Date.now(),
+              };
+              setPdfExport(nextPdf);
+              return nextPdf;
+            });
       if (mode === 'preview') {
-        setPdfPreview({ fileName, downloadUrl: result.data.downloadUrl });
-        messageApi.success('PDF 已生成并打开预览');
+        setPdfPreview(currentPdf);
+        messageApi.success('PDF 已打开预览');
       } else {
-        await downloadFileFromUrl(result.data.downloadUrl, fileName);
-        messageApi.success('PDF 已生成并开始下载');
+        await downloadFileFromUrl(currentPdf.downloadUrl, currentPdf.fileName);
+        messageApi.success('PDF 已开始下载');
       }
     } catch (error) {
       messageApi.error(

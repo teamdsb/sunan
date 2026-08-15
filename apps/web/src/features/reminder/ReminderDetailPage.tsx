@@ -1,7 +1,10 @@
 import { Alert, Button, Card, Descriptions, Space, Tag, Typography, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 import {
   useAcknowledgeReminderMutation,
   useGetReminderByIdQuery,
@@ -23,6 +26,8 @@ function describeAckStatus(reminder: ReminderItem): string {
 
 export function ReminderDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data, isLoading, refetch } = useGetReminderByIdQuery(id, { skip: !id });
   const [acknowledgeReminder, { isLoading: acknowledging }] = useAcknowledgeReminderMutation();
@@ -78,6 +83,16 @@ export function ReminderDetailPage() {
     <section className="page-hero">
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Space align="center" wrap className="detail-header-actions">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() =>
+              navigate(
+                resolveBackHref(myRouteConfig.reminders.path, location.search),
+              )
+            }
+          >
+            返回提醒列表
+          </Button>
           <Typography.Title level={2} style={{ marginBottom: 0 }}>
             提醒详情
           </Typography.Title>

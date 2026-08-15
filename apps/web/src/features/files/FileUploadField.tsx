@@ -1,6 +1,8 @@
 import { Alert, Button, Progress, Space, Typography } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import { useRef, useState } from 'react';
 
+import { downloadFileFromUrl } from './fileDownload';
 import { FilePreviewModal } from './FilePreviewModal';
 import type { FileCategory, FileRecord } from './types';
 import { useFileUpload } from './useFileUpload';
@@ -23,6 +25,8 @@ export function FileUploadField({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [lastSelectedFile, setLastSelectedFile] = useState<File | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const {
     file,
     status,
@@ -54,6 +58,27 @@ export function FileUploadField({
     const uploaded = await uploadFromWecom();
     if (uploaded) {
       onChange?.(uploaded);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!currentFile) {
+      return;
+    }
+
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const downloadUrl = await getFileDownloadUrl(currentFile);
+      await downloadFileFromUrl(downloadUrl, currentFile.fileName);
+    } catch (downloadFailure) {
+      setDownloadError(
+        downloadFailure instanceof Error
+          ? downloadFailure.message
+          : '文件下载失败，请稍后重试',
+      );
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -121,6 +146,15 @@ export function FileUploadField({
         {currentFile ? (
           <Button onClick={() => setPreviewOpen(true)}>预览文件</Button>
         ) : null}
+        {currentFile ? (
+          <Button
+            icon={<DownloadOutlined />}
+            loading={downloading}
+            onClick={() => void handleDownload()}
+          >
+            下载文件
+          </Button>
+        ) : null}
       </Space>
 
       {status === 'uploading' ? (
@@ -145,6 +179,9 @@ export function FileUploadField({
             ) : undefined
           }
         />
+      ) : null}
+      {downloadError ? (
+        <Alert type="error" message={downloadError} showIcon />
       ) : null}
       <FilePreviewModal
         open={previewOpen}

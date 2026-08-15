@@ -14,6 +14,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
+    useLocation: () => ({ pathname: '/procurement/reports', search: '' }),
     useNavigate: () => mockNavigate,
   };
 });
@@ -56,7 +57,9 @@ describe('ProcurementReportPage', () => {
       );
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/procurement/report-requests/report-monthly-1');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/procurement/report-requests/report-monthly-1?backTo=%2Fprocurement%2Freports',
+    );
   });
 
   it('creates a yearly report request and jumps to detail', async () => {
@@ -72,6 +75,8 @@ describe('ProcurementReportPage', () => {
       );
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/procurement/report-requests/report-yearly-1');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/procurement/report-requests/report-yearly-1?backTo=%2Fprocurement%2Freports',
+    );
   });
 });

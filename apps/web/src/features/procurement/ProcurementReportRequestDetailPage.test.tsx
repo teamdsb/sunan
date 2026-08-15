@@ -17,6 +17,10 @@ vi.mock('react-router-dom', async () => {
     );
   return {
     ...actual,
+    useLocation: () => ({
+      pathname: '/procurement/report-requests/report-1',
+      search: '?backTo=%2Fprocurement%2Freports',
+    }),
     useNavigate: () => mockNavigate,
     useParams: () => ({ id: 'report-1' }),
   };
@@ -220,8 +224,25 @@ describe('ProcurementReportRequestDetailPage', () => {
     expect(screen.getByText('已退回修改')).toBeInTheDocument();
   });
 
-  it('downloads a generated report PDF from the export action', async () => {
-    render(<ProcurementReportRequestDetailPage />);
+  it('reuses a generated report PDF after export metadata refresh', async () => {
+    const view = render(<ProcurementReportRequestDetailPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '预览 PDF' }));
+    await screen.findByTitle('BG202604180001.pdf 预览');
+
+    const detailResponse = mockGetDetail.mock.results.at(-1)?.value;
+    mockGetDetail.mockReturnValue({
+      ...detailResponse,
+      data: {
+        data: {
+          ...detailResponse.data.data,
+          exportPdfFileId: 'pdf-1',
+          updatedBy: 'reporter-1',
+          updatedAt: '2026-04-18T10:00:01.000+08:00',
+        },
+      },
+    });
+    view.rerender(<ProcurementReportRequestDetailPage />);
 
     fireEvent.click(screen.getByRole('button', { name: '导出 PDF' }));
 
@@ -231,13 +252,14 @@ describe('ProcurementReportRequestDetailPage', () => {
       );
       expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
     });
+    expect(mockPrintRequest).toHaveBeenCalledTimes(1);
   });
 
-  it('can return to procurement home from a direct entry', () => {
+  it('returns to the report page that opened the detail', () => {
     render(<ProcurementReportRequestDetailPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: '返回采购首页' }));
+    fireEvent.click(screen.getByRole('button', { name: /返回上一页/ }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/procurement');
+    expect(mockNavigate).toHaveBeenCalledWith('/procurement/reports');
   });
 });

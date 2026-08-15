@@ -45,3 +45,24 @@ export const procurementRouteConfig = {
     description: '维护年度采购预算并查看执行情况。',
   },
 } as const;
+
+const procurementReportBackPaths = [
+  procurementRouteConfig.reports.path,
+  procurementRouteConfig.reportApprovals.path,
+];
+
+export function buildProcurementReportRequestHref(
+  id: string,
+  backTo: string = procurementRouteConfig.reports.path,
+) {
+  return `/procurement/report-requests/${encodeURIComponent(id)}?backTo=${encodeURIComponent(backTo)}`;
+}
+
+export function resolveProcurementReportBackHref(search: string) {
+  const backTo = new URLSearchParams(search).get('backTo');
+  const isAllowed = procurementReportBackPaths.some(
+    (path) => backTo === path || backTo?.startsWith(`${path}?`),
+  );
+
+  return isAllowed && backTo ? backTo : procurementRouteConfig.reports.path;
+}

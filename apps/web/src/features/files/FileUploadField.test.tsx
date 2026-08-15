@@ -9,6 +9,7 @@ const previewFile = vi.fn();
 const reset = vi.fn();
 const refetchPolicy = vi.fn();
 const getFileDownloadUrl = vi.fn();
+const downloadFileFromUrl = vi.fn();
 const filePolicy = {
   category: 'procurement-attachments',
   maxSize: 20 * 1024 * 1024,
@@ -42,6 +43,11 @@ vi.mock('./useFileUpload', () => ({
     isPolicyLoading: false,
     policyError: null,
   }),
+}));
+
+vi.mock('./fileDownload', () => ({
+  downloadFileFromUrl: (url: string, fileName: string) =>
+    downloadFileFromUrl(url, fileName),
 }));
 
 describe('FileUploadField', () => {
@@ -145,6 +151,37 @@ describe('FileUploadField', () => {
       'src',
       'https://oss.example.com/download',
     );
+  });
+
+  it('downloads the current file through the existing signed URL', async () => {
+    downloadFileFromUrl.mockResolvedValue(undefined);
+    render(
+      <FileUploadField
+        category="certificates"
+        value={{
+          id: 'file-1',
+          ossKey: 'certificates/2026/03/file.pdf',
+          fileName: '证书.pdf',
+          mimeType: 'application/pdf',
+          fileSize: 3,
+          category: 'certificates',
+          downloadUrl: 'https://oss.example.com/download',
+          createdAt: '2026-03-01T00:00:00.000Z',
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /下载文件/ }));
+
+    await waitFor(() => {
+      expect(getFileDownloadUrl).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'file-1' }),
+      );
+      expect(downloadFileFromUrl).toHaveBeenCalledWith(
+        'https://oss.example.com/download',
+        '证书.pdf',
+      );
+    });
   });
 
   it('keeps a retry path after native upload fails', async () => {

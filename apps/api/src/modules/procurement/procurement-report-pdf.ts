@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
 import fontkit from '@pdf-lib/fontkit';
 import {
   PDFDocument,
@@ -10,6 +7,7 @@ import {
 } from 'pdf-lib';
 import type { ProcurementReportApprovalEntity } from 'src/database/entities/procurement-report-approval.entity';
 import type { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
+import { createProcurementPdfFont } from './procurement-pdf-font';
 
 const PAGE_WIDTH = 595;
 const PAGE_HEIGHT = 842;
@@ -26,17 +24,6 @@ const colors = {
   softGray: rgb(0.975, 0.98, 0.99),
   white: rgb(1, 1, 1),
 };
-
-const requireFromHere = createRequire(__filename);
-const notoSansScEntry = requireFromHere.resolve(
-  '@expo-google-fonts/noto-sans-sc',
-);
-const notoSansScFontPath = join(
-  dirname(notoSansScEntry),
-  '400Regular',
-  'NotoSansSC_400Regular.ttf',
-);
-let notoSansScFontBytes: Uint8Array | undefined;
 
 type ReportPdfReport = Pick<
   ProcurementReportEntity,
@@ -164,11 +151,6 @@ const knownParameterKeys = new Set([
   'month',
   'departmentCode',
 ]);
-
-function loadNotoSansScFontBytes(): Uint8Array {
-  notoSansScFontBytes ??= readFileSync(notoSansScFontPath);
-  return notoSansScFontBytes;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -443,9 +425,9 @@ export async function buildProcurementReportPdf(
   const data = normalizeProcurementReportPdfData(input);
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
-  // fontkit's subset writer drops some CJK glyph mappings from this font.
-  // Embedding the complete font keeps Chinese text reliable in system preview.
-  const font = await pdfDoc.embedFont(loadNotoSansScFontBytes());
+  const font = await pdfDoc.embedFont(
+    await createProcurementPdfFont({ input, data }),
+  );
   pdfDoc.setTitle(`${data.title}（${data.reportNo}）`);
   pdfDoc.setSubject('采购报表审批单');
   pdfDoc.setCreator('苏南船舶管理平台');

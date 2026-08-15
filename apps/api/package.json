@@ -28,6 +28,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "subset-font": "2.5.0",
     "typeorm": "^0.3.24",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",

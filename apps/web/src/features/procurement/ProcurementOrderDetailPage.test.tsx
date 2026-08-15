@@ -188,12 +188,15 @@ describe('ProcurementOrderDetailPage', () => {
   it('downloads a generated order PDF from the export action', async () => {
     render(<ProcurementOrderDetailPage />);
 
+    fireEvent.click(screen.getByRole('button', { name: '预览 PDF' }));
+    await screen.findByTitle('CG202604180001.pdf 预览');
     fireEvent.click(screen.getByRole('button', { name: '导出 PDF' }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('https://oss.example.com/order-1.pdf');
       expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
     });
+    expect(mockPrintOrder).toHaveBeenCalledTimes(1);
   });
 
   it('has a direct-entry return action to procurement home', () => {

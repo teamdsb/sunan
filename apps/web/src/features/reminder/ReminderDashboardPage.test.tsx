@@ -316,7 +316,27 @@ describe('ReminderDashboardPage', () => {
     );
 
     expect(screen.getByRole('button', { name: /展开筛选/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /返回提醒看板/ })).toBeInTheDocument();
     expect(screen.queryByText('对象类型')).not.toBeInTheDocument();
+  });
+
+  it('returns from a status list to the reminder dashboard', async () => {
+    render(
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={['/my/reminders?view=list&status=pending&page=2&pageSize=10']}
+      >
+        <ReminderDashboardPage />
+        <LocationDisplay />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /返回提醒看板/ }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=dashboard');
+    });
+    expect(screen.getByRole('heading', { name: '证书提醒看板' })).toBeInTheDocument();
   });
 
   it('reveals list filters when the filter panel is expanded', () => {
