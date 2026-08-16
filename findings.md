@@ -1,11 +1,34 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-10
+updated: 2026-08-16
 replaces: []
 replaced_by: []
 ---
 # 发现与决策
+
+## 2026-08-16：新一轮优化版本发布（初始）
+- 用户明确说明在 0.0.6 生产发布后又完成了更新优化，并授权再次发布。
+- 上次生产基线是 API/Web/Nginx `0.0.6`，数据库 23 条 migration，回滚源、`.env`/Compose 和 DB/配置/Redis 备份均有明确证据。
+- 本次尚未确定新改动范围、当前本地版本元数据、生产实际状态和是否新增 migration；必须先读取证据，不覆盖旧镜像标签。
+- 当前 Git 为 `main`，HEAD/origin 均为 `82174a2`；除本次规划文件外无未提交业务改动。
+- 上次生产发布已由 `d4fa1a8` (`Deploy/8.10 2:00`) 纳入 Git；此后用户新增 `db392c0` (`fix(app): restore detail navigation and optimize PDF delivery`) 和 `82174a2` (`docs(handbook): update illustrated operation manual`)。
+- 当前 11 个版本/部署真源仍统一为 `0.0.6`，本次需使用唯一新镜像标签；按现有补丁发布规则确定目标为 `0.0.7`，不重用/覆盖生产 `0.0.6` 镜像。
+- 当前 migration 文件仍为 23 份，`d4fa1a8..HEAD` 和工作树都没有 migration 改动；预期是无 schema 变更的 API/Web/Nginx 应用发布。
+- 新增 API 依赖 `subset-font@2.5.0` 用于采购 PDF 中文字体裁剪，依赖链为纯 Node/JavaScript/WASM 包；API Dockerfile 的生产依赖部署会纳入该包及 Noto Sans SC 字体，最终仍需在 Node 20 镜像内执行实际 PDF 字体裁剪验证。
+- 生产只读预检确认现网 API/Web/Nginx 为 `0.0.6`，Compose 有效、六个长期服务正常、23 条 migration、live/ready/Web/采购直达路由正常，近 30 分钟 API/Nginx 错误计数为 0。
+- 服务器根盘仅余约 1.4 GB；Docker 报告 26.72 GB 未被活动容器引用的可回收构建缓存。构建前只清理可重建 build cache，不删除生产镜像、容器、卷或持久化数据。
+- 11 个版本/部署真源已统一更新为 `0.0.7`；`apps/web/src` 无 `SUNAN_VERSION` 或 `0.0.7` 引用，未增加页面版本显示。
+- 发布前门禁通过：Web 60 files / 263 tests，API unit 22 suites / 116 tests，API integration 18 suites / 81 tests，共 460 项、0 失败；API/Web build、API lint、21/21 OpenAPI、278 份 Markdown 索引和 `git diff --check` 均通过。
+- 标准 API unit 在本机 Node 24 下提示并行 worker 强制退出，但命令退出 0；同一 22 suites / 116 tests 使用 `--detectOpenHandles --runInBand` 新鲜复跑通过且无句柄报告，不构成业务回归。生产构建仍固定使用项目要求的 Node 20。
+- 生产发布前备份批次 `20260816214224` 已验证：PostgreSQL custom dump 275,340 bytes / 565 entries、配置归档 13,058 bytes、Redis 时间点 RDB 1,878 bytes，SHA-256 清单通过。
+- 构建前只回收未使用的 Docker build cache，实际释放 27.59 GB；活动镜像、容器和数据未删除。`/var/lib/docker` 与 `/dev/sunan` 是不同文件系统，构建数据盘回收后余 68 GB，源码分区余约 1.4 GB。
+- `0.0.7` 源码批次 `20260816214919` 已完成版本、敏感环境文件排除、23 条 migration 和 6 个关键 SHA-256 校验，并原子切换；旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260816214919`。
+- 生产配置批次 `20260816215037` 已备份并原子更新 `.env`/Compose 到 0.0.7，Compose SHA-256 与本地一致；回滚文件为 `.env.bak-20260816215037` 和 `docker-compose.yml.bak-20260816215037`。
+- 服务器 Node 20 构建生成 `sunan-api/web/nginx:0.0.7`，OCI version label 均为 0.0.7；API 镜像内 package version 为 0.0.7，采购 PDF 中文字体实际裁剪得到约 80 KB 字体，证明新依赖和 Noto Sans SC 均进入生产镜像。
+- 首次 Web 验证使用 GNU `find -printf`，而 Alpine 容器只有 BusyBox `find`，验证失败后自动回切 Web 0.0.6；在旧容器验证兼容 shell glob 后重新切换，5 个关键懒加载资源和 8 条直达路由全部通过。该失败未涉及业务镜像错误。
+- 独立复验的前两轮分别被远程 stdin 被 `docker compose exec` 消费、切换到备份目录后未显式指定 Compose 路径阻断；两轮均未采信。修正后完整新鲜复验退出 0，三个应用容器 0.0.7、API healthy、23 migrations、DB/Redis/OSS ready、9/9 SPA 路由、5/5 关键资源、401 鉴权边界、近期 API/Nginx 错误 0、备份/回滚点、证书和 timers 全部通过。
+- 生产 TLS 证书 CN 为 `qzssncb.com`，有效期至 2026-10-16；企业微信回调 IP 与 certbot timer 均 active。企业微信 iOS/Android/桌面端真实登录和业务操作仍需用户现场验收，自动化 HTTP smoke 不替代该项。
 
 ## 2026-08-10：0.0.6 生产发布（初始）
 - 用户明确授权阅读部署文档、重建所需文件或 Docker 镜像并发布新版本。

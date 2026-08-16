@@ -1,11 +1,37 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-10
+updated: 2026-08-16
 replaces: []
 replaced_by: []
 ---
 # 进度日志
+
+## 会话：2026-08-16（新一轮优化版本生产发布）
+
+### 阶段 19：发布调查与执行
+- **状态：** in_progress
+- **开始时间：** 2026-08-16
+- 执行的操作：
+  - 重新读取 `planning-with-files-zh` 技能，恢复上次 0.0.6 生产发布的版本、备份、切换、验证和回滚证据。
+  - 新增阶段 19，固定“改动审计→唯一版本→全量门禁→新备份→服务器构建→分阶段切换→独立复验”的发布顺序。
+  - 检查 Git/版本/migration：HEAD 与 `origin/main` 同步为 `82174a2`，新增一个应用修复提交和一个手册提交，无新 migration，版本真源仍为 0.0.6。
+  - 为保持镜像不可变追踪和可回滚性，确定本次补丁发布目标为 `0.0.7`，不覆盖现网 `0.0.6` 镜像。
+  - 审计 `d4fa1a8..HEAD`：本轮应用增量是采购 PDF 字体裁剪、详情/返回导航、上传、采购报表、提醒和政策页面修复；无部署拓扑或 schema 变化。
+  - 完成生产只读预检：现网 0.0.6、Compose 有效、六个长期服务正常、23 条 migration、公网 live/ready/Web/采购直达路由通过，近 30 分钟 API/Nginx 错误计数为 0。
+  - 通过 `apply_patch` 将 11 个版本与部署真源统一更新为 0.0.7；前端源码无版本展示引用。
+  - 完整发布前门禁通过：Web 60 files / 263 tests，API unit 22 suites / 116 tests，API integration 18 suites / 81 tests，合计 460 项、0 失败；API/Web build、API lint、21/21 OpenAPI、278 份 Markdown 索引与 diff 检查通过。
+  - 针对 Jest 并行 worker 退出提示补跑全量 API unit `--detectOpenHandles --runInBand`，22 suites / 116 tests 通过且未报告句柄；本机 Node 24 偏差保留记录，生产 Dockerfile 固定 Node 20。
+  - 服务器根盘约余 1.4 GB，但有 26.72 GB 未被活动容器使用的 Docker build cache；备份后、构建前只清理该缓存，不触碰生产镜像和数据。
+  - 完成生产备份批次 `20260816214224`：PostgreSQL 565 entries、配置归档、Redis 时间点 RDB 及 SHA-256 清单均验证通过。
+  - 回收 27.59 GB 未使用 Docker build cache；确认 Docker 数据盘余 68 GB，生产镜像、容器、卷和持久化数据保持不变。
+  - 源码批次 `20260816214919` 流式上传并完成版本、23 条 migration、敏感 `.env` 排除和 6 个关键 SHA-256 校验后原子切换；旧源码保留为 `/dev/sunan/sunan-source/backup-20260816214919`。
+  - 配置批次 `20260816215037` 备份并原子更新生产 `.env` 与 Compose 到 0.0.7，Compose 校验/哈希通过，运行容器当时仍为 0.0.6。
+  - 服务器使用 Node 20 Dockerfile 构建 API/Web/Nginx 0.0.7 镜像；三个 OCI label 和 API package version 均为 0.0.7，镜像内采购 PDF 字体裁剪成功。
+  - API 分阶段切换通过：0.0.7 healthy、23 migrations、DB/Redis/OSS ready，近 5 分钟错误为 0。
+  - Web 首次切换因验证脚本使用 BusyBox 不支持的 `find -printf` 自动回切 0.0.6；改用已在旧容器验证的 shell glob 后再次切换，5 个关键资源和 8 条直达路由通过。
+  - Nginx 切换到 0.0.7，`nginx -t`、公网 Web/API、无凭证 401 鉴权边界及近期错误检查通过。
+  - 按 `verification-before-completion` 重跑独立证据链；前两轮验证脚本分别因 SSH stdin 被 Compose 消费和工作目录错误未采信，修正后完整复验退出 0：三个应用容器 0.0.7、API healthy、23 migrations、运行字体裁剪、备份清单/RDB、9 条路由、5 个资源、401、错误日志 0、证书、timers 和残留检查全部通过。
 
 ## 会话：2026-08-10（0.0.6 生产发布）
 
