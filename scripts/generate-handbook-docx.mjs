@@ -70,9 +70,9 @@ let listSequence = 0;
 let renderedImageCount = 0;
 let topLevelHeadingCount = 0;
 
-// Current pagination after rendering the fixed-size 4:3 placeholders on A4.
-// Recheck these hints after changing body copy or the placeholder dimensions.
-const CHAPTER_PAGE_HINTS = [3, 7, 9, 17, 26, 44, 51, 70, 84, 117, 119, 122, 124, 129, 130, 131];
+// Current pagination after rendering the fixed-size 4:3 placeholders and real screenshots on A4.
+// Recheck these hints after changing body copy or image dimensions.
+const CHAPTER_PAGE_HINTS = [3, 6, 8, 19, 32, 48, 56, 82, 94, 96, 98, 102, 103, 104];
 
 function stripFrontMatter(markdown) {
   if (!markdown.startsWith('---\n')) return markdown;
@@ -249,46 +249,79 @@ function createTable(rows, { header = true, widths = null } = {}) {
   });
 }
 
-async function imageBuffer(relativePath) {
+async function imageParts(relativePath) {
   const absolutePath = path.resolve(inputDir, relativePath);
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`Markdown 图片不存在：${relativePath}`);
   }
   if (!imageCache.has(absolutePath)) {
-    imageCache.set(
-      absolutePath,
-      sharp(absolutePath)
-        .resize(1_200, 900, {
-          fit: 'contain',
-          background: { r: 255, g: 255, b: 255, alpha: 1 },
-        })
+    imageCache.set(absolutePath, (async () => {
+      const source = sharp(absolutePath);
+      const metadata = await source.metadata();
+      const isPlaceholder = relativePath.endsWith('.svg') || relativePath.includes('screenshot-placeholder');
+
+      if (isPlaceholder) {
+        const data = await source
+          .resize(1_200, 900, {
+            fit: 'contain',
+            background: { r: 255, g: 255, b: 255, alpha: 1 },
+          })
+          .png()
+          .toBuffer();
+        return [{ data, width: 600, height: 450 }];
+      }
+
+      const sourceWidth = metadata.width ?? 1_200;
+      const renderWidth = Math.min(sourceWidth, 1_200);
+      const resized = await source
+        .resize({ width: renderWidth, withoutEnlargement: true })
         .png()
-        .toBuffer(),
-    );
+        .toBuffer();
+      const resizedMetadata = await sharp(resized).metadata();
+      const resizedWidth = resizedMetadata.width ?? renderWidth;
+      const resizedHeight = resizedMetadata.height ?? 900;
+      const chunkHeight = 1_440;
+      const parts = [];
+
+      // Word cannot split a single drawing across pages, so long screenshots are split into contiguous page-sized slices.
+      for (let top = 0; top < resizedHeight; top += chunkHeight) {
+        const height = Math.min(chunkHeight, resizedHeight - top);
+        const data = await sharp(resized)
+          .extract({ left: 0, top, width: resizedWidth, height })
+          .png()
+          .toBuffer();
+        parts.push({
+          data,
+          width: 600,
+          height: Math.max(1, Math.round((600 * height) / resizedWidth)),
+        });
+      }
+      return parts;
+    })());
   }
   return imageCache.get(absolutePath);
 }
 
 async function imageParagraph(altText, relativePath) {
-  const data = await imageBuffer(relativePath);
+  const parts = await imageParts(relativePath);
   renderedImageCount += 1;
-  return new Paragraph({
+  return parts.map((part, index) => new Paragraph({
     alignment: AlignmentType.CENTER,
-    keepNext: true,
-    spacing: { before: 160, after: 80 },
+    keepNext: index === parts.length - 1,
+    spacing: { before: index === 0 ? 160 : 0, after: 80 },
     children: [
       new ImageRun({
         type: 'png',
-        data,
-        transformation: { width: 600, height: 450 },
+        data: part.data,
+        transformation: { width: part.width, height: part.height },
         altText: {
-          title: altText || '4:3 截图占位',
-          description: altText || '待替换的系统截图',
-          name: altText || 'Screenshot placeholder',
+          title: altText || '系统截图',
+          description: altText || '系统截图',
+          name: altText || 'System screenshot',
         },
       }),
     ],
-  });
+  }));
 }
 
 function headingParagraph(level, text) {
@@ -353,7 +386,7 @@ async function parseMarkdown(markdown) {
 
     const image = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (image) {
-      children.push(await imageParagraph(image[1], image[2]));
+      children.push(...(await imageParagraph(image[1], image[2])));
       index += 1;
       continue;
     }

@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：278 个 Markdown 文件。
+总数：276 个 Markdown 文件。
 
 ## repository-root
 
@@ -443,9 +443,7 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/handbook/M8-安全管理上线培训材料.md](handbook/M8-安全管理上线培训材料.md) | `operations` | `docs` | M8 安全管理上线培训材料 |
 | [docs/handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md](handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md) | `audit-snapshot` | `external-reference` | 航运公司 |
-| [docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md](handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md) | `audit-snapshot` | `docs` | 苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议 |
 | [docs/handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) | `operations` | `docs` | 苏南船舶管理系统操作手册 |
 
 ## superpowers
