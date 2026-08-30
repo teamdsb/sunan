@@ -19,7 +19,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [vessel, vehicle, personnel]
+            enum: [vessel, vehicle, personnel, equipment]
       responses:
         '200':
           description: OK
@@ -42,7 +42,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [vessel, vehicle, personnel]
+            enum: [vessel, vehicle, personnel, equipment]
       responses:
         '200':
           description: OK
@@ -66,7 +66,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [vessel, vehicle, personnel]
+            enum: [vessel, vehicle, personnel, equipment]
         - name: ownerId
           in: query
           schema:
@@ -275,7 +275,7 @@ components:
           type: string
         ownerType:
           type: string
-          enum: [vessel, vehicle, personnel]
+          enum: [vessel, vehicle, personnel, equipment]
         ownerId:
           type: string
           format: uuid
@@ -407,7 +407,7 @@ components:
           format: uuid
         ownerType:
           type: string
-          enum: [vessel, vehicle, personnel]
+          enum: [vessel, vehicle, personnel, equipment]
         ownerId:
           type: string
           format: uuid
@@ -417,10 +417,12 @@ components:
           type: string
         issueDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为签发日
         expiryDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为到期日
         advanceDays:
           type: integer
         issuer:
@@ -441,10 +443,12 @@ components:
           type: string
         issueDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为签发日
         expiryDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为到期日
         advanceDays:
           type: integer
         issuer:

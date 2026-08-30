@@ -2,6 +2,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDate } from 'src/common/date/business-date';
 import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.entity';
 import { EnterprisePolicyFileEntity } from 'src/database/entities/enterprise-policy-file.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -59,7 +60,7 @@ export class EnterprisePolicyService {
       version: dto.version,
       summary: dto.summary ?? null,
       status: dto.status ?? 'draft',
-      effectiveDate: dto.effectiveDate ?? null,
+      effectiveDate: toBusinessDate(dto.effectiveDate),
       publishedAt: dto.status === 'published' ? new Date() : null,
       departmentCode,
       createdBy: user.userId,
@@ -90,7 +91,7 @@ export class EnterprisePolicyService {
       version: dto.version ?? entity.version,
       summary: dto.summary ?? entity.summary,
       status: dto.status ?? entity.status,
-      effectiveDate: dto.effectiveDate ?? entity.effectiveDate,
+      effectiveDate: dto.effectiveDate === undefined ? entity.effectiveDate : toBusinessDate(dto.effectiveDate),
       updatedBy: user.userId,
     });
     if (dto.status === 'published') {

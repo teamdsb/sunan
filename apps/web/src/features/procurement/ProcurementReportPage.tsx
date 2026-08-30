@@ -66,6 +66,19 @@ function labelFrom(
   return value ? (map[value] ?? fallback) : '-';
 }
 
+function toIsoDateTime(value: string | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
+function toDateTimeLocal(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function ProcurementReportPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,8 +106,8 @@ export function ProcurementReportPage() {
     endDate: string;
   }>();
 
-  const defaultStartDate = `${currentYear}-01-01`;
-  const defaultEndDate = new Date().toISOString().slice(0, 10);
+  const defaultStartDate = new Date(`${currentYear}-01-01T00:00:00+08:00`).toISOString();
+  const defaultEndDate = new Date().toISOString();
 
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
@@ -327,19 +340,19 @@ export function ProcurementReportPage() {
               layout="vertical"
               className="sunan-query-grid-contents"
               initialValues={{
-                startDate: defaultStartDate,
-                endDate: defaultEndDate,
+                startDate: toDateTimeLocal(defaultStartDate),
+                endDate: toDateTimeLocal(defaultEndDate),
               }}
               onFinish={(values: { startDate: string; endDate: string }) => {
-                setStartDate(values.startDate);
-                setEndDate(values.endDate);
+                setStartDate(toIsoDateTime(values.startDate) ?? values.startDate);
+                setEndDate(toIsoDateTime(values.endDate) ?? values.endDate);
               }}
             >
               <Form.Item name="startDate" rules={[{ required: true }]}>
-                <Input type="date" />
+                <Input type="datetime-local" />
               </Form.Item>
               <Form.Item name="endDate" rules={[{ required: true }]}>
-                <Input type="date" />
+                <Input type="datetime-local" />
               </Form.Item>
               <Form.Item>
                 <Button htmlType="submit">刷新</Button>
@@ -413,19 +426,19 @@ export function ProcurementReportPage() {
               layout="vertical"
               className="sunan-query-grid-contents"
               initialValues={{
-                startDate: defaultStartDate,
-                endDate: defaultEndDate,
+                startDate: toDateTimeLocal(defaultStartDate),
+                endDate: toDateTimeLocal(defaultEndDate),
               }}
               onFinish={(values: { startDate: string; endDate: string }) => {
-                setDimensionStartDate(values.startDate);
-                setDimensionEndDate(values.endDate);
+                setDimensionStartDate(toIsoDateTime(values.startDate) ?? values.startDate);
+                setDimensionEndDate(toIsoDateTime(values.endDate) ?? values.endDate);
               }}
             >
               <Form.Item name="startDate" rules={[{ required: true }]}>
-                <Input type="date" />
+                <Input type="datetime-local" />
               </Form.Item>
               <Form.Item name="endDate" rules={[{ required: true }]}>
-                <Input type="date" />
+                <Input type="datetime-local" />
               </Form.Item>
               <Form.Item>
                 <Button htmlType="submit">刷新</Button>

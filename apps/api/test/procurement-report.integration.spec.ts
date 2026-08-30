@@ -43,10 +43,7 @@ const authGuard: CanActivate = {
 class TestModule {}
 
 function toDateText(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return date.toISOString();
 }
 
 describe('ProcurementReport integration', () => {
@@ -85,7 +82,7 @@ describe('ProcurementReport integration', () => {
         title: '船舶配件',
         summary: '船舶配件补充',
         amount: 1200,
-        expenseDate: '2026-01-15',
+        expenseDate: '2026-01-15T00:00:00.000Z',
         status: 'submitted',
         approvalChannel: 'internal',
         externalProcessInstanceId: null,
@@ -121,7 +118,7 @@ describe('ProcurementReport integration', () => {
     const detailsResponse = await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get('/api/v1/procurement/reports/department-details')
       .set('Authorization', 'Bearer token')
-      .query({ departmentCode: 'shipping_dept', startDate: '2026-01-01', endDate: '2026-01-31' });
+      .query({ departmentCode: 'shipping_dept', startDate: '2026-01-01T00:00:00.000Z', endDate: '2026-01-31T23:59:59.999Z' });
 
     expect(detailsResponse.status).toBe(200);
     expect((detailsResponse.body as { data: Array<{ orderNo: string }> }).data).toEqual(

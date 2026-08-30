@@ -93,14 +93,16 @@ paths:
             type: string
         - in: query
           name: dateFrom
+          description: 日期时间控件输入；不接受只有日期的值
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: dateTo
+          description: 日期时间控件输入；不接受只有日期的值
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: page
           schema:

@@ -3653,6 +3653,10 @@ body {
   padding: 0 24px;
 }
 
+.workbench-record-grid {
+  scroll-margin-top: calc(var(--shell-header-height, 64px) + 16px);
+}
+
 .workbench-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

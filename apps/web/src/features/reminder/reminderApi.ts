@@ -22,7 +22,7 @@ export interface ReminderItem {
   id: string;
   certificateId: string;
   certificateTitle: string;
-  ownerType: 'vessel' | 'vehicle' | 'personnel';
+  ownerType: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
   ownerName: string;
   recipientUserId: string;
   reminderType: 'upcoming' | 'overdue';

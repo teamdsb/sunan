@@ -56,6 +56,7 @@ import {
   useCreateWorkbenchLocationEvidenceMutation,
 } from './workbenchApi';
 import { EvidencePanel } from './EvidencePanel';
+import { useGetMasterDataVesselsQuery } from './masterDataApi';
 
 const departmentLabelMap: Record<string, string> = {
   general_office: '总经办',
@@ -244,12 +245,29 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
     return <Input.TextArea rows={3} placeholder={field.placeholder} />;
   }
 
+  if (field.inputType === 'datetime') {
+    return <Input type="datetime-local" placeholder={field.placeholder} />;
+  }
+
+  if (field.inputType === 'date') {
+    return <Input type="datetime-local" placeholder={field.placeholder} />;
+  }
+
   return (
     <Input
       type={field.inputType === 'number' ? 'number' : 'text'}
       placeholder={field.placeholder}
     />
   );
+}
+
+function toIsoDateTime(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return value;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
 }
 
 function getCurrentStep(record: WorkbenchRecordDetail) {
@@ -363,6 +381,8 @@ export function WorkbenchHomePage({
     useGetWorkbenchModuleSchemaQuery(activeModuleCode ?? '', {
       skip: !activeModuleCode,
     });
+  const { data: vesselsResponse, isLoading: vesselsLoading } =
+    useGetMasterDataVesselsQuery(undefined, { skip: !createOpen });
   const {
     data: attendanceStatisticsResponse,
     isLoading: attendanceStatisticsLoading,
@@ -533,6 +553,14 @@ export function WorkbenchHomePage({
     ? visibleModuleCards.length
     : undefined;
   const mobileRecordTotal = recordsResponse?.pagination.total;
+  const vesselOptions = useMemo(
+    () =>
+      (vesselsResponse?.data ?? []).map((vessel) => ({
+        value: vessel.id,
+        label: `${vessel.name}${vessel.code ? ` (${vessel.code})` : ''}`,
+      })),
+    [vesselsResponse?.data],
+  );
 
   useEffect(() => {
     setActiveModuleCode(initialModuleCode);
@@ -553,9 +581,9 @@ export function WorkbenchHomePage({
     }
 
     window.requestAnimationFrame(() => {
-      document
-        .getElementById(`workbench-module-${initialModuleCode}`)
-        ?.scrollIntoView?.({ block: 'center' });
+      document.getElementById('workbench-record-list')?.scrollIntoView?.({
+        block: 'start',
+      });
     });
   }, [initialModuleCode, routeAware, visibleModuleCards.length]);
 
@@ -677,14 +705,29 @@ export function WorkbenchHomePage({
       ([, value]) =>
         value !== undefined && value !== null && String(value).trim() !== '',
     );
-    const payload = Object.fromEntries(payloadEntries);
+    const schemaFields =
+      moduleSchemaResponse?.data.sections.flatMap((section) => section.fields) ??
+      [];
+    const payload = Object.fromEntries(
+      payloadEntries.map(([key, value]) => {
+        const field = schemaFields.find((item) => item.key === key);
+        return [
+          key,
+          field?.inputType === 'datetime' || field?.inputType === 'date'
+            ? toIsoDateTime(value)
+            : value,
+        ];
+      }),
+    );
 
     await createWorkbenchRecord({
       moduleCode: activeModuleCode,
       title: values.title,
       summary: values.summary,
       vesselId: values.vesselId,
-      occurredAt: values.occurredAt,
+      occurredAt: values.occurredAt
+        ? (toIsoDateTime(values.occurredAt) as string)
+        : undefined,
       payload,
     }).unwrap();
 
@@ -798,7 +841,7 @@ export function WorkbenchHomePage({
       learningStatus: trainingProgressStatus,
       learningProgressPercent: parsed,
       ...(trainingProgressStatus === 'completed'
-        ? { completedAt: new Date().toISOString().slice(0, 10) }
+        ? { completedAt: new Date().toISOString() }
         : {}),
     });
   };
@@ -1254,7 +1297,11 @@ export function WorkbenchHomePage({
         </section>
       ) : null}
 
-      <section className="page-card-grid workbench-record-grid">
+      <section
+        id="workbench-record-list"
+        className="page-card-grid workbench-record-grid"
+        style={{ scrollMarginTop: 88 }}
+      >
         <Card className="placeholder-card" variant="borderless">
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Space
@@ -1887,11 +1934,21 @@ export function WorkbenchHomePage({
             >
               <Input.TextArea rows={3} placeholder="输入摘要说明" />
             </Form.Item>
-            <Form.Item label="发生时间（ISO，可选）" name="occurredAt">
-              <Input placeholder="例如：2026-04-21T08:00:00.000Z" />
+            <Form.Item label="发生时间（可选）" name="occurredAt">
+              <Input type="datetime-local" />
             </Form.Item>
             <Form.Item label="船舶ID（可选）" name="vesselId">
-              <Input placeholder="例如：sunan-012" />
+              <Select
+                allowClear
+                showSearch
+                loading={vesselsLoading}
+                optionFilterProp="label"
+                placeholder="选择船舶"
+                options={vesselOptions}
+                notFoundContent={
+                  vesselsLoading ? '船舶加载中…' : '暂无可选择船舶'
+                }
+              />
             </Form.Item>
 
             {moduleSchemaResponse?.data.templateType === 'operation_flow' &&

@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: my
-updated: 2026-05-04
+updated: 2026-08-31
 replaces: []
 replaced_by: []
 ---
@@ -9,7 +9,7 @@ replaced_by: []
 
 ## 用途
 
-统一管理船舶、车辆、人员的电子证照和合同类文件，是提醒引擎的核心数据来源。
+统一管理船舶、车辆、人员、设备的电子证照和合同类文件，是提醒引擎的核心数据来源。
 
 ## 主表 `certificates`
 
@@ -21,8 +21,8 @@ replaced_by: []
 | `owner_id` | uuid | NOT NULL | 持有对象主键 |
 | `certificate_no` | varchar(128) | NULL | 证书编号 |
 | `title` | varchar(128) | NOT NULL | 展示标题 |
-| `issue_date` | date | NULL | 签发日期 |
-| `expiry_date` | date | NOT NULL | 到期日期 |
+| `issue_date` | date | NULL | 签发日历日期；接口输入必须为带时间的 ISO 日期时间 |
+| `expiry_date` | date | NOT NULL | 到期日历日期；接口输入必须为带时间的 ISO 日期时间 |
 | `advance_days` | integer | NOT NULL | 提前提醒天数 |
 | `issuer` | varchar(128) | NULL | 发证机构 |
 | `status` | varchar(16) | NOT NULL, DEFAULT `active` | `active` / `expired` / `archived` |
@@ -58,6 +58,8 @@ replaced_by: []
 2. `advance_days` 默认来自 `certificate_types.default_advance_days`，最小值为 `1`。
 3. 同一 `owner_type + owner_id + certificate_type_id + certificate_no` 组合建议唯一，空编号时由业务层控制重复录入。
 4. Wave 4 新建或变更证书时，持有对象必须有效；已停用对象只允许在历史详情中展示，不允许作为新的 `owner_id`。
+
+5. 前端使用日期时间选择控件，接口拒绝 `YYYY-MM-DD` 日期-only 值；为兼容历史 `DATE` 列，写入时按 `Asia/Shanghai` 日历日期保存。
 
 ## 业务规则
 

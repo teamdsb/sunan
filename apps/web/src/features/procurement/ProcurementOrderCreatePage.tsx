@@ -28,6 +28,12 @@ interface ProcurementOrderFormValues {
   expenseDate?: string;
 }
 
+function toIsoDateTime(value: string | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
 const departmentOptions = [
   { label: '总经办', value: 'general_office' },
   { label: '业务部', value: 'business_dept' },
@@ -105,6 +111,7 @@ export function ProcurementOrderCreatePage() {
       title: values.title.trim(),
       summary: values.summary.trim(),
       amount: Number(values.amount),
+      expenseDate: toIsoDateTime(values.expenseDate),
     };
 
     if (values.departmentCode === 'shipping_dept') {
@@ -236,8 +243,8 @@ export function ProcurementOrderCreatePage() {
               <InputNumber min={0} precision={2} />
             </Form.Item>
 
-            <Form.Item name="expenseDate" label="费用日期（可选）">
-              <Input type="date" />
+            <Form.Item name="expenseDate" label="费用时间（可选）">
+              <Input type="datetime-local" />
             </Form.Item>
 
             <div className="sunan-form-actions">

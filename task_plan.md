@@ -1,17 +1,17 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-19
+updated: 2026-08-30
 replaces: []
 replaced_by: []
 ---
 # 任务计划：苏南平台开发与发布
 
 ## 目标
-持续完成苏南平台开发、文档、验收与发布任务。当前任务是审计 0.0.6 生产发布后用户新增的更新优化，确定唯一新版本标签，按现行部署文档重新构建并分阶段发布到生产，同时保留可验证备份和可执行回滚点。
+持续完成苏南平台开发、文档与验收任务。当前任务是修复证书新增/编辑、分类统计、证书扫描及临期/过期分类问题，并将系统中可填写的日期字段统一改为日期时间选择与后端格式拒绝，最后更新操作手册并通过 Docker/Testcontainers 验证。
 
 ## 当前阶段
-阶段 21
+阶段 24
 
 ## 各阶段
 
@@ -192,6 +192,32 @@ replaced_by: []
 - [x] 扫描禁用术语、图片引用、文档索引和 DOCX 渲染结果
 - **状态：** completed（14 章；40 张真实截图、7 个正式占位和 1 个示例占位；DOCX 105 页；所有门禁通过）
 
+### 阶段 22：补充工作平台截图并更新手册图位
+- [x] 盘点 `docs/handbook/image/` 新增图片并核对尺寸、文件名与图号
+- [x] 将图 8-1B 至图 8-1G 六张工作平台截图嵌入对应位置
+- [x] 更新截图统计和剩余缺口说明
+- [x] 重新生成 DOCX，渲染并检查长图分页、目录和图注
+- [x] 执行图片路径、索引、DOCX 和差异格式验证
+- **状态：** completed（14 章；47 个正式图位、46 张真实截图、1 个正式占位和 1 个第 1 章示例占位；实际用户字体环境下 DOCX 93 页；竖图按比例缩放，适合的连续竖图并排，超长图仅少量分段；目录和图注已复核）
+
+### 阶段 23：证书闭环与全局日期时间收口
+- [x] 复现证书新增/编辑、分类计数、手动扫描和临期/过期分类问题，跟踪前端→API→数据库数据流
+- [x] 对照证书需求、API/DB/state/UI 规格和现有测试，确定每个问题的根因
+- [x] 先增加能稳定重现的失败测试，再实施证书管理、分类统计与提醒扫描修复
+- [x] 盘点全部用户可填写日期字段，统一改为日期时间控件、ISO 提交和后端日期时间校验
+- [x] 启动 Docker，执行证书专项、API 集成、Web/API 全量测试、构建、lint 和规格验证
+- [x] 更新 Markdown/DOCX 操作手册和相关图注，明确需要用户重拍的真实页面截图
+- **状态：** completed（API lint；API unit 23 suites/119 tests；API integration 18 suites/82 tests；Web 60 files/264 tests；API/Web build；4 份相关 OpenAPI；文档索引校验；DOCX 结构与实际字体环境渲染通过；业务时区日期回归用例和 git diff --check 通过）
+
+### 阶段 24：保持 0.0.7 的新版本生产重发
+- [x] 阅读当前部署、上线、迁移、回滚和验收文档，确认唯一生产入口与发布边界
+- [x] 审计工作树、版本真源、新 migration、生产实况与备份前置
+- [x] 保持全局版本 `0.0.7`，不新增或修改前端页面版本显示
+- [x] 对当前工作树执行发布前质量门禁并生成所需文件或 Docker 镜像
+- [x] 按 runbook 完成备份、迁移、分阶段切换与回滚保护
+- [x] 新鲜核验容器、健康检查、公网页面、关键接口、静态资源、版本和日志
+- **状态：** completed（生产 API/Web/Nginx 保持 `0.0.7`，运行本次新镜像 ID；24 条 migration、备份恢复、自动化门禁、12 路由/7 资源公网 smoke 与日志复验通过；企业微信三端真机仍由用户现场执行）
+
 ## 关键问题
 1. 用户最新确认：M1-M6 修复应作为新的 M7；原 M7/M8 整体后移。
 2. 新 M7 使用 6 个 Wave，对应上传/我的、办事、采购、工作台、企业微信直达和最终门禁。
@@ -218,6 +244,7 @@ replaced_by: []
 | 不把自动化 smoke 写成企业微信三端真机通过 | Codex 可验证 HTTP、直达路由、鉴权边界、容器和依赖，不能替代用户在 iOS/Android/桌面企业微信中的真实登录与业务操作 |
 | 0.0.6 无新 migration，仍采用备份后分阶段切流 | 本次变更集为 OAuth/头像/权限，数据库保持 23 条 migration；先备份再 API→Web→Nginx 切换，能保留清晰回滚点并减小故障面 |
 | 新管理员通过现有 UserID 白名单增补 | 认证规格和当前代码明确 `WECOM_SYSTEM_ADMIN_USER_IDS` 是唯一真源；保留现有 3 个值后追加 `DaFaShiDuDaXue`，不写历史数据库管理员字段 |
+| 0.0.7 重发采用新构建替换同标签运行容器 | 用户明确要求不修改版本号；通过源码批次、镜像 ID、创建时间和 SHA-256 追踪本次构建，发布前保留旧镜像 ID 与源码/数据回滚点 |
 
 ## 遇到的错误
 | 错误 | 尝试次数 | 解决方案 |
@@ -242,6 +269,10 @@ replaced_by: []
 | docx-js 多书签生成重复数字 ID | 1 | 内部跳转书签触发 30 项唯一性错误；目录不依赖书签，移除内部链接后保留章节名和页码，OOXML 再次全部通过 |
 | OAuth 授权版本迁移后前端定向测试失败 | 1 | `RequireAuth` 完整 mock 丢失 `persistToken`；`AppRoutes` 测试会话缺少当前授权版本标记。仅修正测试初始化，不回退生产授权迁移。 |
 | 0.0.6 首轮 API 单元测试单用例超时 | 1 | `certificate-reminder-job.service.spec.ts` 的锁续期失败重入队用例超过 5 秒，115/116 通过；按系统化调试单独复现并核对 fake timer/并发时序，尚未进入生产变更。 |
+| 本次发布预检发现本机 Docker daemon 不可用 | 1 | 系统化诊断确认 `desktop-linux` context 正常、Docker.app 已安装，但相关进程和 socket 均不存在；启动 Docker Desktop 并按 daemon 状态轮询后再执行 Testcontainers 集成测试。 |
+| API unit 首轮命令把 `--runInBand` 解析成测试匹配模式 | 1 | `pnpm ... test:unit -- --runInBand` 给 Jest 多传了分隔符，0 用例运行且退出 1；改用 `pnpm --filter api exec jest --config ./jest.unit.config.ts --runInBand` 新鲜重跑，23 suites/121 tests 通过。 |
+| 首轮独立生产复验末尾 Compose 状态检查退出 1 | 1 | 脚本校验备份后工作目录停在 `/dev/sunan/backups`，未指定 Compose 文件；前置核心断言均通过但整轮不采信，修正为显式 `-f /dev/sunan/deploy/docker-compose.yml` 后完整重跑。 |
+| 首轮本机外部路由 smoke 的 URL 拼接失败 | 1 | zsh 默认不对字符串变量执行 sh 风格词拆分，整组路由被当成一个 URL；改为显式 zsh 数组逐项请求后完整重跑。 |
 | 0.0.6 API integration 无可用容器运行时 | 1 | 18 个套件全部在 Testcontainers `pgContainer.start()` 前报 `Could not find a working container runtime strategy`，未进入业务断言；启动本机 Docker Desktop 并确认 daemon 后重跑。 |
 | Docker 刚启动后 integration 并发容器/证照用例失败 | 1 | daemon 恢复后 15/18 suites、72/81 tests 通过；`enterprise-policy`/`master-data` 等待端口绑定超过 10 秒，`certificate` 单用例收到 401。将三个失败套件 `--runInBand` 隔离复现，判断环境并发抖动与实际认证回归。 |
 | 备份远程脚本首次在 JS 模板字符串解析失败 | 1 | shell 参数展开 `\${...}` 被 JS 误识别为模板插值，工具在本地解析阶段退出，未连接或修改生产；对 shell 展开进行显式转义后执行成功。 |
@@ -249,6 +280,8 @@ replaced_by: []
 | API 全量集成测试无法启动 testcontainer | 1 | Docker Desktop 未运行，所有集成套件在 PostgreSQL 容器启动前统一失败。启动 Docker，确认服务端 `29.6.1` 后重跑，18 suites / 80 tests 通过。 |
 | 顶层全量测试首跑时证照集成套件 3 项超时 | 1 | 同进程其余 17 个集成套件通过，无业务断言失败；单独以 `--detectOpenHandles` 重现时 3/3 在 11 秒内通过且无句柄报告，随后全量 API integration 18 suites / 80 tests 和顶层 `CI=1 pnpm test` 均完整退出 0，确认为一次性 Docker/Testcontainers 请求卡顿。 |
 | 文档索引校验拒绝头像/权限设计稿 | 1 | 设计稿使用了仓库未定义的 `current-design` 状态，且新文件未进入 `docs/inventory.md`。改为现有 `current-spec` 并重新生成 inventory。 |
+| 手册生成脚本找不到 `docx` 模块 | 1 | 使用工作区依赖加载结果提供的 Node `NODE_PATH`（bundled `node_modules`），不安装或覆盖仓库依赖后生成成功。 |
+| 系统环境没有 `pandoc` | 1 | 改用 `unzip` 提取 OOXML 文本并用 `render_docx.py`/LibreOffice 完成文档结构与视觉验证。 |
 
 ## 备注
 - 所有新增文档默认使用仓库现有 YAML front matter 风格。

@@ -3,6 +3,7 @@ import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypt
 import { readFileSync } from 'fs';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDateTime } from 'src/common/date/business-date';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
 import { ExportJobEntity } from 'src/database/entities/export-job.entity';
@@ -148,7 +149,7 @@ interface ModuleSchemaField {
   key: string;
   label: string;
   required: boolean;
-  inputType: 'text' | 'number' | 'date' | 'textarea';
+  inputType: 'text' | 'number' | 'date' | 'datetime' | 'textarea';
   placeholder?: string;
 }
 
@@ -700,7 +701,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'participants', label: '参训人员', required: true, inputType: 'textarea' },
           { key: 'learningStatus', label: '学习状态', required: true, inputType: 'text', placeholder: 'not_started/in_progress/completed' },
           { key: 'learningProgressPercent', label: '学习进度(%)', required: true, inputType: 'number' },
-          { key: 'completedAt', label: '完成时间', required: false, inputType: 'date' },
+          { key: 'completedAt', label: '完成时间', required: false, inputType: 'datetime' },
         ],
       },
     ],
@@ -718,7 +719,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'attendeeCount', label: '参会人数', required: true, inputType: 'number' },
           { key: 'signInCount', label: '签到人数', required: true, inputType: 'number' },
           { key: 'photoAttachmentIds', label: '会议照片附件ID列表', required: false, inputType: 'textarea', placeholder: '逗号分隔的 fileId 列表' },
-          { key: 'retentionUntil', label: '资料留存截止日期', required: false, inputType: 'date' },
+          { key: 'retentionUntil', label: '资料留存截止日期', required: false, inputType: 'datetime' },
           { key: 'wecomGroupChatId', label: '企业微信群ID', required: false, inputType: 'text' },
           { key: 'wecomGroupChatLink', label: '企业微信群链接', required: false, inputType: 'text' },
           { key: 'meetingMinutes', label: '会议纪要', required: true, inputType: 'textarea' },
@@ -874,7 +875,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'cargoType', label: '装货类型', required: true, inputType: 'text' },
           { key: 'serviceOwner', label: '业务经手人', required: true, inputType: 'text' },
           { key: 'teamLead', label: '带班领导', required: true, inputType: 'text' },
-          { key: 'signDate', label: '签订日期', required: true, inputType: 'date' },
+          { key: 'signDate', label: '签订日期', required: true, inputType: 'datetime' },
           { key: 'watchVessel', label: '值守船舶', required: true, inputType: 'text' },
         ],
       },
@@ -891,10 +892,10 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
           { key: 'voyageNo', label: '航次', required: true, inputType: 'text' },
           { key: 'route', label: '航线', required: true, inputType: 'text' },
-          { key: 'arrivalTime', label: '抵港时间', required: true, inputType: 'date' },
-          { key: 'berthTime', label: '靠泊时间', required: true, inputType: 'date' },
+          { key: 'arrivalTime', label: '抵港时间', required: true, inputType: 'datetime' },
+          { key: 'berthTime', label: '靠泊时间', required: true, inputType: 'datetime' },
           { key: 'berthTerminal', label: '靠泊码头', required: true, inputType: 'text' },
-          { key: 'departureTime', label: '离港时间', required: true, inputType: 'date' },
+          { key: 'departureTime', label: '离港时间', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -910,11 +911,11 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'updateBatch', label: '更新批次', required: true, inputType: 'text' },
           { key: 'applicableVessels', label: '适用船舶', required: true, inputType: 'textarea' },
           { key: 'chartVersion', label: '版本号', required: true, inputType: 'text' },
-          { key: 'updatedAt', label: '更新日期', required: true, inputType: 'date' },
+          { key: 'updatedAt', label: '更新日期', required: true, inputType: 'datetime' },
           { key: 'updateSummary', label: '更新说明', required: true, inputType: 'textarea' },
           { key: 'attachmentList', label: '附件', required: false, inputType: 'textarea', placeholder: '记录附件清单或说明' },
           { key: 'confirmationRecord', label: '确认记录', required: true, inputType: 'textarea' },
-          { key: 'nextReminderDate', label: '下次提醒日期', required: true, inputType: 'date' },
+          { key: 'nextReminderDate', label: '下次提醒日期', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -928,7 +929,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         title: '财务业务台账',
         fields: [
           { key: 'voucherNo', label: '业务单据号', required: true, inputType: 'text' },
-          { key: 'businessDate', label: '业务日期', required: true, inputType: 'date' },
+          { key: 'businessDate', label: '业务日期', required: true, inputType: 'datetime' },
           { key: 'counterpartyName', label: '往来单位', required: true, inputType: 'text' },
           { key: 'businessCategory', label: '业务类别', required: true, inputType: 'text' },
           { key: 'amount', label: '本次金额', required: true, inputType: 'number' },
@@ -980,7 +981,7 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'agencyCompany', label: '代理公司', required: true, inputType: 'text' },
           { key: 'operationFee', label: '费用', required: true, inputType: 'number' },
-          { key: 'operationDate', label: '作业日期', required: true, inputType: 'date' },
+          { key: 'operationDate', label: '作业日期', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1000,7 +1001,7 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         title: '船舶垃圾接收信息',
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
-          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'datetime' },
           { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
@@ -1026,7 +1027,7 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         title: '船舶污油水接收信息',
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
-          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'datetime' },
           { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
@@ -1052,7 +1053,7 @@ const OPERATION_FLOW_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         title: '生活污水接收信息',
         fields: [
           { key: 'vesselName', label: '船名', required: true, inputType: 'text' },
-          { key: 'operationDate', label: '日期', required: true, inputType: 'date' },
+          { key: 'operationDate', label: '日期', required: true, inputType: 'datetime' },
           { key: 'nationality', label: '国籍', required: true, inputType: 'text' },
           { key: 'berth', label: '泊位', required: true, inputType: 'text' },
           { key: 'quantity', label: '接收数量', required: true, inputType: 'number' },
@@ -1151,7 +1152,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'inspectionArea', label: '排查区域', required: true, inputType: 'text' },
           { key: 'riskLevel', label: '风险等级', required: true, inputType: 'text', placeholder: '低/中/高' },
           { key: 'hazardDescription', label: '隐患描述', required: true, inputType: 'textarea' },
-          { key: 'rectificationDeadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'rectificationDeadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1172,7 +1173,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
           { key: 'inspectionScope', label: '检查范围', required: true, inputType: 'text' },
           { key: 'hazardDescription', label: '问题描述', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1193,7 +1194,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
           { key: 'inspectionType', label: '检验类型', required: true, inputType: 'text' },
           { key: 'findingSummary', label: '检验结论', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1214,7 +1215,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'spaceName', label: '作业舱室', required: true, inputType: 'text' },
           { key: 'gasTestResult', label: '气体检测结果', required: true, inputType: 'textarea' },
           { key: 'safetyMeasures', label: '安全措施', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1235,7 +1236,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'operationVessel', label: '作业船舶', required: true, inputType: 'text' },
           { key: 'operationArea', label: '作业区域', required: true, inputType: 'text' },
           { key: 'issueDescription', label: '问题描述', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1256,7 +1257,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
           { key: 'inspectionAgency', label: '检查单位', required: true, inputType: 'text' },
           { key: 'inspectionItem', label: '检查事项', required: true, inputType: 'text' },
           { key: 'findingSummary', label: '检查问题', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'date' },
+          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1348,7 +1349,7 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'assetName', label: '设备名称', required: true, inputType: 'text' },
           { key: 'inspectionStandard', label: '检验标准', required: true, inputType: 'text' },
           { key: 'inspectionResult', label: '检验结论', required: true, inputType: 'textarea' },
-          { key: 'nextInspectionAt', label: '下次检验时间', required: true, inputType: 'date' },
+          { key: 'nextInspectionAt', label: '下次检验时间', required: true, inputType: 'datetime' },
         ],
       },
     ],
@@ -1363,7 +1364,7 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         fields: [
           { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
           { key: 'fuelType', label: '燃油类型', required: true, inputType: 'text' },
-          { key: 'bunkeringDate', label: '加油日期', required: true, inputType: 'date' },
+          { key: 'bunkeringDate', label: '加油日期', required: true, inputType: 'datetime' },
           { key: 'bunkeringAmount', label: '本次加油量', required: true, inputType: 'number' },
           { key: 'remainingFuelAmount', label: '剩余油量', required: true, inputType: 'number' },
           { key: 'monthlyFuelConsumption', label: '月油耗', required: true, inputType: 'number' },
@@ -1402,7 +1403,7 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'requestType', label: '事项类型', required: true, inputType: 'text' },
           { key: 'requestor', label: '申请人', required: true, inputType: 'text' },
           { key: 'requestSummary', label: '事项说明', required: true, inputType: 'textarea' },
-          { key: 'completedAt', label: '完成时间', required: false, inputType: 'date' },
+          { key: 'completedAt', label: '完成时间', required: false, inputType: 'datetime' },
         ],
       },
     ],
@@ -1468,7 +1469,7 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
         fields: [
           { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
           { key: 'voyageRoute', label: '航线', required: true, inputType: 'text' },
-          { key: 'departureAt', label: '预计离港时间', required: true, inputType: 'date' },
+          { key: 'departureAt', label: '预计离港时间', required: true, inputType: 'datetime' },
           { key: 'safetySummary', label: '航前检查说明', required: true, inputType: 'textarea' },
         ],
       },
@@ -1477,6 +1478,9 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
 };
 
 const WORKBENCH_MODULE_DEFAULTS = new Map(WORKBENCH_MODULES.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
+const MODULE_SCHEMA_VERSIONS: Record<string, number> = {
+  shipping_voyage_approval: 2,
+};
 const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
   ...LEDGER_MODULE_SCHEMAS,
   ...OPERATION_FLOW_MODULE_SCHEMAS,
@@ -1925,7 +1929,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       applicantUserId: user.userId,
       assigneeUserId: null,
       reviewerUserId: null,
-      occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : now,
+      occurredAt: dto.occurredAt ? toBusinessDateTime(dto.occurredAt) : now,
       submittedAt: initialStatus === 'submitted' ? now : null,
       closedAt: null,
       payload: normalizedPayload,
@@ -2562,7 +2566,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
             require: field.required ? 1 as const : 0 as const,
             un_print: 0 as const,
           },
-          config: control === 'Date' ? { date: { type: 'day' } } : {},
+          config: control === 'Date' ? { date: { type: field.inputType === 'datetime' ? 'hour' : 'day' } } : {},
         };
       });
 
@@ -2586,6 +2590,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       case 'number':
         return 'Number';
       case 'date':
+        return 'Date';
+      case 'datetime':
         return 'Date';
       default:
         return 'Text';
@@ -3399,19 +3405,20 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      const templateCode = `${moduleItem.moduleCode}_v1`;
+      const schemaVersion = MODULE_SCHEMA_VERSIONS[moduleItem.moduleCode] ?? 1;
+      const templateCode = `${moduleItem.moduleCode}_v${schemaVersion}`;
       const templateSeed = {
         moduleCode: moduleItem.moduleCode,
         templateCode,
         templateType: moduleItem.templateType,
-        schemaVersion: 1,
+        schemaVersion,
         fieldSchema: schemaDefinition as unknown as Record<string, unknown>,
         stepSchema: schemaDefinition.stepTemplates ?? [],
         printSchema: { paperSizes: moduleItem.supportsPrint ? ['A4', 'A3'] : [] },
         approvalTemplateCode: moduleItem.requiresApproval ? templateCode : null,
         enabled: !moduleItem.legacyOnly,
       };
-      const existingTemplate = await this.templateRepository.findOne({ where: { templateCode, schemaVersion: 1 } });
+      const existingTemplate = await this.templateRepository.findOne({ where: { templateCode, schemaVersion } });
       if (!existingTemplate) {
         await this.templateRepository.save(this.templateRepository.create(templateSeed));
       }
@@ -3481,7 +3488,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         ...fallbackSchema,
         templateType: moduleItem.templateType,
       },
-      templateCode: `${moduleItem.moduleCode}_v1`,
+      templateCode: `${moduleItem.moduleCode}_v${MODULE_SCHEMA_VERSIONS[moduleItem.moduleCode] ?? 1}`,
     };
   }
 
@@ -4003,12 +4010,14 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('payload is required');
     }
 
-    const requiredFields = schema.sections.flatMap((section) => section.fields).filter((field) => field.required);
-    for (const field of requiredFields) {
+    const schemaFields = schema.sections.flatMap((section) => section.fields);
+    for (const field of schemaFields) {
       const raw = payload[field.key];
-      if (raw === undefined || raw === null) {
+      const isMissing = raw === undefined || raw === null || (typeof raw === 'string' && !raw.trim());
+      if (isMissing && field.required) {
         throw new BadRequestException(`payload.${field.key} is required`);
       }
+      if (isMissing) continue;
 
       if (field.inputType === 'number') {
         const numeric = typeof raw === 'number' ? raw : Number(raw);
@@ -4018,13 +4027,14 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      if (field.inputType === 'date') {
+      if (field.inputType === 'date' || field.inputType === 'datetime') {
         const dateString = this.toScalarString(raw).trim();
         if (!dateString) {
           throw new BadRequestException(`payload.${field.key} is required`);
         }
-        if (Number.isNaN(Date.parse(dateString))) {
-          throw new BadRequestException(`payload.${field.key} must be a valid date`);
+        const hasTime = /T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?$/.test(dateString);
+        if (!hasTime || Number.isNaN(Date.parse(dateString))) {
+          throw new BadRequestException(`payload.${field.key} must be a valid date-time`);
         }
         continue;
       }
@@ -4042,7 +4052,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       if (!this.toScalarString(normalized.retentionUntil).trim()) {
         const retention = new Date();
         retention.setUTCFullYear(retention.getUTCFullYear() + 3);
-        normalized.retentionUntil = retention.toISOString().slice(0, 10);
+        normalized.retentionUntil = retention.toISOString();
       }
     }
     if (moduleCode === 'goa_training') {
@@ -4051,7 +4061,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         learningStatus === 'completed' &&
         !this.toScalarString(normalized.completedAt).trim()
       ) {
-        normalized.completedAt = new Date().toISOString().slice(0, 10);
+        normalized.completedAt = new Date().toISOString();
       }
     }
     return normalized;

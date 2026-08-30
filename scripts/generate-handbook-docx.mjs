@@ -43,16 +43,16 @@ const MARGIN_BOTTOM = 964;
 const MARGIN_LEFT = 1_191;
 const CONTENT_WIDTH = A4_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
 const BODY_FONT = {
-  ascii: 'Arial',
-  eastAsia: 'SimSun',
-  hAnsi: 'Arial',
-  cs: 'Arial',
+  ascii: 'Arial Unicode MS',
+  eastAsia: 'Arial Unicode MS',
+  hAnsi: 'Arial Unicode MS',
+  cs: 'Arial Unicode MS',
 };
 const HEADING_FONT = {
-  ascii: 'Arial',
-  eastAsia: 'Microsoft YaHei',
-  hAnsi: 'Arial',
-  cs: 'Arial',
+  ascii: 'Arial Unicode MS',
+  eastAsia: 'Arial Unicode MS',
+  hAnsi: 'Arial Unicode MS',
+  cs: 'Arial Unicode MS',
 };
 
 const border = { style: BorderStyle.SINGLE, size: 4, color: 'B7C4D3' };
@@ -70,9 +70,16 @@ let listSequence = 0;
 let renderedImageCount = 0;
 let topLevelHeadingCount = 0;
 
-// Current pagination after rendering the fixed-size 4:3 placeholders and real screenshots on A4.
+const SINGLE_IMAGE_MAX_WIDTH = 600;
+const SINGLE_IMAGE_MAX_HEIGHT = 760;
+const TWO_UP_IMAGE_MAX_WIDTH = 280;
+const TWO_UP_IMAGE_MAX_HEIGHT = 620;
+const LONG_IMAGE_RATIO = 2.65;
+const LONG_IMAGE_PART_RATIO = 2.4;
+
+// Current pagination after rendering proportionally scaled figures on A4.
 // Recheck these hints after changing body copy or image dimensions.
-const CHAPTER_PAGE_HINTS = [3, 6, 8, 19, 32, 48, 56, 82, 94, 96, 98, 102, 103, 104];
+const CHAPTER_PAGE_HINTS = [3, 6, 8, 16, 25, 42, 50, 72, 82, 84, 86, 90, 91, 92];
 
 function stripFrontMatter(markdown) {
   if (!markdown.startsWith('---\n')) return markdown;
@@ -137,7 +144,7 @@ function inlineChildren(value, options = {}) {
       pushRun(token.slice(2, -2), { bold: true });
     } else if (token.startsWith('`')) {
       pushRun(token.slice(1, -1), {
-        font: { ascii: 'Menlo', eastAsia: 'Microsoft YaHei', hAnsi: 'Menlo' },
+        font: { ascii: 'Menlo', eastAsia: 'Arial Unicode MS', hAnsi: 'Menlo' },
         color: '34495E',
         shading: { fill: 'EEF2F6', type: ShadingType.CLEAR },
       });
@@ -249,7 +256,67 @@ function createTable(rows, { header = true, widths = null } = {}) {
   });
 }
 
-async function imageParts(relativePath) {
+function fitImageDimensions(width, height, maxWidth, maxHeight) {
+  const scale = Math.min(maxWidth / width, maxHeight / height);
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
+function imageRunParagraph(part, altText, options = {}) {
+  const transformation = fitImageDimensions(
+    part.pixelWidth,
+    part.pixelHeight,
+    options.maxWidth ?? SINGLE_IMAGE_MAX_WIDTH,
+    options.maxHeight ?? SINGLE_IMAGE_MAX_HEIGHT,
+  );
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    keepNext: options.keepNext ?? false,
+    spacing: {
+      before: options.before ?? 0,
+      after: options.after ?? 0,
+    },
+    children: [
+      new ImageRun({
+        type: 'png',
+        data: part.data,
+        transformation,
+        altText: {
+          title: altText || '系统截图',
+          description: altText || '系统截图',
+          name: altText || 'System screenshot',
+        },
+      }),
+    ],
+  });
+}
+
+function captionParagraph(caption, { compact = false } = {}) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    keepLines: true,
+    spacing: compact
+      ? { before: 55, after: 0, line: 250 }
+      : { before: 0, after: 160, line: 300 },
+    children: [
+      new TextRun({
+        text: markdownPlainText(caption),
+        font: BODY_FONT,
+        size: compact ? 16 : 18,
+        color: '4B5563',
+        italics: true,
+      }),
+    ],
+  });
+}
+
+function figureLabel(caption) {
+  return caption.match(/^图\s+\S+/)?.[0] ?? caption;
+}
+
+async function imageAsset(relativePath) {
   const absolutePath = path.resolve(inputDir, relativePath);
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`Markdown 图片不存在：${relativePath}`);
@@ -268,11 +335,19 @@ async function imageParts(relativePath) {
           })
           .png()
           .toBuffer();
-        return [{ data, width: 600, height: 450 }];
+        return {
+          isPlaceholder: true,
+          ratio: 0.75,
+          twoUpEligible: false,
+          pairedSlices: false,
+          parts: [{ data, pixelWidth: 1_200, pixelHeight: 900 }],
+        };
       }
 
       const sourceWidth = metadata.width ?? 1_200;
-      const renderWidth = Math.min(sourceWidth, 1_200);
+      const sourceHeight = metadata.height ?? 900;
+      const ratio = sourceHeight / sourceWidth;
+      const renderWidth = Math.min(sourceWidth, 1_600);
       const resized = await source
         .resize({ width: renderWidth, withoutEnlargement: true })
         .png()
@@ -280,48 +355,127 @@ async function imageParts(relativePath) {
       const resizedMetadata = await sharp(resized).metadata();
       const resizedWidth = resizedMetadata.width ?? renderWidth;
       const resizedHeight = resizedMetadata.height ?? 900;
-      const chunkHeight = 1_440;
+      const partCount = ratio > LONG_IMAGE_RATIO
+        ? Math.ceil(ratio / LONG_IMAGE_PART_RATIO)
+        : 1;
       const parts = [];
 
-      // Word cannot split a single drawing across pages, so long screenshots are split into contiguous page-sized slices.
-      for (let top = 0; top < resizedHeight; top += chunkHeight) {
-        const height = Math.min(chunkHeight, resizedHeight - top);
+      // Split only genuinely long captures. Equal contiguous slices preserve every source pixel.
+      for (let partIndex = 0; partIndex < partCount; partIndex += 1) {
+        const top = Math.floor((partIndex * resizedHeight) / partCount);
+        const bottom = Math.floor(((partIndex + 1) * resizedHeight) / partCount);
+        const height = bottom - top;
         const data = await sharp(resized)
           .extract({ left: 0, top, width: resizedWidth, height })
           .png()
           .toBuffer();
         parts.push({
           data,
-          width: 600,
-          height: Math.max(1, Math.round((600 * height) / resizedWidth)),
+          pixelWidth: resizedWidth,
+          pixelHeight: height,
         });
       }
-      return parts;
+      return {
+        isPlaceholder: false,
+        ratio,
+        twoUpEligible: partCount === 1 && ratio >= 1.55,
+        pairedSlices:
+          partCount === 2 && sourceWidth <= 1_200 && ratio <= 4.6,
+        parts,
+      };
     })());
   }
   return imageCache.get(absolutePath);
 }
 
-async function imageParagraph(altText, relativePath) {
-  const parts = await imageParts(relativePath);
-  renderedImageCount += 1;
-  return parts.map((part, index) => new Paragraph({
-    alignment: AlignmentType.CENTER,
-    keepNext: index === parts.length - 1,
-    spacing: { before: index === 0 ? 160 : 0, after: 80 },
-    children: [
-      new ImageRun({
-        type: 'png',
-        data: part.data,
-        transformation: { width: part.width, height: part.height },
-        altText: {
-          title: altText || '系统截图',
-          description: altText || '系统截图',
-          name: altText || 'System screenshot',
-        },
+function figureGridTable(figures) {
+  const columnWidth = Math.floor(CONTENT_WIDTH / 2);
+  const columnWidths = [columnWidth, CONTENT_WIDTH - columnWidth];
+
+  return new Table({
+    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    columnWidths,
+    borders: tableWithoutBorders(),
+    rows: [
+      new TableRow({
+        cantSplit: true,
+        children: figures.map((figure, index) =>
+          new TableCell({
+            width: { size: columnWidths[index], type: WidthType.DXA },
+            verticalAlign: VerticalAlign.TOP,
+            margins: {
+              top: 110,
+              bottom: 120,
+              left: index === 0 ? 0 : 110,
+              right: index === 0 ? 110 : 0,
+            },
+            children: [
+              imageRunParagraph(figure.part, figure.altText, {
+                maxWidth: TWO_UP_IMAGE_MAX_WIDTH,
+                maxHeight: TWO_UP_IMAGE_MAX_HEIGHT,
+              }),
+              captionParagraph(figure.cellCaption ?? figure.caption, { compact: true }),
+            ],
+          }),
+        ),
       }),
     ],
-  }));
+  });
+}
+
+function sliceGridTable(asset, altText) {
+  const label = altText || '系统截图';
+  return figureGridTable(
+    asset.parts.map((part, index) => ({
+      part,
+      altText: `${label} ${index + 1}/${asset.parts.length}`,
+      caption: `${label}（${index === 0 ? '上半部分' : '下半部分'}）`,
+    })),
+  );
+}
+
+function renderSingleFigure(figure, asset) {
+  renderedImageCount += 1;
+  if (asset.pairedSlices) {
+    return [
+      sliceGridTable(asset, figure.altText),
+      captionParagraph(figure.caption),
+    ];
+  }
+
+  return [
+    ...asset.parts.map((part, index) =>
+      imageRunParagraph(part, figure.altText, {
+        keepNext: index === asset.parts.length - 1,
+        before: index === 0 ? 160 : 40,
+        after: 80,
+      })),
+    captionParagraph(figure.caption),
+  ];
+}
+
+function nextContentLine(lines, startIndex) {
+  let index = startIndex;
+  while (index < lines.length && !lines[index].trim()) index += 1;
+  return index;
+}
+
+function figureBlock(lines, startIndex) {
+  const imageLine = lines[startIndex]?.trim() ?? '';
+  const image = imageLine.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+  if (!image) return null;
+
+  const captionIndex = nextContentLine(lines, startIndex + 1);
+  const captionLine = lines[captionIndex]?.trim() ?? '';
+  const caption = captionLine.match(/^\*(图\s.+)\*$/);
+  if (!caption) return null;
+
+  return {
+    altText: image[1],
+    relativePath: image[2],
+    caption: caption[1],
+    nextIndex: captionIndex + 1,
+  };
 }
 
 function headingParagraph(level, text) {
@@ -386,8 +540,45 @@ async function parseMarkdown(markdown) {
 
     const image = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (image) {
-      children.push(...(await imageParagraph(image[1], image[2])));
-      index += 1;
+      const firstFigure = figureBlock(lines, index);
+      if (!firstFigure) {
+        const asset = await imageAsset(image[2]);
+        children.push(...renderSingleFigure({
+          altText: image[1],
+          caption: image[1] || '系统截图',
+        }, asset));
+        index += 1;
+        continue;
+      }
+
+      const firstAsset = await imageAsset(firstFigure.relativePath);
+      const secondIndex = nextContentLine(lines, firstFigure.nextIndex);
+      const secondFigure = figureBlock(lines, secondIndex);
+      if (firstAsset.twoUpEligible && secondFigure) {
+        const secondAsset = await imageAsset(secondFigure.relativePath);
+        if (secondAsset.twoUpEligible) {
+          renderedImageCount += 2;
+          children.push(figureGridTable([
+            {
+              part: firstAsset.parts[0],
+              altText: firstFigure.altText,
+              cellCaption: figureLabel(firstFigure.caption),
+            },
+            {
+              part: secondAsset.parts[0],
+              altText: secondFigure.altText,
+              cellCaption: figureLabel(secondFigure.caption),
+            },
+          ]));
+          children.push(captionParagraph(firstFigure.caption, { compact: true }));
+          children.push(captionParagraph(secondFigure.caption, { compact: true }));
+          index = secondFigure.nextIndex;
+          continue;
+        }
+      }
+
+      children.push(...renderSingleFigure(firstFigure, firstAsset));
+      index = firstFigure.nextIndex;
       continue;
     }
 
@@ -467,25 +658,11 @@ async function parseMarkdown(markdown) {
       index += 1;
     }
     const paragraphText = paragraphLines.join(' ');
-    const isCaption = /^\*图\s/.test(paragraphText) && paragraphText.endsWith('*');
     children.push(
       new Paragraph({
-        alignment: isCaption ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
-        keepLines: isCaption,
-        spacing: isCaption
-          ? { before: 0, after: 160, line: 300 }
-          : { before: 0, after: 110, line: 360 },
-        children: isCaption
-          ? [
-              new TextRun({
-                text: markdownPlainText(paragraphText.slice(1, -1)),
-                font: BODY_FONT,
-                size: 18,
-                color: '4B5563',
-                italics: true,
-              }),
-            ]
-          : inlineChildren(paragraphText),
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { before: 0, after: 110, line: 360 },
+        children: inlineChildren(paragraphText),
       }),
     );
   }

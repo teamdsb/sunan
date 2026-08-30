@@ -1,5 +1,7 @@
 ﻿import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
+
 export class EnterprisePolicyCreateDto {
   @IsString()
   @MaxLength(128)
@@ -23,6 +25,7 @@ export class EnterprisePolicyCreateDto {
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   effectiveDate?: string;
 
   @IsOptional()
@@ -30,4 +33,3 @@ export class EnterprisePolicyCreateDto {
   @IsUUID('4', { each: true })
   fileIds?: string[];
 }
-

@@ -20,6 +20,7 @@ import {
 } from 'pdf-lib';
 import { Brackets, DataSource, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDate, toBusinessDateTime } from 'src/common/date/business-date';
 import { appEnv } from 'src/config/env';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
@@ -81,6 +82,7 @@ const INCLUDED_REPORT_ORDER_STATUSES: ProcurementOrderStatus[] = [
   'final_approved',
   'rejected',
 ];
+
 const PENDING_REPORT_REQUEST_STATUSES: ProcurementReportRequestStatus[] = [
   'submitted',
   'dept_approved',
@@ -717,7 +719,7 @@ export class ProcurementService {
       title: dto.title.trim(),
       summary: dto.summary.trim(),
       amount: dto.amount,
-      expenseDate: dto.expenseDate ?? null,
+      expenseDate: toBusinessDate(dto.expenseDate),
       status: 'draft',
       approvalChannel,
       externalProcessInstanceId: null,
@@ -764,7 +766,7 @@ export class ProcurementService {
       title: dto.title?.trim() ?? order.title,
       summary: dto.summary?.trim() ?? order.summary,
       amount: dto.amount ?? order.amount,
-      expenseDate: dto.expenseDate ?? order.expenseDate,
+      expenseDate: dto.expenseDate === undefined ? order.expenseDate : toBusinessDate(dto.expenseDate),
       updatedBy: user.userId,
     });
 
@@ -1949,8 +1951,8 @@ export class ProcurementService {
     startDate: string,
     endDate: string,
   ): NormalizedDateRange {
-    const startAt = new Date(`${startDate}T00:00:00.000+08:00`);
-    const endAt = new Date(`${endDate}T23:59:59.999+08:00`);
+    const startAt = toBusinessDateTime(startDate);
+    const endAt = toBusinessDateTime(endDate);
 
     if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
       throw new BadRequestException('invalid date range');
@@ -1978,7 +1980,7 @@ export class ProcurementService {
     const { minDate, now } = this.buildThreeYearWindow();
 
     if (submittedFrom) {
-      const startAt = new Date(`${submittedFrom}T00:00:00.000+08:00`);
+      const startAt = toBusinessDateTime(submittedFrom);
       if (Number.isNaN(startAt.getTime())) {
         throw new BadRequestException('invalid submittedFrom');
       }
@@ -1991,7 +1993,7 @@ export class ProcurementService {
     }
 
     if (submittedTo) {
-      const endAt = new Date(`${submittedTo}T23:59:59.999+08:00`);
+      const endAt = toBusinessDateTime(submittedTo);
       if (Number.isNaN(endAt.getTime())) {
         throw new BadRequestException('invalid submittedTo');
       }

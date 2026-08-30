@@ -91,6 +91,18 @@ vi.mock('./workbenchApi', () => ({
   ],
 }));
 
+vi.mock('./masterDataApi', () => ({
+  useGetMasterDataVesselsQuery: () => ({
+    data: {
+      data: [
+        { id: 'vessel-1', name: '苏南022', code: 'SN022' },
+        { id: 'vessel-2', name: '苏南023', code: 'SN023' },
+      ],
+    },
+    isLoading: false,
+  }),
+}));
+
 vi.mock('../../hooks/useWecomJsSdk', () => ({
   useWecomJsSdk: () => ({ isReady: true, error: null }),
 }));
@@ -325,7 +337,7 @@ describe('WorkbenchHomePage', () => {
     expect(within(recordSection!).getByText('海图记录 4')).toBeInTheDocument();
   });
 
-  it('anchors direct module entries to their selected module card', () => {
+  it('anchors direct module entries to the module record list', () => {
     render(
       <WorkbenchHomePage routeAware initialModuleCode="business_signin_desk" />,
     );
@@ -333,7 +345,106 @@ describe('WorkbenchHomePage', () => {
     expect(
       screen.getByText('签到台').closest('.workbench-module-card'),
     ).toHaveClass('is-selected');
-    expect(mockScrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+    expect(mockScrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+  });
+
+  it('uses selectable vessel and date-time controls for voyage approval records', async () => {
+    const dashboard = mockGetWorkbenchDashboardQuery().data.data;
+    mockGetWorkbenchDashboardQuery.mockReturnValue({
+      data: {
+        data: {
+          ...dashboard,
+          modules: [
+            {
+              moduleCode: 'shipping_voyage_approval',
+              moduleName: '航次计划审批',
+              departmentCode: 'shipping',
+              templateType: 'wecom_approval',
+              pendingCount: 0,
+              requiresApproval: true,
+              supportsPrint: true,
+              supportsStatistics: false,
+              mobileFirst: true,
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
+    mockGetWorkbenchModuleSchemaQuery.mockReturnValue({
+      data: {
+        data: {
+          moduleCode: 'shipping_voyage_approval',
+          templateType: 'wecom_approval',
+          sections: [
+            {
+              key: 'voyage',
+              title: '航次计划审批单',
+              fields: [
+                {
+                  key: 'departureAt',
+                  label: '预计离港时间',
+                  required: true,
+                  inputType: 'datetime',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      isLoading: false,
+    });
+    mockCreateWorkbenchRecord.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({ data: { id: 'record-voyage-1' } }),
+    });
+
+    render(
+      <WorkbenchHomePage
+        routeAware
+        initialModuleCode="shipping_voyage_approval"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '新建审批记录' }));
+    expect(screen.getByLabelText('发生时间（可选）')).toHaveAttribute(
+      'type',
+      'datetime-local',
+    );
+    expect(screen.getByLabelText('预计离港时间')).toHaveAttribute(
+      'type',
+      'datetime-local',
+    );
+
+    fireEvent.change(screen.getByLabelText('记录标题'), {
+      target: { value: '航次计划审批-苏南022' },
+    });
+    fireEvent.change(screen.getByLabelText('摘要'), {
+      target: { value: '北海到钦州航次' },
+    });
+    fireEvent.change(screen.getByLabelText('发生时间（可选）'), {
+      target: { value: '2026-04-21T08:00' },
+    });
+    fireEvent.change(screen.getByLabelText('预计离港时间'), {
+      target: { value: '2026-04-21T10:30' },
+    });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: '船舶ID（可选）' }));
+    expect(await screen.findByText('苏南022 (SN022)')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('苏南022 (SN022)'));
+    fireEvent.click(screen.getByText(/提\s*交/));
+
+    await waitFor(() => {
+      expect(mockCreateWorkbenchRecord).toHaveBeenCalledWith(
+        expect.objectContaining({
+          moduleCode: 'shipping_voyage_approval',
+          vesselId: 'vessel-1',
+          occurredAt: expect.stringMatching(/2026-04-21T/),
+          payload: {
+            departureAt: expect.stringMatching(/2026-04-21T/),
+          },
+        }),
+      );
+    });
   });
 
   it('adds return actions for direct module, approval and attendance entries', () => {

@@ -17,6 +17,7 @@ import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WorkbenchRecordStepEntity } from 'src/database/entities/workbench-record-step.entity';
+import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
@@ -192,6 +193,28 @@ describe('WorkbenchController integration', () => {
     uploadSpy.mockRestore();
   });
 
+  it('does not overwrite an existing template during runtime catalog sync', async () => {
+    const templateRepository = dataSource.getRepository(WorkbenchTemplateEntity);
+    const template = await templateRepository.findOneOrFail({ where: { templateCode: 'shipping_voyage_approval_v2', schemaVersion: 2 } });
+    const originalFieldSchema = template.fieldSchema;
+    const originalEnabled = template.enabled;
+    template.fieldSchema = { administratorField: 'keep-me' };
+    template.enabled = false;
+    await templateRepository.save(template);
+    try {
+      await (workbenchService as unknown as { syncRuntimeCatalog(): Promise<void> }).syncRuntimeCatalog();
+
+      const reloaded = await templateRepository.findOneOrFail({ where: { templateCode: 'shipping_voyage_approval_v2', schemaVersion: 2 } });
+      expect(reloaded.fieldSchema).toEqual({ administratorField: 'keep-me' });
+      expect(reloaded.enabled).toBe(false);
+    } finally {
+      const restored = await templateRepository.findOneOrFail({ where: { templateCode: 'shipping_voyage_approval_v2', schemaVersion: 2 } });
+      restored.fieldSchema = originalFieldSchema;
+      restored.enabled = originalEnabled;
+      await templateRepository.save(restored);
+    }
+  });
+
   afterAll(async () => {
     if (app) {
       await app.close();
@@ -215,7 +238,7 @@ describe('WorkbenchController integration', () => {
           berth: 'QZ-B3',
           agencyCompany: '苏南代理',
           operationFee: 1000,
-          operationDate: '2026-04-21',
+          operationDate: '2026-04-21T00:00:00.000Z',
         },
       });
 
@@ -365,7 +388,7 @@ describe('WorkbenchController integration', () => {
         payload: {
           vesselName: '苏南022',
           voyageRoute: '北海-钦州',
-          departureAt: '2026-04-21',
+          departureAt: '2026-04-21T10:30:00.000Z',
           safetySummary: '航前检查已完成',
         },
       });
@@ -383,7 +406,7 @@ describe('WorkbenchController integration', () => {
       .send({
         moduleCode: 'shipping_voyage_approval',
         businessRecordId: approvalRecordId,
-        templateCode: 'shipping_voyage_approval_v1',
+        templateCode: 'shipping_voyage_approval_v2',
         title: '航次计划审批-苏南022',
         applicantUserId: currentUser.userId,
       });
@@ -409,6 +432,23 @@ describe('WorkbenchController integration', () => {
       },
     });
     expect(wecomHttpGatewayMock.createApprovalTemplate).toHaveBeenCalled();
+    const approvalTemplatePayload =
+      wecomHttpGatewayMock.createApprovalTemplate.mock.calls.at(-1)?.[1] as {
+        template_content?: {
+          controls?: Array<{
+            property: { title: Array<{ text: string }>; control: string };
+            config: { date?: { type?: string } };
+          }>;
+        };
+      };
+    const departureControl =
+      approvalTemplatePayload.template_content?.controls?.find(
+        (control) => control.property.title[0]?.text === '预计离港时间',
+      );
+    expect(departureControl).toMatchObject({
+      property: { control: 'Date' },
+      config: { date: { type: 'hour' } },
+    });
 
     const callbackSignature = buildCallbackSignature({
       eventId: 'evt-1',
@@ -729,6 +769,68 @@ describe('WorkbenchController integration', () => {
       ]),
     );
 
+    const voyageSchemaResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/workbench/modules/shipping_voyage_approval/schema')
+      .set('Authorization', 'Bearer token');
+    expect(voyageSchemaResponse.status).toBe(200);
+    const voyageFields =
+      (
+        voyageSchemaResponse.body as {
+          data: {
+            sections: Array<{
+              fields: Array<{ key: string; inputType: string }>;
+            }>;
+          };
+        }
+      ).data.sections[0]?.fields ?? [];
+    expect(voyageFields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'departureAt', inputType: 'datetime' }),
+      ]),
+    );
+
+    const invalidVoyageResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'shipping_voyage_approval',
+        title: '航次计划审批-无效时间',
+        summary: '应拒绝日期-only值',
+        vesselId: 'sunan-022',
+        payload: {
+          vesselName: '苏南022',
+          voyageRoute: '北海-钦州',
+          departureAt: '2026-04-21',
+          safetySummary: '航前检查已完成',
+        },
+      });
+    expect(invalidVoyageResponse.status).toBe(400);
+
+    const invalidOptionalDateResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/workbench/records')
+      .set('Authorization', 'Bearer token')
+      .send({
+        moduleCode: 'goa_meeting',
+        title: '会议记录-无效日期',
+        summary: '可选日期字段也应拒绝 date-only 值',
+        payload: {
+          meetingType: '视频会议',
+          host: '总经办',
+          attendeeCount: 10,
+          signInCount: 8,
+          photoAttachmentIds: 'file-1',
+          meetingMinutes: '会议纪要',
+          retentionUntil: '2026-04-21',
+        },
+      });
+    expect(invalidOptionalDateResponse.status).toBe(400);
+
     const createTrainingResponse = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
@@ -844,7 +946,7 @@ describe('WorkbenchController integration', () => {
           cargoType: '成品油',
           serviceOwner: '李四',
           teamLead: '王队长',
-          signDate: '2026-04-22',
+          signDate: '2026-04-22T00:00:00.000Z',
         },
       });
 
@@ -875,7 +977,7 @@ describe('WorkbenchController integration', () => {
           cargoType: '成品油',
           serviceOwner: '李四',
           teamLead: '王队长',
-          signDate: '2026-04-22',
+          signDate: '2026-04-22T00:00:00.000Z',
           watchVessel: '苏南022',
         },
       });
@@ -912,8 +1014,8 @@ describe('WorkbenchController integration', () => {
         createMeetingResponse.body as {
           data: { payload: Record<string, unknown> };
         }
-      ).data.payload.retentionUntil,
-    ).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+    ).data.payload.retentionUntil,
+    ).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/));
 
     const printDefaultResponse = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -1050,7 +1152,7 @@ describe('WorkbenchController integration', () => {
         payload: {
           vesselName: '苏南012',
           fuelType: '柴油',
-          bunkeringDate: '2026-04-25',
+          bunkeringDate: '2026-04-25T00:00:00.000Z',
           bunkeringAmount: 12.5,
           remainingFuelAmount: 35.8,
           monthlyFuelConsumption: 42.3,
@@ -1165,7 +1267,7 @@ describe('WorkbenchController integration', () => {
         summary: '用于校验财务板块录单',
         payload: {
           voucherNo: 'FBB-2026-0001',
-          businessDate: '2026-04-22',
+          businessDate: '2026-04-22T00:00:00.000Z',
           counterpartyName: '广西某航运服务公司',
           businessCategory: '劳务结算',
           amount: 12800,

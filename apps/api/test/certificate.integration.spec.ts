@@ -189,7 +189,7 @@ describe('CertificateController integration', () => {
         ownerType: 'vessel',
         ownerId: vesselId,
         title: '国籍证书A',
-        expiryDate: '2027-12-31',
+        expiryDate: '2027-12-31T00:00:00.000Z',
       });
     const id1 = (createVessel.body as { data: { id: string } }).data.id;
 
@@ -201,7 +201,7 @@ describe('CertificateController integration', () => {
         ownerType: 'vehicle',
         ownerId: vehicleId,
         title: '车辆证书B',
-        expiryDate: '2028-01-31',
+        expiryDate: '2028-01-31T00:00:00.000Z',
       });
 
     const filtered = await request(
@@ -294,8 +294,40 @@ describe('CertificateController integration', () => {
         ownerType: 'vessel',
         ownerId: '00000000-0000-0000-0000-000000000001',
         title: 'bad',
-        expiryDate: '2027-12-31',
+        expiryDate: '2027-12-31T00:00:00.000Z',
       });
     expect(create.status).toBe(400);
+  });
+
+  it('rejects date-only certificate values and accepts ISO date-times', async () => {
+    const dateOnlyResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/certificates')
+      .set('Authorization', 'Bearer token')
+      .send({
+        certificateTypeId: typeId,
+        ownerType: 'vessel',
+        ownerId: vesselId,
+        title: '日期格式校验',
+        expiryDate: '2027-12-31',
+      });
+    expect(dateOnlyResponse.status).toBe(400);
+
+    const dateTimeResponse = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/certificates')
+      .set('Authorization', 'Bearer token')
+      .send({
+        certificateTypeId: typeId,
+        ownerType: 'vessel',
+        ownerId: vesselId,
+        title: '日期格式校验通过',
+        issueDate: '2026-01-01T08:00:00.000Z',
+        expiryDate: '2027-12-31T00:00:00.000Z',
+      });
+    expect(dateTimeResponse.status).toBe(201);
+    expect((dateTimeResponse.body as { data: { issueDate: string } }).data.issueDate).toBe('2026-01-01');
   });
 });

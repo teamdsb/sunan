@@ -98,6 +98,20 @@ function labelFrom(
   return value ? (map[value] ?? fallback) : '-';
 }
 
+function toDateTimeLocal(value: string | null | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value.includes('T') ? value : `${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return undefined;
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toIsoDateTime(value: string | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
 export function ProcurementOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -164,7 +178,7 @@ export function ProcurementOrderDetailPage() {
       title: order.title,
       summary: order.summary,
       amount: order.amount,
-      expenseDate: order.expenseDate ?? undefined,
+        expenseDate: toDateTimeLocal(order.expenseDate),
     });
   }, [form, order]);
 
@@ -228,6 +242,7 @@ export function ProcurementOrderDetailPage() {
         title: values.title.trim(),
         summary: values.summary.trim(),
         amount: Number(values.amount),
+        expenseDate: toIsoDateTime(values.expenseDate),
       },
     }).unwrap();
     messageApi.success('草稿已更新');
@@ -438,8 +453,8 @@ export function ProcurementOrderDetailPage() {
               >
                 <InputNumber min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item name="expenseDate" label="费用日期（可选）">
-                <Input type="date" />
+              <Form.Item name="expenseDate" label="费用时间（可选）">
+                <Input type="datetime-local" />
               </Form.Item>
               <Space wrap>
                 <Button

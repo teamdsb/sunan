@@ -69,12 +69,12 @@ describe('Master data integration', () => {
     const redacted = await request(app.getHttpServer()).get('/api/v1/master-data/personnel');
     expect(redacted.body.data.find((item: { id: string }) => item.id === personnelId)).toBeUndefined();
     currentUser = { ...currentUser, userId: 'safety-manager', roles: ['all_authenticated', 'shipping'], position: '经理' };
-    const inactiveAssignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01' });
+    const inactiveAssignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01T00:00:00.000Z' });
     expect(inactiveAssignment.status).toBe(422);
     await request(app.getHttpServer()).patch(`/api/v1/master-data/vessels/${vesselId}`).send({ status: 'active' });
-    const assignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01' });
+    const assignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01T00:00:00.000Z' });
     expect(assignment.status).toBe(201);
-    const overlap = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'chief_officer', effectiveFrom: '2026-07-10' });
+    const overlap = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'chief_officer', effectiveFrom: '2026-07-10T00:00:00.000Z' });
     expect(overlap.status).toBe(409);
   });
 

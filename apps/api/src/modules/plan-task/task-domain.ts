@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { toBusinessDateTime } from 'src/common/date/business-date';
 
 export type RecurrenceKind = 'annual' | 'monthly' | 'periodic' | 'one_time';
 export type TaskStatus = 'pending' | 'in_progress' | 'blocked' | 'completed' | 'cancelled';
@@ -83,7 +84,7 @@ export function expandOccurrences(
   windowStart: Date,
   windowEnd: Date,
 ): string[] {
-  const anchor = new Date(rule.startAt);
+  const anchor = toBusinessDateTime(rule.startAt);
   if (Number.isNaN(anchor.getTime()) || windowStart >= windowEnd) {
     return [];
   }

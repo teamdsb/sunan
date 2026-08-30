@@ -119,7 +119,7 @@ describe('Procurement budget integration', () => {
         title: '预算执行采购',
         summary: '用于年度预算执行统计',
         amount: 120,
-        expenseDate: '2026-06-13',
+        expenseDate: '2026-06-13T00:00:00.000Z',
         status: 'final_approved',
         approvalChannel: 'internal',
         externalProcessInstanceId: null,

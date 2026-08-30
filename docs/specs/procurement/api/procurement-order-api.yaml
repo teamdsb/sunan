@@ -49,13 +49,13 @@ paths:
           description: 提交时间起始（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: submittedTo
           description: 提交时间截止（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: page
           schema:
@@ -476,8 +476,9 @@ components:
           format: double
         expenseDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
+          description: 日期时间控件输入；服务端按业务时区保存为费用日
         approvalChannel:
           type: string
           enum: [internal, wecom_native]
@@ -501,8 +502,9 @@ components:
           format: double
         expenseDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
+          description: 日期时间控件输入；服务端按业务时区保存为费用日
   securitySchemes:
     bearerAuth:
       type: http

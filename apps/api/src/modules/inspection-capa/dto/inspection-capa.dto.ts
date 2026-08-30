@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsDateString, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 import { RecurrenceRuleDto } from 'src/modules/plan-task/dto/plan-task.dto';
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
 
 export class TemplateItemDto {
   @IsString() @IsNotEmpty() @MaxLength(64) itemCode!: string;
@@ -43,8 +44,8 @@ export class CreateInspectionPlanDto {
 }
 
 export class InspectionGenerationDto {
-  @IsDateString() windowStart!: string;
-  @IsDateString() windowEnd!: string;
+  @IsDateString() @IsDateTimeString() windowStart!: string;
+  @IsDateString() @IsDateTimeString() windowEnd!: string;
   @IsOptional() @IsIn(['generate', 'reconcile']) mode: string = 'generate';
 }
 
@@ -73,7 +74,7 @@ export class CreateIssueDto {
   @IsOptional() @IsUUID() vesselId?: string;
   @IsOptional() @IsIn(['vessel', 'department', 'company']) responsibilityScope?: string;
   @IsString() @IsNotEmpty() @MaxLength(64) responsibleUserId!: string;
-  @IsDateString() dueAt!: string;
+  @IsDateString() @IsDateTimeString() dueAt!: string;
   @IsOptional() @ValidateNested() @Type(() => CreateIssueSourceDto) source?: CreateIssueSourceDto;
 }
 
@@ -92,7 +93,7 @@ export class CreateCapaActionDto {
   @IsIn(['corrective', 'preventive']) actionType!: string;
   @IsString() @IsNotEmpty() @MaxLength(500) title!: string;
   @IsString() @IsNotEmpty() @MaxLength(64) responsibleUserId!: string;
-  @IsDateString() dueAt!: string;
+  @IsDateString() @IsDateTimeString() dueAt!: string;
 }
 
 export class SubmitCapaActionDto {

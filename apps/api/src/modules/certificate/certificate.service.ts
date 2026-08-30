@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDate } from 'src/common/date/business-date';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
 import { CertificateTypeEntity } from 'src/database/entities/certificate-type.entity';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
@@ -19,6 +20,12 @@ import { CertificateUpdateDto } from './dto/certificate-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
+const OWNER_TYPE_LABELS: Record<CertificateEntity['ownerType'], string> = {
+  vessel: '船舶',
+  vehicle: '车辆',
+  personnel: '人员',
+  equipment: '设备',
+};
 
 @Injectable()
 export class CertificateService {
@@ -129,7 +136,9 @@ export class CertificateService {
     const map = new Map<string, { groupKey: string; groupLabel: string; count: number }>();
     for (const row of details) {
       const key = query.groupBy === 'owner' ? `${row.ownerType}:${row.ownerId}` : row.certificateTypeId;
-      const label = query.groupBy === 'owner' ? `${row.ownerType}-${row.ownerName}` : row.certificateTypeName;
+      const label = query.groupBy === 'owner'
+        ? `${OWNER_TYPE_LABELS[row.ownerType] ?? row.ownerType} - ${row.ownerName}`
+        : row.certificateTypeName;
       const current = map.get(key) ?? { groupKey: key, groupLabel: label, count: 0 };
       current.count += 1;
       map.set(key, current);
@@ -146,8 +155,7 @@ export class CertificateService {
   async create(dto: CertificateCreateDto, user: CurrentUser) {
     this.ensureManager(user);
     await this.assertOwnerExists(dto.ownerType, dto.ownerId);
-    const certificateType = await this.certificateTypeRepository.findOne({ where: { id: dto.certificateTypeId } });
-    if (!certificateType) throw new NotFoundException('certificate type not found');
+    const certificateType = await this.assertCertificateType(dto.certificateTypeId, dto.ownerType);
 
     const advanceDays = dto.advanceDays ?? certificateType.defaultAdvanceDays;
     const entity = this.repository.create({
@@ -156,8 +164,8 @@ export class CertificateService {
       ownerId: dto.ownerId,
       certificateNo: dto.certificateNo ?? null,
       title: dto.title,
-      issueDate: dto.issueDate ?? null,
-      expiryDate: dto.expiryDate,
+      issueDate: toBusinessDate(dto.issueDate),
+      expiryDate: toBusinessDate(dto.expiryDate) as string,
       advanceDays,
       issuer: dto.issuer ?? null,
       status: dto.status ?? 'active',
@@ -175,8 +183,13 @@ export class CertificateService {
     this.ensureManager(user);
     const entity = await this.findOneOrThrow(id);
 
+    const nextOwnerType = dto.ownerType ?? entity.ownerType;
+    const nextOwnerId = dto.ownerId ?? entity.ownerId;
     if (dto.ownerType || dto.ownerId) {
-      await this.assertOwnerExists(dto.ownerType ?? entity.ownerType, dto.ownerId ?? entity.ownerId);
+      await this.assertOwnerExists(nextOwnerType, nextOwnerId);
+    }
+    if (dto.certificateTypeId || dto.ownerType) {
+      await this.assertCertificateType(dto.certificateTypeId ?? entity.certificateTypeId, nextOwnerType);
     }
 
     Object.assign(entity, {
@@ -185,8 +198,8 @@ export class CertificateService {
       ownerId: dto.ownerId ?? entity.ownerId,
       certificateNo: dto.certificateNo ?? entity.certificateNo,
       title: dto.title ?? entity.title,
-      issueDate: dto.issueDate ?? entity.issueDate,
-      expiryDate: dto.expiryDate ?? entity.expiryDate,
+      issueDate: dto.issueDate === undefined ? entity.issueDate : toBusinessDate(dto.issueDate),
+      expiryDate: dto.expiryDate === undefined ? entity.expiryDate : toBusinessDate(dto.expiryDate) as string,
       advanceDays: dto.advanceDays ?? entity.advanceDays,
       issuer: dto.issuer ?? entity.issuer,
       status: dto.status ?? entity.status,
@@ -277,6 +290,24 @@ export class CertificateService {
     const row = await this.personnelRepository.findOne({ where: { id: ownerId, deletedAt: IsNull() } });
     if (!row) throw new NotFoundException('personnel owner not found');
     if (row.employmentStatus !== 'active') throw new UnprocessableEntityException('inactive owner cannot be selected');
+  }
+
+  private async assertCertificateType(
+    certificateTypeId: string,
+    ownerType: CertificateEntity['ownerType'],
+  ) {
+    const certificateType = await this.certificateTypeRepository.findOne({
+      where: { id: certificateTypeId },
+    });
+    if (!certificateType || !certificateType.isActive) {
+      throw new NotFoundException('certificate type not found');
+    }
+    if (!this.matchesOwnerScope(certificateType.ownerScope, ownerType)) {
+      throw new UnprocessableEntityException(
+        'certificate type is not applicable to owner type',
+      );
+    }
+    return certificateType;
   }
 
   private async findOneOrThrow(id: string) {

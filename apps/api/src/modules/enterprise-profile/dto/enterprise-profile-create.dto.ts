@@ -1,5 +1,7 @@
 ﻿import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
+
 export class EnterpriseProfileCreateDto {
   @IsString()
   @MaxLength(128)
@@ -19,6 +21,7 @@ export class EnterpriseProfileCreateDto {
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   effectiveDate?: string;
 
   @IsOptional()
@@ -26,4 +29,3 @@ export class EnterpriseProfileCreateDto {
   @IsUUID('4', { each: true })
   fileIds?: string[];
 }
-

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsDateString, IsIn, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { PROCUREMENT_DEPARTMENT_CODES, PROCUREMENT_DIMENSION_TYPES } from '../procurement.constants';
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
 
 export class ProcurementOrderUpdateDto {
   @IsOptional()
@@ -33,5 +34,6 @@ export class ProcurementOrderUpdateDto {
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   expenseDate?: string;
 }

@@ -1,4 +1,5 @@
 import { IsISO8601, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
 
 export class WorkbenchRecordCreateDto {
   @IsString()
@@ -18,6 +19,7 @@ export class WorkbenchRecordCreateDto {
 
   @IsOptional()
   @IsISO8601()
+  @IsDateTimeString()
   occurredAt?: string;
 
   @IsOptional()

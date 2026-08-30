@@ -65,6 +65,12 @@ function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : '新增证照失败，请稍后重试';
 }
 
+function toIsoDateTime(value: string | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
 export function CertificateListPage() {
   const location = useLocation();
   const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
@@ -141,6 +147,8 @@ export function CertificateListPage() {
       const payload: CreateCertificateInput = {
         ...values,
         ownerType: createOwnerType,
+        issueDate: toIsoDateTime(values.issueDate),
+        expiryDate: toIsoDateTime(values.expiryDate) ?? values.expiryDate,
         status: values.status ?? 'active',
         ...(upload?.id ? { fileIds: [upload.id] } : {}),
       };
@@ -168,7 +176,7 @@ export function CertificateListPage() {
           value={ownerType}
           onChange={(value) => {
             applySearch({
-              ownerType: value as 'vessel' | 'vehicle' | 'personnel',
+              ownerType: value as CertificateItem['ownerType'],
               page: 1,
               pageSize,
               groupBy,
@@ -245,8 +253,18 @@ export function CertificateListPage() {
           </Card>
         ) : null}
 
-        <Card className="status-card">
-          <Typography.Text type="secondary">当前分组总数：{grouped?.data?.length ?? 0}</Typography.Text>
+        <Card className="status-card" title={groupBy === 'owner' ? '按持有对象分组' : '按证照类型分组'}>
+          <Space direction="vertical" style={{ width: '100%' }} size="small">
+            <Typography.Text strong>
+              证照总数：{(grouped?.data ?? []).reduce((total, group) => total + group.count, 0)}
+            </Typography.Text>
+            {(grouped?.data ?? []).length ? (grouped?.data ?? []).map((group) => (
+              <Space key={group.groupKey} style={{ justifyContent: 'space-between', width: '100%' }}>
+                <Typography.Text>{group.groupLabel}</Typography.Text>
+                <Typography.Text type="secondary">{group.count} 张</Typography.Text>
+              </Space>
+            )) : <Typography.Text type="secondary">暂无分组数据</Typography.Text>}
+          </Space>
         </Card>
 
         <Card loading={isLoading}>
@@ -355,10 +373,10 @@ export function CertificateListPage() {
             <Input placeholder="证照编号" maxLength={128} />
           </Form.Item>
           <Form.Item name="issueDate" label="签发日期">
-            <Input type="date" />
+            <Input type="datetime-local" />
           </Form.Item>
           <Form.Item name="expiryDate" label="到期日" rules={[{ required: true, message: '请选择到期日' }]}>
-            <Input type="date" />
+            <Input type="datetime-local" />
           </Form.Item>
           <Form.Item name="advanceDays" label="提前提醒天数">
             <InputNumber min={1} style={{ width: '100%' }} placeholder="默认使用证照类型配置" />

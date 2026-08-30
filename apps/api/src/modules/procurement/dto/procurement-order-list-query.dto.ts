@@ -6,6 +6,7 @@ import {
   PROCUREMENT_DIMENSION_TYPES,
   PROCUREMENT_ORDER_STATUSES,
 } from '../procurement.constants';
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
 
 export class ProcurementOrderListQueryDto {
   @IsOptional()
@@ -36,10 +37,12 @@ export class ProcurementOrderListQueryDto {
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   submittedFrom?: string;
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   submittedTo?: string;
 
   @IsOptional()

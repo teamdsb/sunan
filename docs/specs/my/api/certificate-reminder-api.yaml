@@ -45,7 +45,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [vessel, vehicle, personnel]
+            enum: [vessel, vehicle, personnel, equipment]
       responses:
         '200':
           description: OK
@@ -180,7 +180,7 @@ components:
           type: string
         ownerType:
           type: string
-          enum: [vessel, vehicle, personnel]
+          enum: [vessel, vehicle, personnel, equipment]
         ownerName:
           type: string
         recipientUserId:

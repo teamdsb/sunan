@@ -134,6 +134,7 @@ export class ReminderService {
       for (const role of resolveRolesFromDepartments(
         viewer.departmentIds ?? [],
         viewer.departmentNames,
+        viewer.departmentCodes ?? [],
       )) {
         roles.add(role);
       }

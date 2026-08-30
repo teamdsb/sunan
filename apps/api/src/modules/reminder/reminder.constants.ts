@@ -16,6 +16,16 @@ const ROLE_BY_DEPARTMENT_NAME = new Map<string, string>([
   ['后勤部', 'logistics'],
 ]);
 
+const ROLE_BY_DEPARTMENT_CODE = new Map<string, string>([
+  ['general_office', 'general_office'],
+  ['finance_dept', 'finance'],
+  ['business_dept', 'business'],
+  ['shipping_dept', 'shipping'],
+  ['logistics_dept', 'logistics'],
+  ['zhongchuan_group', 'workgroup'],
+  ['pinglu_canal_group', 'workgroup'],
+]);
+
 const ROLE_BY_DEPARTMENT_ID = new Map<number, string>([
   [3, 'general_office'],
   [4, 'finance'],
@@ -28,6 +38,7 @@ const ROLE_BY_DEPARTMENT_ID = new Map<number, string>([
 export function resolveRolesFromDepartments(
   departmentIds: number[],
   departmentNames: string[],
+  departmentCodes: string[] = [],
 ): string[] {
   const roles = new Set<string>(['all_authenticated']);
 
@@ -46,6 +57,13 @@ export function resolveRolesFromDepartments(
       }
     });
   }
+
+  departmentCodes.forEach((departmentCode) => {
+    const role = ROLE_BY_DEPARTMENT_CODE.get(departmentCode);
+    if (role) {
+      roles.add(role);
+    }
+  });
 
   return [...roles];
 }

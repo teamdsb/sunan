@@ -294,7 +294,8 @@ components:
           type: string
         effectiveDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为生效日
         fileIds:
           type: array
           items:
@@ -314,7 +315,8 @@ components:
           enum: [draft, published, deprecated]
         effectiveDate:
           type: string
-          format: date
+          format: date-time
+          description: 日期时间控件输入；服务端按业务时区保存为生效日
         fileIds:
           type: array
           items:

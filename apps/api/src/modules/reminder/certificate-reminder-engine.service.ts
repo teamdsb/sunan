@@ -331,6 +331,7 @@ export class CertificateReminderEngineService {
       const roles = resolveRolesFromDepartments(
         user.departmentIds ?? [],
         user.departmentNames,
+        user.departmentCodes ?? [],
       );
       if (roles.some((role) => roleNames.includes(role))) {
         target.add(user.userId);

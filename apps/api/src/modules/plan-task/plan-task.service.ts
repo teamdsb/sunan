@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, IsNull, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDateTime } from 'src/common/date/business-date';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import {
   SafetyPlanEntity,
@@ -249,8 +250,8 @@ export class PlanTaskService {
     const plan = await this.mustGetPlan(planId);
     this.assertPlanManager(plan, user);
     if (plan.status !== 'active') throw new ConflictException('Only active plans can generate tasks');
-    const windowStart = new Date(input.windowStart);
-    const windowEnd = new Date(input.windowEnd);
+    const windowStart = toBusinessDateTime(input.windowStart);
+    const windowEnd = toBusinessDateTime(input.windowEnd);
     if (windowStart >= windowEnd) throw new UnprocessableEntityException('Generation window is invalid');
 
     const replay = await this.runs.findOneBy({ requestedBy: user.userId, requestId });
@@ -325,8 +326,8 @@ export class PlanTaskService {
       if (query.planId && task.planId !== query.planId) return false;
       if (query.vesselId && task.vesselId !== query.vesselId) return false;
       if (query.status && task.status !== query.status) return false;
-      if (query.startAt && task.scheduledAt < new Date(query.startAt)) return false;
-      if (query.endAt && task.scheduledAt >= new Date(query.endAt)) return false;
+      if (query.startAt && task.scheduledAt < toBusinessDateTime(query.startAt)) return false;
+      if (query.endAt && task.scheduledAt >= toBusinessDateTime(query.endAt)) return false;
       return true;
     });
     const scoped: SafetyTaskEntity[] = [];
@@ -391,7 +392,7 @@ export class PlanTaskService {
       const previousStatus = task.status;
       if (input.actionType === 'reschedule') {
         if (!input.scheduledAt || !input.dueAt) throw new UnprocessableEntityException('Scheduled and due dates are required');
-        const scheduledAt = new Date(input.scheduledAt); const dueAt = new Date(input.dueAt);
+        const scheduledAt = toBusinessDateTime(input.scheduledAt); const dueAt = toBusinessDateTime(input.dueAt);
         if (dueAt < scheduledAt) throw new UnprocessableEntityException('Due date cannot precede scheduled date');
         task.scheduledAt = scheduledAt; task.dueAt = dueAt;
       } else if (input.actionType === 'complete') task = await this.completeParticipant(task, user.userId, manager);
@@ -682,7 +683,7 @@ export class PlanTaskService {
 
   private async delegateTask(task: SafetyTaskEntity, user: CurrentUser, input: TaskActionDto, reason: string, manager: EntityManager) {
     const delegateUserId = input.delegateUserId?.trim();
-    const effectiveUntil = input.delegateUntil ? new Date(input.delegateUntil) : null;
+    const effectiveUntil = input.delegateUntil ? toBusinessDateTime(input.delegateUntil) : null;
     if (!delegateUserId || delegateUserId === task.responsibleUserId || !effectiveUntil || effectiveUntil <= new Date()) {
       throw new UnprocessableEntityException('A different delegate and future delegateUntil are required');
     }
@@ -957,7 +958,7 @@ export class PlanTaskService {
       throw new UnprocessableEntityException('quorumCount exceeds participant count');
     }
     try {
-      expandOccurrences(input.recurrence as RecurrenceRule, 'Asia/Shanghai', new Date(input.recurrence.startAt), new Date(new Date(input.recurrence.startAt).getTime() + 370 * 86_400_000));
+      expandOccurrences(input.recurrence as RecurrenceRule, 'Asia/Shanghai', toBusinessDateTime(input.recurrence.startAt), new Date(toBusinessDateTime(input.recurrence.startAt).getTime() + 370 * 86_400_000));
     } catch (error) {
       throw new UnprocessableEntityException(error instanceof Error ? error.message : 'Invalid recurrence rule');
     }

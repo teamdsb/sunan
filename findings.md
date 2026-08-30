@@ -1,11 +1,27 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-19
+updated: 2026-08-30
 replaces: []
 replaced_by: []
 ---
 # 发现与决策
+
+## 2026-08-30：证书闭环与全局日期时间收口（初始）
+- 用户报告的证书问题涵盖四条独立链路：新增/编辑写入、证书类型归类与 owner 计数、扫描任务筛选、临期/过期看板分类；不应以单一 UI 补丁合并处理。
+- 现有证书与提醒数据库列为 `DATE`，前端证书创建表单仍使用 date-only 控件；需先明确全系统可填写日期字段边界和时区语义，再决定存储迁移方式。
+- 上一轮工作平台修复和手册生成改动仍在工作区，本轮必须兼容并保留，不回滚或覆盖。
+- 用户已明确授权修复后启动 Docker/Testcontainers 执行集成验证。
+
+## 2026-08-30：证书闭环与全局日期时间收口（完成）
+- 证书新增/编辑根因是前端详情页只维护标题、到期日和状态，未提交持有对象、证照类型、编号、签发时间、提醒天数、签发机构和备注；现已补齐字段、对象/类型下拉及日期时间控件，提交统一转 ISO。
+- 证书分类根因是分组接口返回固定/占位数量且 owner 标签使用内部枚举；现按真实证照行聚合总数和分组数，并将 `vessel/vehicle/personnel/equipment` 显示为中文对象类型。
+- 扫描根因是提醒接收人匹配只看单一部门 ID/名称，企业微信同步的 `departmentCodes` 未参与筛选；现支持同步部门编码并保留设备类型筛选，因此船舶、车辆、人员和设备提醒均可找到接收人。
+- 航次计划审批根因是动态 schema 将日期字段标记为 date，前端只渲染普通输入且船舶字段没有受控选项；现将动态日期统一标记为 datetime，使用日期时间控件，并从主数据加载船舶下拉选项；已存在模板在启动时同步 schema 版本。
+- 全局日期输入已收口：证书、采购、工作平台、企业资料/制度、主数据分配、检查/CAPA、计划任务等 DTO 增加 `IsDateTimeString`；动态字段后端拒绝没有时间的值；自动补值也统一为 ISO date-time。
+- Docker `29.6.1` 下 API integration 18 suites/82 tests、API unit 22 suites/116 tests、Web 60 files/264 tests、双端 build、API lint、3 份 OpenAPI、276 份 Markdown 索引和 `git diff --check` 均退出 0。
+- 操作手册 Markdown 与 DOCX 已更新，DOCX 生成器嵌入 48 张正文图；实际用户字体环境下 LibreOffice 渲染为 79 页 A4，封面/目录/证照章节/末页抽查通过。图 5-4A/B/C、图 5-5A/B、图 7-1B、图 8-1B/C 需用户按新版页面重拍。
+- 环境记录：生成器默认 Node 找不到 `docx`，改用工作区 bundled `NODE_PATH`；系统没有 `pandoc`，改用 OOXML 文本流检查。文档隔离渲染 profile 的方框字形仅是临时字体环境，实际用户 `HOME` 渲染中文正常。
 
 ## 2026-08-19：手册最终真实性收口
 - 工作平台考勤页面源码只有月份筛选、统计卡片和模块明细，没有导出或财务对账按钮；手册已删除对应步骤和图注。
@@ -155,6 +171,28 @@ replaced_by: []
 - 用户最新确认：M1-M6 的修复作为新的 M7，之前的 M7/M8 延后。
 
 ## 研究发现
+- 2026-08-31 新版本发布任务：用户明确要求保持版本号 `0.0.7`，且不涉及前端页面版本显示；本次目标是将当前工作树中的全部新更新重新构建并发布到生产。
+- 当前分支为 `main`，`HEAD` 与 `origin/main` 同在 `4a64066`；工作树有 65 个已跟踪文件改动及新增日期工具、校验器、migration 和手册图片，必须作为整体构建源，不能清理或回退。
+- 仓库当前部署入口包括 `deploy/deployment-runbook.md`、`deploy/docker-compose.prod.yml`、`docs/architecture/deployment.md` 和 `docs/specs/wecom/production-cutover-runbook.md`，待逐份核对后确定实际生产发布命令。
+- 当前 runbook 的生产主机为 `root@39.106.103.45`，部署目录为 `/dev/sunan/deploy`，源码目录为 `/dev/sunan/sunan-source/current`；标准方式是排除本地密钥、环境文件、依赖和构建产物后同步完整当前源码，再由生产服务器构建镜像。
+- `deploy/docker-compose.yml` 和 `deploy/docker-compose.prod.yml` 的 API/Web/Nginx 镜像与 OCI 标签默认均使用 `SUNAN_VERSION=0.0.7`；`deploy/.env.example` 也为 `0.0.7`，无需调整版本号或前端显示。
+- API 容器启动命令会先执行 `node dist/database/run-migrations.js` 和幂等 seed，再启动服务；本轮存在新增 migration `1710000023000-workbench-voyage-schema-v2.ts`，发布必须先完成生产备份并核对 migration 结果。
+- 部署架构与切换 runbook 将 PostgreSQL 发布前备份、恢复校验、完整自动化门禁、发布后公网/企业微信 smoke 作为上线要求；Codex 可执行自动化与 HTTP 验证，三端企业微信真机验证仍需按事实保留为人工现场项。
+- `deploy/README.md` 明确 `deploy/docker-compose.yml` 是服务器实际真源，`docker-compose.prod.yml` 只是早期快照；本次部署配置未发生变更，不需覆盖服务器 Nginx 或 Compose。
+- 上一轮 `0.0.7` 发布已经验证可用的操作模式是：PostgreSQL custom dump + 配置归档 + `redis-cli --rdb` 时间点快照及校验；源码流式上传后做敏感文件排除/哈希核对和原子切换；服务按 API → Web → Nginx 分阶段切换并在失败时回切旧镜像 ID。
+- 因用户要求继续使用同一 `0.0.7` 标签，本次不可只依赖标签区分新旧镜像；必须在发布证据中记录旧/新镜像 ID、镜像创建时间、源码批次和关键文件 SHA-256。
+- 本次发布前自动化门禁：Web 60 files/264 tests、API unit 23 suites/121 tests、API integration 18 suites/83 tests，API/Web build、API lint、21/21 OpenAPI、276 份 Markdown 索引、版本/前端显示/diff 检查均通过。
+- 生产备份批次 `20260831010322` 已验证：PostgreSQL custom dump 278,349 bytes/550 entries、配置归档 13,225 bytes、Redis 时间点 RDB 4,529 bytes，三项 SHA-256 校验通过；dump 已恢复到临时库并核对 23 条 migration、4 个企业微信用户、3 条工作平台记录、40 个模板，随后确认临时库删除。
+- 源码批次 `20260831010442` 已校验并原子切换：版本 0.0.7、24 条 migration、无敏感 `.env`/node_modules/dist，关键源码指纹 `d9ff24db...ed40180d` 与本地一致；旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260831010442`。
+- 生产镜像批次 `20260831010555` 已完成：新 API `sha256:87b865...d61b0`、Web `sha256:e08de2...88bd1`、Nginx `sha256:0053c2...0108f`；旧镜像 ID 均保留 `rollback-20260831010442` 标签，构建后运行容器仍锁定旧 ID。API 镜像为 Node 20.20.2、包版本 0.0.7，包含第 24 条编译 migration；Web 镜像有 101 个资源文件。
+- 新 API 一次性容器已在旧 API 持续服务期间完成 migration/seed：生产数据库从 23 升至 24 条 migration，航次 v2 模板恰好 1 条且 `departureAt.inputType=datetime`，一次性容器无残留。
+- API 切换批次 `20260831010959` 通过：运行镜像为新 ID `sha256:87b865...d61b0`，API healthy，live/ready 与 DB/Redis/OSS 就绪、无凭证 401、近 5 分钟错误 0，自动回切未触发。
+- Web 切换批次 `20260831011122` 通过：运行镜像为新 ID `sha256:e08de2...88bd1`，容器内和 Docker 网络访问正常，7 个关键新懒加载资源存在，近 5 分钟 Web 错误 0，自动回切未触发。
+- Nginx 切换批次 `20260831011226` 通过：运行镜像为新 ID `sha256:0053c2...0108f`，`nginx -t`、12 条 SPA 路由、7 个新资源、API live/ready、401 边界通过，本次切换后 5xx/错误均为 0；TLS 有效至 2026-10-16。
+- 独立新鲜复验最终退出 0：六个长期服务正常，生产源码指纹与本地一致，API/Web/Nginx 分别运行本次新 ID `87b865...`/`e08de2...`/`0053c2...`，数据库 24 条 migration；备份 SHA-256、Redis RDB、恢复演练、回滚镜像/源码、无 upload/one-off 残留均通过。
+- 本机外部公网复验再次通过 12 条 SPA 路由、7 个本轮关键资源、live/ready、未登录 401 和根域名 301；近 10 分钟 API/Web 错误及 Nginx 最近 300 条 5xx/错误均为 0。
+- 本次完整回滚点：源码 `/dev/sunan/sunan-source/backup-20260831010442`；API/Web/Nginx 镜像标签分别为 `sunan-*:rollback-20260831010442`；数据库/配置/Redis 备份批次为 `20260831010322`。新增 migration 是增量模板记录，必要时可先回切旧应用镜像，再按恢复预案决定是否执行 migration down 或数据库恢复。
+- 企业微信 iOS/Android/桌面真实登录、授权与业务操作不能由 HTTP 自动化替代，本次仍作为用户现场验收项保留，不写成已执行。
 - 仓库没有既有 `task_plan.md`、`findings.md`、`progress.md`。
 - `docs/` 已存在当前计划入口：`docs/execplans.md`、`docs/plans/README.md`、`docs/prompts/README.md`。
 - M7/M8 当前已有计划与 prompt：`docs/plans/M7-execplans.md`、`docs/plans/M8-execplans.md`、`docs/prompts/m7/`、`docs/prompts/m8/`。
@@ -355,6 +393,12 @@ replaced_by: []
 - 已同步删除 `docs/README.md` 与 `docs/inventory.md` 中指向已删除安全培训/对比文档的断链，并重新生成 inventory（276 个 Markdown）。
 - 图片统计为 40 张真实截图、7 个正式 4:3 占位和 1 个第 1 章示例占位，共 48 个图片引用；DOCX 生成器已改为 14 个章节页码提示。
 - DOCX 生成、A4 渲染、DOCX validator、PDF/XML 禁用术语扫描、`node scripts/check-doc-index.mjs` 和 `git diff --check` 均通过；最终 Word 为 105 页，目录页码与章节实际起始页一致。
+
+## 2026-08-30：补充工作平台截图
+- 用户在 `docs/handbook/image/` 新增图 8-1B 至图 8-1G 六张真实截图，分别对应通用记录表单、作业流程、考勤统计、企业微信审批记录、海图更新和通用附件面板。
+- 新图尺寸为 1090×2368、1078×2346、2206×2680、2122×590、2194×1090、1076×4516，比例混合；继续按原比例嵌入，不改裁剪为 4:3。
+- 这些图片与正文图题及操作步骤匹配，已替换原 8-1B 至 8-1G 占位图。正式图位仍为 47 个，真实截图增至 46 个，唯一剩余正式占位为图 5-5B 证书提醒详情；另保留第 1 章示例占位。
+- 本轮进一步调整 DOCX 生成器：普通竖图完整按比例缩放，连续竖图在可读尺寸内并排，超长窄图按等高上下两段并排；不再按固定像素高度大量切片。实际用户字体环境下重新渲染后文档为 93 页，A4 页面、图注和章节目录均已按新分页复核。
 
 ## 2026-08-19：最新版真实功能手册与截图替换
 - 用户新增一批实际截图，位于 `docs/handbook/image/`；文件名按现有图号/功能命名，包含登录授权、导航、我的、办事、采购、文件上传/预览、报表审批和工作平台首页等场景。

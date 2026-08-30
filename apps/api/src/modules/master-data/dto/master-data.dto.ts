@@ -1,5 +1,7 @@
 import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
+
 export class MasterDataListQueryDto {
   @IsOptional() @IsString() @MaxLength(128) keyword?: string;
   @IsOptional() @IsEnum(['true', 'false']) includeInactive?: 'true' | 'false';
@@ -28,8 +30,8 @@ export class AssignmentCreateDto {
   @IsUUID() vesselId!: string;
   @IsUUID() personnelId!: string;
   @IsString() @MaxLength(64) roleCode!: string;
-  @IsDateString() effectiveFrom!: string;
-  @IsOptional() @IsDateString() effectiveTo?: string;
+  @IsDateString() @IsDateTimeString() effectiveFrom!: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() effectiveTo?: string;
 }
 
 export class EquipmentMasterDataDto {

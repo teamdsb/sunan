@@ -25,6 +25,8 @@ vi.mock('../files/FileUploadField', () => ({
 
 vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
+  useGetCertificateTypesQuery: () => ({ data: { data: [] }, isLoading: false }),
+  useGetCertificateOwnersQuery: () => ({ data: { data: [] }, isLoading: false }),
   useUpdateCertificateMutation: () => [mockUpdate, { isLoading: false }],
   useBindCertificateFilesMutation: () => [mockBind],
   useLazyGetCertificateFileDownloadUrlQuery: () => [mockGetFileDownloadUrl],
@@ -37,10 +39,18 @@ describe('CertificateDetailPage', () => {
       data: {
         data: {
           id: 'c1',
+          certificateTypeId: 'type-1',
+          ownerType: 'vessel',
+          ownerId: 'vessel-1',
           title: 'certificate-a',
+          certificateNo: 'CERT-1',
+          issueDate: '2026-01-01',
           ownerName: 'vessel-012',
           expiryDate: '2027-12-31',
+          advanceDays: 30,
+          issuer: '海事局',
           status: 'active',
+          remarks: null,
           files: [{ id: 'f1', fileName: 'doc.pdf' }],
         },
       },

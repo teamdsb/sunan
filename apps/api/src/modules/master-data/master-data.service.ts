@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'crypto';
 import { IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDate } from 'src/common/date/business-date';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
 import { MasterDataImportBatchEntity } from 'src/database/entities/master-data-import-batch.entity';
 import { MasterDataImportRowEntity } from 'src/database/entities/master-data-import-row.entity';
@@ -91,11 +92,13 @@ export class MasterDataService {
   async createAssignment(dto: AssignmentCreateDto, user: CurrentUser) {
     this.ensureManager(user); const [vessel, person] = await Promise.all([this.vessel(dto.vesselId), this.person(dto.personnelId)]);
     if (vessel.status !== 'active' || person.employmentStatus !== 'active') throw new UnprocessableEntityException('inactive master data cannot be assigned');
-    if (dto.effectiveTo && dto.effectiveTo <= dto.effectiveFrom) throw new UnprocessableEntityException('effectiveTo must be after effectiveFrom');
+    const effectiveFrom = toBusinessDate(dto.effectiveFrom) as string;
+    const effectiveTo = dto.effectiveTo ? toBusinessDate(dto.effectiveTo) : null;
+    if (effectiveTo && effectiveTo <= effectiveFrom) throw new UnprocessableEntityException('effectiveTo must be after effectiveFrom');
     const current = await this.assignments.find({ where: { personnelId: dto.personnelId, status: 'active', deletedAt: IsNull() } });
-    const overlaps = current.some((item) => this.overlaps(dto.effectiveFrom, dto.effectiveTo ?? null, item.effectiveFrom, item.effectiveTo));
+    const overlaps = current.some((item) => this.overlaps(effectiveFrom, effectiveTo, item.effectiveFrom, item.effectiveTo));
     if (overlaps) throw new ConflictException('personnel has an overlapping vessel assignment');
-    const row = await this.assignments.save(this.assignments.create({ vesselId: vessel.id, personnelId: person.id, roleCode: dto.roleCode, effectiveFrom: dto.effectiveFrom, effectiveTo: dto.effectiveTo ?? null, status: 'active', vesselNameSnapshot: vessel.name, personnelNameSnapshot: person.name, createdBy: user.userId, updatedBy: user.userId }));
+    const row = await this.assignments.save(this.assignments.create({ vesselId: vessel.id, personnelId: person.id, roleCode: dto.roleCode, effectiveFrom, effectiveTo, status: 'active', vesselNameSnapshot: vessel.name, personnelNameSnapshot: person.name, createdBy: user.userId, updatedBy: user.userId }));
     return { data: this.assignmentDto(row) };
   }
 

@@ -13,9 +13,13 @@ export interface CertificateItem {
   ownerId: string;
   ownerName: string;
   title: string;
+  certificateNo: string | null;
+  issueDate: string | null;
   expiryDate: string;
   advanceDays: number;
+  issuer: string | null;
   status: 'active' | 'expired' | 'archived';
+  remarks: string | null;
   files: Array<{
     id: string;
     fileName: string;
@@ -68,11 +72,14 @@ export interface UpdateCertificateInput {
   certificateTypeId?: string;
   ownerType?: CertificateItem['ownerType'];
   ownerId?: string;
-  ownerName?: string;
   title?: string;
+  certificateNo?: string;
+  issueDate?: string;
   expiryDate?: string;
   advanceDays?: number;
+  issuer?: string;
   status?: CertificateItem['status'];
+  remarks?: string;
   fileIds?: string[];
 }
 

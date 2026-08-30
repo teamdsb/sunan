@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { toBusinessDateTime } from 'src/common/date/business-date';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import {
@@ -211,7 +212,7 @@ export class InspectionCapaService {
   async createIssue(user: CurrentUser, input: CreateIssueDto, requestId: string) {
     if (await this.issues.exists({ where: { idempotencyKey: requestId, deletedAt: IsNull() } })) { const replay = await this.issues.findOneBy({ idempotencyKey: requestId, deletedAt: IsNull() }); if (replay) return this.issueDto(replay, user); }
     await this.assertActivePersonnel(input.responsibleUserId); if (input.source) await this.assertSource(input.source.sourceType, input.source.sourceId, user);
-    const issue = await this.issues.save(this.issues.create({ issueNo: this.issueNo(), title: input.title.trim(), issueType: input.issueType, severity: input.severity, status: 'open', vesselId: input.vesselId ?? null, responsibilityScope: input.responsibilityScope ?? null, responsibleUserId: input.responsibleUserId, dueAt: new Date(input.dueAt), idempotencyKey: requestId, closedAt: null, closedBy: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
+    const issue = await this.issues.save(this.issues.create({ issueNo: this.issueNo(), title: input.title.trim(), issueType: input.issueType, severity: input.severity, status: 'open', vesselId: input.vesselId ?? null, responsibilityScope: input.responsibilityScope ?? null, responsibleUserId: input.responsibleUserId, dueAt: toBusinessDateTime(input.dueAt), idempotencyKey: requestId, closedAt: null, closedBy: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
     if (input.source) await this.issueSources.save(this.issueSources.create({ issueId: issue.id, sourceType: input.source.sourceType, sourceId: input.source.sourceId, sourceItemKey: input.source.sourceItemKey ?? '', sourceSnapshot: { sourceType: input.source.sourceType }, createdBy: user.userId }));
     await this.audit('issue', issue.id, 'create', user.userId, requestId, null, { title: issue.title }); return this.issueDto(issue, user);
   }
@@ -233,7 +234,7 @@ export class InspectionCapaService {
 
   async createCapaAction(capaId: string, user: CurrentUser, input: CreateCapaActionDto, requestId: string) {
     const capa = await this.mustCapa(capaId); const issue = await this.mustIssue(capa.issueId); this.assertIssueManager(issue, user); this.assertCapaInProgress(capa, issue); await this.assertActivePersonnel(input.responsibleUserId);
-    const action = await this.capaActions.save(this.capaActions.create({ capaId, actionType: input.actionType, title: input.title.trim(), responsibleUserId: input.responsibleUserId, dueAt: new Date(input.dueAt), status: 'assigned', completionStatement: null, submittedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'action_in_progress'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa_action', action.id, 'create', user.userId, requestId, null, { actionType: action.actionType }); return this.capaActionDto(action, user, capa);
+    const action = await this.capaActions.save(this.capaActions.create({ capaId, actionType: input.actionType, title: input.title.trim(), responsibleUserId: input.responsibleUserId, dueAt: toBusinessDateTime(input.dueAt), status: 'assigned', completionStatement: null, submittedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); capa.updatedBy = user.userId; await this.capas.save(capa); issue.status = 'action_in_progress'; issue.updatedBy = user.userId; await this.issues.save(issue); await this.audit('capa_action', action.id, 'create', user.userId, requestId, null, { actionType: action.actionType }); return this.capaActionDto(action, user, capa);
   }
 
   async submitCapaAction(actionId: string, user: CurrentUser, input: SubmitCapaActionDto, requestId: string) {

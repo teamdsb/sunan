@@ -1,11 +1,58 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-19
+updated: 2026-08-31
 replaces: []
 replaced_by: []
 ---
 # 进度日志
+
+## 会话：2026-08-31（保持 0.0.7 的新版本生产重发）
+
+### 阶段 24：部署发现与发布执行
+- **状态：** completed
+- 已读取 `planning-with-files-zh` 与 `verification-before-completion` 技能并恢复既有规划文件。
+- 已确认当前 `main` 与 `origin/main` 位于 `4a64066`，工作树保留上一轮证书闭环、全局日期时间、迁移、规格和手册更新；本次以该完整工作树为发布源。
+- 用户要求保持 `0.0.7` 且不改前端页面版本显示，已写入发布边界。
+- 已读当前部署手册、架构、企业微信切换 runbook、生产 Compose、环境变量示例和 Dockerfile；确认采用服务器源码构建，API 启动自动 migration/seed，发布前需先备份并保留源码回滚点。
+- 已读部署索引、操作规范、服务器清单、环境变量、备份恢复、上线材料与可观测规范；确认生产实际使用 `deploy/docker-compose.yml`，本轮部署配置无差异。
+- 版本真源全部维持 `0.0.7`，前端源码不需要新增版本展示；同标签重发将以镜像 ID、创建时间、源码批次和哈希作为不可变追踪证据。
+- 生产只读预检通过：API/Web/Nginx 当前均为 0.0.7 且记录了旧镜像 ID，数据库 23 条 migration，Compose/关键环境变量/live/ready/Web 正常，近 30 分钟 API 错误为 0，根盘约 66 GB 可用。
+- 新 migration 审计确认只从 `shipping_voyage_approval_v1` 幂等复制 v2 模板并把 `departureAt` 输入类型改为 datetime；down 只删除对应 v2，无删除历史业务记录。
+- 本机 Docker daemon 不可用；按 `systematic-debugging` 确认 Docker.app 存在但进程/socket 不存在，判定为 Docker Desktop 未启动的环境问题。
+- 已启动 Docker Desktop并确认 client/server 均为 29.6.1；Web 60 files/264 tests、Web build、API lint、API build 已新鲜通过。
+- API unit 首轮因命令额外分隔符把 `--runInBand` 当作匹配模式，未运行用例；已确认是命令调用错误，改用直接 Jest 参数重跑，不把该结果记为代码失败。
+- API unit 新鲜重跑 23 suites/121 tests 通过；API integration 串行新鲜运行 18 suites/83 tests 全部通过，包含新增 migration、工作平台、证书、提醒、采购和日期时间回归。
+- 21/21 OpenAPI、276 份 Markdown 索引、版本一致性、前端无版本显示引用和 `git diff --check` 通过；本地发布前门禁完成。
+- 生产备份批次 `20260831010322` 已完成并验证：DB dump 550 entries、配置归档、Redis 时间点 RDB 和 SHA-256 均通过；dump 临时库恢复演练核对 23 migrations/4 users/3 workbench records/40 templates，临时库已删除。
+- 源码批次 `20260831010442` 完成完整上传、敏感文件/生成目录排除、24 migration 和关键 SHA-256 校验后原子切换；旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260831010442`，运行容器尚未变化。
+- 镜像批次 `20260831010555` 使用生产 Dockerfile/Node 20 构建 API/Web/Nginx 0.0.7；新旧镜像 ID 已记录，旧 ID 已加 `rollback-20260831010442` 标签，新 API 含编译 migration、Web 有 101 个资源，构建后运行容器未变化。
+- 已用新 API 一次性容器先执行第 24 条 migration 和幂等 seed，确认航次 v2 模板/日期时间字段生效且旧 API 持续健康；无 one-off 容器残留。
+- API 切换批次 `20260831010959` 已通过 50 秒健康门禁：新 ID 运行、24 migrations、live/ready/依赖/401 正常、近 5 分钟错误 0，未触发自动回切。
+- Web 切换批次 `20260831011122` 通过：新 ID 运行，容器/Docker 网络及 7 个关键懒加载资源正常，错误 0，未触发自动回切。
+- Nginx 切换批次 `20260831011226` 通过：新 ID 运行，配置、12 路由、7 资源、live/ready/401、TLS 及本次 5xx/错误门禁通过，未触发自动回切。
+- 首轮独立复验的远端脚本因最终 Compose 命令工作目录错误退出 1，本机外部 smoke 因 zsh 字符串不拆分导致 URL 拼接错误；均属验证脚本问题，生产核心断言已通过但整轮不采信，修正后重跑。
+- 修正后独立复验完整退出 0：生产运行本次新 API/Web/Nginx ID，六个服务正常、24 migrations、源码指纹、备份/RDB/恢复证据、回滚点、无残留、证书/timers 和日志门禁通过。
+- 本机外部公网复验完整退出 0：12 条真实 SPA 路由、7 个关键新资源、live/ready、401 与根域名 301 通过；近 10 分钟 API/Web 错误和 Nginx 最近 300 条 5xx/错误均为 0。
+- 最终版本仍为 `0.0.7`，未修改前端页面版本显示。回滚源为 `/dev/sunan/sunan-source/backup-20260831010442`，回滚镜像标签为 `sunan-api/web/nginx:rollback-20260831010442`，数据/配置/Redis 备份批次为 `20260831010322`。
+- 企业微信 iOS/Android/桌面真机登录与业务操作保留为用户现场验收项，未用浏览器或 HTTP smoke 冒充完成。
+
+## 会话：2026-08-30（证书闭环与全局日期时间收口）
+
+### 阶段 23：实现、验证与交付
+- **状态：** completed
+- 已读取 `systematic-debugging` 和 `planning-with-files-zh` 技能，恢复既有规划文件并核对未提交工作区。
+- 已定位证书/提醒的主要前后端、集成测试与规格文件，并初步发现证书表单仍使用 date-only 控件。
+- 已完成根因跟踪与修复：证书详情编辑表单缺少对象/类型/编号等字段，分组接口使用占位统计，提醒扫描只按部门 ID/名称匹配，航次 schema 与前端日期/船舶字段缺少可选控件；已分别在详情表单、证书服务、提醒引擎和工作平台 schema/页面修复。
+- 已将证书创建、编辑、采购、工作平台及其他用户可填写日期统一为日期时间控件，前端提交 ISO 日期时间，后端新增 `IsDateTimeString` 并拒绝 `YYYY-MM-DD`；自动补值的会议留存期限和培训完成时间也改为 ISO 日期时间。历史 `DATE` 字段写入统一按 `Asia/Shanghai` 日历日期转换，避免 UTC 跨日。
+- 已补充并更新证书、工作平台、主数据、采购集成/组件测试，证书 date-only 400 与有效 ISO date-time 用例通过。
+- Docker daemon `29.6.1` 可用；API integration 18 suites/82 tests 通过，包含 certificate、certificate-reminder、workbench 与 procurement 相关套件。
+- API lint 通过；API unit 23 suites/119 tests 通过；Web 60 files/264 tests 通过；Web/API production build 通过。
+- `certificate-api.yaml`、`procurement-order-api.yaml`、`procurement-report-api.yaml` 均通过 Swagger 校验；`node scripts/check-doc-index.mjs` 通过（276 个 Markdown）；`git diff --check` 通过。
+- 已重新生成 [苏南船舶管理系统操作手册.docx](/Users/yuan/项目/sunan/sunan/docs/handbook/苏南船舶管理系统操作手册.docx)，生成器报告 14 个章节、48 张正文图；DOCX 压缩结构无错误，LibreOffice 实际用户字体环境渲染为 79 页 A4，封面、目录、证照章节、末页抽查无中文缺字、溢出或截图变形。
+- 发现并修正工作平台自动补值仍写入 date-only 的边界：培训完成时间、会议资料留存截止时间和培训完成按钮现在均保存完整 ISO 时间。
+- 交付提示：图 5-4A/B/C、图 5-5A/B、图 7-1B 仍需按新版分组统计、日期时间控件和提醒分类页面重拍；图 8-1B/C 已使用新版日期时间与船舶下拉截图，其余已有真实截图已保留。
+- 本轮环境限制：手册生成首次因默认 Node 找不到 `docx` 模块，改用工作区 bundled `NODE_PATH` 后成功；系统没有 `pandoc`，改用 OOXML 文本流核对；文档隔离渲染 profile 缺少中文字体，实际 `HOME=/Users/yuan` 渲染已确认中文正常。
 
 ## 会话：2026-08-19（移除不存在的安全管理操作）
 
@@ -18,6 +65,17 @@ replaced_by: []
 - 已同步更新 Markdown、DOCX 生成器、Word、docs/README.md 和 docs/inventory.md，不保留“隐藏入口”或“功能存在但未显示”的表述。
 - 验证结果：14 章、40 张真实图、7 个正式占位、1 个示例占位；DOCX 105 页；目录页码为 3/6/8/19/32/48/56/82/94/96/98/102/103/104；DOCX validator、PDF/XML 禁用词扫描、索引检查和 diff 检查通过。
 - 页面抽查：目录页清晰列出 14 章；第 82 页工作平台章节标题、表格和页脚无溢出或空白错位。
+
+## 会话：2026-08-30（补充工作平台截图）
+
+### 阶段 22：补充工作平台截图并更新手册图位
+- **状态：** completed
+- 用户在 `docs/handbook/image/` 新增图 8-1B 至图 8-1G 六张真实截图；已核对文件名、尺寸和视觉内容，均与正文对应图题匹配。
+- 已将六张截图替换到 Markdown 对应占位，保留原始比例；长图交由 DOCX 生成器连续切片分页。
+- 已将第 13 章统计更新为 47 个正式图位、46 张真实截图、1 个剩余正式占位（图 5-5B 证书提醒详情）以及 1 个第 1 章示例占位。
+- 已按比例驱动规则重新生成并渲染 DOCX：实际 HOME 下 LibreOffice 输出中文可读的 A4 文档共 93 页；连续竖图（如图 8-1B/8-1C）并排，超长图（如图 8-1G）仅分为上下两段，未拉伸或重复裁切。
+- 已回填新的静态目录页码（3、6、8、16、25、42、50、72、82、84、86、90、91、92），并复核封面、目录、工作平台图片页和末页。
+- 已通过文档索引、图片路径、DOCX validator、禁用术语扫描和 `git diff --check`；清理字体测试临时文件。
 
 ## 会话：2026-08-19（最新版真实功能手册与截图替换）
 

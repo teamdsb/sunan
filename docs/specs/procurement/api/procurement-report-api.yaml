@@ -78,14 +78,14 @@ paths:
           description: 明细查询起始日期（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: endDate
           required: true
           description: 明细查询截止日期（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
       responses:
         '200':
           description: OK
@@ -121,14 +121,14 @@ paths:
           description: 明细查询起始日期（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
         - in: query
           name: endDate
           required: true
           description: 明细查询截止日期（仅支持近 3 年范围）
           schema:
             type: string
-            format: date
+            format: date-time
       responses:
         '200':
           description: OK

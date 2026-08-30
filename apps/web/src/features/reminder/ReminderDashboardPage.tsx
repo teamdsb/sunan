@@ -11,7 +11,7 @@ import { canManageReminderActions, isOverdueReminder } from './reminderPermissio
 
 type ReminderFilter = 'all' | 'pending' | 'overdue' | 'acknowledged';
 type ReminderViewMode = 'dashboard' | 'list';
-type ReminderOwnerType = 'vessel' | 'vehicle' | 'personnel';
+type ReminderOwnerType = 'vessel' | 'vehicle' | 'personnel' | 'equipment';
 type ReminderStatusFilter = 'pending' | 'acknowledged';
 
 const statCards: Array<{ key: ReminderFilter; label: string; badge: string }> = [
@@ -24,6 +24,7 @@ const ownerTypeLabelMap: Record<string, string> = {
   vessel: '船舶',
   vehicle: '车辆',
   personnel: '人员',
+  equipment: '设备',
 };
 
 const reminderTypeLabelMap: Record<string, string> = {
@@ -270,6 +271,7 @@ export function ReminderDashboardPage() {
                         { value: 'vessel', label: '船舶' },
                         { value: 'vehicle', label: '车辆' },
                         { value: 'personnel', label: '人员' },
+                        { value: 'equipment', label: '设备' },
                       ]}
                       onChange={(nextOwnerType) =>
                         applySearch({

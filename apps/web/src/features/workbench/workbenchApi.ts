@@ -103,7 +103,7 @@ export interface WorkbenchModuleSchemaField {
   key: string;
   label: string;
   required: boolean;
-  inputType: 'text' | 'number' | 'date' | 'textarea';
+  inputType: 'text' | 'number' | 'date' | 'datetime' | 'textarea';
   placeholder?: string;
 }
 

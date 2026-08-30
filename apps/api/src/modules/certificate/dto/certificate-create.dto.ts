@@ -1,5 +1,7 @@
 ﻿import { IsArray, IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
 
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
+
 export class CertificateCreateDto {
   @IsUUID()
   certificateTypeId!: string;
@@ -21,9 +23,11 @@ export class CertificateCreateDto {
 
   @IsOptional()
   @IsDateString()
+  @IsDateTimeString()
   issueDate?: string;
 
   @IsDateString()
+  @IsDateTimeString()
   expiryDate!: string;
 
   @IsOptional()

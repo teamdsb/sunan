@@ -15,6 +15,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
 
 export class PlanInputDto {
   @IsString() @IsNotEmpty() @MaxLength(200) title!: string;
@@ -44,7 +45,7 @@ export class PaginationQueryDto {
 
 export class RecurrenceRuleDto {
   @IsIn(['annual', 'monthly', 'periodic', 'one_time']) kind!: string;
-  @IsDateString() startAt!: string;
+  @IsDateString() @IsDateTimeString() startAt!: string;
   @IsOptional() @IsInt() @Min(1) @Max(12) month?: number;
   @IsOptional() @IsInt() @Min(1) @Max(31) dayOfMonth?: number;
   @IsOptional() @IsInt() @Min(1) @Max(366) intervalDays?: number;
@@ -63,8 +64,8 @@ export class PlanItemInputDto {
 }
 
 export class GenerationRequestDto {
-  @IsDateString() windowStart!: string;
-  @IsDateString() windowEnd!: string;
+  @IsDateString() @IsDateTimeString() windowStart!: string;
+  @IsDateString() @IsDateTimeString() windowEnd!: string;
   @IsOptional() @IsIn(['generate', 'reconcile']) mode: string = 'generate';
 }
 
@@ -73,8 +74,8 @@ export class TaskListQueryDto {
   @IsOptional() @IsIn(['pending', 'in_progress', 'blocked', 'completed', 'cancelled']) status?: string;
   @IsOptional() @IsUUID() planId?: string;
   @IsOptional() @IsUUID() vesselId?: string;
-  @IsOptional() @IsDateString() startAt?: string;
-  @IsOptional() @IsDateString() endAt?: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() startAt?: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() endAt?: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page = 1;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize = 20;
 }
@@ -82,10 +83,10 @@ export class TaskListQueryDto {
 export class TaskActionDto {
   @IsIn(['start', 'complete', 'block', 'reschedule', 'cancel', 'remind', 'escalate', 'delegate', 'transfer']) actionType!: string;
   @IsOptional() @IsString() @MaxLength(500) reason?: string;
-  @IsOptional() @IsDateString() dueAt?: string;
-  @IsOptional() @IsDateString() scheduledAt?: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() dueAt?: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() scheduledAt?: string;
   @IsOptional() @IsString() @MaxLength(64) recipientUserId?: string;
   @IsOptional() @IsString() @MaxLength(64) delegateUserId?: string;
-  @IsOptional() @IsDateString() delegateUntil?: string;
+  @IsOptional() @IsDateString() @IsDateTimeString() delegateUntil?: string;
   @IsOptional() @IsString() @MaxLength(64) transferToUserId?: string;
 }
