@@ -24,6 +24,7 @@ vi.mock('./certificateApi', () => ({
   useGetGroupedCertificatesQuery: (params: unknown) => mockGrouped(params),
   useGetCertificateTypesQuery: (params: unknown) => mockTypes(params),
   useGetCertificateOwnersQuery: (params: unknown) => mockOwners(params),
+  useGetCertificateReminderRecipientsQuery: () => ({ data: { data: [] }, isLoading: false }),
   useCreateCertificateMutation: () => [mockCreate, { isLoading: false }],
 }));
 
@@ -109,10 +110,10 @@ describe('CertificateListPage', () => {
         keyword: 'abc',
       }),
     );
-    expect(mockGrouped).toHaveBeenLastCalledWith(expect.objectContaining({ groupBy: 'owner' }));
+    expect(mockGrouped).toHaveBeenLastCalledWith(expect.objectContaining({ groupBy: 'type' }));
     expect(screen.getByRole('link', { name: '国籍证书' })).toHaveAttribute(
       'href',
-      '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D1%26pageSize%3D10%26ownerType%3Dvessel%26groupBy%3Downer%26status%3Dactive%26keyword%3Dabc',
+      '/my/certificates/c1?backTo=%2Fmy%2Fcertificates%3Fpage%3D1%26pageSize%3D10%26ownerType%3Dvessel%26groupBy%3Dtype%26status%3Dactive%26keyword%3Dabc',
     );
 
     fireEvent.click(screen.getByRole('button', { name: /展开筛选/ }));
@@ -140,7 +141,7 @@ describe('CertificateListPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent(
-        '?page=1&pageSize=10&ownerType=vessel&groupBy=owner&status=active&keyword=%E6%B5%B7%E4%BA%8B',
+        '?page=1&pageSize=10&ownerType=vessel&groupBy=type&status=active&keyword=%E6%B5%B7%E4%BA%8B',
       );
     });
 
@@ -177,12 +178,12 @@ describe('CertificateListPage', () => {
   it('restores the certificate list scroll position when returning with the same query', async () => {
     const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
     window.sessionStorage.setItem(
-      'certificate-list-scroll:?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc',
+      'certificate-list-scroll:?page=2&pageSize=20&ownerType=vessel&groupBy=type&status=active&keyword=abc',
       '240',
     );
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=owner&status=active&keyword=abc']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=2&pageSize=20&ownerType=vessel&groupBy=type&status=active&keyword=abc']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -194,7 +195,7 @@ describe('CertificateListPage', () => {
 
   it('hides advanced filters behind an expandable panel by default', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=type']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -205,7 +206,7 @@ describe('CertificateListPage', () => {
 
   it('opens a create drawer backed by real certificate reference data', () => {
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=owner']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/certificates?page=1&pageSize=10&ownerType=vessel&groupBy=type']}>
         <CertificateListPage />
       </MemoryRouter>,
     );
@@ -216,6 +217,7 @@ describe('CertificateListPage', () => {
     expect(mockTypes).toHaveBeenCalledWith({ ownerType: 'vessel' });
     expect(mockOwners).toHaveBeenCalledWith({ ownerType: 'vessel' });
     expect(screen.getByRole('combobox', { name: '持有对象' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '维护对象' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: '证照类型' })).toBeInTheDocument();
     expect(screen.getByTestId('certificate-file-upload')).toBeInTheDocument();
   });

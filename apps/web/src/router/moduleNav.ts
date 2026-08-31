@@ -78,6 +78,11 @@ export const moduleNavGroups: readonly ModuleNavGroup[] = [
         label: myRouteConfig.reminders.label,
       },
       {
+        key: 'my-master-data',
+        path: myRouteConfig.masterData.path,
+        label: myRouteConfig.masterData.label,
+      },
+      {
         key: 'my-monitors',
         path: myRouteConfig.monitors.path,
         label: myRouteConfig.monitors.label,

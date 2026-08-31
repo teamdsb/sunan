@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Form,
   Input,
@@ -13,6 +14,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
@@ -22,6 +24,7 @@ import { FileAttachmentList } from '../files/FileAttachmentList';
 import { FilePreviewModal } from '../files/FilePreviewModal';
 import { downloadFileFromUrl } from '../files/fileDownload';
 import type { FileRecord } from '../files/types';
+import { formatShanghaiDateTime, toShanghaiDateTimeLocal, toShanghaiIso } from '../../utils/dateTime';
 import {
   ProcurementApprovalRecord,
   ProcurementDepartmentCode,
@@ -98,20 +101,6 @@ function labelFrom(
   return value ? (map[value] ?? fallback) : '-';
 }
 
-function toDateTimeLocal(value: string | null | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value.includes('T') ? value : `${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return undefined;
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function toIsoDateTime(value: string | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
-}
-
 export function ProcurementOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -178,7 +167,7 @@ export function ProcurementOrderDetailPage() {
       title: order.title,
       summary: order.summary,
       amount: order.amount,
-        expenseDate: toDateTimeLocal(order.expenseDate),
+      expenseDate: toShanghaiDateTimeLocal(order.expenseDate),
     });
   }, [form, order]);
 
@@ -209,7 +198,7 @@ export function ProcurementOrderDetailPage() {
         dataIndex: 'approvedAt',
         key: 'approvedAt',
         width: 180,
-        render: (value: string) => new Date(value).toLocaleString('zh-CN'),
+        render: (value: string) => formatShanghaiDateTime(value),
       },
       {
         title: '意见',
@@ -242,7 +231,7 @@ export function ProcurementOrderDetailPage() {
         title: values.title.trim(),
         summary: values.summary.trim(),
         amount: Number(values.amount),
-        expenseDate: toIsoDateTime(values.expenseDate),
+        expenseDate: toShanghaiIso(values.expenseDate),
       },
     }).unwrap();
     messageApi.success('草稿已更新');
@@ -411,7 +400,7 @@ export function ProcurementOrderDetailPage() {
               </Descriptions.Item>
               <Descriptions.Item label="提交时间">
                 {order.submittedAt
-                  ? new Date(order.submittedAt).toLocaleString('zh-CN')
+                  ? formatShanghaiDateTime(order.submittedAt)
                   : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="外部流程状态">
@@ -453,8 +442,8 @@ export function ProcurementOrderDetailPage() {
               >
                 <InputNumber min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item name="expenseDate" label="费用时间（可选）">
-                <Input type="datetime-local" />
+              <Form.Item name="expenseDate" label="费用时间（可选）" getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
               </Form.Item>
               <Space wrap>
                 <Button

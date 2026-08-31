@@ -22,7 +22,7 @@ import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { CertificateModule } from 'src/modules/certificate/certificate.module';
 import { OssService } from 'src/modules/files/oss.service';
 
-const currentUser = {
+let currentUser = {
   userId: 'manager-1',
   corpId: 'ww-test',
   name: 'Manager',
@@ -178,6 +178,25 @@ describe('CertificateController integration', () => {
     expect(invalidOwnerType.status).toBe(400);
   });
 
+  it('restricts reminder recipient identities to certificate managers', async () => {
+    const managerRecipients = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificates/reminder-recipients')
+      .set('Authorization', 'Bearer token');
+    expect(managerRecipients.status).toBe(200);
+
+    currentUser = { ...currentUser, roles: ['all_authenticated'] };
+    const employeeRecipients = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificates/reminder-recipients')
+      .set('Authorization', 'Bearer token');
+    expect(employeeRecipients.status).toBe(403);
+
+    currentUser = { ...currentUser, roles: ['all_authenticated', 'shipping'] };
+  });
+
   it('supports create/filter/grouped/update/delete and file bind', async () => {
     const createVessel = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -190,6 +209,7 @@ describe('CertificateController integration', () => {
         ownerId: vesselId,
         title: '国籍证书A',
         expiryDate: '2027-12-31T00:00:00.000Z',
+        reminderRecipientUserId: 'manager-1',
       });
     const id1 = (createVessel.body as { data: { id: string } }).data.id;
 
@@ -274,6 +294,18 @@ describe('CertificateController integration', () => {
       .set('Authorization', 'Bearer token')
       .send({ title: '国籍证书A-更新' });
     expect(patch.status).toBe(200);
+
+    const clearReminderRecipient = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .patch(`/api/v1/certificates/${id1}`)
+      .set('Authorization', 'Bearer token')
+      .send({ reminderRecipientUserId: null });
+    expect(clearReminderRecipient.status).toBe(200);
+    expect(
+      (clearReminderRecipient.body as { data: { reminderRecipientUserId: string | null } }).data
+        .reminderRecipientUserId,
+    ).toBeNull();
 
     const del = await request(
       app.getHttpServer() as Parameters<typeof request>[0],

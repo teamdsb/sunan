@@ -17,6 +17,12 @@ vi.mock('./reminderApi', () => ({
   useAcknowledgeReminderMutation: () => [mockAcknowledge, { isLoading: false }],
 }));
 
+const mockGetCertificateFileDownloadUrl = vi.fn();
+
+vi.mock('../certificate/certificateApi', () => ({
+  useLazyGetCertificateFileDownloadUrlQuery: () => [mockGetCertificateFileDownloadUrl],
+}));
+
 describe('ReminderDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -40,6 +46,11 @@ describe('ReminderDetailPage', () => {
           sentAt: '2026-03-28T01:00:00+08:00',
           acknowledgedAt: null,
           acknowledgedBy: null,
+          certificateTypeName: '船舶证照',
+          certificateNo: 'CERT-001',
+          issueDate: '2026-01-01T00:00:00+08:00',
+          expiryDate: '2026-04-01T00:00:00+08:00',
+          files: [{ id: 'file-1', fileName: '国籍证书.pdf', mimeType: 'application/pdf', fileSize: 1024 }],
         },
       },
       isLoading: false,
@@ -62,8 +73,16 @@ describe('ReminderDetailPage', () => {
             sentAt: '2026-03-28T01:00:00+08:00',
             acknowledgedAt: '2026-03-28T02:00:00+08:00',
             acknowledgedBy: 'shipping-employee',
+            certificateTypeName: '船舶证照',
+            certificateNo: 'CERT-001',
+            issueDate: '2026-01-01T00:00:00+08:00',
+            expiryDate: '2026-04-01T00:00:00+08:00',
+            files: [{ id: 'file-1', fileName: '国籍证书.pdf', mimeType: 'application/pdf', fileSize: 1024 }],
           },
         }),
+    });
+    mockGetCertificateFileDownloadUrl.mockReturnValue({
+      unwrap: () => Promise.resolve({ data: { downloadUrl: 'https://files.test/cert.pdf' } }),
     });
   });
 
@@ -77,6 +96,8 @@ describe('ReminderDetailPage', () => {
     );
 
     expect(screen.getAllByText('国籍证书')).toHaveLength(2);
+    expect(screen.getByText('CERT-001')).toBeInTheDocument();
+    expect(screen.getByText('国籍证书.pdf')).toBeInTheDocument();
     expect(screen.getByText('处理记录')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /确认提醒/ }));
 

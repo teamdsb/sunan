@@ -33,6 +33,25 @@ paths:
       summary: Create personnel or bind a WeCom identity
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PersonnelInput'}}}}
       responses: {'201': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/vehicles:
+    get:
+      summary: List vehicles available for certificate ownership
+      parameters: [{$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/IncludeInactive'}]
+      responses: {'200': {$ref: '#/components/responses/List'}}
+    post:
+      summary: Create a vehicle master-data object
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VehicleInput'}}}}
+      responses: {'201': {$ref: '#/components/responses/Item'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /master-data/vehicles/{id}:
+    get:
+      summary: Get vehicle profile and certificates
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      summary: Update or deactivate a vehicle
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VehicleInput'}}}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
   /master-data/personnel/{id}:
     get:
       summary: Get personnel profile and assignment history
@@ -85,12 +104,13 @@ paths:
 components:
   parameters:
     Id: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
-    Type: {name: type, in: path, required: true, schema: {type: string, enum: [vessels, personnel, equipment]}}
+    Type: {name: type, in: path, required: true, schema: {type: string, enum: [vessels, vehicles, personnel, equipment]}}
     Keyword: {name: keyword, in: query, schema: {type: string, maxLength: 128}}
     IncludeInactive: {name: includeInactive, in: query, schema: {type: boolean, default: false}}
   schemas:
     VesselInput: {type: object, required: [code, name, category], properties: {code: {type: string}, name: {type: string}, category: {type: string}, status: {type: string, enum: [active, inactive]}, mmsi: {type: string}, remarks: {type: string}}}
     PersonnelInput: {type: object, required: [name, departmentCode], properties: {name: {type: string}, departmentCode: {type: string}, wecomUserId: {type: string}, position: {type: string}, mobile: {type: string}, employmentStatus: {type: string, enum: [active, inactive, left]}, remarks: {type: string}}}
+    VehicleInput: {type: object, required: [plateNumber], properties: {plateNumber: {type: string, maxLength: 32}, vehicleType: {type: string, maxLength: 32}, status: {type: string, enum: [active, inactive, retired]}, remarks: {type: string}}}
     AssignmentInput: {type: object, required: [personnelId, vesselId, roleCode, effectiveFrom], properties: {personnelId: {type: string, format: uuid}, vesselId: {type: string, format: uuid}, roleCode: {type: string}, effectiveFrom: {type: string, format: date-time, description: '日期时间控件输入；按业务时区换算为生效日'}, effectiveTo: {type: string, format: date-time, description: '日期时间控件输入；按业务时区换算为结束日'}}}
     EquipmentInput: {type: object, required: [code, name, categoryCode, vesselId], properties: {code: {type: string}, name: {type: string}, categoryCode: {type: string}, vesselId: {type: string, format: uuid}, status: {type: string, enum: [active, inactive, retired]}, serialNo: {type: string}, remarks: {type: string}}}
     ImportInput: {type: object, required: [importType, content], properties: {importType: {type: string, enum: [vessels, personnel, equipment, assignments]}, content: {type: string, description: Canonical CSV or JSON payload}}}

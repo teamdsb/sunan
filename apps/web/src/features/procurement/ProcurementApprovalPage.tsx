@@ -12,6 +12,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import {
   ProcurementDepartmentCode,
   ProcurementPendingTask,
@@ -126,7 +127,7 @@ export function ProcurementApprovalPage() {
         dataIndex: 'submittedAt',
         key: 'submittedAt',
         width: 180,
-        render: (value: string) => new Date(value).toLocaleString('zh-CN'),
+        render: (value: string) => formatShanghaiDateTime(value),
       },
       {
         title: '操作',

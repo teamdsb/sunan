@@ -1,6 +1,7 @@
-import { Button, Descriptions, Empty, Form, Input, List, Modal, Space, Tag, Timeline, Typography, message } from 'antd';
+import { Button, DatePicker, Descriptions, Empty, Form, Input, List, Modal, Space, Tag, Timeline, Typography, message } from 'antd';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
 
 import { type TaskActionInput, type TaskActionType, useGetTaskQuery, usePerformTaskActionMutation, useRetryTaskDeliveryMutation } from './taskApi';
 
@@ -9,11 +10,6 @@ const actionLabels: Record<TaskActionType, string> = {
   remind: '催办', escalate: '升级', delegate: '代理', transfer: '转移',
 };
 const immediateActions = new Set<TaskActionType>(['start', 'complete']);
-
-function shanghaiDateTime(value: string) {
-  if (/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return value;
-  return new Date(`${value.length === 16 ? `${value}:00` : value}+08:00`).toISOString();
-}
 
 export function TaskDetailPage() {
   const { taskId = '' } = useParams();
@@ -29,9 +25,9 @@ export function TaskDetailPage() {
 
   const perform = async (actionType: TaskActionType, values: Omit<TaskActionInput, 'id' | 'actionType'> = {}) => {
     const normalized = { ...values };
-    if (values.scheduledAt) normalized.scheduledAt = shanghaiDateTime(values.scheduledAt);
-    if (values.dueAt) normalized.dueAt = shanghaiDateTime(values.dueAt);
-    if (values.delegateUntil) normalized.delegateUntil = shanghaiDateTime(values.delegateUntil);
+    if (values.scheduledAt) normalized.scheduledAt = toShanghaiIso(values.scheduledAt);
+    if (values.dueAt) normalized.dueAt = toShanghaiIso(values.dueAt);
+    if (values.delegateUntil) normalized.delegateUntil = toShanghaiIso(values.delegateUntil);
     await act({ id: task.id, actionType, ...normalized }).unwrap();
     message.success(`${actionLabels[actionType]}已完成`);
     setSelectedAction(undefined);
@@ -48,8 +44,8 @@ export function TaskDetailPage() {
       <Typography.Title level={2}>{task.title}</Typography.Title>
       <Descriptions column={1}>
         <Descriptions.Item label="状态"><Tag color={task.isOverdue ? 'red' : 'blue'}>{task.isOverdue ? '逾期' : task.status}</Tag></Descriptions.Item>
-        <Descriptions.Item label="计划时间">{new Date(task.scheduledAt).toLocaleString('zh-CN')}</Descriptions.Item>
-        <Descriptions.Item label="期限">{new Date(task.dueAt).toLocaleString('zh-CN')}</Descriptions.Item>
+        <Descriptions.Item label="计划时间">{formatShanghaiDateTime(task.scheduledAt)}</Descriptions.Item>
+        <Descriptions.Item label="期限">{formatShanghaiDateTime(task.dueAt)}</Descriptions.Item>
         <Descriptions.Item label="负责人">{task.responsibleUserId}</Descriptions.Item>
       </Descriptions>
       <Space wrap>{task.availableActions?.map((action) => <Button key={action} loading={actionState.isLoading} onClick={() => openAction(action)}>{actionLabels[action]}</Button>)}</Space>
@@ -62,19 +58,19 @@ export function TaskDetailPage() {
       )} /> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无消息记录" />}
 
       <Typography.Title level={4}>参与人与责任轨迹</Typography.Title>
-      <List size="small" dataSource={task.participants} renderItem={(participant) => <List.Item><List.Item.Meta title={`${participant.userId} · ${participant.role}`} description={`${participant.status}${participant.completedAt ? ` · 已完成 ${new Date(participant.completedAt).toLocaleString('zh-CN')}` : ''}`} /></List.Item>} />
+      <List size="small" dataSource={task.participants} renderItem={(participant) => <List.Item><List.Item.Meta title={`${participant.userId} · ${participant.role}`} description={`${participant.status}${participant.completedAt ? ` · 已完成 ${formatShanghaiDateTime(participant.completedAt)}` : ''}`} /></List.Item>} />
       {task.transfers.length ? <List size="small" header="转移记录" dataSource={task.transfers} renderItem={(transfer) => <List.Item>{transfer.fromUserId} → {transfer.toUserId} · {transfer.reason}</List.Item>} /> : null}
       {task.delegations.length ? <List size="small" header="代理记录" dataSource={task.delegations} renderItem={(delegation) => <List.Item>{delegation.delegatorUserId} → {delegation.delegateUserId} · {delegation.status}</List.Item>} /> : null}
 
       <Typography.Title level={4}>历史轨迹</Typography.Title>
-      <Timeline items={task.actionLogs.map((log) => ({ children: `${actionLabels[log.actionType as TaskActionType] ?? log.actionType} · ${new Date(log.createdAt).toLocaleString('zh-CN')}${log.reason ? ` · ${log.reason}` : ''}` }))} />
+      <Timeline items={task.actionLogs.map((log) => ({ children: `${actionLabels[log.actionType as TaskActionType] ?? log.actionType} · ${formatShanghaiDateTime(log.createdAt)}${log.reason ? ` · ${log.reason}` : ''}` }))} />
 
       <Modal title={selectedAction ? actionLabels[selectedAction] : ''} open={Boolean(selectedAction)} okText="确定" cancelText="取消" onCancel={() => setSelectedAction(undefined)} onOk={() => form.submit()} confirmLoading={actionState.isLoading} destroyOnHidden>
         <Form form={form} layout="vertical" onFinish={(values) => selectedAction && perform(selectedAction, values)}>
           <Form.Item name="reason" label="原因" rules={[{ required: true, message: '请输入原因' }]}><Input.TextArea maxLength={500} /></Form.Item>
-          {selectedAction === 'reschedule' && <><Form.Item name="scheduledAt" label="新计划时间" rules={[{ required: true }]}><Input type="datetime-local" /></Form.Item><Form.Item name="dueAt" label="新截止时间" rules={[{ required: true }]}><Input type="datetime-local" /></Form.Item></>}
+          {selectedAction === 'reschedule' && <><Form.Item name="scheduledAt" label="新计划时间" rules={[{ required: true }]} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" /></Form.Item><Form.Item name="dueAt" label="新截止时间" rules={[{ required: true }]} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" /></Form.Item></>}
           {(selectedAction === 'remind' || selectedAction === 'escalate') && <Form.Item name="recipientUserId" label="接收人 ID（默认当前负责人）"><Input /></Form.Item>}
-          {selectedAction === 'delegate' && <><Form.Item name="delegateUserId" label="代理人 ID" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="delegateUntil" label="代理截止时间" rules={[{ required: true }]}><Input type="datetime-local" /></Form.Item></>}
+          {selectedAction === 'delegate' && <><Form.Item name="delegateUserId" label="代理人 ID" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="delegateUntil" label="代理截止时间" rules={[{ required: true }]} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" /></Form.Item></>}
           {selectedAction === 'transfer' && <Form.Item name="transferToUserId" label="新负责人 ID" rules={[{ required: true }]}><Input /></Form.Item>}
         </Form>
       </Modal>

@@ -28,6 +28,11 @@ export const myRouteConfig = {
     label: '证书提醒',
     description: '查看提醒看板并确认处理。',
   },
+  masterData: {
+    path: '/my/master-data',
+    label: '证书对象',
+    description: '维护证照可选择的船舶、车辆、人员和设备对象。',
+  },
   monitors: {
     path: '/my/monitors',
     detailPath: '/my/monitors/:vesselId',

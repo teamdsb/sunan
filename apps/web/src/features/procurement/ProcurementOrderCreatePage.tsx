@@ -1,6 +1,7 @@
 import {
   Button,
   Card,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -10,6 +11,7 @@ import {
 } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toShanghaiIso } from '../../utils/dateTime';
 import {
   ProcurementDepartmentCode,
   ProcurementDimensionType,
@@ -26,12 +28,6 @@ interface ProcurementOrderFormValues {
   summary: string;
   amount: number;
   expenseDate?: string;
-}
-
-function toIsoDateTime(value: string | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
 }
 
 const departmentOptions = [
@@ -111,7 +107,7 @@ export function ProcurementOrderCreatePage() {
       title: values.title.trim(),
       summary: values.summary.trim(),
       amount: Number(values.amount),
-      expenseDate: toIsoDateTime(values.expenseDate),
+      expenseDate: toShanghaiIso(values.expenseDate),
     };
 
     if (values.departmentCode === 'shipping_dept') {
@@ -243,8 +239,8 @@ export function ProcurementOrderCreatePage() {
               <InputNumber min={0} precision={2} />
             </Form.Item>
 
-            <Form.Item name="expenseDate" label="费用时间（可选）">
-              <Input type="datetime-local" />
+            <Form.Item name="expenseDate" label="费用时间（可选）" getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+              <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
             </Form.Item>
 
             <div className="sunan-form-actions">

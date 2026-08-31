@@ -17,8 +17,10 @@ import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CertificateReminderEntity } from 'src/database/entities/certificate-reminder.entity';
+import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
 import { CertificateTypeEntity } from 'src/database/entities/certificate-type.entity';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
+import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
@@ -109,6 +111,8 @@ describe('ReminderController integration', () => {
     const vehicleRepo = dataSource.getRepository(VehicleEntity);
     const personnelRepo = dataSource.getRepository(PersonnelEntity);
     const certificateRepo = dataSource.getRepository(CertificateEntity);
+    const certificateFileRepo = dataSource.getRepository(CertificateFileEntity);
+    const fileRepo = dataSource.getRepository(FileEntity);
     const reminderRepo = dataSource.getRepository(CertificateReminderEntity);
     const wecomUserRepo = dataSource.getRepository(WecomUserEntity);
 
@@ -180,6 +184,25 @@ describe('ReminderController integration', () => {
         }),
       )
     ).id;
+
+    const certificateFile = await fileRepo.save(
+      fileRepo.create({
+        ossKey: 'tests/certificate-reminder-cert-001.pdf',
+        fileName: '国籍证书.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 1024,
+        category: 'certificates',
+        uploadedBy: 'seed',
+      }),
+    );
+    await certificateFileRepo.save(
+      certificateFileRepo.create({
+        certificateId,
+        fileId: certificateFile.id,
+        fileRole: 'primary',
+        sortOrder: 0,
+      }),
+    );
 
     await wecomUserRepo.save(
       wecomUserRepo.create([
@@ -324,7 +347,7 @@ describe('ReminderController integration', () => {
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
-    expect(dashboard.body.data.totalPending).toBe(0);
+    expect(dashboard.body.data.totalPending).toBe(1);
     expect(dashboard.body.data.totalAcknowledged).toBe(0);
 
     const list = await request(
@@ -335,6 +358,26 @@ describe('ReminderController integration', () => {
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(1);
     expect(list.body.data[0].recipientUserId).toBe('shipping-employee');
+
+    const detail = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get(`/api/v1/certificate-reminders/${shippingReminderId}`)
+      .set('Authorization', 'Bearer token');
+    expect(detail.status).toBe(200);
+    expect(detail.body.data).toEqual(
+      expect.objectContaining({
+        certificateNo: 'CERT-001',
+        issueDate: '2026-01-01',
+        expiryDate: '2026-04-27',
+        files: [
+          expect.objectContaining({
+            fileName: '国籍证书.pdf',
+            mimeType: 'application/pdf',
+          }),
+        ],
+      }),
+    );
 
     const hiddenPeerDetail = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -358,7 +401,7 @@ describe('ReminderController integration', () => {
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
-    expect(dashboard.body.data.totalPending).toBe(0);
+    expect(dashboard.body.data.totalPending).toBe(2);
 
     const list = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -390,7 +433,8 @@ describe('ReminderController integration', () => {
       .get('/api/v1/certificate-reminders/dashboard')
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
-    expect(dashboard.body.data.totalPending).toBe(1);
+    expect(dashboard.body.data.totalPending).toBe(0);
+    expect(dashboard.body.data.totalOverdue).toBe(1);
 
     const list = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -465,7 +509,7 @@ describe('ReminderController integration', () => {
     expect(repeatAck.status).toBe(409);
   });
 
-  it('accepts manual scan requests from authenticated users and returns a job id', async () => {
+  it('restricts manual scan requests to reminder managers', async () => {
     currentUser = {
       ...currentUser,
       userId: 'shipping-employee',
@@ -473,14 +517,29 @@ describe('ReminderController integration', () => {
       position: '\u5458\u5DE5',
     };
 
-    const scan = await request(
+    const employeeScan = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
       .post('/api/v1/certificate-reminders/actions/scan')
       .set('Authorization', 'Bearer token');
 
-    expect(scan.status).toBe(202);
-    expect(scan.body.data.jobId).toEqual(expect.any(String));
-    expect(scan.body.data.acceptedAt).toEqual(expect.any(String));
+    expect(employeeScan.status).toBe(403);
+
+    currentUser = {
+      ...currentUser,
+      userId: 'shipping-manager',
+      roles: ['all_authenticated', 'shipping'],
+      position: '\u7ECF\u7406',
+    };
+
+    const managerScan = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/certificate-reminders/actions/scan')
+      .set('Authorization', 'Bearer token');
+
+    expect(managerScan.status).toBe(202);
+    expect(managerScan.body.data.jobId).toEqual(expect.any(String));
+    expect(managerScan.body.data.acceptedAt).toEqual(expect.any(String));
   });
 });

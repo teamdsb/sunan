@@ -48,3 +48,12 @@ describe('moduleNav workbench targets', () => {
     );
   });
 });
+
+describe('moduleNav my targets', () => {
+  it('places the safety master data center directly below certificate reminders', () => {
+    const myItems = moduleNavGroups.find((group) => group.key === 'my')?.children ?? [];
+    const labels = myItems.map((item) => item.label);
+    expect(labels.indexOf('证书对象')).toBe(labels.indexOf('证书提醒') + 1);
+    expect(resolveActiveNavItemKey('/my/master-data')).toBe('my-master-data');
+  });
+});

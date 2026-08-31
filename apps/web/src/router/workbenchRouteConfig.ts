@@ -6,7 +6,7 @@ export const workbenchRouteConfig = {
   },
   masterData: {
     path: '/workbench/master-data',
-    label: '安全主数据中心',
+    label: '证书对象',
     description: '管理船舶、人员任职、设备与受控选择器。',
   },
   tasks: { path: '/workbench/tasks', label: '安全任务中心', description: '查看真实待办、参与任务、完成任务和日历。' },

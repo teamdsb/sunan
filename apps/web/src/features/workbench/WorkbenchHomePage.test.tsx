@@ -348,6 +348,50 @@ describe('WorkbenchHomePage', () => {
     expect(mockScrollIntoView).toHaveBeenCalledWith({ block: 'start' });
   });
 
+  it('puts the selected task-board module first and supports collapsing the board', () => {
+    const dashboard = mockGetWorkbenchDashboardQuery().data.data;
+    mockGetWorkbenchDashboardQuery.mockReturnValue({
+      data: {
+        data: {
+          ...dashboard,
+          modules: [
+            ...dashboard.modules,
+            {
+              moduleCode: 'goa_meeting',
+              moduleName: '会议管理',
+              departmentCode: 'general_office',
+              templateType: 'ledger_form',
+              pendingCount: 0,
+              requiresApproval: false,
+              supportsPrint: true,
+              supportsStatistics: false,
+              mobileFirst: false,
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<WorkbenchHomePage routeAware initialModuleCode="goa_meeting" />);
+
+    const grid = screen.getByTestId('workbench-module-grid');
+    expect(grid.firstElementChild).toHaveAttribute('data-module-code', 'goa_meeting');
+    expect(grid).toHaveClass('is-collapsed');
+    fireEvent.click(screen.getByRole('button', { name: '展开任务看板' }));
+    expect(screen.getByTestId('workbench-module-grid')).not.toHaveClass('is-collapsed');
+    fireEvent.click(screen.getByRole('button', { name: '收起任务看板' }));
+    expect(screen.getByTestId('workbench-module-grid')).toHaveClass('is-collapsed');
+  });
+
+  it('formats workbench record times as Shanghai date-time text', () => {
+    render(<WorkbenchHomePage routeAware initialModuleCode="shipping_chart_update" />);
+
+    expect(screen.getAllByText('2026-04-22 10:00').length).toBeGreaterThan(0);
+    expect(screen.queryByText('2026-04-22T10:00:00.000+08:00')).toBeNull();
+  });
+
   it('uses selectable vessel and date-time controls for voyage approval records', async () => {
     const dashboard = mockGetWorkbenchDashboardQuery().data.data;
     mockGetWorkbenchDashboardQuery.mockReturnValue({
@@ -407,14 +451,8 @@ describe('WorkbenchHomePage', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: '新建审批记录' }));
-    expect(screen.getByLabelText('发生时间（可选）')).toHaveAttribute(
-      'type',
-      'datetime-local',
-    );
-    expect(screen.getByLabelText('预计离港时间')).toHaveAttribute(
-      'type',
-      'datetime-local',
-    );
+    expect(screen.getByLabelText('发生时间（可选）')).toBeInTheDocument();
+    expect(screen.getByLabelText('预计离港时间')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('记录标题'), {
       target: { value: '航次计划审批-苏南022' },
@@ -425,9 +463,13 @@ describe('WorkbenchHomePage', () => {
     fireEvent.change(screen.getByLabelText('发生时间（可选）'), {
       target: { value: '2026-04-21T08:00' },
     });
+    fireEvent.keyDown(screen.getByLabelText('发生时间（可选）'), { key: 'Enter', code: 'Enter' });
+    fireEvent.blur(screen.getByLabelText('发生时间（可选）'));
     fireEvent.change(screen.getByLabelText('预计离港时间'), {
       target: { value: '2026-04-21T10:30' },
     });
+    fireEvent.keyDown(screen.getByLabelText('预计离港时间'), { key: 'Enter', code: 'Enter' });
+    fireEvent.blur(screen.getByLabelText('预计离港时间'));
     fireEvent.mouseDown(screen.getByRole('combobox', { name: '船舶ID（可选）' }));
     expect(await screen.findByText('苏南022 (SN022)')).toBeInTheDocument();
     fireEvent.click(screen.getByText('苏南022 (SN022)'));

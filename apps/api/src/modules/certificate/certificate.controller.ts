@@ -24,6 +24,11 @@ export class CertificateController {
     return { data: await this.service.grouped(query) };
   }
 
+  @Get('reminder-recipients')
+  async reminderRecipients(@CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.listReminderRecipients(user) };
+  }
+
   @Get(':id')
   async getById(@Param('id') id: string) {
     return { data: await this.service.getById(id) };

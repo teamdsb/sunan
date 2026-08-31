@@ -17,6 +17,8 @@ export interface CertificateItem {
   issueDate: string | null;
   expiryDate: string;
   advanceDays: number;
+  reminderEnabled: boolean;
+  reminderRecipientUserId: string | null;
   issuer: string | null;
   status: 'active' | 'expired' | 'archived';
   remarks: string | null;
@@ -62,6 +64,8 @@ export interface CreateCertificateInput {
   issueDate?: string;
   expiryDate: string;
   advanceDays?: number;
+  reminderEnabled?: boolean;
+  reminderRecipientUserId?: string | null;
   issuer?: string;
   status?: CertificateItem['status'];
   remarks?: string;
@@ -77,6 +81,8 @@ export interface UpdateCertificateInput {
   issueDate?: string;
   expiryDate?: string;
   advanceDays?: number;
+  reminderEnabled?: boolean;
+  reminderRecipientUserId?: string | null;
   issuer?: string;
   status?: CertificateItem['status'];
   remarks?: string;
@@ -111,6 +117,13 @@ export const certificateApi = baseApi.injectEndpoints({
       { ownerType: CertificateItem['ownerType'] }
     >({
       query: (params) => ({ url: '/certificate-owners', params }),
+      providesTags: ['CertificateOwner'],
+    }),
+    getCertificateReminderRecipients: builder.query<
+      ApiEnvelope<Array<{ userId: string; name: string; position: string | null }>>,
+      void
+    >({
+      query: () => ({ url: '/certificates/reminder-recipients' }),
       providesTags: ['CertificateOwner'],
     }),
     getCertificateById: builder.query<ApiEnvelope<CertificateItem>, string>({
@@ -169,6 +182,7 @@ export const {
   useGetGroupedCertificatesQuery,
   useGetCertificateTypesQuery,
   useGetCertificateOwnersQuery,
+  useGetCertificateReminderRecipientsQuery,
   useGetCertificateByIdQuery,
   useCreateCertificateMutation,
   useUpdateCertificateMutation,

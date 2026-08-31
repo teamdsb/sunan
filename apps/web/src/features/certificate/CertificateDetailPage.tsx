@@ -1,15 +1,18 @@
-import { Alert, Button, Card, Form, Input, InputNumber, Segmented, Select, Space, Typography } from 'antd';
+import { Alert, Button, Card, DatePicker, Form, Input, InputNumber, Segmented, Select, Space, Switch, Typography, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { useAppSelector } from '../../app/hooks';
 import { canManageCompanyContent } from '../auth/permissions';
 import { FileUploadField } from '../files/FileUploadField';
 import { FileAttachmentList } from '../files/FileAttachmentList';
+import { formatShanghaiDateTime, toShanghaiDateTimeLocal, toShanghaiIso } from '../../utils/dateTime';
 import type { FileRecord } from '../files/types';
 import {
   type CertificateItem,
   useBindCertificateFilesMutation,
   useGetCertificateByIdQuery,
+  useGetCertificateReminderRecipientsQuery,
   useGetCertificateOwnersQuery,
   useGetCertificateTypesQuery,
   useLazyGetCertificateFileDownloadUrlQuery,
@@ -35,21 +38,9 @@ type CertificateFormValues = {
   issuer?: string;
   status: CertificateItem['status'];
   remarks?: string;
+  reminderEnabled: boolean;
+  reminderRecipientUserId?: string | null;
 };
-
-function toDateTimeLocal(value: string | null | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value.includes('T') ? value : `${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return undefined;
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function toIsoDateTime(value: string | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
-}
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
@@ -61,11 +52,13 @@ export function CertificateDetailPage() {
   const [getFileDownloadUrl] = useLazyGetCertificateFileDownloadUrlQuery();
   const [upload, setUpload] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<CertificateFormValues>();
   const item = data?.data;
   const ownerType = Form.useWatch('ownerType', form) ?? item?.ownerType ?? 'vessel';
   const { data: typeResponse, isLoading: loadingTypes } = useGetCertificateTypesQuery({ ownerType }, { skip: !item });
   const { data: ownerResponse, isLoading: loadingOwners } = useGetCertificateOwnersQuery({ ownerType }, { skip: !item });
+  const { data: recipientResponse } = useGetCertificateReminderRecipientsQuery(undefined, { skip: !canManage });
 
   useEffect(() => {
     if (item) {
@@ -75,25 +68,28 @@ export function CertificateDetailPage() {
         ownerId: item.ownerId,
         certificateNo: item.certificateNo ?? undefined,
         title: item.title,
-        issueDate: toDateTimeLocal(item.issueDate),
-        expiryDate: toDateTimeLocal(item.expiryDate) ?? '',
+        issueDate: toShanghaiDateTimeLocal(item.issueDate),
+        expiryDate: toShanghaiDateTimeLocal(item.expiryDate) ?? '',
         advanceDays: item.advanceDays,
         issuer: item.issuer ?? undefined,
         status: item.status,
         remarks: item.remarks ?? undefined,
+        reminderEnabled: item.reminderEnabled !== false,
+        reminderRecipientUserId: item.reminderRecipientUserId ?? undefined,
       });
     }
   }, [item, form]);
 
   return (
     <section className="page-hero">
+      {contextHolder}
       <Typography.Title level={2}>证照详情</Typography.Title>
       <Typography.Paragraph type="secondary">查看并维护证照基础信息、有效期与附件。</Typography.Paragraph>
       <Card loading={isLoading}>
         {saveError ? <Alert type="error" showIcon message={saveError} style={{ marginBottom: 12 }} /> : null}
         {item ? (
           <>
-            <Typography.Paragraph>持有对象：{item.ownerName}</Typography.Paragraph>
+            <Typography.Paragraph>持有对象：{item.ownerName} · 到期：{formatShanghaiDateTime(item.expiryDate)}</Typography.Paragraph>
             {canManage ? (
               <Form
                 form={form}
@@ -111,13 +107,17 @@ export function CertificateDetailPage() {
                       id,
                       data: {
                         ...values,
-                        issueDate: toIsoDateTime(values.issueDate),
-                        expiryDate: toIsoDateTime(values.expiryDate) ?? values.expiryDate,
+                        issueDate: toShanghaiIso(values.issueDate),
+                        expiryDate: toShanghaiIso(values.expiryDate) ?? values.expiryDate,
+                        reminderRecipientUserId: values.reminderRecipientUserId ?? null,
                       },
                     }).unwrap();
                     if (upload?.id) await bindFiles({ id, fileIds: [upload.id] }).unwrap();
+                    messageApi.success('电子证照已更新');
                   } catch (error) {
-                    setSaveError(error instanceof Error ? error.message : '保存失败，请稍后重试');
+                    const message = error instanceof Error ? error.message : '保存失败，请稍后重试';
+                    setSaveError(message);
+                    messageApi.error(message);
                   }
                 }}
               >
@@ -127,20 +127,24 @@ export function CertificateDetailPage() {
                     options={ownerTabs as unknown as Array<{ label: string; value: string }>}
                   />
                 </Form.Item>
-                <Form.Item name="ownerId" label="持有对象" rules={[{ required: true, message: '请选择持有对象' }]}>
-                  <Select showSearch loading={loadingOwners} placeholder="选择船舶、车辆、人员或设备" optionFilterProp="label" options={(ownerResponse?.data ?? []).map((owner) => ({ value: owner.id, label: `${owner.name} (${owner.code})` }))} />
+                <Form.Item label="持有对象" required>
+                  <Form.Item name="ownerId" noStyle rules={[{ required: true, message: '请选择持有对象' }]}>
+                    <Select aria-label="持有对象" showSearch loading={loadingOwners} placeholder="选择船舶、车辆、人员或设备" optionFilterProp="label" options={(ownerResponse?.data ?? []).map((owner) => ({ value: owner.id, label: `${owner.name} (${owner.code})` }))} />
+                  </Form.Item>
                 </Form.Item>
                 <Form.Item name="certificateTypeId" label="证照类型" rules={[{ required: true, message: '请选择证照类型' }]}>
                   <Select showSearch loading={loadingTypes} placeholder="选择证照类型" optionFilterProp="label" options={(typeResponse?.data ?? []).map((type) => ({ value: type.id, label: `${type.name} · 提前 ${type.defaultAdvanceDays} 天提醒` }))} />
                 </Form.Item>
                 <Form.Item name="title" label="证照标题" rules={[{ required: true, message: '请输入证照标题' }]}><Input maxLength={128} /></Form.Item>
                 <Form.Item name="certificateNo" label="证照编号"><Input maxLength={128} /></Form.Item>
-                <Form.Item name="issueDate" label="签发时间"><Input type="datetime-local" /></Form.Item>
-                <Form.Item name="expiryDate" label="到期时间" rules={[{ required: true, message: '请选择到期时间' }]}><Input type="datetime-local" /></Form.Item>
+                <Form.Item name="issueDate" label="签发时间" getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} /></Form.Item>
+                <Form.Item name="expiryDate" label="到期时间" rules={[{ required: true, message: '请选择到期时间' }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} /></Form.Item>
                 <Form.Item name="advanceDays" label="提前提醒天数"><InputNumber min={1} style={{ width: '100%' }} /></Form.Item>
                 <Form.Item name="issuer" label="签发机构"><Input maxLength={128} /></Form.Item>
                 <Form.Item name="status" label="状态" rules={[{ required: true }]}><Select options={[{ value: 'active', label: '有效' }, { value: 'expired', label: '已过期' }, { value: 'archived', label: '已归档' }]} /></Form.Item>
                 <Form.Item name="remarks" label="备注"><Input.TextArea rows={3} /></Form.Item>
+                <Form.Item name="reminderEnabled" label="企业微信提醒" valuePropName="checked" extra="关闭后仍保留证照，但扫描不会生成或发送提醒"><Switch /></Form.Item>
+                <Form.Item name="reminderRecipientUserId" label="提醒负责人" extra="可不设置；未设置时按部门规则通知"><Select allowClear showSearch optionFilterProp="label" placeholder="可选负责人" options={(recipientResponse?.data ?? []).map((recipient) => ({ value: recipient.userId, label: `${recipient.name}${recipient.position ? ` · ${recipient.position}` : ''}` }))} /></Form.Item>
                 <Form.Item label="附件上传/预览"><FileUploadField category="certificates" value={upload} onChange={setUpload} /></Form.Item>
                 <Space wrap className="detail-action-bar"><Button htmlType="submit" type="primary" loading={saving}>保存</Button></Space>
               </Form>

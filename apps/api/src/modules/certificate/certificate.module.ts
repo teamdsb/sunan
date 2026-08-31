@@ -8,6 +8,7 @@ import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { CertificateController } from './certificate.controller';
 import { CertificateReferenceController } from './certificate-reference.controller';
 import { CertificateService } from './certificate.service';
@@ -24,6 +25,7 @@ import { OssService } from 'src/modules/files/oss.service';
       VehicleEntity,
       PersonnelEntity,
       SafetyEquipmentEntity,
+      WecomUserEntity,
     ]),
   ],
   controllers: [CertificateController, CertificateReferenceController],

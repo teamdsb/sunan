@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   canManageCompanyContent,
+  canManageMasterData,
   canManageSafety,
   canStartProcurement,
 } from './permissions';
@@ -24,5 +25,10 @@ describe('frontend permission presentation', () => {
   it('limits safety template and plan management to its backend roles', () => {
     expect(canManageSafety(['all_authenticated', 'shipping'])).toBe(true);
     expect(canManageSafety(['all_authenticated', 'crew'])).toBe(false);
+  });
+
+  it('limits certificate object maintenance to its backend roles', () => {
+    expect(canManageMasterData(['all_authenticated', 'general_office'])).toBe(true);
+    expect(canManageMasterData(['all_authenticated', 'crew'])).toBe(false);
   });
 });

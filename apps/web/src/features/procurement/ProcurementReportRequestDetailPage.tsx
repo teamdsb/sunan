@@ -16,6 +16,7 @@ import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { resolveProcurementReportBackHref } from '../../router/procurementRouteConfig';
 import { FilePreviewModal } from '../files/FilePreviewModal';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { downloadFileFromUrl } from '../files/fileDownload';
 import {
   ProcurementApprovalRecord,
@@ -220,7 +221,7 @@ export function ProcurementReportRequestDetailPage() {
         dataIndex: 'approvedAt',
         key: 'approvedAt',
         width: 180,
-        render: (value: string) => new Date(value).toLocaleString('zh-CN'),
+        render: (value: string) => formatShanghaiDateTime(value),
       },
       {
         title: '审批意见',

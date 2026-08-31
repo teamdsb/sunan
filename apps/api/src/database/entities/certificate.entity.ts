@@ -41,6 +41,12 @@ export class CertificateEntity {
   @Column({ name: 'advance_days', type: 'integer' })
   advanceDays!: number;
 
+  @Column({ name: 'reminder_enabled', type: 'boolean', default: true })
+  reminderEnabled!: boolean;
+
+  @Column({ name: 'reminder_recipient_user_id', type: 'varchar', length: 64, nullable: true })
+  reminderRecipientUserId!: string | null;
+
   @Column({ type: 'varchar', length: 128, nullable: true })
   issuer!: string | null;
 

@@ -12,13 +12,14 @@ const QUEUE_KEY = 'certificate-reminder:queue';
 const PROCESSING_KEY = 'certificate-reminder:queue:processing';
 const SCAN_LOCK_KEY = 'certificate-reminder:scan-lock';
 const CRON_MARKER_PREFIX = 'certificate-reminder:cron:';
+const CRON_BUCKET_MS = 5 * 60 * 1000;
 const SCAN_LOCK_TTL_MS = 30 * 60 * 1000;
 const SCAN_LOCK_HEARTBEAT_MS = 5 * 60 * 1000;
 const PROCESSING_HEARTBEAT_MS = 60 * 1000;
 const PROCESSING_STALE_AFTER_MS = 3 * PROCESSING_HEARTBEAT_MS;
 const RETRY_BACKOFF_BASE_MS = 1000;
 const MAX_RETRY_COUNT = 3;
-const CRON_MARKER_TTL_SECONDS = 172_800;
+const CRON_MARKER_TTL_SECONDS = 900;
 const WORKER_IDLE_DELAY_MS = 250;
 
 class RecoverableScanAbortError extends Error {
@@ -71,7 +72,8 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     const envelope: ReminderJobEnvelope = { jobId, source: 'cron' };
     const jobKey = this.buildKey(jobId);
     const payload = JSON.stringify(envelope);
-    const cronMarkerKey = `${CRON_MARKER_PREFIX}${this.clock.today()}`;
+    const bucket = Math.floor(this.clock.now().getTime() / CRON_BUCKET_MS);
+    const cronMarkerKey = `${CRON_MARKER_PREFIX}${this.clock.today()}:${bucket}`;
 
     const result = await this.redis.eval(
       `
@@ -99,6 +101,26 @@ export class CertificateReminderJobService implements OnModuleInit, OnModuleDest
     }
 
     return { jobId, acceptedAt };
+  }
+
+  async getJobStatus(jobId: string) {
+    const job = await this.redis.hgetall(this.buildKey(jobId));
+    if (!job.jobId) {
+      return null;
+    }
+    return {
+      jobId: job.jobId,
+      source: job.source,
+      status: job.status,
+      acceptedAt: job.acceptedAt ?? null,
+      startedAt: job.startedAt ?? null,
+      finishedAt: job.finishedAt ?? null,
+      createdCount: Number(job.createdCount ?? 0),
+      sentCount: Number(job.sentCount ?? 0),
+      failedCount: Number(job.failedCount ?? 0),
+      error: job.error ?? null,
+      retryCount: Number(job.retryCount ?? 0),
+    };
   }
 
   private async enqueueManualJob(source: ReminderJobEnvelope['source']): Promise<{

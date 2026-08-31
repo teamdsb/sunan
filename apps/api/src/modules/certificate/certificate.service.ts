@@ -1,4 +1,4 @@
-﻿import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+﻿import { ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { In, IsNull, Repository } from 'typeorm';
@@ -12,12 +12,14 @@ import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { CertificateBindFilesDto } from './dto/certificate-bind-files.dto';
 import { CertificateCreateDto } from './dto/certificate-create.dto';
 import { CertificateGroupQueryDto } from './dto/certificate-group-query.dto';
 import { CertificateListQueryDto } from './dto/certificate-list-query.dto';
 import { CertificateUpdateDto } from './dto/certificate-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
+import { CertificateReminderJobService } from 'src/modules/reminder/certificate-reminder-job.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 const OWNER_TYPE_LABELS: Record<CertificateEntity['ownerType'], string> = {
@@ -46,7 +48,10 @@ export class CertificateService {
     private readonly personnelRepository: Repository<PersonnelEntity>,
     @InjectRepository(SafetyEquipmentEntity)
     private readonly equipmentRepository: Repository<SafetyEquipmentEntity>,
+    @InjectRepository(WecomUserEntity)
+    private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly ossService: OssService,
+    @Optional() private readonly reminderJobService?: CertificateReminderJobService,
   ) {}
 
   async list(query: CertificateListQueryDto) {
@@ -129,6 +134,12 @@ export class CertificateService {
     }));
   }
 
+  async listReminderRecipients(user: CurrentUser) {
+    this.ensureManager(user);
+    const rows = await this.wecomUserRepository.find({ order: { name: 'ASC' } });
+    return rows.map((row) => ({ userId: row.userId, name: row.name, position: row.position }));
+  }
+
   async grouped(query: CertificateGroupQueryDto) {
     const rows = await this.repository.find({ where: { deletedAt: IsNull() }, order: { expiryDate: 'ASC' } });
     const details = await Promise.all(rows.map((row) => this.toDetail(row)));
@@ -167,6 +178,8 @@ export class CertificateService {
       issueDate: toBusinessDate(dto.issueDate),
       expiryDate: toBusinessDate(dto.expiryDate) as string,
       advanceDays,
+      reminderEnabled: dto.reminderEnabled ?? true,
+      reminderRecipientUserId: dto.reminderRecipientUserId?.trim() || null,
       issuer: dto.issuer ?? null,
       status: dto.status ?? 'active',
       remarks: dto.remarks ?? null,
@@ -176,6 +189,7 @@ export class CertificateService {
 
     const saved = await this.repository.save(entity);
     if (dto.fileIds?.length) await this.bindFiles(saved.id, { fileIds: dto.fileIds }, user);
+    void this.enqueueReminderScan();
     return this.getById(saved.id);
   }
 
@@ -201,6 +215,11 @@ export class CertificateService {
       issueDate: dto.issueDate === undefined ? entity.issueDate : toBusinessDate(dto.issueDate),
       expiryDate: dto.expiryDate === undefined ? entity.expiryDate : toBusinessDate(dto.expiryDate) as string,
       advanceDays: dto.advanceDays ?? entity.advanceDays,
+      reminderEnabled: dto.reminderEnabled ?? entity.reminderEnabled ?? true,
+      reminderRecipientUserId:
+        dto.reminderRecipientUserId === undefined
+          ? entity.reminderRecipientUserId ?? null
+          : dto.reminderRecipientUserId?.trim() || null,
       issuer: dto.issuer ?? entity.issuer,
       status: dto.status ?? entity.status,
       remarks: dto.remarks ?? entity.remarks,
@@ -214,6 +233,7 @@ export class CertificateService {
       await this.bindFiles(id, { fileIds: dto.fileIds }, user);
     }
 
+    void this.enqueueReminderScan();
     return this.getById(id);
   }
 
@@ -255,6 +275,15 @@ export class CertificateService {
   private ensureManager(user: CurrentUser) {
     if (user.roles.includes('system_admin') || user.roles.some((role) => MANAGER_ROLES.has(role))) return;
     throw new ForbiddenException('forbidden');
+  }
+
+  private async enqueueReminderScan(): Promise<void> {
+    if (!this.reminderJobService) return;
+    try {
+      await this.reminderJobService.enqueueScan({ source: 'manual' });
+    } catch {
+      // Certificate persistence must not fail when Redis is unavailable.
+    }
   }
 
   private matchesOwnerScope(ownerScope: string, ownerType?: 'vessel' | 'vehicle' | 'personnel' | 'equipment') {
@@ -357,6 +386,8 @@ export class CertificateService {
       issueDate: entity.issueDate,
       expiryDate: entity.expiryDate,
       advanceDays: entity.advanceDays,
+      reminderEnabled: entity.reminderEnabled !== false,
+      reminderRecipientUserId: entity.reminderRecipientUserId,
       issuer: entity.issuer,
       status: entity.status,
       remarks: entity.remarks,

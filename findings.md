@@ -1,11 +1,53 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-30
+updated: 2026-08-31
 replaces: []
 replaced_by: []
 ---
 # 发现与决策
+
+## 2026-08-31：0.0.7 再次生产发布（阶段 27 后续修改，完成）
+- 本轮继续沿用全局版本 `0.0.7`，未修改前端页面版本显示；`apps/web/src` 无 `SUNAN_VERSION` 或版本展示引用，数据库 migration 数量仍为 25。
+- 本地发布门禁已通过：Web 60 文件/270 项、API 单测 24 套件/125 项、API 集成 18 套件/84 项；API/Web build、API lint、21 份 OpenAPI、276 份 Markdown 索引、版本扫描和 `git diff --check` 均通过。
+- 生产备份批次为 `20260831211651`：DB dump、配置归档、Redis RDB 的 SHA-256 全部通过；Redis RDB 校验为 36 keys/30 expires，PostgreSQL 镜像 `pg_restore -l` 读取 566 条目录行（551 条非注释项）。
+- 源码批次 `20260831211740` 已原子切换，旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260831211740`；本地/生产应用源码聚合指纹为 `a499941235eb4d6323ff0b0d4ea1a8f47cf4a4b6f646c66a0cc3aba313d35e6f`。
+- Node 20 生产构建产出 API/Web/Nginx 摘要：`sha256:87a83a70f86f7d6c7f0190a0699aad6de0c74a06b17b3a48ebe4effe7b0bf38b`、`sha256:4d0eae9f1851f0fd236e7bacc3c3ff2e906628f9f88a9892670aa274a2a35810`、`sha256:e50f75e1e8d13ba887394d3907ccdefc26408dca98ccf721f9b62f8507237d9d`；API 镜像内版本和 `dist/main.js` 校验通过。旧镜像保留为 `sunan-api/web/nginx:rollback-20260831211740`。
+- 新 API 一次性容器 migration/seed 成功，数据库保持 25 条；随后 API→Web→Nginx 分阶段切换成功，API healthy、Web/Nginx running，Nginx `-t` 通过，无一次性 API/Web/Nginx 容器残留。
+- 独立线上复验通过：六个长期服务、live/ready、未登录证书接口 401、8 条 SPA 直达路由、CSS/JS 资源、TLS（至 2026-10-16）、WeCom IP 同步 timer（enabled/active）和近 10 分钟 API/Nginx 错误日志门禁均符合预期。
+- 构建输出含 5 个弃用子依赖和 `xlsx` bin 链接警告但退出码为 0；宿主机无 `pg_restore`，已使用只读 PostgreSQL 镜像完成恢复目录检查。企业微信 iOS/Android/桌面真实登录与业务操作仍需用户现场验收，不能由 HTTP smoke 替代。
+
+## 2026-08-31：0.0.7 再次生产发布（阶段 27 后续修改）
+- 本轮在阶段 27 后继续修改自动提醒调度、证书对象权限与详情附件、提醒看板、工作台布局/路由和样式，并同步测试、规格和手册；数据库 migration 数量仍为 25。
+- 版本真源继续为 `0.0.7`，`apps/web/src` 不包含 `SUNAN_VERSION` 或版本显示文本；同标签重发需记录新镜像摘要、源码批次、关键哈希与旧镜像回滚标签。
+
+## 2026-08-31：证书对象与自动提醒修复
+
+- 用户确认“安全主数据中心”改名为“证书对象”，但现有 `/my/master-data` 和 `/workbench/master-data` 路由继续兼容。
+- 工作台当前 `taskBoardExpanded` 默认值为 `true`，展开时渲染全部模块；本轮需改为默认两行并支持完整展开，选中模块仍通过排序置顶。
+- `ReminderSchedulerService` 仅在每日上海时间 09:00 入队扫描，证照新增/编辑不会触发扫描，因此新证照在下一次调度前必须手动扫描；本轮增加启动补扫和保存后异步入队。
+- `ReminderService.toDto` 仅返回提醒快照，没有证照编号、签发/到期字段和附件；本轮由服务端补充关联证照信息与附件元数据，前端复用现有文件预览/下载组件。
+
+## 2026-08-31：0.0.7 再次生产发布（本轮修改）
+- 本轮工作树在上一轮发布基础上继续修改，主要涉及证书/提醒页面、工作台首页和导航、移动端样式、路由测试以及手册和 API/UI 规格；包版本仍为 `0.0.7`，`apps/web/src` 无版本显示引用。
+- 本轮 Web 测试增至 270 项；API unit/integration 分别为 125/84 项，均已在本地新鲜通过。API/Web build、API lint、21 份 OpenAPI、276 份 Markdown 索引和 `git diff --check` 通过。
+- 证书对象入口位于“我的 > 证书提醒”下方；船舶、车辆、人员、设备对象支持新增/编辑，普通用户只读有效对象，停用对象与维护动作受角色权限控制。所有可填写日期字段改为日期时间选择控件，后端拒绝 date-only，界面统一显示上海时间 `YYYY-MM-DD HH:mm`。
+- 操作手册 Markdown 与 DOCX 已同步；DOCX 生成器输出 14 个章节、48 张正文图，LibreOffice 渲染为 94 页 A4，DOCX XML 结构校验通过。新版页面对应截图仍需用户现场重拍后替换。
+- 同标签重发继续以源码批次、镜像摘要、创建时间、关键文件哈希和旧镜像回滚标签作为不可变发布证据；不得仅依据 `0.0.7` 标签判断新旧版本。
+- 生产预检、备份、恢复演练、源码同步和 Node 20 镜像构建均完成；本轮备份批次为 `20260831064109`，源码批次为 `20260831064406`，构建 API/Web/Nginx 摘要为 `43ea1c025f...dabb50d4`/`4998d5922e...c988fb7`/`347eda4abc...376cee6f`，旧摘要保留在 `rollback-20260831064406` 标签。
+- 数据库 migration/seed 保持 25 条迁移，新增证书提醒字段和索引继续存在；临时库恢复演练核对 25 migrations、4 users、3 certificates 后清理完成。
+- API→Web→Nginx 切换和独立复验通过：API healthy、Web/Nginx running，17 条 SPA 路由、8 个新资源、API live/ready/401、根域名 301、TLS、定时器和近 10 分钟错误门禁全部通过；同标签版本仍为 `0.0.7`，前端构建产物无版本显示引用。
+- 本轮源码聚合指纹本地/生产一致为 `a24d1f154ce8d9ff273c557d52ee00b8fe96ceb055aa5abaef059d49f3ba6a7d`；备份 SHA-256、Redis RDB 检查和 PostgreSQL 566 条恢复目录通过，无一次性容器残留。
+- 已记录并修正验证工具问题：Redis ACL `NOAUTH`、宿主机无 Node、`.env.example` 宽泛正则误报、远程嵌套命令替换语法错误及 pnpm 参数传递错误；均未改变生产状态。构建时 `xlsx` bin 链接警告为非致命，API 运行和健康门禁已实测通过。
+
+## 2026-08-31：0.0.7 小改动再次生产发布
+- 镜像构建批次 `20260831031730` 产出新 API/Web/Nginx 摘要 `sha256:72c9f238...d284608`/`sha256:9a799f3b...0d36a15d`/`sha256:ba4a0f99...35079d0`；旧运行摘要已保留为 `rollback-20260831031635` 标签，三张新镜像版本标签仍为 `0.0.7`。
+- 新 API 一次性容器执行 migration/seed 后，生产数据库由 24 条迁移升至 25 条；`certificates` 的 `reminder_enabled`、`reminder_recipient_user_id` 字段和 `idx_certificates_reminder_recipient` 索引均存在，迁移幂等增量未改动既有业务记录。
+- API→Web→Nginx 已按阶段完成切换，运行摘要与构建摘要一致；API healthy、Web/Nginx running、Nginx 配置测试通过，自动回滚未触发。
+- 新鲜生产复验通过：六个长期容器正常，API live/ready 200，证书/提醒/设置/工作台/采购五个受保护接口未登录均 401；公网 14 条（含根路径）SPA 路由均返回带 DOCTYPE 的 200，7 个新懒加载资源均 200，根域名 HTTP 301，TLS 证书至 2026-10-16，定时器 enabled/active，近 10 分钟 API/Nginx 错误标记均为 0。
+- 备份复验通过：本轮 DB/配置/Redis 三份 SHA-256 全部 OK，Redis RDB 检查通过，生产数据库镜像 `pg_restore -l` 读取 565 条目录项；新 migration 文件哈希 `c6e934e8...bd3dee` 与本地一致，Web 产物中无 `0.0.7` 或 `SUNAN_VERSION` 展示文本，无一次性容器残留。
+- 验证脚本的三次本地 shell 失败均为工具调用问题（安全策略拦截临时文件删除、zsh 特殊 `path` 变量、zsh 标量分词），未改变生产状态；改用安全且可复现的命令后复验完整退出 0。宿主机缺少 `pg_restore`，已改用只读挂载的 PostgreSQL 镜像完成同等检查。
+- 本轮最终回滚点：源码 `/dev/sunan/sunan-source/backup-20260831031635`；镜像 `sunan-api/web/nginx:rollback-20260831031635`；数据/配置/Redis 备份 `20260831031452`。企业微信 iOS/Android/桌面真实登录、授权与业务操作不能由 HTTP 自动化替代，仍需用户现场执行。
 
 ## 2026-08-30：证书闭环与全局日期时间收口（初始）
 - 用户报告的证书问题涵盖四条独立链路：新增/编辑写入、证书类型归类与 owner 计数、扫描任务筛选、临期/过期看板分类；不应以单一 UI 补丁合并处理。
@@ -193,6 +235,13 @@ replaced_by: []
 - 本机外部公网复验再次通过 12 条 SPA 路由、7 个本轮关键资源、live/ready、未登录 401 和根域名 301；近 10 分钟 API/Web 错误及 Nginx 最近 300 条 5xx/错误均为 0。
 - 本次完整回滚点：源码 `/dev/sunan/sunan-source/backup-20260831010442`；API/Web/Nginx 镜像标签分别为 `sunan-*:rollback-20260831010442`；数据库/配置/Redis 备份批次为 `20260831010322`。新增 migration 是增量模板记录，必要时可先回切旧应用镜像，再按恢复预案决定是否执行 migration down 或数据库恢复。
 - 企业微信 iOS/Android/桌面真实登录、授权与业务操作不能由 HTTP 自动化替代，本次仍作为用户现场验收项保留，不写成已执行。
+- 2026-08-31 第二次 0.0.7 重发：`main`/`origin/main` 已到 `8ddb3c3`，工作树有 49 个已跟踪文件改动及新目录/文件，新增 migration `1710000024000-certificate-reminder-preferences.ts`；需按新 schema 变更重新执行备份、门禁和发布。
+- 2026-08-31 第三次发布预检：`main`/`origin/main` 已到 `8ddb3c3`，线上仍为上次发布的 API/Web/Nginx 0.0.7 镜像、24 条 migration；本地新增 migration `1710000024000-certificate-reminder-preferences.ts` 将 certificates 增加 `reminder_enabled`、`reminder_recipient_user_id` 和软删除过滤索引，均为 `IF NOT EXISTS` 幂等增量。
+- 本轮版本/部署真源仍全部为 `0.0.7`，`apps/web/src` 无版本显示引用；部署配置未改动，继续使用服务器 `/dev/sunan/deploy/docker-compose.yml`。
+- 本轮发布前门禁最终通过：Web 60 files/264 tests、API unit 23 suites/121 tests、API integration 18 suites/84 tests，API/Web build、API lint、21/21 OpenAPI、276 Markdown 索引、版本/前端显示/diff 检查全部通过。
+- 本轮新备份批次 `20260831031452` 已完成：PostgreSQL custom dump 278,620 bytes/550 entries、配置归档 13,225 bytes、Redis 时间点 RDB 8,802 bytes；SHA-256 与 RDB 校验通过，dump 恢复演练核对 24 条 migration、4 个企业微信用户、3 条证书记录，临时库已删除。
+- 本轮源码批次 `20260831031635` 已完成校验并原子切换：0.0.7、25 条 migration、无敏感环境文件/生成目录，应用源码指纹 `e65fcf...043551a` 与本地一致；旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260831031635`。
+- Web 首轮与 API unit/build/lint 并行时，`AppRoutes` `/my` 懒加载测试超时；隔离用例及单独默认 Web 全量重跑均通过，确认为本机并行资源竞争而非代码回归，后续发布门禁按阶段执行。
 - 仓库没有既有 `task_plan.md`、`findings.md`、`progress.md`。
 - `docs/` 已存在当前计划入口：`docs/execplans.md`、`docs/plans/README.md`、`docs/prompts/README.md`。
 - M7/M8 当前已有计划与 prompt：`docs/plans/M7-execplans.md`、`docs/plans/M8-execplans.md`、`docs/prompts/m7/`、`docs/prompts/m8/`。
@@ -410,3 +459,9 @@ replaced_by: []
 - 真实截图的尺寸混合为桌面横图、手机长图和超长采购报表图。Markdown 中直接引用原图；DOCX 生成器对真实图按比例缩放，长图切成连续片段后分页，4:3 只用于缺失图位占位。
 - 第 9 章没有提供真实截图，因此主数据、计划、任务、检查、问题和 CAPA 图位全部保留为待补 4:3 占位；第 8 章除工作平台首页外也保留待补图位。正式图位统计为 40 张真实图 + 34 张占位图。
 - 源码核对未发现需整章移除的现有功能。检查模板当前只有创建草稿/查看，主数据页当前只有查询/选择/档案列表，采购审批和报表审批当前均为系统内审批，采购新建页当前没有附件控件；手册已按这些真实边界表述。
+
+## 2026-08-31：提醒/对象回归复核
+- 提醒列表筛选已补上 `reminderType=upcoming` 且未显式指定状态时排除 `acknowledged`，与“待处理”统计一致；对应 API 单测通过。
+- 设备证书提醒引擎原先将 `ownerName` 直接写成设备 UUID；已加入 `SafetyEquipmentEntity` 可选仓储和名称解析，未改变既有单测构造兼容性。
+- 主数据维护列表现在请求 `includeInactive=true`，停用/报废对象仍可找到并恢复；设备编辑时类别编码允许留空以保持原分类，避免 DTO 只返回 `categoryId` 导致保存失败。
+- 本轮复核已完成：用户可填写的日期字段均已替换为不可手输的 DatePicker 日期时间控件，主数据新增/编辑按钮与后端维护角色集合一致；对应 Web/API 测试、构建和 lint 均通过。

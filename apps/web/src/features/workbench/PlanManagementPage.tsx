@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Form, Input, InputNumber, List, Select, Space, Tag, Typography, message } from 'antd';
+import { Button, Card, DatePicker, Empty, Form, Input, InputNumber, List, Select, Space, Tag, Typography, message } from 'antd';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
@@ -135,7 +135,7 @@ export function PlanManagementPage() {
               <Form.Item name="title" label="任务名称" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="responsibleUserId" label="负责人 ID" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="participantUserIds" label="参与人 ID（逗号分隔）"><Input /></Form.Item>
-              <Form.Item name="startAt" label="首次执行时间" rules={[{ required: true }]}><Input type="datetime-local" /></Form.Item>
+              <Form.Item name="startAt" label="首次执行时间" rules={[{ required: true }]} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" /></Form.Item>
               {selectedPlan.planType === 'monthly' && <Form.Item name="dayOfMonth" label="每月日期"><InputNumber min={1} max={31} /></Form.Item>}
               {selectedPlan.planType === 'periodic' && <Form.Item name="intervalDays" label="间隔天数" rules={[{ required: true }]}><InputNumber min={1} /></Form.Item>}
               <Form.Item name="completionRule" label="完成规则"><Select style={{ width: 120 }} options={[{ value: 'all', label: '全部完成' }, { value: 'any', label: '任一完成' }, { value: 'quorum', label: '达到人数' }]} /></Form.Item>

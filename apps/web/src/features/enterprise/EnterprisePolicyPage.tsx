@@ -26,6 +26,7 @@ import type { FileRecord } from '../files/types';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, resolveBackHref, updateSearchParams } from '../../router/myRouteState';
 import { useAppSelector } from '../../app/hooks';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { canManageCompanyContent } from '../auth/permissions';
 import {
   type EnterprisePolicy,
@@ -334,7 +335,7 @@ export function EnterprisePolicyDetailPage() {
             </Descriptions.Item>
             <Descriptions.Item label="发布时间">
               {policy.publishedAt
-                ? new Date(policy.publishedAt).toLocaleString('zh-CN')
+                ? formatShanghaiDateTime(policy.publishedAt)
                 : '尚未发布'}
             </Descriptions.Item>
           </Descriptions>

@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
-import { AssignmentCreateDto, EquipmentMasterDataDto, MasterDataImportDto, MasterDataListQueryDto, NormalizeReferenceDto, PersonnelMasterDataDto, VesselMasterDataDto } from './dto/master-data.dto';
+import { AssignmentCreateDto, EquipmentMasterDataDto, MasterDataImportDto, MasterDataListQueryDto, NormalizeReferenceDto, PersonnelMasterDataDto, VehicleMasterDataDto, VesselMasterDataDto } from './dto/master-data.dto';
 import { MasterDataService } from './master-data.service';
 
 @Controller('/api/v1/master-data')
@@ -14,6 +14,10 @@ export class MasterDataController {
   @Post('vessels') createVessel(@Body() dto: VesselMasterDataDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.createVessel(dto, user); }
   @Get('vessels/:id') vessel(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) { return this.service.getVessel(id, user); }
   @Patch('vessels/:id') updateVessel(@Param('id') id: string, @Body() dto: VesselMasterDataDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.updateVessel(id, dto, user); }
+  @Get('vehicles') listVehicles(@Query() query: MasterDataListQueryDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.listVehicles(query, user); }
+  @Post('vehicles') createVehicle(@Body() dto: VehicleMasterDataDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.createVehicle(dto, user); }
+  @Get('vehicles/:id') vehicle(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) { return this.service.getVehicle(id, user); }
+  @Patch('vehicles/:id') updateVehicle(@Param('id') id: string, @Body() dto: VehicleMasterDataDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.updateVehicle(id, dto, user); }
   @Get('personnel') listPersonnel(@Query() query: MasterDataListQueryDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.listPersonnel(query, user); }
   @Post('personnel') createPersonnel(@Body() dto: PersonnelMasterDataDto, @CurrentUserDecorator() user: CurrentUser) { return this.service.createPersonnel(dto, user); }
   @Get('personnel/:id') personnel(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) { return this.service.getPersonnel(id, user); }

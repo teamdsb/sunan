@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { IsNull, Repository } from 'typeorm';
@@ -9,6 +9,7 @@ import { CertificateReminderEntity } from 'src/database/entities/certificate-rem
 import { CertificateTypeEntity } from 'src/database/entities/certificate-type.entity';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
+import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
@@ -44,6 +45,9 @@ export class CertificateReminderEngineService {
     private readonly wecomMessageService: WecomMessageService,
     private readonly clock: ReminderClockService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    @Optional()
+    @InjectRepository(SafetyEquipmentEntity)
+    private readonly equipmentRepository: Repository<SafetyEquipmentEntity> | undefined = undefined,
   ) {}
 
   async runScan(
@@ -56,13 +60,14 @@ export class CertificateReminderEngineService {
   }> {
     const now = this.clock.now();
     const scheduledDate = this.clock.today();
-    const [certificates, certificateTypes, reminders, vessels, vehicles, personnel, users] = await Promise.all([
+    const [certificates, certificateTypes, reminders, vessels, vehicles, personnel, equipment, users] = await Promise.all([
       this.certificateRepository.find({ where: { deletedAt: IsNull() } }),
       this.certificateTypeRepository.find(),
       this.reminderRepository.find(),
       this.vesselRepository.find({ where: { deletedAt: IsNull() } }),
       this.vehicleRepository.find({ where: { deletedAt: IsNull() } }),
       this.personnelRepository.find({ where: { deletedAt: IsNull() } }),
+      this.equipmentRepository?.find({ where: { deletedAt: IsNull() } }) ?? Promise.resolve([]),
       this.wecomUserRepository.find(),
     ]);
 
@@ -70,6 +75,7 @@ export class CertificateReminderEngineService {
     const vesselById = new Map(vessels.map((row) => [row.id, row]));
     const vehicleById = new Map(vehicles.map((row) => [row.id, row]));
     const personnelById = new Map(personnel.map((row) => [row.id, row]));
+    const equipmentById = new Map(equipment.map((row) => [row.id, row]));
     const reminderByKey = new Map(
       reminders.map((reminder) => [
         this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType),
@@ -104,6 +110,10 @@ export class CertificateReminderEngineService {
         continue;
       }
 
+      if (certificate.reminderEnabled === false) {
+        continue;
+      }
+
       const type = typeById.get(certificate.certificateTypeId);
       const advanceDays = certificate.advanceDays ?? type?.defaultAdvanceDays ?? 30;
       const daysUntilExpiry = this.diffDays(certificate.expiryDate, scheduledDate);
@@ -118,6 +128,7 @@ export class CertificateReminderEngineService {
         type,
         users,
         personnelById,
+        equipmentById,
         vesselById,
         vehicleById,
       });
@@ -171,7 +182,7 @@ export class CertificateReminderEngineService {
           certificateExpiryDate: certificate.expiryDate,
           ownerType: certificate.ownerType,
           ownerId: certificate.ownerId,
-          ownerName: this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById),
+          ownerName: this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById, equipmentById),
           recipientUserId,
           reminderType,
           status: 'dispatching',
@@ -196,7 +207,7 @@ export class CertificateReminderEngineService {
           reminder.certificateExpiryDate = certificate.expiryDate;
           reminder.ownerType = certificate.ownerType;
           reminder.ownerId = certificate.ownerId;
-          reminder.ownerName = this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById);
+          reminder.ownerName = this.resolveOwnerName(certificate.ownerType, certificate.ownerId, vesselById, vehicleById, personnelById, equipmentById);
           reminder.reminderType = reminderType;
           reminder.scheduledDate = scheduledDate;
           reminder.daysBeforeExpiry = daysUntilExpiry;
@@ -283,10 +294,16 @@ export class CertificateReminderEngineService {
     type: CertificateTypeEntity | undefined;
     users: WecomUserEntity[];
     personnelById: Map<string, PersonnelEntity>;
+    equipmentById: Map<string, SafetyEquipmentEntity>;
     vesselById: Map<string, VesselEntity>;
     vehicleById: Map<string, VehicleEntity>;
   }): string[] {
     const recipients = new Set<string>();
+    const configuredRecipient = params.certificate.reminderRecipientUserId?.trim();
+    if (configuredRecipient) {
+      const exists = params.users.some((user) => user.userId === configuredRecipient);
+      return exists ? [configuredRecipient] : [];
+    }
     const ownerType = params.certificate.ownerType;
 
     if (ownerType === 'vessel') {
@@ -345,6 +362,7 @@ export class CertificateReminderEngineService {
     vessels: Map<string, VesselEntity>,
     vehicles: Map<string, VehicleEntity>,
     personnel: Map<string, PersonnelEntity>,
+    equipment: Map<string, SafetyEquipmentEntity>,
   ): string {
     if (ownerType === 'vessel') {
       return vessels.get(ownerId)?.name ?? ownerId;
@@ -355,7 +373,7 @@ export class CertificateReminderEngineService {
     }
 
     if (ownerType === 'equipment') {
-      return ownerId;
+      return equipment.get(ownerId)?.name ?? ownerId;
     }
 
     return personnel.get(ownerId)?.name ?? ownerId;

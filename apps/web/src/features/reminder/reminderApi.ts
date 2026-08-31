@@ -22,16 +22,28 @@ export interface ReminderItem {
   id: string;
   certificateId: string;
   certificateTitle: string;
+  certificateTypeId?: string;
+  certificateTypeName?: string;
+  certificateNo?: string | null;
+  issueDate?: string | null;
+  expiryDate?: string;
   ownerType: 'vessel' | 'vehicle' | 'personnel' | 'equipment';
   ownerName: string;
   recipientUserId: string;
   reminderType: 'upcoming' | 'overdue';
-  status: 'pending' | 'sent' | 'acknowledged' | 'failed';
+  status: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed';
   scheduledDate: string;
   daysBeforeExpiry: number;
   sentAt: string | null;
   acknowledgedAt: string | null;
   acknowledgedBy: string | null;
+  files?: Array<{
+    id: string;
+    fileName: string;
+    ossKey: string;
+    mimeType: string;
+    fileSize: number;
+  }>;
 }
 
 export interface ReminderListQuery {
@@ -45,6 +57,18 @@ export interface ReminderListQuery {
 export interface ReminderScanJob {
   jobId: string;
   acceptedAt: string;
+}
+
+export interface ReminderScanJobStatus extends ReminderScanJob {
+  source: 'manual' | 'cron';
+  status: 'queued' | 'running' | 'retryable' | 'completed' | 'failed';
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdCount: number;
+  sentCount: number;
+  failedCount: number;
+  error: string | null;
+  retryCount: number;
 }
 
 type ReminderEnvelope<T> = ApiEnvelope<T>;
@@ -94,6 +118,9 @@ export const reminderApi = baseApi.injectEndpoints({
       query: () => ({ url: '/certificate-reminders/actions/scan', method: 'POST' }),
       invalidatesTags: ['ReminderDashboard', 'Reminder'],
     }),
+    getReminderScanJob: builder.query<ReminderEnvelope<ReminderScanJobStatus | null>, string>({
+      query: (jobId) => ({ url: `/certificate-reminders/actions/scan/${jobId}` }),
+    }),
   }),
 });
 
@@ -103,4 +130,5 @@ export const {
   useGetReminderByIdQuery,
   useAcknowledgeReminderMutation,
   useTriggerReminderScanMutation,
+  useGetReminderScanJobQuery,
 } = reminderApi;

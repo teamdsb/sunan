@@ -180,6 +180,9 @@ importers:
       axios:
         specifier: ^1.8.4
         version: 1.13.6
+      dayjs:
+        specifier: ^1.11.20
+        version: 1.11.20
       heic2any:
         specifier: ^0.0.4
         version: 0.0.4

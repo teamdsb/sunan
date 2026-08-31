@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { useGetTasksQuery } from './taskApi';
 
 const tabs = [
@@ -90,7 +91,7 @@ export function TaskCenterPage() {
         ) : tasks.length ? (
           <List dataSource={tasks} renderItem={(task) => (
             <List.Item actions={[<Button key="detail" type="link" onClick={() => navigate(workbenchRouteConfig.taskDetail.buildPath(task.id))}>查看</Button>]}>
-              <List.Item.Meta title={<Link to={workbenchRouteConfig.taskDetail.buildPath(task.id)}>{task.title}</Link>} description={`期限：${new Date(task.dueAt).toLocaleString('zh-CN')}`} />
+              <List.Item.Meta title={<Link to={workbenchRouteConfig.taskDetail.buildPath(task.id)}>{task.title}</Link>} description={`期限：${formatShanghaiDateTime(task.dueAt)}`} />
               <Tag color={task.isOverdue ? 'red' : task.status === 'completed' ? 'green' : 'blue'}>{task.isOverdue ? '逾期' : task.status}</Tag>
             </List.Item>
           )} />

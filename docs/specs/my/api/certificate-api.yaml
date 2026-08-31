@@ -109,10 +109,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateDetailResponse'
+  /certificates/reminder-recipients:
+    get:
+      tags: [Certificates]
+      summary: 获取可选的企业微信提醒负责人
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReminderRecipient'
+        '403':
+          description: 仅证照管理角色可读取提醒负责人列表
   /certificates/grouped:
     get:
       tags: [Certificates]
-      summary: 按持有对象分组查询电子证照
+      summary: 按证照分类分组查询电子证照（旧版 owner 参数仅用于兼容）
       parameters:
         - name: groupBy
           in: query
@@ -295,6 +314,12 @@ components:
           format: date
         advanceDays:
           type: integer
+        reminderEnabled:
+          type: boolean
+        reminderRecipientUserId:
+          type: string
+          nullable: true
+          description: 指定提醒负责人；不设置时按对象和部门规则推导
         issuer:
           type: string
           nullable: true
@@ -385,6 +410,17 @@ components:
           type: string
         status:
           type: string
+    ReminderRecipient:
+      type: object
+      required: [userId, name]
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+        position:
+          type: string
+          nullable: true
     CertificateGroup:
       type: object
       properties:
@@ -425,6 +461,14 @@ components:
           description: 日期时间控件输入；服务端按业务时区保存为到期日
         advanceDays:
           type: integer
+        reminderEnabled:
+          type: boolean
+          default: true
+          description: 是否启用企业微信临期/过期提醒
+        reminderRecipientUserId:
+          type: string
+          nullable: true
+          description: 可选的企业微信提醒负责人
         issuer:
           type: string
         remarks:
@@ -451,6 +495,12 @@ components:
           description: 日期时间控件输入；服务端按业务时区保存为到期日
         advanceDays:
           type: integer
+        reminderEnabled:
+          type: boolean
+        reminderRecipientUserId:
+          type: string
+          nullable: true
+          description: 可选的企业微信提醒负责人；留空时恢复按部门规则推导
         issuer:
           type: string
         status:

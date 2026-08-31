@@ -69,7 +69,7 @@ describe('EnterprisePolicyDetailPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('2026/8/12 09:30:00')).toBeInTheDocument();
+    expect(screen.getByText('2026-08-12 09:30')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /返回制度列表/ }));
     expect(screen.getByTestId('location')).toHaveTextContent(
       '/my/enterprise-policy?page=3&pageSize=20&status=published&keyword=demo',

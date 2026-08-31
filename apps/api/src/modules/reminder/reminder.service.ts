@@ -4,6 +4,9 @@ import { IsNull, Repository } from 'typeorm';
 
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { CertificateReminderEntity } from 'src/database/entities/certificate-reminder.entity';
+import { CertificateEntity } from 'src/database/entities/certificate.entity';
+import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
+import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 
@@ -22,6 +25,12 @@ export class ReminderService {
   constructor(
     @InjectRepository(CertificateReminderEntity)
     private readonly reminderRepository: Repository<CertificateReminderEntity>,
+    @InjectRepository(CertificateEntity)
+    private readonly certificateRepository: Repository<CertificateEntity>,
+    @InjectRepository(CertificateFileEntity)
+    private readonly certificateFileRepository: Repository<CertificateFileEntity>,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
     @InjectRepository(PersonnelEntity)
     private readonly personnelRepository: Repository<PersonnelEntity>,
     @InjectRepository(WecomUserEntity)
@@ -32,7 +41,9 @@ export class ReminderService {
   async dashboard(user: CurrentUser) {
     const reminders = await this.visibleReminders(user);
     return {
-      totalPending: reminders.filter((item) => item.status === 'pending').length,
+      totalPending: reminders.filter(
+        (item) => item.reminderType === 'upcoming' && item.status !== 'acknowledged',
+      ).length,
       totalOverdue: reminders.filter(
         (item) => item.reminderType === 'overdue' && item.status !== 'acknowledged',
       ).length,
@@ -49,7 +60,11 @@ export class ReminderService {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
     const total = sorted.length;
-    const data = sorted.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((item) => this.toDto(item));
+    const data = await Promise.all(
+      sorted
+        .slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)
+        .map((item) => this.toDto(item)),
+    );
 
     return {
       data,
@@ -64,7 +79,7 @@ export class ReminderService {
 
   async detail(id: string, user: CurrentUser) {
     const reminder = await this.findVisibleReminderOrThrow(id, user);
-    return this.toDto(reminder);
+    return this.toDto(reminder, true);
   }
 
   async acknowledge(id: string, dto: ReminderAcknowledgeDto, user: CurrentUser) {
@@ -83,7 +98,7 @@ export class ReminderService {
     await this.reminderRepository.save(reminder);
 
     void dto;
-    return this.toDto(reminder);
+    return this.toDto(reminder, true);
   }
 
   private async visibleReminders(user: CurrentUser): Promise<CertificateReminderEntity[]> {
@@ -196,6 +211,12 @@ export class ReminderService {
         return false;
       }
 
+      // The dashboard's pending card is represented by reminderType=upcoming.
+      // Acknowledged upcoming reminders are historical records, not pending work.
+      if (query.reminderType === 'upcoming' && !query.status && item.status === 'acknowledged') {
+        return false;
+      }
+
       if (query.ownerType && item.ownerType !== query.ownerType) {
         return false;
       }
@@ -262,11 +283,23 @@ export class ReminderService {
     return currentUser.departmentCodes.includes(personnel.departmentCode);
   }
 
-  private toDto(reminder: CertificateReminderEntity) {
+  private async toDto(reminder: CertificateReminderEntity, includeCertificate = false) {
+    const certificate = includeCertificate
+      ? await this.certificateRepository.findOne({ where: { id: reminder.certificateId } })
+      : null;
+    const files = includeCertificate
+      ? await this.loadCertificateFiles(reminder.certificateId)
+      : [];
+
     return {
       id: reminder.id,
       certificateId: reminder.certificateId,
+      certificateTypeId: reminder.certificateTypeId,
+      certificateTypeName: reminder.certificateTypeName,
       certificateTitle: reminder.certificateTitle,
+      certificateNo: certificate?.certificateNo ?? null,
+      issueDate: certificate?.issueDate ?? null,
+      expiryDate: certificate?.expiryDate ?? reminder.certificateExpiryDate,
       ownerType: reminder.ownerType,
       ownerName: reminder.ownerName,
       recipientUserId: reminder.recipientUserId,
@@ -277,6 +310,30 @@ export class ReminderService {
       sentAt: reminder.sentAt?.toISOString() ?? null,
       acknowledgedAt: reminder.acknowledgedAt?.toISOString() ?? null,
       acknowledgedBy: reminder.acknowledgedBy,
+      ...(includeCertificate ? { files } : {}),
     };
+  }
+
+  private async loadCertificateFiles(certificateId: string) {
+    const relations = await this.certificateFileRepository.find({
+      where: { certificateId },
+      order: { sortOrder: 'ASC' },
+    });
+    if (!relations.length) return [];
+
+    const files = await this.fileRepository.find({
+      where: relations.map((relation) => ({ id: relation.fileId })),
+    });
+    const byId = new Map(files.map((file) => [file.id, file]));
+    return relations
+      .map((relation) => byId.get(relation.fileId))
+      .filter((file): file is FileEntity => Boolean(file))
+      .map((file) => ({
+        id: file.id,
+        fileName: file.fileName,
+        ossKey: file.ossKey,
+        mimeType: file.mimeType,
+        fileSize: file.fileSize,
+      }));
   }
 }

@@ -206,6 +206,10 @@ export function AppRoutes() {
             element={renderLazyPage(<ReminderDetailPage />)}
           />
           <Route
+            path={myRouteConfig.masterData.path}
+            element={renderLazyPage(<MasterDataPage />)}
+          />
+          <Route
             path={myRouteConfig.monitors.path}
             element={renderLazyPage(<MonitorPage />)}
           />

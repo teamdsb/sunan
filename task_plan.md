@@ -11,7 +11,7 @@ replaced_by: []
 持续完成苏南平台开发、文档与验收任务。当前任务是修复证书新增/编辑、分类统计、证书扫描及临期/过期分类问题，并将系统中可填写的日期字段统一改为日期时间选择与后端格式拒绝，最后更新操作手册并通过 Docker/Testcontainers 验证。
 
 ## 当前阶段
-阶段 24
+阶段 27
 
 ## 各阶段
 
@@ -218,9 +218,27 @@ replaced_by: []
 - [x] 新鲜核验容器、健康检查、公网页面、关键接口、静态资源、版本和日志
 - **状态：** completed（生产 API/Web/Nginx 保持 `0.0.7`，运行本次新镜像 ID；24 条 migration、备份恢复、自动化门禁、12 路由/7 资源公网 smoke 与日志复验通过；企业微信三端真机仍由用户现场执行）
 
+### 阶段 25：0.0.7 小改动再次生产发布
+- [x] 审计当前提交/工作树、版本真源、新 migration 与生产实况
+- [x] 阅读并确认本轮发布边界、备份前置和回滚点
+- [x] 保持全局版本 `0.0.7`，不修改前端页面版本显示
+- [x] 执行受影响与全量发布前门禁，生成新的 Node 20 Docker 镜像
+- [x] 完成生产备份、migration/seed、API→Web→Nginx 分阶段切换和回滚保护
+- [x] 新鲜验证容器、数据库、关键接口、静态资源、公网路由、日志和定时器
+- **状态：** completed（生产 API/Web/Nginx 均为 `0.0.7`；25 条 migration、备份与恢复条目、镜像回滚标签、14 条 SPA 路由/7 个资源、公网 live/ready/401、TLS、定时器和近期日志复验通过；企业微信三端真机仍由用户现场执行）
+
 ## 关键问题
 1. 用户最新确认：M1-M6 修复应作为新的 M7；原 M7/M8 整体后移。
 2. 新 M7 使用 6 个 Wave，对应上传/我的、办事、采购、工作台、企业微信直达和最终门禁。
+
+### 阶段 26：0.0.7 再次生产发布（本轮修改）
+- [x] 审计本轮工作树、版本真源、测试变化与生产当前状态
+- [x] 保持全局版本 `0.0.7`，不修改前端页面版本显示
+- [x] 执行 Web/API 测试、构建、lint、OpenAPI、文档索引与 diff 门禁
+- [x] 完成生产备份、源码同步、Node 20 镜像构建与回滚标签
+- [x] 执行 migration/seed、API→Web→Nginx 分阶段切换
+- [x] 新鲜验证容器、数据库、关键接口、静态资源、公网路由、日志、TLS 与定时器
+- **状态：** completed（生产 API/Web/Nginx 均为 `0.0.7`；25 条 migration、备份恢复、镜像回滚标签、17 条 SPA 路由/8 个资源、公网 live/ready/401、TLS、定时器和近期日志复验通过；企业微信三端真机仍由用户现场执行）
 
 ## 已做决策
 | 决策 | 理由 |
@@ -245,6 +263,16 @@ replaced_by: []
 | 0.0.6 无新 migration，仍采用备份后分阶段切流 | 本次变更集为 OAuth/头像/权限，数据库保持 23 条 migration；先备份再 API→Web→Nginx 切换，能保留清晰回滚点并减小故障面 |
 | 新管理员通过现有 UserID 白名单增补 | 认证规格和当前代码明确 `WECOM_SYSTEM_ADMIN_USER_IDS` 是唯一真源；保留现有 3 个值后追加 `DaFaShiDuDaXue`，不写历史数据库管理员字段 |
 | 0.0.7 重发采用新构建替换同标签运行容器 | 用户明确要求不修改版本号；通过源码批次、镜像 ID、创建时间和 SHA-256 追踪本次构建，发布前保留旧镜像 ID 与源码/数据回滚点 |
+
+## 阶段 26 执行错误
+| 错误 | 尝试次数 | 解决方案 |
+|------|---------|---------|
+| API unit 首次通过 pnpm 脚本传递 `--runInBand` 时 Jest 未找到测试 | 1 | 改用 `pnpm --filter api exec jest --config ./jest.unit.config.ts --runInBand`，23 suites/121 tests 通过 |
+| 服务器宿主机没有 Node，源码切换后的版本校验提前退出 | 1 | 使用现有 `sunan-api:0.0.7` Node 20 镜像只读挂载源码完成版本、migration 和敏感文件校验 |
+| Redis RDB 首次快照因 ACL 返回 `NOAUTH` | 1 | 从生产 `.env` 读取 ACL 参数到 shell 变量后执行认证 `redis-cli --rdb`，密码未输出，快照和 `redis-check-rdb` 通过 |
+| 一次性 migration 校验命令的嵌套命令替换导致远程 shell 语法错误 | 1 | 拆分为独立 migration/seed 与计数命令，25 条 migration、无临时容器残留 |
+| 源码敏感文件检查的宽泛正则误报 `.env.example` | 1 | 改为精确匹配 `.env`、`.env.local` 和 `.env.*.local`，确认无敏感文件 |
+| API 镜像 `pnpm deploy` 报 `xlsx` bin 创建警告 | 1 | 构建命令仍以退出码 0 完成；用 Node 20 容器验证 package version 和 `dist/main.js` 存在，API 健康门禁通过 |
 
 ## 遇到的错误
 | 错误 | 尝试次数 | 解决方案 |
@@ -273,6 +301,8 @@ replaced_by: []
 | API unit 首轮命令把 `--runInBand` 解析成测试匹配模式 | 1 | `pnpm ... test:unit -- --runInBand` 给 Jest 多传了分隔符，0 用例运行且退出 1；改用 `pnpm --filter api exec jest --config ./jest.unit.config.ts --runInBand` 新鲜重跑，23 suites/121 tests 通过。 |
 | 首轮独立生产复验末尾 Compose 状态检查退出 1 | 1 | 脚本校验备份后工作目录停在 `/dev/sunan/backups`，未指定 Compose 文件；前置核心断言均通过但整轮不采信，修正为显式 `-f /dev/sunan/deploy/docker-compose.yml` 后完整重跑。 |
 | 首轮本机外部路由 smoke 的 URL 拼接失败 | 1 | zsh 默认不对字符串变量执行 sh 风格词拆分，整组路由被当成一个 URL；改为显式 zsh 数组逐项请求后完整重跑。 |
+| 本轮 Web 全量测试 `/my` 懒加载用例超时 | 1 | 60 files/264 tests 中仅 `AppRoutes > renders the my home page at /my` 停留在 route-loading，先隔离运行该文件/用例并检查近期路由及测试改动，未据此发布。 |
+| Web 全量首轮 `/my` 懒加载超时经隔离复现为并发资源竞争 | 1 | 单独用例约 1 秒通过，单独重跑默认 Web 全量 60 files/264 tests 通过；未修改测试或生产代码，后续门禁采用分阶段执行。 |
 | 0.0.6 API integration 无可用容器运行时 | 1 | 18 个套件全部在 Testcontainers `pgContainer.start()` 前报 `Could not find a working container runtime strategy`，未进入业务断言；启动本机 Docker Desktop 并确认 daemon 后重跑。 |
 | Docker 刚启动后 integration 并发容器/证照用例失败 | 1 | daemon 恢复后 15/18 suites、72/81 tests 通过；`enterprise-policy`/`master-data` 等待端口绑定超过 10 秒，`certificate` 单用例收到 401。将三个失败套件 `--runInBand` 隔离复现，判断环境并发抖动与实际认证回归。 |
 | 备份远程脚本首次在 JS 模板字符串解析失败 | 1 | shell 参数展开 `\${...}` 被 JS 误识别为模板插值，工具在本地解析阶段退出，未连接或修改生产；对 shell 展开进行显式转义后执行成功。 |
@@ -286,3 +316,20 @@ replaced_by: []
 ## 备注
 - 所有新增文档默认使用仓库现有 YAML front matter 风格。
 - 规划中需保持 Enterprise WeCom 作为主运行容器的约束。
+
+### 阶段 27：证书对象、自动提醒与工作台布局修复
+- [x] 将“安全主数据中心”统一更名为“证书对象”，保留旧路由兼容并更新手册/规格
+- [x] 任务看板默认展示两行模块，选中模块置顶，展开/收起与右侧栏目自适应等高
+- [x] 修复提醒自动调度：启动补扫、证照新增/编辑触发队列、五分钟时间桶幂等
+- [x] 完善提醒看板部门规则说明、用户可见范围和提醒详情中的证照附件
+- [x] 增加回归测试并顺序执行 Web/API 测试、构建、文档索引和差异检查
+- **状态：** completed（Web 60 文件/269 项；API 单测 24 套件/124 项；API 集成 18 套件/84 项；构建、lint、21 份 OpenAPI、文档索引与 diff 校验通过；DOCX 已重生成并完成渲染复核）
+
+### 阶段 28：0.0.7 再次生产发布（阶段 27 后续修改）
+- [x] 审计本轮工作树、版本真源、迁移文件和生产当前状态
+- [x] 保持全局版本 `0.0.7`，不修改前端页面版本显示
+- [x] 执行 Web/API 测试、构建、lint、OpenAPI、文档索引和 diff 门禁
+- [x] 完成生产备份、源码同步、Node 20 镜像构建和回滚标签
+- [x] 执行 migration/seed、API→Web→Nginx 分阶段切换
+- [x] 新鲜验证容器、数据库、关键接口、静态资源、公网路由、日志、TLS 和定时器
+- **状态：** completed（生产 API/Web/Nginx 均为 `0.0.7`；新镜像摘要分别为 `sha256:87a83a70f86f7d6c7f0190a0699aad6de0c74a06b17b3a48ebe4effe7b0bf38b`、`sha256:4d0eae9f1851f0fd236e7bacc3c3ff2e906628f9f88a9892670aa274a2a35810`、`sha256:e50f75e1e8d13ba887394d3907ccdefc26408dca98ccf721f9b62f8507237d9d`；备份批次 `20260831211651`、源码批次 `20260831211740` 和旧镜像回滚标签已保留；25 条 migration、API/Web/Nginx 分阶段切换、8 条 SPA 直达路由、静态资源、live/ready/401、TLS、定时器、近期错误日志和备份恢复校验通过；企业微信三端真机仍由用户现场执行）

@@ -1,12 +1,18 @@
-import { Button, Card, Col, List, Pagination, Row, Select, Space, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Col, List, Pagination, Row, Select, Space, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined, DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
 import { useGetSettingsQuery } from '../settings/settingsApi';
-import { useGetReminderDashboardQuery, useGetReminderListQuery, useTriggerReminderScanMutation } from './reminderApi';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
+import {
+  useGetReminderDashboardQuery,
+  useGetReminderListQuery,
+  useGetReminderScanJobQuery,
+  useTriggerReminderScanMutation,
+} from './reminderApi';
 import { canManageReminderActions, isOverdueReminder } from './reminderPermissions';
 
 type ReminderFilter = 'all' | 'pending' | 'overdue' | 'acknowledged';
@@ -19,13 +25,6 @@ const statCards: Array<{ key: ReminderFilter; label: string; badge: string }> = 
   { key: 'overdue', label: '已逾期', badge: '已逾期' },
   { key: 'acknowledged', label: '已确认', badge: '已确认' },
 ];
-
-const ownerTypeLabelMap: Record<string, string> = {
-  vessel: '船舶',
-  vehicle: '车辆',
-  personnel: '人员',
-  equipment: '设备',
-};
 
 const reminderTypeLabelMap: Record<string, string> = {
   upcoming: '即将到期',
@@ -77,7 +76,7 @@ export function ReminderDashboardPage() {
   const view = urlViewMode ? readViewMode(urlViewMode, 'dashboard') : settingsViewMode ?? 'dashboard';
   const isListMode = view === 'list';
   const status = searchParams.get('status') as ReminderStatusFilter | null;
-  const reminderType = searchParams.get('reminderType') as 'overdue' | null;
+  const reminderType = searchParams.get('reminderType') as 'upcoming' | 'overdue' | null;
   const ownerType = searchParams.get('ownerType') as ReminderOwnerType | null;
   const page = readNumber(searchParams, 'page', 1);
   const pageSize = readNumber(searchParams, 'pageSize', 5);
@@ -97,6 +96,13 @@ export function ReminderDashboardPage() {
   }, [isListMode, page, pageSize, reminderType, ownerType, status]);
   const listQuery = useGetReminderListQuery(listQueryArgs, shouldWaitForSettings ? { skip: true } : undefined);
   const [triggerScan, { isLoading: scanning }] = useTriggerReminderScanMutation();
+  const [scanJobId, setScanJobId] = useState<string | null>(null);
+  const scanJobQuery = useGetReminderScanJobQuery(scanJobId ?? '', {
+    skip: !scanJobId,
+    pollingInterval: scanJobId ? 1000 : 0,
+  });
+  const scanJob = scanJobQuery.data?.data;
+  const handledScanRef = useRef<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const dashboard = dashboardQuery.data?.data;
@@ -110,19 +116,34 @@ export function ReminderDashboardPage() {
   const handleScan = async () => {
     try {
       const response = await triggerScan().unwrap();
+      setScanJobId(response.data.jobId);
       await Promise.all([dashboardQuery.refetch(), listQuery.refetch()]);
-      message.success(`扫描已受理，任务 ${response.data.jobId}`);
+      message.info('扫描任务已受理，正在处理');
     } catch (error) {
       message.error(error instanceof Error ? error.message : '扫描触发失败');
     }
   };
 
+  useEffect(() => {
+    if (!scanJob || (scanJob.status !== 'completed' && scanJob.status !== 'failed')) return;
+    const resultKey = `${scanJob.jobId}:${scanJob.status}`;
+    if (handledScanRef.current === resultKey) return;
+    handledScanRef.current = resultKey;
+    void Promise.all([dashboardQuery.refetch(), listQuery.refetch()]);
+    if (scanJob.status === 'completed') {
+      message.success(`扫描完成：新增 ${scanJob.createdCount} 条，已发送 ${scanJob.sentCount} 条${scanJob.failedCount ? `，失败 ${scanJob.failedCount} 条` : ''}`);
+    } else {
+      message.error(`扫描失败：${scanJob.error || '请稍后重试'}`);
+    }
+    setScanJobId(null);
+  }, [dashboardQuery.refetch, listQuery.refetch, scanJob?.jobId, scanJob?.status, scanJob?.createdCount, scanJob?.sentCount, scanJob?.failedCount, scanJob?.error]);
+
   const handleCardClick = (item: (typeof statCards)[number]) => {
     if (item.key === 'pending') {
       applySearch({
         view: 'list',
-        status: 'pending',
-        reminderType: null,
+        status: null,
+        reminderType: 'upcoming',
         ownerType: null,
         page: null,
         pageSize: null,
@@ -173,6 +194,15 @@ export function ReminderDashboardPage() {
         </div>
 
         {!isListMode ? (
+          <Alert
+            type="info"
+            showIcon
+            message="提醒规则"
+            description="证照可在新增或编辑时指定负责人，也可以留空使用部门规则：船舶和设备通知船务部、综合办公室；车辆通知物流部、综合办公室；人员证照通知本人及所属部门负责人。系统会自动扫描临期和逾期证照，无需手动扫描。"
+          />
+        ) : null}
+
+        {!isListMode ? (
           <>
             <Row gutter={[16, 16]} className="page-card-grid reminder-stat-grid">
               {statCards.map((item) => {
@@ -206,32 +236,17 @@ export function ReminderDashboardPage() {
               })}
             </Row>
 
-            <Row gutter={[16, 16]}>
-              <Col xs={24} lg={12}>
-                <Card title="按持有对象分组" loading={dashboardQuery.isLoading} variant="borderless">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    {(dashboard?.byOwnerType ?? []).map((item) => (
-                      <Space key={item.ownerType} style={{ justifyContent: 'space-between', width: '100%' }}>
-                        <Typography.Text>{labelFrom(ownerTypeLabelMap, item.ownerType, '其他对象')}</Typography.Text>
-                        <Tag color="blue">{item.count}</Tag>
-                      </Space>
-                    ))}
+            <Card title="按证照分类" loading={dashboardQuery.isLoading} variant="borderless">
+              <Space direction="vertical" style={{ width: '100%' }}>
+                {(dashboard?.byCertificateType ?? []).map((item) => (
+                  <Space key={item.certificateTypeName} style={{ justifyContent: 'space-between', width: '100%' }}>
+                    <Typography.Text>{item.certificateTypeName}</Typography.Text>
+                    <Tag color="gold">{item.count}</Tag>
                   </Space>
-                </Card>
-              </Col>
-              <Col xs={24} lg={12}>
-                <Card title="按证书类型分组" loading={dashboardQuery.isLoading} variant="borderless">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    {(dashboard?.byCertificateType ?? []).map((item) => (
-                      <Space key={item.certificateTypeName} style={{ justifyContent: 'space-between', width: '100%' }}>
-                        <Typography.Text>{item.certificateTypeName}</Typography.Text>
-                        <Tag color="gold">{item.count}</Tag>
-                      </Space>
-                    ))}
-                  </Space>
-                </Card>
-              </Col>
-            </Row>
+                ))}
+              </Space>
+            </Card>
+            {scanJob ? <Alert showIcon type={scanJob.status === 'failed' ? 'error' : scanJob.status === 'completed' ? 'success' : 'info'} message={`扫描任务：${scanJob.status === 'queued' ? '排队中' : scanJob.status === 'running' ? '处理中' : scanJob.status === 'retryable' ? '等待重试' : scanJob.status === 'completed' ? '已完成' : '失败'}`} description={scanJob.status === 'completed' ? `新增 ${scanJob.createdCount} 条，发送 ${scanJob.sentCount} 条，失败 ${scanJob.failedCount} 条` : scanJob.error || '正在扫描证照并发送企业微信提醒。'} /> : null}
           </>
         ) : (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -351,7 +366,7 @@ export function ReminderDashboardPage() {
                       {item.certificateTitle}
                     </Link>
                   }
-                  description={`${item.ownerName} · ${item.scheduledDate} · ${item.recipientUserId}`}
+                  description={`${item.ownerName} · ${formatShanghaiDateTime(item.scheduledDate)} · ${item.recipientUserId}`}
                 />
                 <Space wrap>
                   <Tag color={isOverdueReminder(item) ? 'red' : 'default'}>

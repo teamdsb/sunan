@@ -11,6 +11,9 @@ import {
   type ReminderItem,
 } from './reminderApi';
 import { canAcknowledgeReminder, canManageReminderActions, isOverdueReminder } from './reminderPermissions';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
+import { FileAttachmentList, type AttachmentFileDescriptor } from '../files/FileAttachmentList';
+import { useLazyGetCertificateFileDownloadUrlQuery } from '../certificate/certificateApi';
 
 function describeAckStatus(reminder: ReminderItem): string {
   if (reminder.status === 'acknowledged') {
@@ -31,6 +34,7 @@ export function ReminderDetailPage() {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data, isLoading, refetch } = useGetReminderByIdQuery(id, { skip: !id });
   const [acknowledgeReminder, { isLoading: acknowledging }] = useAcknowledgeReminderMutation();
+  const [getCertificateFileUrl] = useLazyGetCertificateFileDownloadUrlQuery();
   const [localReminder, setLocalReminder] = useState<ReminderItem | null>(null);
   const [acknowledgeError, setAcknowledgeError] = useState<string | null>(null);
 
@@ -116,10 +120,14 @@ export function ReminderDetailPage() {
                 <Descriptions column={1} bordered size="small">
                   <Descriptions.Item label="提醒编号">{reminder.id}</Descriptions.Item>
                   <Descriptions.Item label="证书标题">{reminder.certificateTitle}</Descriptions.Item>
+                  <Descriptions.Item label="证照分类">{reminder.certificateTypeName ?? '-'}</Descriptions.Item>
+                  <Descriptions.Item label="证照编号">{reminder.certificateNo || '-'}</Descriptions.Item>
                   <Descriptions.Item label="持有对象">{reminder.ownerName}</Descriptions.Item>
                   <Descriptions.Item label="对象类型">{reminder.ownerType}</Descriptions.Item>
                   <Descriptions.Item label="提醒类型">{reminder.reminderType}</Descriptions.Item>
-                  <Descriptions.Item label="计划日期">{reminder.scheduledDate}</Descriptions.Item>
+                  <Descriptions.Item label="计划日期">{formatShanghaiDateTime(reminder.scheduledDate)}</Descriptions.Item>
+                  <Descriptions.Item label="签发时间">{formatShanghaiDateTime(reminder.issueDate)}</Descriptions.Item>
+                  <Descriptions.Item label="到期时间">{formatShanghaiDateTime(reminder.expiryDate)}</Descriptions.Item>
                   <Descriptions.Item label="提前天数">{reminder.daysBeforeExpiry}</Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -128,14 +136,28 @@ export function ReminderDetailPage() {
                 <Descriptions column={1} bordered size="small">
                   <Descriptions.Item label="证照 ID">{reminder.certificateId}</Descriptions.Item>
                   <Descriptions.Item label="证照标题">{reminder.certificateTitle}</Descriptions.Item>
+                  <Descriptions.Item label="证照分类">{reminder.certificateTypeName ?? '-'}</Descriptions.Item>
                   <Descriptions.Item label="接收人">{reminder.recipientUserId}</Descriptions.Item>
                 </Descriptions>
               </Card>
 
+              <Card title={`证照附件（${reminder.files?.length ?? 0}）`} size="small">
+                <FileAttachmentList
+                  files={(reminder.files ?? []) as AttachmentFileDescriptor[]}
+                  getUrl={async (file) => {
+                    const response = await getCertificateFileUrl({
+                      id: reminder.certificateId,
+                      fileId: file.id,
+                    }).unwrap();
+                    return response.data.downloadUrl;
+                  }}
+                />
+              </Card>
+
               <Card title="处理记录" size="small">
                 <Descriptions column={1} bordered size="small">
-                  <Descriptions.Item label="发送时间">{reminder.sentAt ?? '未发送'}</Descriptions.Item>
-                  <Descriptions.Item label="确认时间">{reminder.acknowledgedAt ?? '未确认'}</Descriptions.Item>
+                  <Descriptions.Item label="发送时间">{reminder.sentAt ? formatShanghaiDateTime(reminder.sentAt) : '未发送'}</Descriptions.Item>
+                  <Descriptions.Item label="确认时间">{reminder.acknowledgedAt ? formatShanghaiDateTime(reminder.acknowledgedAt) : '未确认'}</Descriptions.Item>
                   <Descriptions.Item label="确认人">{reminder.acknowledgedBy ?? '未确认'}</Descriptions.Item>
                 </Descriptions>
               </Card>

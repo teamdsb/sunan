@@ -1,6 +1,8 @@
-import { Alert, Button, Card, Drawer, Form, Input, InputNumber, List, Pagination, Segmented, Select, Space, Typography, message } from 'antd';
+import { Alert, Button, Card, DatePicker, Drawer, Form, Input, InputNumber, List, Pagination, Segmented, Select, Space, Switch, Tag, Typography, message } from 'antd';
+import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { buildDetailHref, updateSearchParams } from '../../router/myRouteState';
@@ -13,11 +15,12 @@ import {
   type CreateCertificateInput,
   useCreateCertificateMutation,
   useGetCertificateOwnersQuery,
+  useGetCertificateReminderRecipientsQuery,
   useGetCertificateTypesQuery,
   useGetCertificatesQuery,
   useGetGroupedCertificatesQuery,
 } from './certificateApi';
-import { useGetSettingsQuery } from '../settings/settingsApi';
+import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
 
 const ownerTabs = [
   { label: '船舶', value: 'vessel' },
@@ -26,15 +29,7 @@ const ownerTabs = [
   { label: '设备', value: 'equipment' },
 ] as const;
 const scrollStoragePrefix = 'certificate-list-scroll:';
-const certificateStatusLabelMap: Record<string, string> = {
-  active: '有效',
-  expired: '已过期',
-  archived: '已归档',
-};
-
-function formatCertificateStatus(status: string) {
-  return certificateStatusLabelMap[status] ?? '未知状态';
-}
+const ownerTypeLabelMap: Record<string, string> = { vessel: '船舶', vehicle: '车辆', personnel: '人员', equipment: '设备' };
 
 function readPageValue(value: string | null, fallback: number): number {
   if (!value) {
@@ -65,22 +60,15 @@ function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : '新增证照失败，请稍后重试';
 }
 
-function toIsoDateTime(value: string | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
-}
-
 export function CertificateListPage() {
   const location = useLocation();
   const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
   const canManage = canManageCompanyContent(roles);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: settings } = useGetSettingsQuery();
   const [messageApi, contextHolder] = message.useMessage();
   const ownerType = (searchParams.get('ownerType') as 'vessel' | 'vehicle' | 'personnel' | 'equipment' | null) || 'vessel';
-  const groupBy =
-    (searchParams.get('groupBy') as 'owner' | 'type' | null) || settings?.data.certificateGroupBy || 'owner';
+  const rawGroupBy = searchParams.get('groupBy');
+  const groupBy = 'type' as const;
   const status = searchParams.get('status') || undefined;
   const keyword = searchParams.get('keyword') || '';
   const [keywordDraft, setKeywordDraft] = useState(keyword);
@@ -97,6 +85,7 @@ export function CertificateListPage() {
   const { data: grouped } = useGetGroupedCertificatesQuery({ groupBy });
   const { data: typeResponse, isLoading: loadingTypes } = useGetCertificateTypesQuery({ ownerType: createOwnerType });
   const { data: ownerResponse, isLoading: loadingOwners } = useGetCertificateOwnersQuery({ ownerType: createOwnerType });
+  const { data: recipientResponse } = useGetCertificateReminderRecipientsQuery(undefined, { skip: !canManage });
   const [createCertificate, { isLoading: creating }] = useCreateCertificateMutation();
 
   const items = useMemo(() => data?.data ?? [], [data]);
@@ -110,6 +99,16 @@ export function CertificateListPage() {
   useEffect(() => {
     setKeywordDraft(keyword);
   }, [keyword]);
+
+  useEffect(() => {
+    if (!rawGroupBy || rawGroupBy === 'type') {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.set('groupBy', 'type');
+    setSearchParams(next, { replace: true });
+  }, [rawGroupBy, searchParams, setSearchParams]);
 
   useEffect(() => {
     const storageKey = getScrollStorageKey(location.search);
@@ -141,14 +140,15 @@ export function CertificateListPage() {
   };
 
   const submitCreate = async () => {
-    const values = await form.validateFields();
     setCreateError(null);
     try {
+      const values = await form.validateFields();
       const payload: CreateCertificateInput = {
         ...values,
         ownerType: createOwnerType,
-        issueDate: toIsoDateTime(values.issueDate),
-        expiryDate: toIsoDateTime(values.expiryDate) ?? values.expiryDate,
+        issueDate: toShanghaiIso(values.issueDate),
+        expiryDate: toShanghaiIso(values.expiryDate) ?? values.expiryDate,
+        reminderRecipientUserId: values.reminderRecipientUserId ?? null,
         status: values.status ?? 'active',
         ...(upload?.id ? { fileIds: [upload.id] } : {}),
       };
@@ -158,17 +158,22 @@ export function CertificateListPage() {
       setUpload(null);
       form.resetFields();
     } catch (error) {
-      setCreateError(toErrorMessage(error));
+      const message = toErrorMessage(error);
+      setCreateError(message);
+      messageApi.error(message);
     }
   };
 
   return (
     <section className="page-hero">
       {contextHolder}
-      <Typography.Title level={2}>电子证照</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        按持有对象、状态和关键词查询证照，并查看到期与附件信息。
-      </Typography.Paragraph>
+      <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+        <div>
+          <Typography.Title level={2} style={{ marginBottom: 4 }}>电子证照</Typography.Title>
+          <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>按证照分类管理持有对象的证照、有效期、提醒和附件。</Typography.Paragraph>
+        </div>
+        {canManage ? <Button aria-label="新增证照" type="primary" icon={<PlusOutlined />} onClick={openCreateDrawer}>新增证照</Button> : null}
+      </Space>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Segmented
           block
@@ -195,21 +200,7 @@ export function CertificateListPage() {
         {showFilters ? (
           <Card size="small" className="filter-panel" title={<Space size="small"><FilterOutlined /><span>筛选条件</span></Space>}>
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Segmented
-                block
-                options={[{ label: '按对象分组', value: 'owner' }, { label: '按类型分组', value: 'type' }]}
-                value={groupBy}
-                onChange={(value) =>
-                  applySearch({
-                    groupBy: value as 'owner' | 'type',
-                    ownerType,
-                    page,
-                    pageSize,
-                    status,
-                    keyword,
-                  })
-                }
-              />
+              <Button type="link" size="small" onClick={() => applySearch({ groupBy: 'type', ownerType, page, pageSize, status, keyword })}>按类型分组</Button>
               <Select
                 allowClear
                 placeholder="状态"
@@ -253,7 +244,7 @@ export function CertificateListPage() {
           </Card>
         ) : null}
 
-        <Card className="status-card" title={groupBy === 'owner' ? '按持有对象分组' : '按证照类型分组'}>
+        <Card className="status-card" title="按证照分类">
           <Space direction="vertical" style={{ width: '100%' }} size="small">
             <Typography.Text strong>
               证照总数：{(grouped?.data ?? []).reduce((total, group) => total + group.count, 0)}
@@ -273,13 +264,10 @@ export function CertificateListPage() {
             renderItem={(item) => (
               <List.Item>
                 <List.Item.Meta
-                  title={
-                    <Link to={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>
-                      {item.title}
-                    </Link>
-                  }
-                  description={`${item.ownerName} · ${item.expiryDate} · ${formatCertificateStatus(item.status)}`}
+                  title={<Space><Link to={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>{item.title}</Link><Tag>{item.certificateTypeName}</Tag></Space>}
+                  description={<Space direction="vertical" size={2}><Typography.Text>持有对象：{item.ownerName}（{ownerTypeLabelMap[item.ownerType] ?? item.ownerType}）</Typography.Text><Typography.Text type="secondary">编号：{item.certificateNo || '-'} · 签发：{formatShanghaiDateTime(item.issueDate)} · 到期：{formatShanghaiDateTime(item.expiryDate)}</Typography.Text><Typography.Text type="secondary">签发机构：{item.issuer || '-'} · 附件：{(item.files ?? []).length} 个 · 提醒：{item.reminderEnabled === false ? '已关闭' : item.reminderRecipientUserId || '按部门规则'}</Typography.Text></Space>}
                 />
+                {canManage ? <Button type="link" icon={<EditOutlined />} href={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>编辑</Button> : null}
               </List.Item>
             )}
           />
@@ -303,9 +291,6 @@ export function CertificateListPage() {
           />
         </Card>
 
-        {canManage ? <Button type="primary" className="page-primary-action" onClick={openCreateDrawer}>
-          新增证照
-        </Button> : null}
       </Space>
 
       {canManage ? <Drawer
@@ -342,17 +327,10 @@ export function CertificateListPage() {
           <Form.Item name="ownerType" hidden>
             <Input />
           </Form.Item>
-          <Form.Item name="ownerId" label="持有对象" rules={[{ required: true, message: '请选择持有对象' }]}>
-            <Select
-              showSearch
-              loading={loadingOwners}
-              placeholder="选择船舶、车辆、人员或设备"
-              optionFilterProp="label"
-              options={owners.map((item) => ({
-                value: item.id,
-                label: `${item.name} (${item.code})`,
-              }))}
-            />
+          <Form.Item label="持有对象" required>
+            <Form.Item name="ownerId" noStyle rules={[{ required: true, message: '请选择持有对象' }]}>
+              <Select aria-label="持有对象" showSearch loading={loadingOwners} placeholder="选择船舶、车辆、人员或设备" optionFilterProp="label" options={owners.map((item) => ({ value: item.id, label: `${item.name} (${item.code})` }))} />
+            </Form.Item>
           </Form.Item>
           <Form.Item name="certificateTypeId" label="证照类型" rules={[{ required: true, message: '请选择证照类型' }]}>
             <Select
@@ -372,11 +350,11 @@ export function CertificateListPage() {
           <Form.Item name="certificateNo" label="证照编号">
             <Input placeholder="证照编号" maxLength={128} />
           </Form.Item>
-          <Form.Item name="issueDate" label="签发日期">
-            <Input type="datetime-local" />
+          <Form.Item name="issueDate" label="签发日期" getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+            <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="expiryDate" label="到期日" rules={[{ required: true, message: '请选择到期日' }]}>
-            <Input type="datetime-local" />
+          <Form.Item name="expiryDate" label="到期日" rules={[{ required: true, message: '请选择到期日' }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+            <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="advanceDays" label="提前提醒天数">
             <InputNumber min={1} style={{ width: '100%' }} placeholder="默认使用证照类型配置" />
@@ -396,6 +374,8 @@ export function CertificateListPage() {
           <Form.Item name="remarks" label="备注">
             <Input.TextArea rows={3} placeholder="备注" />
           </Form.Item>
+          <Form.Item name="reminderEnabled" label="企业微信提醒" valuePropName="checked" initialValue={true} extra="关闭后仍可保存证照，不生成提醒"><Switch /></Form.Item>
+          <Form.Item name="reminderRecipientUserId" label="提醒负责人" extra="可不设置；未设置时按部门规则通知"><Select allowClear showSearch optionFilterProp="label" placeholder="可选负责人" options={(recipientResponse?.data ?? []).map((recipient) => ({ value: recipient.userId, label: `${recipient.name}${recipient.position ? ` · ${recipient.position}` : ''}` }))} /></Form.Item>
           <Form.Item label="附件">
             <FileUploadField category="certificates" value={upload} onChange={setUpload} />
           </Form.Item>

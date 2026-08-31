@@ -228,6 +228,7 @@ describe('AppRoutes', () => {
     ['/my/enterprise-policy', 'ENTERPRISE_POLICY'],
     ['/my/certificates', 'CERTIFICATE_LIST'],
     ['/my/reminders', 'REMINDER_DASHBOARD'],
+    ['/my/master-data', 'MASTER_DATA'],
     ['/my/monitors', 'MONITOR_PAGE'],
     ['/my/settings', 'SETTINGS_PAGE'],
     [officeRouteConfig.officeHome.path, 'OFFICE_HOME'],
@@ -276,6 +277,7 @@ describe('AppRoutes', () => {
     expect(myRouteConfig.enterprisePolicy.path).toBe('/my/enterprise-policy');
     expect(myRouteConfig.certificates.path).toBe('/my/certificates');
     expect(myRouteConfig.reminders.path).toBe('/my/reminders');
+    expect(myRouteConfig.masterData.path).toBe('/my/master-data');
     expect(myRouteConfig.monitors.path).toBe('/my/monitors');
     expect(myRouteConfig.settings.path).toBe('/my/settings');
   });

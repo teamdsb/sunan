@@ -11,6 +11,8 @@ import {
   RightOutlined,
   SafetyCertificateOutlined,
   TableOutlined,
+  UpOutlined,
+  DownOutlined,
   WarningOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
@@ -18,6 +20,7 @@ import {
   Alert,
   Button,
   Card,
+  DatePicker,
   Drawer,
   Empty,
   Form,
@@ -32,6 +35,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { useWecomJsSdk } from '../../hooks/useWecomJsSdk';
@@ -57,6 +61,7 @@ import {
 } from './workbenchApi';
 import { EvidencePanel } from './EvidencePanel';
 import { useGetMasterDataVesselsQuery } from './masterDataApi';
+import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
 
 const departmentLabelMap: Record<string, string> = {
   general_office: '总经办',
@@ -150,44 +155,14 @@ function labelFrom(
   return map[value] ?? fallback;
 }
 
-function formatRecordTime(occurredAt: string) {
-  const date = new Date(occurredAt);
-  return Number.isNaN(date.getTime())
-    ? occurredAt
-    : date.toLocaleString('zh-CN', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-}
-
-function formatMobileRecordTime(occurredAt: string) {
-  const date = new Date(occurredAt);
-  if (Number.isNaN(date.getTime())) {
-    return occurredAt;
+function recordDateParts(occurredAt: string, compact = false) {
+  const formatted = formatShanghaiDateTime(occurredAt);
+  if (formatted === '-') {
+    return { date: '-', time: '' };
   }
-
-  const dateKey = date.toLocaleDateString('zh-CN');
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const timeText = date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  if (dateKey === today.toLocaleDateString('zh-CN')) {
-    return timeText;
-  }
-  if (dateKey === yesterday.toLocaleDateString('zh-CN')) {
-    return `昨日 ${timeText}`;
-  }
-  return date.toLocaleDateString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-  });
+  const [fullDate, time] = formatted.split(' ');
+  const date = compact ? fullDate.slice(5) : fullDate;
+  return { date, time: time ?? '' };
 }
 
 function getMobileStatusMeta(record: WorkbenchRecordSummary) {
@@ -246,11 +221,11 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
   }
 
   if (field.inputType === 'datetime') {
-    return <Input type="datetime-local" placeholder={field.placeholder} />;
+    return <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} placeholder={field.placeholder ?? '选择日期时间'} style={{ width: '100%' }} />;
   }
 
   if (field.inputType === 'date') {
-    return <Input type="datetime-local" placeholder={field.placeholder} />;
+    return <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} placeholder={field.placeholder ?? '选择日期时间'} style={{ width: '100%' }} />;
   }
 
   return (
@@ -259,15 +234,6 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
       placeholder={field.placeholder}
     />
   );
-}
-
-function toIsoDateTime(value: unknown) {
-  if (typeof value !== 'string' || !value.trim()) {
-    return value;
-  }
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
 }
 
 function getCurrentStep(record: WorkbenchRecordDetail) {
@@ -323,6 +289,7 @@ export function WorkbenchHomePage({
   const [alertNoticeVisible, setAlertNoticeVisible] = useState(true);
   const [mobileModulesExpanded, setMobileModulesExpanded] = useState(false);
   const [mobileRecordsExpanded, setMobileRecordsExpanded] = useState(false);
+  const [taskBoardExpanded, setTaskBoardExpanded] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -430,6 +397,15 @@ export function WorkbenchHomePage({
       ),
     [moduleCards, moduleFilter],
   );
+  const orderedModuleCards = useMemo(
+    () =>
+      [...visibleModuleCards].sort(
+        (left, right) =>
+          Number(right.moduleCode === activeModuleCode) -
+            Number(left.moduleCode === activeModuleCode),
+      ),
+    [activeModuleCode, visibleModuleCards],
+  );
   const detailModule = detailResponse?.data
     ? (moduleCards.find(
         (item) => item.moduleCode === detailResponse.data.moduleCode,
@@ -517,14 +493,16 @@ export function WorkbenchHomePage({
     [moduleCards, recentRecords],
   );
   const mobileModuleCards = useMemo(() => {
-    const sorted = [...visibleModuleCards].sort(
-        (left, right) =>
-          Number(right.mobileFirst) - Number(left.mobileFirst) ||
-          right.pendingCount - left.pendingCount ||
-          left.moduleName.localeCompare(right.moduleName, 'zh-CN'),
-      );
+    const sorted = [...orderedModuleCards].sort(
+      (left, right) =>
+        Number(right.moduleCode === activeModuleCode) -
+          Number(left.moduleCode === activeModuleCode) ||
+        Number(right.mobileFirst) - Number(left.mobileFirst) ||
+        right.pendingCount - left.pendingCount ||
+        left.moduleName.localeCompare(right.moduleName, 'zh-CN'),
+    );
     return mobileModulesExpanded ? sorted : sorted.slice(0, 3);
-  }, [mobileModulesExpanded, visibleModuleCards]);
+  }, [activeModuleCode, mobileModulesExpanded, orderedModuleCards]);
   const mobilePriorityRecords = useMemo(
     () =>
       [
@@ -714,7 +692,7 @@ export function WorkbenchHomePage({
         return [
           key,
           field?.inputType === 'datetime' || field?.inputType === 'date'
-            ? toIsoDateTime(value)
+            ? toShanghaiIso(value as string)
             : value,
         ];
       }),
@@ -726,7 +704,7 @@ export function WorkbenchHomePage({
       summary: values.summary,
       vesselId: values.vesselId,
       occurredAt: values.occurredAt
-        ? (toIsoDateTime(values.occurredAt) as string)
+        ? (toShanghaiIso(values.occurredAt) as string)
         : undefined,
       payload,
     }).unwrap();
@@ -1020,7 +998,7 @@ export function WorkbenchHomePage({
                   >
                     <span>
                       <ClockCircleOutlined />
-                      {formatMobileRecordTime(record.occurredAt)}
+                    <span className="workbench-record-time"><b>{recordDateParts(record.occurredAt, true).date}</b><small>{recordDateParts(record.occurredAt, true).time}</small></span>
                     </span>
                     <strong>{record.title}</strong>
                     <em>{meta.label}</em>
@@ -1163,11 +1141,22 @@ export function WorkbenchHomePage({
         <section className="workbench-board-layout">
           <div className="workbench-board-main">
             <div className="sunan-panel-heading">
-              <Typography.Title level={2}>任务看板</Typography.Title>
+              <div className="workbench-panel-title-row">
+                <Typography.Title level={2}>任务看板</Typography.Title>
+                <Typography.Text type="secondary">{orderedModuleCards.length} 个模块</Typography.Text>
+              </div>
+              <Button
+                type="text"
+                size="small"
+                className="workbench-board-toggle"
+                aria-label={taskBoardExpanded ? '收起任务看板' : '展开任务看板'}
+                icon={taskBoardExpanded ? <UpOutlined /> : <DownOutlined />}
+                onClick={() => setTaskBoardExpanded((expanded) => !expanded)}
+              />
               <Typography.Text>按流程阶段拖拽管理</Typography.Text>
             </div>
             <div
-              className="workbench-module-grid"
+              className={`workbench-module-grid${taskBoardExpanded ? '' : ' is-collapsed'}`}
               data-testid="workbench-module-grid"
             >
               {visibleModuleCards.length === 0 ? (
@@ -1181,7 +1170,7 @@ export function WorkbenchHomePage({
                   />
                 </Card>
               ) : (
-                visibleModuleCards.map((item) => {
+                orderedModuleCards.map((item) => {
                   const selected = activeModuleCode === item.moduleCode;
                   return (
                     <article
@@ -1252,7 +1241,7 @@ export function WorkbenchHomePage({
                 {recentRecordRows.length > 0 ? (
                   recentRecordRows.map((item) => (
                     <article className="workbench-schedule-item" key={item.id}>
-                      <span>{formatRecordTime(item.occurredAt)}</span>
+                      <time className="workbench-record-time"><b>{recordDateParts(item.occurredAt).date}</b><small>{recordDateParts(item.occurredAt).time}</small></time>
                       <div>
                         <strong>{item.title}</strong>
                         <small>{item.moduleName}</small>
@@ -1369,6 +1358,7 @@ export function WorkbenchHomePage({
                   dataIndex: 'occurredAt',
                   key: 'occurredAt',
                   width: 220,
+                  render: (value: string) => formatShanghaiDateTime(value),
                 },
               ]}
             />
@@ -1934,8 +1924,13 @@ export function WorkbenchHomePage({
             >
               <Input.TextArea rows={3} placeholder="输入摘要说明" />
             </Form.Item>
-            <Form.Item label="发生时间（可选）" name="occurredAt">
-              <Input type="datetime-local" />
+            <Form.Item
+              label="发生时间（可选）"
+              name="occurredAt"
+              getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })}
+              getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}
+            >
+              <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} style={{ width: '100%' }} />
             </Form.Item>
             <Form.Item label="船舶ID（可选）" name="vesselId">
               <Select
@@ -2015,6 +2010,19 @@ export function WorkbenchHomePage({
                     key={field.key}
                     label={field.label}
                     name={['payload', field.key]}
+                    getValueProps={(value?: string) => ({
+                      value:
+                        field.inputType === 'date' || field.inputType === 'datetime'
+                          ? value
+                            ? dayjs(value)
+                            : undefined
+                          : value,
+                    })}
+                    getValueFromEvent={
+                      field.inputType === 'date' || field.inputType === 'datetime'
+                        ? (value) => value?.format('YYYY-MM-DD HH:mm')
+                        : undefined
+                    }
                     rules={
                       field.required
                         ? [{ required: true, message: `请填写${field.label}` }]

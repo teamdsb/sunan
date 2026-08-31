@@ -13,6 +13,7 @@ const mockSettings = vi.fn();
 const mockDashboard = vi.fn();
 const mockList = vi.fn();
 const mockScan = vi.fn();
+const mockScanJob = vi.fn();
 const dashboardRefetch = vi.fn();
 const listRefetch = vi.fn();
 const dashboardData = {
@@ -94,6 +95,8 @@ vi.mock('./reminderApi', () => ({
   useGetReminderListQuery: (_params: unknown, options?: { skip?: boolean }) =>
     options ? mockList(_params, options) : mockList(_params),
   useTriggerReminderScanMutation: () => [mockScan, { isLoading: false }],
+  useGetReminderScanJobQuery: (jobId: string, options?: { skip?: boolean }) =>
+    mockScanJob(jobId, options),
 }));
 
 function LocationDisplay() {
@@ -125,6 +128,7 @@ describe('ReminderDashboardPage', () => {
     mockScan.mockReturnValue({
       unwrap: () => Promise.resolve({ data: { jobId: 'job-1', acceptedAt: '2026-03-28T10:00:00+08:00' } }),
     });
+    mockScanJob.mockReturnValue({ data: undefined });
   });
 
   it('falls back to the settings view when the URL omits view, but lets the URL win when present', () => {
@@ -222,7 +226,7 @@ describe('ReminderDashboardPage', () => {
 
     fireEvent.click(screen.getByTestId('reminder-stat-button-pending'));
     await waitFor(() => {
-      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'pending' }));
+      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ reminderType: 'upcoming' }));
     });
   });
 
@@ -237,10 +241,10 @@ describe('ReminderDashboardPage', () => {
     fireEvent.click(screen.getByTestId('reminder-stat-button-pending'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&status=pending');
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?view=list&reminderType=upcoming');
     });
     await waitFor(() => {
-      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 5, status: 'pending' }));
+      expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 5, reminderType: 'upcoming' }));
     });
   });
 
@@ -291,6 +295,41 @@ describe('ReminderDashboardPage', () => {
     await waitFor(() => expect(mockScan).toHaveBeenCalled());
     await waitFor(() => expect(dashboardRefetch).toHaveBeenCalled());
     await waitFor(() => expect(listRefetch).toHaveBeenCalled());
+  });
+
+  it('shows a terminal scan message only once for the same job result', async () => {
+    mockScanJob.mockImplementation((jobId: string) => ({
+      data:
+        jobId === 'job-1'
+          ? {
+              data: {
+                jobId: 'job-1',
+                source: 'manual',
+                status: 'completed',
+                startedAt: null,
+                finishedAt: null,
+                acceptedAt: '2026-03-28T10:00:00+08:00',
+                createdCount: 1,
+                sentCount: 1,
+                failedCount: 0,
+                error: null,
+                retryCount: 0,
+              },
+            }
+          : undefined,
+    }));
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders?view=dashboard']}>
+        <ReminderDashboardPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /手动扫描/ }));
+
+    await waitFor(() => expect(mockScanJob).toHaveBeenCalledWith('job-1', expect.objectContaining({ skip: false })));
+    const antd = await import('antd');
+    await waitFor(() => expect(antd.message.success).toHaveBeenCalledTimes(1));
   });
 
   it('hides scan when the user is not authorized', () => {

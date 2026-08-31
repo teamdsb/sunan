@@ -27,6 +27,7 @@ vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
   useGetCertificateTypesQuery: () => ({ data: { data: [] }, isLoading: false }),
   useGetCertificateOwnersQuery: () => ({ data: { data: [] }, isLoading: false }),
+  useGetCertificateReminderRecipientsQuery: () => ({ data: { data: [] }, isLoading: false }),
   useUpdateCertificateMutation: () => [mockUpdate, { isLoading: false }],
   useBindCertificateFilesMutation: () => [mockBind],
   useLazyGetCertificateFileDownloadUrlQuery: () => [mockGetFileDownloadUrl],
@@ -106,6 +107,7 @@ describe('CertificateDetailPage', () => {
     const titleInput = container.querySelector('#title') as HTMLInputElement;
     expect(titleInput.value).toBe('certificate-a');
     expect(screen.getByText('doc.pdf')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '维护对象' })).not.toBeInTheDocument();
 
     fireEvent.change(titleInput, {
       target: { value: 'certificate-a-updated' },

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -8,6 +8,7 @@ import { CertificateReminderJobService } from './certificate-reminder-job.servic
 import { ReminderService } from './reminder.service';
 import { ReminderAcknowledgeDto } from './dto/reminder-acknowledge.dto';
 import { ReminderListQueryDto } from './dto/reminder-list-query.dto';
+import { MANAGEMENT_ROLES } from './reminder.constants';
 
 @Controller('/api/v1/certificate-reminders')
 @UseGuards(JwtAuthGuard)
@@ -44,7 +45,17 @@ export class ReminderController {
 
   @Post('actions/scan')
   @HttpCode(202)
-  async scan() {
+  async scan(@CurrentUserDecorator() user: CurrentUser) {
+    if (!user.isAdmin && !user.roles.some((role) => role === 'system_admin' || MANAGEMENT_ROLES.has(role))) {
+      throw new ForbiddenException('forbidden');
+    }
+
     return { data: await this.jobService.enqueueScan({ source: 'manual' }) };
+  }
+
+  @Get('actions/scan/:jobId')
+  async scanStatus(@Param('jobId') jobId: string) {
+    const data = await this.jobService.getJobStatus(jobId);
+    return { data };
   }
 }

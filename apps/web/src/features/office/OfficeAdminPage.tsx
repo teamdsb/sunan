@@ -16,6 +16,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { canManageOffice } from './officePermissions';
 import {
   OfficeAdminEntry,
@@ -250,7 +251,7 @@ export function OfficeAdminPage() {
         title: '时间',
         dataIndex: 'createdAt',
         key: 'createdAt',
-        render: (value: string) => new Date(value).toLocaleString('zh-CN'),
+        render: (value: string) => formatShanghaiDateTime(value),
       },
       {
         title: '动作',

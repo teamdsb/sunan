@@ -44,6 +44,13 @@ export class EquipmentMasterDataDto {
   @IsOptional() @IsString() remarks?: string;
 }
 
+export class VehicleMasterDataDto {
+  @IsOptional() @IsString() @MaxLength(32) plateNumber?: string;
+  @IsOptional() @IsString() @MaxLength(32) vehicleType?: string;
+  @IsOptional() @IsEnum(['active', 'inactive', 'retired']) status?: 'active' | 'inactive' | 'retired';
+  @IsOptional() @IsString() remarks?: string;
+}
+
 export class MasterDataImportDto {
   @IsEnum(['vessels', 'personnel', 'equipment', 'assignments']) importType!: 'vessels' | 'personnel' | 'equipment' | 'assignments';
   @IsString() content!: string;

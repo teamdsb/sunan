@@ -261,14 +261,15 @@ describe('CertificateReminderJobService', () => {
     expect(state.hashes.size).toBe(0);
   });
 
-  it('enqueues cron jobs only once per Shanghai day', async () => {
+  it('enqueues cron jobs only once per Shanghai five-minute bucket', async () => {
     const { CertificateReminderJobService } = await import('./certificate-reminder-job.service');
 
     const engine = {
       runScan: jest.fn(async () => ({ createdCount: 0, sentCount: 0, failedCount: 0 })),
     };
+    let now = new Date('2026-03-28T01:00:00.000Z');
     const clock = {
-      now: jest.fn(() => new Date('2026-03-28T01:00:00.000Z')),
+      now: jest.fn(() => now),
       today: jest.fn(() => '2026-03-28'),
     };
     const { redis, state } = createRedisMock();
@@ -280,6 +281,11 @@ describe('CertificateReminderJobService', () => {
     expect(first).not.toBeNull();
     expect(second).toBeNull();
     expect(state.queue).toHaveLength(1);
+
+    now = new Date('2026-03-28T01:05:00.000Z');
+    const nextBucket = await service.enqueueCronScan();
+    expect(nextBucket).not.toBeNull();
+    expect(state.queue).toHaveLength(2);
 
     await (service as any).processQueueOnce();
     expect(engine.runScan).toHaveBeenCalledTimes(1);

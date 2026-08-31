@@ -44,7 +44,7 @@ export function SettingsPage() {
             <Select options={[{ value: 'dashboard', label: '看板' }, { value: 'list', label: '列表' }]} />
           </Form.Item>
           <Form.Item name="certificateGroupBy" label="证照分组">
-            <Select options={[{ value: 'owner', label: '按对象' }, { value: 'type', label: '按类型' }]} />
+            <Select options={[{ value: 'type', label: '按证照分类' }]} />
           </Form.Item>
           <Form.Item name="enablePushNotifications" valuePropName="checked" label="推送通知">
             <Switch />

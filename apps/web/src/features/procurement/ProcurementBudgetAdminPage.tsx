@@ -18,6 +18,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { formatShanghaiDateTime } from '../../utils/dateTime';
 import {
   ProcurementBudget,
   ProcurementDepartmentCode,
@@ -495,7 +496,7 @@ export function ProcurementBudgetAdminPage() {
               key: 'changedAt',
               width: 170,
               render: (value: string) =>
-                new Date(value).toLocaleString('zh-CN'),
+                formatShanghaiDateTime(value),
             },
           ]}
         />

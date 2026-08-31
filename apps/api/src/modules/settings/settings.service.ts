@@ -19,7 +19,7 @@ export class SettingsService {
           userId,
           defaultModule: 'my',
           reminderViewMode: 'dashboard',
-          certificateGroupBy: 'owner',
+          certificateGroupBy: 'type',
           enablePushNotifications: true,
           theme: 'light',
         }),
@@ -32,7 +32,7 @@ export class SettingsService {
     const settings = await this.getByUserEntity(userId);
     Object.assign(settings, {
       reminderViewMode: dto.reminderViewMode ?? settings.reminderViewMode,
-      certificateGroupBy: dto.certificateGroupBy ?? settings.certificateGroupBy,
+      certificateGroupBy: 'type',
       enablePushNotifications: dto.enablePushNotifications ?? settings.enablePushNotifications,
     });
 
@@ -48,7 +48,7 @@ export class SettingsService {
         userId,
         defaultModule: 'my',
         reminderViewMode: 'dashboard',
-        certificateGroupBy: 'owner',
+        certificateGroupBy: 'type',
         enablePushNotifications: true,
         theme: 'light',
       }),
@@ -68,4 +68,3 @@ export class SettingsService {
     };
   }
 }
-

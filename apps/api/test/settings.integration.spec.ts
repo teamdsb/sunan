@@ -104,7 +104,7 @@ describe('SettingsController integration', () => {
       ).data,
     ).toMatchObject({
       reminderViewMode: 'list',
-      certificateGroupBy: 'owner',
+      certificateGroupBy: 'type',
       enablePushNotifications: false,
     });
   });

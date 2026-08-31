@@ -104,6 +104,7 @@ import { Wave6InspectionCapa1710000020000 } from './migrations/1710000020000-wav
 import { Wave7LegacySafetyMigration1710000021000 } from './migrations/1710000021000-wave7-legacy-safety-migration';
 import { WecomUserDepartmentIds1710000022000 } from './migrations/1710000022000-wecom-user-department-ids';
 import { WorkbenchVoyageSchemaV21710000023000 } from './migrations/1710000023000-workbench-voyage-schema-v2';
+import { CertificateReminderPreferences1710000024000 } from './migrations/1710000024000-certificate-reminder-preferences';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -213,6 +214,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     Wave7LegacySafetyMigration1710000021000,
     WecomUserDepartmentIds1710000022000,
     WorkbenchVoyageSchemaV21710000023000,
+    CertificateReminderPreferences1710000024000,
   ],
   synchronize: false,
 });

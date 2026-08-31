@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   Card,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -11,9 +12,11 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
+import { formatShanghaiDateTime, toShanghaiDateTimeLocal, toShanghaiIso } from '../../utils/dateTime';
 import { buildProcurementReportRequestHref } from '../../router/procurementRouteConfig';
 import {
   ProcurementDepartmentCode,
@@ -64,19 +67,6 @@ function labelFrom(
   fallback: string,
 ) {
   return value ? (map[value] ?? fallback) : '-';
-}
-
-function toIsoDateTime(value: string | undefined) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toISOString();
-}
-
-function toDateTimeLocal(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export function ProcurementReportPage() {
@@ -340,19 +330,19 @@ export function ProcurementReportPage() {
               layout="vertical"
               className="sunan-query-grid-contents"
               initialValues={{
-                startDate: toDateTimeLocal(defaultStartDate),
-                endDate: toDateTimeLocal(defaultEndDate),
+                startDate: toShanghaiDateTimeLocal(defaultStartDate),
+                endDate: toShanghaiDateTimeLocal(defaultEndDate),
               }}
               onFinish={(values: { startDate: string; endDate: string }) => {
-                setStartDate(toIsoDateTime(values.startDate) ?? values.startDate);
-                setEndDate(toIsoDateTime(values.endDate) ?? values.endDate);
+                  setStartDate(toShanghaiIso(values.startDate) ?? values.startDate);
+                  setEndDate(toShanghaiIso(values.endDate) ?? values.endDate);
               }}
             >
-              <Form.Item name="startDate" rules={[{ required: true }]}>
-                <Input type="datetime-local" />
+              <Form.Item name="startDate" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
               </Form.Item>
-              <Form.Item name="endDate" rules={[{ required: true }]}>
-                <Input type="datetime-local" />
+              <Form.Item name="endDate" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
               </Form.Item>
               <Form.Item>
                 <Button htmlType="submit">刷新</Button>
@@ -394,7 +384,7 @@ export function ProcurementReportPage() {
                 key: 'submittedAt',
                 width: 180,
                 render: (value: string | null) =>
-                  value ? new Date(value).toLocaleString('zh-CN') : '-',
+                  value ? formatShanghaiDateTime(value) : '-',
               },
             ]}
           />
@@ -426,19 +416,19 @@ export function ProcurementReportPage() {
               layout="vertical"
               className="sunan-query-grid-contents"
               initialValues={{
-                startDate: toDateTimeLocal(defaultStartDate),
-                endDate: toDateTimeLocal(defaultEndDate),
+                startDate: toShanghaiDateTimeLocal(defaultStartDate),
+                endDate: toShanghaiDateTimeLocal(defaultEndDate),
               }}
               onFinish={(values: { startDate: string; endDate: string }) => {
-                setDimensionStartDate(toIsoDateTime(values.startDate) ?? values.startDate);
-                setDimensionEndDate(toIsoDateTime(values.endDate) ?? values.endDate);
+                  setDimensionStartDate(toShanghaiIso(values.startDate) ?? values.startDate);
+                  setDimensionEndDate(toShanghaiIso(values.endDate) ?? values.endDate);
               }}
             >
-              <Form.Item name="startDate" rules={[{ required: true }]}>
-                <Input type="datetime-local" />
+              <Form.Item name="startDate" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
               </Form.Item>
-              <Form.Item name="endDate" rules={[{ required: true }]}>
-                <Input type="datetime-local" />
+              <Form.Item name="endDate" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
               </Form.Item>
               <Form.Item>
                 <Button htmlType="submit">刷新</Button>

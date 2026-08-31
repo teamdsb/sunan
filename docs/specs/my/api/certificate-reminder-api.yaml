@@ -110,6 +110,31 @@ paths:
                       acceptedAt:
                         type: string
                         format: date-time
+        '403':
+          description: 仅提醒管理角色可触发扫描
+  '/certificate-reminders/actions/scan/{jobId}':
+    get:
+      tags: [CertificateReminders]
+      summary: 查询证照提醒扫描任务状态
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK；不存在的任务返回 data=null
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/ReminderScanJobStatus'
+                    nullable: true
 components:
   securitySchemes:
     bearerAuth:
@@ -176,8 +201,34 @@ components:
         certificateId:
           type: string
           format: uuid
+        certificateTypeId:
+          type: string
+          format: uuid
+        certificateTypeName:
+          type: string
         certificateTitle:
           type: string
+        certificateNo:
+          type: string
+          nullable: true
+        issueDate:
+          type: string
+          format: date
+          nullable: true
+        expiryDate:
+          type: string
+          format: date
+        files:
+          type: array
+          items:
+            type: object
+            required: [id, fileName, ossKey, mimeType, fileSize]
+            properties:
+              id: {type: string, format: uuid}
+              fileName: {type: string}
+              ossKey: {type: string}
+              mimeType: {type: string}
+              fileSize: {type: integer}
         ownerType:
           type: string
           enum: [vessel, vehicle, personnel, equipment]
@@ -190,7 +241,7 @@ components:
           enum: [upcoming, overdue]
         status:
           type: string
-          enum: [pending, sent, acknowledged, failed]
+          enum: [pending, dispatching, sent, acknowledged, failed]
         scheduledDate:
           type: string
           format: date
@@ -207,6 +258,21 @@ components:
         acknowledgedBy:
           type: string
           nullable: true
+    ReminderScanJobStatus:
+      type: object
+      required: [jobId, source, status, acceptedAt, startedAt, finishedAt, createdCount, sentCount, failedCount, retryCount]
+      properties:
+        jobId: {type: string}
+        source: {type: string, enum: [manual, cron]}
+        status: {type: string, enum: [queued, running, retryable, completed, failed]}
+        acceptedAt: {type: string, format: date-time}
+        startedAt: {type: string, format: date-time, nullable: true}
+        finishedAt: {type: string, format: date-time, nullable: true}
+        createdCount: {type: integer}
+        sentCount: {type: integer}
+        failedCount: {type: integer}
+        error: {type: string, nullable: true}
+        retryCount: {type: integer}
     ReminderListResponse:
       type: object
       properties:

@@ -5,42 +5,29 @@ import { CertificateReminderJobService } from './certificate-reminder-job.servic
 @Injectable()
 export class ReminderSchedulerService implements OnModuleInit, OnModuleDestroy {
   private timer: NodeJS.Timeout | null = null;
+  private readonly intervalMs = 5 * 60 * 1000;
 
   constructor(private readonly jobService: CertificateReminderJobService) {}
 
   onModuleInit(): void {
-    this.scheduleNextRun();
+    void this.enqueueScheduledScan();
+    this.timer = setInterval(() => {
+      void this.enqueueScheduledScan();
+    }, this.intervalMs);
   }
 
   onModuleDestroy(): void {
     if (this.timer) {
-      clearTimeout(this.timer);
+      clearInterval(this.timer);
       this.timer = null;
     }
   }
 
-  private scheduleNextRun(): void {
-    const now = new Date();
-    const nextRun = this.nextShanghaiNine(now);
-    const delay = Math.max(nextRun.getTime() - now.getTime(), 0);
-
-    this.timer = setTimeout(() => {
-      void this.jobService.enqueueCronScan();
-      this.scheduleNextRun();
-    }, delay);
-  }
-
-  private nextShanghaiNine(now: Date): Date {
-    const shanghaiOffsetMs = 8 * 60 * 60 * 1000;
-    const shifted = new Date(now.getTime() + shanghaiOffsetMs);
-    const year = shifted.getUTCFullYear();
-    const month = shifted.getUTCMonth();
-    const day = shifted.getUTCDate();
-    const nineUtcMs = Date.UTC(year, month, day, 1, 0, 0, 0);
-    if (now.getTime() < nineUtcMs) {
-      return new Date(nineUtcMs);
+  private async enqueueScheduledScan(): Promise<void> {
+    try {
+      await this.jobService.enqueueCronScan();
+    } catch {
+      // The next interval retries automatically; the worker remains available.
     }
-
-    return new Date(Date.UTC(year, month, day + 1, 1, 0, 0, 0));
   }
 }

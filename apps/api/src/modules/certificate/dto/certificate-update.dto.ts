@@ -1,6 +1,7 @@
 ﻿import { IsArray, IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
 
 import { IsDateTimeString } from 'src/common/validators/is-date-time-string.decorator';
+import { IsBoolean } from 'class-validator';
 
 export class CertificateUpdateDto {
   @IsOptional()
@@ -39,6 +40,15 @@ export class CertificateUpdateDto {
   @IsInt()
   @Min(1)
   advanceDays?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  reminderEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  reminderRecipientUserId?: string | null;
 
   @IsOptional()
   @IsString()

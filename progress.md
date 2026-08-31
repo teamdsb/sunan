@@ -7,6 +7,73 @@ replaced_by: []
 ---
 # 进度日志
 
+## 会话：2026-08-31（0.0.7 再次生产发布，阶段 27 后续修改）
+
+### 阶段 28：部署调查与执行
+- **状态：** completed
+- 用户要求再次上线最新工作树修改，版本继续保持 `0.0.7`，不修改前端页面版本显示。
+- 当前工作树在阶段 27 基础上继续修改，涉及自动提醒调度、证书对象权限/详情、提醒看板与附件、工作台布局/路由、样式、规格和手册；无新的 migration 文件，仍为 25 条。
+- 本地门禁已完成：Web 60 文件/270 项、API 单测 24 套件/125 项、API 集成 18 套件/84 项；API/Web 构建、API lint、21 份 OpenAPI、276 份 Markdown 索引、版本与前端版本显示扫描、`git diff --check` 均通过。
+- 生产预检通过；备份批次 `20260831211651` 的 PostgreSQL dump、配置归档和 Redis RDB SHA-256 全部通过，RDB 检查为 36 keys/30 expires，PostgreSQL `pg_restore -l` 读取 566 条目录行（551 条非注释项）。
+- 源码批次 `20260831211740` 已原子切换，旧源码保留为 `/dev/sunan/sunan-source/backup-20260831211740`；本地/生产应用源码聚合指纹均为 `a499941235eb4d6323ff0b0d4ea1a8f47cf4a4b6f646c66a0cc3aba313d35e6f`，无敏感环境文件或生成目录。
+- Node 20 生产镜像构建完成：API `sha256:87a83a70f86f7d6c7f0190a0699aad6de0c74a06b17b3a48ebe4effe7b0bf38b`（创建时间 `2026-08-31 21:22:39 +08:00`）、Web `sha256:4d0eae9f1851f0fd236e7bacc3c3ff2e906628f9f88a9892670aa274a2a35810`（`21:21:10 +08:00`）、Nginx `sha256:e50f75e1e8d13ba887394d3907ccdefc26408dca98ccf721f9b62f8507237d9d`；API 镜像版本 `0.0.7` 且 `dist/main.js` 存在。
+- 新 API 一次性容器执行 migration/seed 成功，数据库仍为 25 条 migration；无一次性 API/Web/Nginx 容器残留。
+- 已按 API→Web→Nginx 分阶段切换：API healthy、Web/Nginx running，Nginx `-t` 通过；运行容器摘要与构建摘要一致，旧摘要保留为 `sunan-api/web/nginx:rollback-20260831211740`。
+- 独立生产复验通过：六个长期服务正常，live/ready 200，受保护证书接口未登录 401，`/`、`/my`、`/my/master-data`、`/my/certificates`、`/my/reminders`、`/office`、`/procurement`、`/workbench` 均 200，CSS/JS 资源 200，近 10 分钟 API/Nginx 错误标记为 0，TLS 至 2026-10-16，`sunan-wecom-callback-ip-sync.timer` enabled/active。
+- 生产构建期间 `pnpm deploy` 输出 5 个弃用子依赖和 `xlsx` bin 警告但退出码为 0；随后 API 版本、启动产物、健康检查均实测通过。宿主机缺少 `pg_restore`，已改用只读 PostgreSQL 镜像完成同等目录校验。
+- 企业微信 iOS/Android/桌面真实登录、授权和业务操作不能由 HTTP 自动化替代，继续保留为用户现场验收项。
+
+## 会话：2026-08-31（证书对象、自动提醒与工作台布局）
+
+### 阶段 27：已完成
+- 用户确认执行：统一名称为“证书对象”；任务看板默认两行并自适应等高；自动提醒无需手动扫描；看板按用户相关证书真实显示；详情展示证照附件。
+- 已完成根因核对：提醒调度仅每日 09:00，证照保存不触发扫描；提醒 DTO 缺少证照附件；工作台默认渲染全部模块。
+- 已完成实现：保留 `/my/master-data` 与 `/workbench/master-data` 兼容路由并统一显示“证书对象”；任务看板默认两行、可展开/收起且已选模块置顶；证照新增/编辑异步触发提醒队列，后台启动即扫并每五分钟按时间桶去重；提醒看板按用户范围显示待处理/已逾期/已确认，详情返回证照字段和附件，支持预览/下载。
+- 已补齐权限与时间规则：证书对象页面支持船舶、车辆、人员、设备的新增/编辑，维护动作仅对维护角色开放；普通用户只读有效对象，停用对象仅维护角色可见。所有可填写日期字段统一使用日期时间选择控件，后端拒绝 date-only 输入，前端按上海时间显示 `YYYY-MM-DD HH:mm`。
+- 已补齐回归：提醒详情 mock 与附件断言、ReminderService 依赖夹具、调度器启动/周期/销毁测试、提醒时间桶测试和 PostgreSQL 详情附件集成断言。
+- 新鲜门禁：`pnpm test:web` 60 文件/270 项；API 单测 24 套件/125 项；API 集成 18 套件/84 项（`TESTCONTAINERS_RYUK_DISABLED=true`）；`pnpm build`、API lint、21 份 OpenAPI、`node scripts/check-doc-index.mjs`（276 个 Markdown）、`git diff --check` 均通过。
+- 手册 Markdown 与 DOCX 已更新并重生成；生成器报告 14 个章节、48 张正文图，LibreOffice 渲染为 94 页 A4，DOCX XML 结构校验通过。证照列表、新增/详情、证书提醒看板、证书提醒详情、设置和工作台首页截图仍需用户按新界面重拍后替换，尤其旧图仍显示底部“新增证照”和“按对象”分组。
+
+## 会话：2026-08-31（0.0.7 再次生产发布，本轮修改）
+
+### 阶段 26：部署调查与执行
+- **状态：** completed
+- 用户要求再次上线最新工作树改动，版本继续保持 `0.0.7`，不修改前端页面版本显示。
+- 本轮新增改动覆盖证书/提醒页面及测试、工作台首页和导航、移动端样式、路由和操作手册/规格；当前工作树共有 64 个已跟踪改动文件及既有 migration/工具目录。
+- 本地门禁已通过：Web 60 files/269 tests、API unit 23 suites/121 tests、API integration 18 suites/84 tests，API/Web build、API lint、21 OpenAPI、276 Markdown 索引、版本/前端显示/diff 检查全部通过。
+- API unit 首次调用因 pnpm 参数转发错误导致 Jest 未找到测试，已改用直接 Jest 参数方式重跑并通过，不构成代码失败。
+- 生产只读预检已完成；线上初始状态为上一轮 `0.0.7` 镜像和 25 条 migration。
+- 生产预检通过：六个服务正常，当前 API/Web/Nginx 摘要为上一轮 `72c9f238...`/`9a799f3b...`/`ba4a0f99...`，Compose 配置哈希与本地一致，live/ready 200，敏感配置均 SET。
+- 备份批次 `20260831064109` 完成：PostgreSQL dump 279,180 bytes、配置归档约 13 KB、Redis RDB 9,392 bytes；三份 SHA-256 全部通过，Redis RDB 检查显示 36 keys/30 expires；临时库恢复演练核对 25 migrations、4 users、3 certificates 后已删除。
+- 源码批次 `20260831064406` 完成原子切换，旧源码保留为 `/dev/sunan/sunan-source/backup-20260831064406`；三个包版本均 `0.0.7`、25 个 migration，无敏感 `.env` 或生成目录；应用源码聚合指纹本地/生产均为 `a24d1f154ce8d9ff273c557d52ee00b8fe96ceb055aa5abaef059d49f3ba6a7d`。
+- 镜像构建批次约 `20260831064802` 完成：API `sha256:43ea1c025fdb2c6b1ef015eb26a21f209ad2f12ce896dbc43f5d0b51dabb50d4`、Web `sha256:4998d5922ed18f83e048a215f81e5882cf39ddc2f446b10b5f5a22cf1c988fb7`、Nginx `sha256:347eda4abce5128681ded96a31868d987f58b2917c206540be0bc2ac376cee6f`；三张镜像标签保持 `0.0.7`，旧摘要已加 `rollback-20260831064406` 标签。API 构建有 `xlsx` bin 警告但退出 0，Node 20 入口校验通过。
+- 一次性新 API 容器 migration/seed 完成，数据库保持 25 条 migration；API→Web→Nginx 分阶段切换完成，API healthy、Web/Nginx running、Nginx `-t` 通过，无自动回切。
+- 独立新鲜复验通过：六个长期容器正常，证书提醒字段/索引存在，五个受保护 API 未登录均 401，17 条 SPA 直达路由和 8 个新资源公网 200，API live/ready 200，根域名 HTTP 301，TLS 至 2026-10-16，定时器 enabled/active，近 10 分钟 API/Web/Nginx 错误标记均为 0，无一次性容器残留。
+- 验证脚本问题记录：首次 Redis 快照因 ACL `NOAUTH`，服务器宿主机无 Node，源码敏感文件正则误报 `.env.example`，一次性命令嵌套替换产生 shell 语法错误；均改用安全替代命令后通过，未改变业务数据。API unit 首次 pnpm 参数错误未运行测试，改用直接 Jest 参数后 23/121 通过。
+- 阶段 26 已完成；本轮完整回滚点为源码 `/dev/sunan/sunan-source/backup-20260831064406`、镜像 `sunan-api/web/nginx:rollback-20260831064406`、备份批次 `20260831064109`。企业微信 iOS/Android/桌面真实登录与业务操作继续保留为用户现场验收项。
+
+## 会话：2026-08-31（0.0.7 小改动再次生产发布）
+
+### 阶段 25：部署调查与执行
+- **状态：** completed
+- 已重新读取 `planning-with-files-zh` 与 `verification-before-completion` 技能并恢复既有发布记录。
+- 已确认 `main`/`origin/main` 位于 `8ddb3c3`；当前工作树包含 49 个改动文件和新的 `1710000024000-certificate-reminder-preferences.ts` migration。
+- 用户明确本轮仍保持版本 `0.0.7`，且不修改前端页面版本显示；已写入本阶段边界。
+- 生产只读预检通过：线上仍为上次 0.0.7 API/Web/Nginx 镜像、24 条 migration，Compose/live/ready/Web 正常，磁盘约 64 GB 可用；新 migration 为证书提醒字段与索引的幂等增量变更。
+- 本轮版本/部署配置无需修改，前端源码未引用 `SUNAN_VERSION` 或 `0.0.7` 页面显示。
+- Web 全量门禁出现 1 个失败：`src/router/AppRoutes.test.tsx` 的 `/my` 首页懒加载用例超时，59 files/263 tests 通过；API unit 23/121、API build、lint 和 Web build 通过。按系统化调试先隔离复现，未进入生产发布。
+- 隔离 `/my` 用例约 1 秒通过；随后单独默认 Web 全量重跑 60 files/264 tests 通过，确认首轮失败为与其他门禁并行时的资源竞争，不改代码，改为分阶段执行。
+- 本轮发布前门禁完成：API integration 18 suites/84 tests、API unit 23 suites/121 tests、Web 60 files/264 tests，API/Web build、API lint、21 OpenAPI、文档索引、版本和 diff 检查通过。
+- 生产备份批次 `20260831031452` 已通过：DB dump 550 entries、配置归档、Redis RDB 及 SHA-256 校验；恢复演练核对 24 migrations/4 users/3 certificates，临时库已删除。
+- 源码批次 `20260831031635` 完成完整上传、敏感文件/生成目录排除、25 migration 和应用源码 SHA-256 校验后原子切换；旧源码回滚点为 `/dev/sunan/sunan-source/backup-20260831031635`，运行容器尚未变化。
+- 新镜像构建批次 `20260831031730` 完成：API `sha256:72c9f238...d284608`、Web `sha256:9a799f3b...0d36a15d`、Nginx `sha256:ba4a0f99...35079d0`，Node `v20.20.2`，三张镜像 OCI 版本均为 `0.0.7`；旧镜像已加 `rollback-20260831031635` 标签。
+- 一次性新 API 容器已完成 migration/seed，数据库从 24 条升至 25 条；证书表新增 `reminder_enabled`、`reminder_recipient_user_id`，提醒索引 `idx_certificates_reminder_recipient` 存在，容器无残留。
+- API→Web→Nginx 分阶段切换完成：API healthy、Web/Nginx running，运行摘要分别为 `72c9f238...d284608`、`9a799f3b...0d36a15d`、`ba4a0f99...35079d0`，Nginx `-t` 通过；自动回切未触发。
+- 独立新鲜复验通过：六个长期服务正常，25 条 migration，5 个受保护 API 未登录均为 401，14 条 SPA 直达路由和 7 个关键新懒加载资源公网 200，API live/ready 200，根域名 HTTP 301，TLS 至 2026-10-16，定时器 enabled/active，近 10 分钟 API/Nginx 错误标记为 0。
+- 本轮备份批次 `20260831031452` SHA-256 全部通过，Redis RDB 检查通过，PostgreSQL dump 由生产数据库镜像 `pg_restore -l` 读到 565 条目录项；新 migration 哈希与本地一致，前端产物扫描无 `0.0.7`/`SUNAN_VERSION` 展示文本，无临时容器残留。
+- 验证脚本记录：公网首轮因临时文件删除命令被本地安全策略拦截，第二轮因 zsh `path` 变量覆盖 `PATH`，第三轮因 zsh 标量不按空格拆分；均未发起破坏性操作，改用无临时文件、`route` 变量和原生数组后完整通过。宿主机无 `pg_restore`，改用 `docker run --rm` 挂载只读备份目录完成目录校验。
+- 阶段 25 已完成；完整回滚点为源码 `/dev/sunan/sunan-source/backup-20260831031635`、镜像标签 `sunan-api/web/nginx:rollback-20260831031635`、备份批次 `20260831031452`。企业微信 iOS/Android/桌面真实登录与业务操作继续保留为用户现场验收项。
+
 ## 会话：2026-08-31（保持 0.0.7 的新版本生产重发）
 
 ### 阶段 24：部署发现与发布执行

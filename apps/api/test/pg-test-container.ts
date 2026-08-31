@@ -87,6 +87,7 @@ import { Wave6InspectionCapa1710000020000 } from 'src/database/migrations/171000
 import { Wave7LegacySafetyMigration1710000021000 } from 'src/database/migrations/1710000021000-wave7-legacy-safety-migration';
 import { WecomUserDepartmentIds1710000022000 } from 'src/database/migrations/1710000022000-wecom-user-department-ids';
 import { WorkbenchVoyageSchemaV21710000023000 } from 'src/database/migrations/1710000023000-workbench-voyage-schema-v2';
+import { CertificateReminderPreferences1710000024000 } from 'src/database/migrations/1710000024000-certificate-reminder-preferences';
 import {
   CapaActionEntity,
   CapaActionEvidenceEntity,
@@ -208,6 +209,7 @@ const ALL_TEST_MIGRATIONS = [
   Wave7LegacySafetyMigration1710000021000,
   WecomUserDepartmentIds1710000022000,
   WorkbenchVoyageSchemaV21710000023000,
+  CertificateReminderPreferences1710000024000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;
