@@ -175,6 +175,22 @@ export class OssService {
     );
   }
 
+  async readBuffer(ossKey: string, maxBytes = 20 * 1024 * 1024): Promise<Buffer> {
+    if (this.aliyunClient) {
+      const head = await this.aliyunClient.head(ossKey);
+      if (Number(head.res.headers['content-length']) > maxBytes) throw new Error('文件超过读取大小限制');
+      const object = await this.aliyunClient.get(ossKey);
+      const bytes = Buffer.from(object.content);
+      if (bytes.length > maxBytes) throw new Error('文件超过读取大小限制');
+      return bytes;
+    }
+    const object = await this.getS3Client().send(new GetObjectCommand({ Bucket: appEnv.OSS_BUCKET, Key: ossKey }));
+    if (!object.Body || (object.ContentLength ?? 0) > maxBytes) throw new Error('文件不存在或超过读取大小限制');
+    const bytes = Buffer.from(await object.Body.transformToByteArray());
+    if (bytes.length > maxBytes) throw new Error('文件超过读取大小限制');
+    return bytes;
+  }
+
   async checkConnection(): Promise<void> {
     if (this.aliyunClient) {
       await this.aliyunClient.getBucketInfo(appEnv.OSS_BUCKET);

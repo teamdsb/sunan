@@ -42,10 +42,10 @@ export class ReminderService {
     const reminders = await this.visibleReminders(user);
     return {
       totalPending: reminders.filter(
-        (item) => item.reminderType === 'upcoming' && item.status !== 'acknowledged',
+        (item) => item.reminderType === 'upcoming' && !['acknowledged', 'resolved'].includes(item.status),
       ).length,
       totalOverdue: reminders.filter(
-        (item) => item.reminderType === 'overdue' && item.status !== 'acknowledged',
+        (item) => item.reminderType === 'overdue' && !['acknowledged', 'resolved'].includes(item.status),
       ).length,
       totalAcknowledged: reminders.filter((item) => item.status === 'acknowledged').length,
       byOwnerType: this.groupByOwnerType(reminders),
@@ -84,7 +84,7 @@ export class ReminderService {
 
   async acknowledge(id: string, dto: ReminderAcknowledgeDto, user: CurrentUser) {
     const reminder = await this.findVisibleReminderOrThrow(id, user);
-    if (reminder.status === 'acknowledged') {
+    if (['acknowledged', 'resolved'].includes(reminder.status)) {
       throw new ConflictException('already acknowledged');
     }
 
@@ -102,12 +102,15 @@ export class ReminderService {
   }
 
   private async visibleReminders(user: CurrentUser): Promise<CertificateReminderEntity[]> {
-    const reminders = await this.reminderRepository.find({
+    let reminders = await this.reminderRepository.find({
       order: {
         scheduledDate: 'DESC',
         createdAt: 'DESC',
       },
     });
+    const certificates = await this.certificateRepository.find({ withDeleted: true });
+    const certificateById = new Map(certificates.map(certificate => [certificate.id, certificate]));
+    reminders = reminders.map(reminder => this.resolveCycleStatus(reminder, certificateById.get(reminder.certificateId)));
     const context = await this.resolveViewerContext(user);
 
     if (context.roles.has('system_admin')) {
@@ -138,6 +141,14 @@ export class ReminderService {
       throw new NotFoundException('certificate reminder not found');
     }
 
+    const certificate = await this.certificateRepository.findOne({ where: { id: reminder.certificateId }, withDeleted: true });
+    return this.resolveCycleStatus(reminder, certificate ?? undefined);
+  }
+
+  private resolveCycleStatus(reminder: CertificateReminderEntity, certificate: CertificateEntity | undefined) {
+    if (reminder.status !== 'acknowledged' && (!certificate || certificate.deletedAt || certificate.status === 'archived' || certificate.reminderEnabled === false || certificate.expiryDate !== reminder.certificateExpiryDate)) {
+      return Object.assign(new CertificateReminderEntity(), reminder, { status: 'resolved' as const });
+    }
     return reminder;
   }
 
@@ -213,7 +224,7 @@ export class ReminderService {
 
       // The dashboard's pending card is represented by reminderType=upcoming.
       // Acknowledged upcoming reminders are historical records, not pending work.
-      if (query.reminderType === 'upcoming' && !query.status && item.status === 'acknowledged') {
+      if (query.reminderType && !query.status && ['acknowledged', 'resolved'].includes(item.status)) {
         return false;
       }
 
@@ -299,7 +310,7 @@ export class ReminderService {
       certificateTitle: reminder.certificateTitle,
       certificateNo: certificate?.certificateNo ?? null,
       issueDate: certificate?.issueDate ?? null,
-      expiryDate: certificate?.expiryDate ?? reminder.certificateExpiryDate,
+      expiryDate: reminder.certificateExpiryDate,
       ownerType: reminder.ownerType,
       ownerName: reminder.ownerName,
       recipientUserId: reminder.recipientUserId,

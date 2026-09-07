@@ -1,3 +1,4 @@
+import { ReminderExpiryCycle1710000025000 } from './migrations/1710000025000-reminder-expiry-cycle';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { appEnv } from '../config/env';
@@ -215,6 +216,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     WecomUserDepartmentIds1710000022000,
     WorkbenchVoyageSchemaV21710000023000,
     CertificateReminderPreferences1710000024000,
+    ReminderExpiryCycle1710000025000,
   ],
   synchronize: false,
 });

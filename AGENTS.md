@@ -25,6 +25,8 @@
 
 领域规格按 `api/`、`db/`、`state/`、`ui/` 组织；历史材料位于 `docs/archive/`。生成目录 `apps/web/dist-review-no-mock` 不是源码。
 
+部分旧规格已原地标记为 `historical-archive`，仅供追溯，不随功能同步维护。数据结构与实际行为以源码和 migration 为准；仅在接口契约、关键业务决定或发布操作变化时更新必要文档，无需逐层复制实现。
+
 | 操作 | 命令 |
 |---|---|
 | 安装依赖 | `pnpm install` |

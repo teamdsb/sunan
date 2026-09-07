@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import Redis from 'ioredis';
 
 import { appEnv } from 'src/config/env';
@@ -78,7 +78,7 @@ export class CertificateReminderEngineService {
     const equipmentById = new Map(equipment.map((row) => [row.id, row]));
     const reminderByKey = new Map(
       reminders.map((reminder) => [
-        this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType),
+        this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType, reminder.certificateExpiryDate),
         reminder,
       ]),
     );
@@ -141,11 +141,15 @@ export class CertificateReminderEngineService {
         certificate.status = 'expired';
       }
       certificate.latestScanAt = now;
-      await this.certificateRepository.save(certificate);
+      const updated = await this.certificateRepository.update(
+        { id: certificate.id, expiryDate: certificate.expiryDate, certificateTypeId: certificate.certificateTypeId, ownerType: certificate.ownerType, ownerId: certificate.ownerId, reminderRecipientUserId: certificate.reminderRecipientUserId ?? IsNull(), reminderEnabled: true, deletedAt: IsNull(), status: Not('archived') },
+        { latestScanAt: now, status: certificate.status },
+      );
+      if (!updated.affected) continue; // 换证/停用已发生时，丢弃扫描开始时的旧快照。
 
       for (const recipientUserId of recipients) {
         assertLeaseValid();
-        const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType);
+        const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType, certificate.expiryDate);
         const reminderCycleKey = this.makeReminderCycleKey(
           certificate.id,
           recipientUserId,
@@ -224,6 +228,7 @@ export class CertificateReminderEngineService {
               'recipientUserId',
               'scheduledDate',
               'reminderType',
+              'certificateExpiryDate',
             ]);
             createdCount += 1;
           } else {
@@ -473,8 +478,9 @@ export class CertificateReminderEngineService {
     recipientUserId: string,
     scheduledDate: string,
     reminderType: string,
+    certificateExpiryDate: string,
   ): string {
-    return [certificateId, recipientUserId, scheduledDate, reminderType].join(':');
+    return [certificateId, recipientUserId, scheduledDate, reminderType, certificateExpiryDate].join(':');
   }
 
   private makeReminderCycleKey(

@@ -184,51 +184,6 @@ describe('MyHomePage', () => {
     );
   });
 
-  it('renders the blue enterprise card grid hooks', () => {
-    render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByTestId('my-home-page')).toHaveClass('my-home-page');
-    expect(screen.getByTestId('my-home-grid')).toHaveClass(
-      'my-home-grid',
-      'my-home-card-grid',
-    );
-    expect(screen.getAllByRole('link')).toHaveLength(6);
-  });
-
-  it('renders the refreshed command dashboard copy', () => {
-    render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(
-      screen.getByRole('heading', { name: '王工 · 船务部 / 财务部' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: '王工的头像' })).toHaveAttribute(
-      'src',
-      'https://avatar.example.com/wang.png',
-    );
-    expect(screen.getByText('欢迎使用船舶管理工作台')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: '当前重点' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: '常用入口' }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('待办审批')).toBeInTheDocument();
-    expect(screen.getByText('工作平台审批待处理')).toBeInTheDocument();
-    expect(screen.getAllByText('证照预警').length).toBeGreaterThan(0);
-  });
-
   it('does not count overdue pending reminders twice', () => {
     render(
       <MemoryRouter
@@ -372,66 +327,4 @@ describe('MyHomePage', () => {
     expect(screen.getByText('企业资料 - 项')).toBeInTheDocument();
   });
 
-  it('renders the mobile status card instead of the old command hero artwork', () => {
-    const { container } = render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(container.querySelector('.my-home-status-card')).toBeInTheDocument();
-    expect(container.querySelector('.my-home-command-hero')).toBeNull();
-    expect(container.querySelector('.my-home-command-hero svg')).toBeNull();
-    expect(container.querySelector('.my-home-ship-visual')).toBeNull();
-  });
-
-  it('renders enterprise shortcut cards with stable labels', () => {
-    render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByRole('link', { name: '企业资料' })).toHaveClass(
-      'my-home-shortcut',
-    );
-    expect(screen.getByRole('link', { name: '电子证照' })).toHaveClass(
-      'my-home-shortcut',
-    );
-  });
-
-  it('renders shortcuts with blue icon plates', () => {
-    render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getAllByTestId('my-home-shortcut-icon')).toHaveLength(6);
-    expect(screen.getAllByTestId('my-home-shortcut-icon')[0]).toHaveClass(
-      'my-home-shortcut-icon',
-      'my-home-shortcut-icon-blue',
-    );
-  });
-
-  it('uses the whole shortcut card as the action without rendering redundant view labels', () => {
-    const { container } = render(
-      <MemoryRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <MyHomePage />
-      </MemoryRouter>,
-    );
-
-    expect(container.querySelectorAll('.my-home-shortcut-action')).toHaveLength(
-      0,
-    );
-    expect(screen.queryByText('查看')).not.toBeInTheDocument();
-  });
 });

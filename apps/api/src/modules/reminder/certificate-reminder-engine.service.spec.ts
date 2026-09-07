@@ -5,6 +5,7 @@ type AnyRepo<T> = {
   findOne: jest.Mock<Promise<T | null>, [unknown?]>;
   save: jest.Mock<Promise<T>, [T | T[]]>;
   upsert: jest.Mock<Promise<unknown>, any[]>;
+  update: jest.Mock;
   create: jest.Mock<T, [Partial<T>]>;
   rows: T[];
 };
@@ -27,6 +28,7 @@ function createRepo<T>(rows: T[] = []): AnyRepo<T> {
       }
       return value as T;
     }),
+    update: jest.fn().mockResolvedValue({ affected: 1 }),
     upsert: jest.fn(async (value) => {
       const list = Array.isArray(value) ? value : [value];
       for (const item of list as T[]) {
@@ -37,7 +39,8 @@ function createRepo<T>(rows: T[] = []): AnyRepo<T> {
             existing.certificateId === record.certificateId &&
             existing.recipientUserId === record.recipientUserId &&
             existing.scheduledDate === record.scheduledDate &&
-            existing.reminderType === record.reminderType
+            existing.reminderType === record.reminderType &&
+            existing.certificateExpiryDate === record.certificateExpiryDate
           );
         });
 

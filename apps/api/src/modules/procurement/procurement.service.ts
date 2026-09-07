@@ -1068,57 +1068,64 @@ export class ProcurementService {
     dto: ProcurementApprovalActionDto,
     user: CurrentUser,
   ) {
-    const order = await this.mustFindOrder(id);
-    const source = dto.source ?? 'internal';
-    this.assertApprovalSource(source);
+    const observed = await this.mustFindOrder(id);
+    const { order, approval } = await this.dataSource.transaction(async manager => {
+      const order = await manager.findOne(ProcurementOrderEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!order) throw new NotFoundException('记录不存在');
+      if (order.status !== observed.status) throw new ConflictException('审批状态已变化，请刷新后重试');
+      const source = dto.source ?? 'internal';
+      this.assertApprovalSource(source);
 
-    const approvalLevel = this.resolveApprovalLevel(order, user);
-    if (!approvalLevel) {
-      if (
-        order.status === 'draft' ||
-        order.status === 'final_approved' ||
-        order.status === 'rejected'
-      ) {
-        throw new ConflictException(
-          'current status does not allow approval action',
-        );
+      const approvalLevel = this.resolveApprovalLevel(order, user);
+      if (!approvalLevel) {
+        if (
+          order.status === 'draft' ||
+          order.status === 'final_approved' ||
+          order.status === 'rejected'
+        ) {
+          throw new ConflictException(
+            'current status does not allow approval action',
+          );
+        }
+        throw new ForbiddenException('forbidden');
       }
-      throw new ForbiddenException('forbidden');
-    }
 
-    const nextStatus = this.resolveNextStatus(
-      order.status,
-      approvalLevel,
-      dto.action,
-    );
-    order.status = nextStatus;
-    order.updatedBy = user.userId;
-
-    if (nextStatus === 'final_approved') {
-      order.finalApprovedAt = new Date();
-    }
-
-    if (nextStatus === 'draft') {
-      order.finalApprovedAt = null;
-    }
-
-    await this.orderRepository.save(order);
-
-    const approval = await this.orderApprovalRepository.save(
-      this.orderApprovalRepository.create({
-        orderId: order.id,
+      const nextStatus = this.resolveNextStatus(
+        order.status,
         approvalLevel,
-        action: dto.action,
-        comment: dto.comment?.trim() || null,
-        source,
-        externalEventId: dto.externalEventId ?? null,
-        approvedBy: user.userId,
-        payloadSnapshot: {
+        dto.action,
+      );
+      order.status = nextStatus;
+      order.updatedBy = user.userId;
+
+      if (nextStatus === 'final_approved') {
+        order.finalApprovedAt = new Date();
+      }
+
+      if (nextStatus === 'draft') {
+        order.finalApprovedAt = null;
+      }
+
+      await manager.save(ProcurementOrderEntity, order);
+
+      const approval = await manager.getRepository(ProcurementOrderApprovalEntity).save(
+        manager.create(ProcurementOrderApprovalEntity, {
+          orderId: order.id,
+          approvalLevel,
+          action: dto.action,
+          comment: dto.comment?.trim() || null,
+          source,
           externalEventId: dto.externalEventId ?? null,
-          syncDirection: source === 'external' ? 'pull_from_wecom' : null,
-        },
-      }),
-    );
+          approvedBy: user.userId,
+          payloadSnapshot: {
+            externalEventId: dto.externalEventId ?? null,
+            syncDirection: source === 'external' ? 'pull_from_wecom' : null,
+          },
+        }),
+      );
+
+      return { order, approval };
+    });
 
     await this.notifyOrderApprovalResult(order, dto.action);
 
@@ -1464,63 +1471,70 @@ export class ProcurementService {
     dto: ProcurementApprovalActionDto,
     user: CurrentUser,
   ) {
-    const report = await this.mustFindReport(id);
-    const source = dto.source ?? 'internal';
-    this.assertApprovalSource(source);
+    const observed = await this.mustFindReport(id);
+    const { report, approval } = await this.dataSource.transaction(async manager => {
+      const report = await manager.findOne(ProcurementReportEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!report) throw new NotFoundException('记录不存在');
+      if (report.status !== observed.status) throw new ConflictException('审批状态已变化，请刷新后重试');
+      const source = dto.source ?? 'internal';
+      this.assertApprovalSource(source);
 
-    const approvalLevel = this.resolveReportApprovalLevel(report, user);
-    if (!approvalLevel) {
-      if (
-        report.status === 'draft' ||
-        report.status === 'final_approved' ||
-        report.status === 'rejected'
-      ) {
-        throw new ConflictException(
-          'current status does not allow approval action',
-        );
+      const approvalLevel = this.resolveReportApprovalLevel(report, user);
+      if (!approvalLevel) {
+        if (
+          report.status === 'draft' ||
+          report.status === 'final_approved' ||
+          report.status === 'rejected'
+        ) {
+          throw new ConflictException(
+            'current status does not allow approval action',
+          );
+        }
+        throw new ForbiddenException('forbidden');
       }
-      throw new ForbiddenException('forbidden');
-    }
 
-    const previousStatus = report.status;
-    const nextStatus = this.resolveNextReportStatus(
-      report.status,
-      approvalLevel,
-      dto.action,
-    );
-
-    report.status = nextStatus;
-    report.updatedBy = user.userId;
-
-    if (nextStatus === 'final_approved') {
-      report.finalApprovedAt = new Date();
-    }
-
-    if (nextStatus === 'draft') {
-      report.finalApprovedAt = null;
-    }
-
-    await this.reportRepository.save(report);
-
-    const approval = await this.reportApprovalRepository.save(
-      this.reportApprovalRepository.create({
-        reportId: report.id,
+      const previousStatus = report.status;
+      const nextStatus = this.resolveNextReportStatus(
+        report.status,
         approvalLevel,
-        action: dto.action,
-        comment: dto.comment?.trim() || null,
-        source,
-        externalEventId: dto.externalEventId ?? null,
-        approvedBy: user.userId,
-        payloadSnapshot: {
+        dto.action,
+      );
+
+      report.status = nextStatus;
+      report.updatedBy = user.userId;
+
+      if (nextStatus === 'final_approved') {
+        report.finalApprovedAt = new Date();
+      }
+
+      if (nextStatus === 'draft') {
+        report.finalApprovedAt = null;
+      }
+
+      await manager.save(ProcurementReportEntity, report);
+
+      const approval = await manager.getRepository(ProcurementReportApprovalEntity).save(
+        manager.create(ProcurementReportApprovalEntity, {
+          reportId: report.id,
+          approvalLevel,
+          action: dto.action,
+          comment: dto.comment?.trim() || null,
+          source,
           externalEventId: dto.externalEventId ?? null,
-          statusBefore: previousStatus,
-          statusAfter: nextStatus,
-          snapshotParams: report.snapshotParams,
-          snapshotSummary: report.snapshotSummary,
-          syncDirection: source === 'external' ? 'pull_from_wecom' : null,
-        },
-      }),
-    );
+          approvedBy: user.userId,
+          payloadSnapshot: {
+            externalEventId: dto.externalEventId ?? null,
+            statusBefore: previousStatus,
+            statusAfter: nextStatus,
+            snapshotParams: report.snapshotParams,
+            snapshotSummary: report.snapshotSummary,
+            syncDirection: source === 'external' ? 'pull_from_wecom' : null,
+          },
+        }),
+      );
+
+      return { report, approval };
+    });
 
     await this.notifyReportApprovalResult(report, dto.action);
 

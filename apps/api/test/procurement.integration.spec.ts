@@ -370,4 +370,20 @@ describe('ProcurementController integration', () => {
     expect(invalidResponse.status).toBe(400);
     expect((invalidResponse.body as { message: string }).message).toContain('submitted date range must be in last three years');
   });
+  it('并发部门审批只推进一次并留下单条审批记录，其他部门不能审批', async () => {
+    currentUser = { ...currentUser, userId: 'mvp-applicant', roles: ['all_authenticated', 'logistics'], departments: ['后勤部'] };
+    const order = await request(app.getHttpServer() as Parameters<typeof request>[0]).post('/api/v1/procurement/orders').send({ departmentCode: 'logistics_dept', dimensionType: 'logistics_category', dimensionKey: 'canteen', title: '首版并发审批', summary: '日常采购', amount: 100 }).expect(201);
+    const id = order.body.data.id as string;
+    await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/procurement/orders/${id}/submit`).expect(201);
+    currentUser = { ...currentUser, userId: 'wrong-department', roles: ['all_authenticated', 'shipping'], departments: ['船务部'] };
+    await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/procurement/orders/${id}/approvals/actions`).send({ action: 'approve', source: 'internal' }).expect(403);
+    currentUser = { ...currentUser, userId: 'logistics-reviewer', roles: ['all_authenticated', 'logistics'], departments: ['后勤部'] };
+    const responses = await Promise.all([1, 2].map(() => request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/procurement/orders/${id}/approvals/actions`).send({ action: 'approve', source: 'internal' })));
+    expect(responses.filter(response => response.status === 201)).toHaveLength(1);
+    expect(responses.every(response => [201, 403, 409].includes(response.status))).toBe(true);
+    const history = await request(app.getHttpServer() as Parameters<typeof request>[0]).get(`/api/v1/procurement/orders/${id}/approvals`).expect(200);
+    expect(history.body.data).toHaveLength(1);
+    expect(history.body.data[0].approvedBy).toBe('logistics-reviewer');
+  });
+
 });

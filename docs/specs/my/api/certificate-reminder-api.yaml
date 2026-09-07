@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Certificate Reminder API
   version: 1.0.0
-  description: 证书提醒模块 API 规格。
+  description: 证书提醒模块 API 规格。resolved 表示证照已更新、停用、归档或删除，旧提醒无需处理；到期时间保留该提醒的原始快照。
 servers:
   - url: /api/v1
 tags:
@@ -35,7 +35,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending, sent, acknowledged, failed]
+            enum: [pending, dispatching, sent, acknowledged, failed, resolved]
         - name: reminderType
           in: query
           schema:
@@ -241,7 +241,7 @@ components:
           enum: [upcoming, overdue]
         status:
           type: string
-          enum: [pending, dispatching, sent, acknowledged, failed]
+          enum: [pending, dispatching, sent, acknowledged, failed, resolved]
         scheduledDate:
           type: string
           format: date

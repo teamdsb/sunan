@@ -8,6 +8,30 @@ info:
 servers:
   - url: /api/v1
 paths:
+  /workbench/inspection-people:
+    get:
+      tags: [Workbench]
+      summary: 获取自查可分配人员（仅管理人员）
+      description: 返回当前企业中已登录且可用的船员和管理人员，不返回其他个人资料。
+      responses:
+        '200':
+          description: 可分配人员
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId: { type: string }
+                        name: { type: string }
+                        canExecute: { type: boolean }
+                        canReview: { type: boolean }
+        '403':
+          description: 当前用户无分配权限
   /workbench/modules:
     get:
       summary: 获取工作平台模块列表
@@ -561,6 +585,10 @@ components:
           type: string
           enum: [manual, callback, reconcile]
     CreateWorkbenchRecordRequest:
+      description: >-
+        shipping_self_inspection 必须由管理人员创建，vesselId、assigneeUserId、reviewerUserId 必填；
+        执行人和审核人必须是同企业的可用人员且不能相同。payload 必须包含 inspectionScope 和 deadline。
+        船名由后端从 vesselId 读取。自查使用固定三步骤，不通过通用模板配置改变审核规则。
       type: object
       required: [moduleCode, title, summary]
       properties:
@@ -573,6 +601,12 @@ components:
         vesselId:
           type: string
           nullable: true
+        assigneeUserId:
+          type: string
+          maxLength: 64
+        reviewerUserId:
+          type: string
+          maxLength: 64
         occurredAt:
           type: string
           format: date-time
@@ -584,6 +618,15 @@ components:
         - $ref: '#/components/schemas/WorkbenchRecordSummary'
         - type: object
           properties:
+            availableActions:
+              type: array
+              description: 按当前用户分工与状态计算；自查前端只显示这些动作。
+              items: { type: string }
+            ownerUserId: { type: string }
+            assigneeUserId: { type: string, nullable: true }
+            reviewerUserId: { type: string, nullable: true }
+            assigneeName: { type: string }
+            reviewerName: { type: string }
             summary:
               type: string
             externalProcessInstanceId:
@@ -612,6 +655,11 @@ components:
       properties:
         id:
           type: string
+        completedBy: { type: string, nullable: true }
+        stepPayload:
+          type: object
+          additionalProperties: true
+          description: 保存执行说明、退回原因及本轮重新上传证据的时间下限。
         stepCode:
           type: string
         stepName:
@@ -690,6 +738,13 @@ components:
           type: string
           format: date-time
     WorkbenchRecordActionRequest:
+      description: >-
+        自查仅支持 assign、start、complete_step、request_rework、close_record、void。
+        assign 的 payload 为 assigneeUserId/reviewerUserId，重新分配会重启检查；
+        complete_step 只能操作当前执行步骤，现场检查需 checkResult=conforming/nonconforming；
+        除 start 外所有动作必须填写 comment。检查不合格需整改前照片，整改提交需本轮整改后照片。
+        审核仅由独立审核人执行，关闭前检查及整改必须完成。通用 submit_review、参与人和外部审批入口不能绕过规则。
+        状态冲突返回 409，角色不符返回 403；关闭或作废后只读。
       type: object
       required: [actionType]
       properties:
@@ -705,6 +760,7 @@ components:
               request_rework,
               close_record,
               archive,
+              void,
               retry_export,
               reconcile_record,
               refresh_print_snapshot,

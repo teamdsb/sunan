@@ -37,7 +37,7 @@ describe('ReminderService administrator source', () => {
     };
     const service = new ReminderService(
       reminderRepository as never,
-      { findOne: jest.fn() } as never,
+      { findOne: jest.fn(), find: jest.fn().mockResolvedValue([{ id: 'certificate-pending', expiryDate: '2026-09-09' }]) } as never,
       { find: jest.fn() } as never,
       { find: jest.fn() } as never,
       { findOne: jest.fn() } as never,
@@ -66,6 +66,7 @@ describe('ReminderService administrator source', () => {
         {
           id: 'pending',
           certificateId: 'certificate-pending',
+          certificateExpiryDate: '2026-09-09',
           certificateTitle: '待处理证照',
           ownerType: 'equipment',
           ownerId: 'equipment-1',
@@ -101,7 +102,7 @@ describe('ReminderService administrator source', () => {
     };
     const service = new ReminderService(
       reminderRepository as never,
-      { findOne: jest.fn() } as never,
+      { findOne: jest.fn(), find: jest.fn().mockResolvedValue([{ id: 'certificate-pending', expiryDate: '2026-09-09' }]) } as never,
       { find: jest.fn() } as never,
       { find: jest.fn() } as never,
       { findOne: jest.fn() } as never,

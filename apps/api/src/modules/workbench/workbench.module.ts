@@ -20,6 +20,8 @@ import { FilesModule } from 'src/modules/files/files.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
 import { WorkbenchApprovalController } from './workbench-approval.controller';
 import { WorkbenchController } from './workbench.controller';
+import { SelfInspectionService } from './self-inspection.service';
+import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
 import { WorkbenchService } from './workbench.service';
 
 @Module({
@@ -46,6 +48,6 @@ import { WorkbenchService } from './workbench.service';
     ]),
   ],
   controllers: [WorkbenchController, WorkbenchApprovalController],
-  providers: [WorkbenchService],
+  providers: [WorkbenchService, SelfInspectionService, RoleResolverService],
 })
 export class WorkbenchModule {}

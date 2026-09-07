@@ -1,25 +1,4 @@
-import { Logger } from '@nestjs/common';
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-
-type SubsetFont = (
-  fontBuffer: Buffer,
-  text: string,
-  options: { targetFormat: 'sfnt' },
-) => Promise<Buffer>;
-
-const requireFromHere = createRequire(__filename);
-const subsetFont = requireFromHere('subset-font') as SubsetFont;
-const notoSansScEntry = requireFromHere.resolve(
-  '@expo-google-fonts/noto-sans-sc',
-);
-const notoSansScFontPath = join(
-  dirname(notoSansScEntry),
-  '400Regular',
-  'NotoSansSC_400Regular.ttf',
-);
-const logger = new Logger('ProcurementPdfFont');
+import { createChinesePdfFont } from 'src/common/pdf/chinese-pdf-font';
 
 const staticPdfText = `
 苏南船舶管理平台 · 采购单 PROCUREMENT ORDER
@@ -40,29 +19,8 @@ const staticPdfText = `
 ¥ · （ ） ， 。 ： ； ！ ？ — … - / 0 1 2 3 4 5 6 7 8 9
 `;
 
-let fullFontBytes: Buffer | undefined;
-
-function loadFullFontBytes(): Buffer {
-  fullFontBytes ??= readFileSync(notoSansScFontPath);
-  return fullFontBytes;
-}
-
-export async function createProcurementPdfFont(
+export function createProcurementPdfFont(
   documentData: unknown,
 ): Promise<Buffer> {
-  const documentText = `${staticPdfText}\n${JSON.stringify(documentData)}`;
-  const uniqueCharacters = [...new Set(documentText)].join('');
-
-  try {
-    return await subsetFont(loadFullFontBytes(), uniqueCharacters, {
-      targetFormat: 'sfnt',
-    });
-  } catch (error) {
-    logger.warn(
-      `PDF font subsetting failed; using the complete font: ${
-        error instanceof Error ? error.message : 'unknown error'
-      }`,
-    );
-    return loadFullFontBytes();
-  }
+  return createChinesePdfFont({ labels: staticPdfText, data: documentData });
 }

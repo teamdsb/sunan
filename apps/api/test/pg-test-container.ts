@@ -1,4 +1,5 @@
-﻿import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ReminderExpiryCycle1710000025000 } from 'src/database/migrations/1710000025000-reminder-expiry-cycle';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { ImagePullPolicy } from 'testcontainers';
 import { DataSource } from 'typeorm';
@@ -210,6 +211,7 @@ const ALL_TEST_MIGRATIONS = [
   WecomUserDepartmentIds1710000022000,
   WorkbenchVoyageSchemaV21710000023000,
   CertificateReminderPreferences1710000024000,
+  ReminderExpiryCycle1710000025000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

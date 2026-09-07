@@ -125,7 +125,9 @@ describe('ReminderDetailPage', () => {
     expect(screen.queryByRole('button', { name: /确认提醒/ })).toBeNull();
   });
 
-  it('shows acknowledged state after a 409 conflict', async () => {
+  it('shows the server state after a 409 conflict', async () => {
+    const state = mockDetail();
+    state.refetch.mockResolvedValue({ data: { data: { ...state.data.data, status: 'acknowledged' } } });
     mockAcknowledge.mockReturnValue({
       unwrap: () => Promise.reject({ status: 409 }),
     });
@@ -163,6 +165,14 @@ describe('ReminderDetailPage', () => {
       '/my/reminders?view=list&status=pending&page=2',
     );
   });
+  it('does not present a renewed certificate reminder as pending work', () => {
+    const state = mockDetail();
+    mockDetail.mockReturnValue({ ...state, data: { data: { ...state.data.data, status: 'resolved' } } });
+    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders/r1']}><Routes><Route path="/my/reminders/:id" element={<ReminderDetailPage />} /></Routes></MemoryRouter>);
+    expect(screen.getByText('证照已更新或停用，无需处理')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /确认提醒/ })).not.toBeInTheDocument();
+  });
+
 });
 
 function LocationDisplay() {

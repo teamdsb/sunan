@@ -1,7 +1,7 @@
 ﻿import { ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnprocessableEntityException } from '@nestjs/common';
-import { In, IsNull, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDate } from 'src/common/date/business-date';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
@@ -187,51 +187,54 @@ export class CertificateService {
       updatedBy: user.userId,
     });
 
-    const saved = await this.repository.save(entity);
-    if (dto.fileIds?.length) await this.bindFiles(saved.id, { fileIds: dto.fileIds }, user);
+    const saved = await this.repository.manager.transaction(async manager => {
+      const record = await manager.save(CertificateEntity, entity);
+      if (dto.fileIds?.length) await this.saveFileRelations(manager, record.id, dto.fileIds, 'append');
+      return record;
+    });
     void this.enqueueReminderScan();
     return this.getById(saved.id);
   }
 
   async update(id: string, dto: CertificateUpdateDto, user: CurrentUser) {
     this.ensureManager(user);
-    const entity = await this.findOneOrThrow(id);
+    await this.repository.manager.transaction(async manager => {
+      const entity = await manager.findOne(CertificateEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!entity) throw new NotFoundException('certificate not found');
 
-    const nextOwnerType = dto.ownerType ?? entity.ownerType;
-    const nextOwnerId = dto.ownerId ?? entity.ownerId;
-    if (dto.ownerType || dto.ownerId) {
-      await this.assertOwnerExists(nextOwnerType, nextOwnerId);
-    }
-    if (dto.certificateTypeId || dto.ownerType) {
-      await this.assertCertificateType(dto.certificateTypeId ?? entity.certificateTypeId, nextOwnerType);
-    }
+      const nextOwnerType = dto.ownerType ?? entity.ownerType;
+      const nextOwnerId = dto.ownerId ?? entity.ownerId;
+      if (dto.ownerType || dto.ownerId) {
+        await this.assertOwnerExists(nextOwnerType, nextOwnerId);
+      }
+      if (dto.certificateTypeId || dto.ownerType) {
+        await this.assertCertificateType(dto.certificateTypeId ?? entity.certificateTypeId, nextOwnerType);
+      }
 
-    Object.assign(entity, {
-      certificateTypeId: dto.certificateTypeId ?? entity.certificateTypeId,
-      ownerType: dto.ownerType ?? entity.ownerType,
-      ownerId: dto.ownerId ?? entity.ownerId,
-      certificateNo: dto.certificateNo ?? entity.certificateNo,
-      title: dto.title ?? entity.title,
-      issueDate: dto.issueDate === undefined ? entity.issueDate : toBusinessDate(dto.issueDate),
-      expiryDate: dto.expiryDate === undefined ? entity.expiryDate : toBusinessDate(dto.expiryDate) as string,
-      advanceDays: dto.advanceDays ?? entity.advanceDays,
-      reminderEnabled: dto.reminderEnabled ?? entity.reminderEnabled ?? true,
-      reminderRecipientUserId:
-        dto.reminderRecipientUserId === undefined
-          ? entity.reminderRecipientUserId ?? null
-          : dto.reminderRecipientUserId?.trim() || null,
-      issuer: dto.issuer ?? entity.issuer,
-      status: dto.status ?? entity.status,
-      remarks: dto.remarks ?? entity.remarks,
-      updatedBy: user.userId,
+      Object.assign(entity, {
+        certificateTypeId: dto.certificateTypeId ?? entity.certificateTypeId,
+        ownerType: dto.ownerType ?? entity.ownerType,
+        ownerId: dto.ownerId ?? entity.ownerId,
+        certificateNo: dto.certificateNo ?? entity.certificateNo,
+        title: dto.title ?? entity.title,
+        issueDate: dto.issueDate === undefined ? entity.issueDate : toBusinessDate(dto.issueDate),
+        expiryDate: dto.expiryDate === undefined ? entity.expiryDate : toBusinessDate(dto.expiryDate) as string,
+        advanceDays: dto.advanceDays ?? entity.advanceDays,
+        reminderEnabled: dto.reminderEnabled ?? entity.reminderEnabled ?? true,
+        reminderRecipientUserId:
+          dto.reminderRecipientUserId === undefined
+            ? entity.reminderRecipientUserId ?? null
+            : dto.reminderRecipientUserId?.trim() || null,
+        issuer: dto.issuer ?? entity.issuer,
+        status: dto.status ?? (dto.expiryDate && entity.status === 'expired' && (toBusinessDate(dto.expiryDate) ?? '') >= (toBusinessDate(new Date().toISOString()) ?? '') ? 'active' : entity.status),
+        remarks: dto.remarks ?? entity.remarks,
+        updatedBy: user.userId,
     });
 
-    await this.repository.save(entity);
+    await manager.save(CertificateEntity, entity);
 
-    if (dto.fileIds) {
-      await this.fileRelRepository.delete({ certificateId: id });
-      await this.bindFiles(id, { fileIds: dto.fileIds }, user);
-    }
+    if (dto.fileIds) await this.saveFileRelations(manager, id, dto.fileIds, 'replace');
+    });
 
     void this.enqueueReminderScan();
     return this.getById(id);
@@ -247,18 +250,23 @@ export class CertificateService {
 
   async bindFiles(id: string, dto: CertificateBindFilesDto, user: CurrentUser) {
     this.ensureManager(user);
-    await this.findOneOrThrow(id);
-
-    const files = await this.fileRepository.find({ where: { id: In(dto.fileIds) } });
-    if (files.length !== dto.fileIds.length) throw new NotFoundException('file not found');
-
-    const existing = await this.fileRelRepository.find({ where: { certificateId: id } });
-    const existingSet = new Set(existing.map((row) => row.fileId));
-    const rows = dto.fileIds.filter((fileId) => !existingSet.has(fileId)).map((fileId, index) =>
-      this.fileRelRepository.create({ certificateId: id, fileId, sortOrder: existing.length + index, fileRole: 'primary' }),
-    );
-    if (rows.length) await this.fileRelRepository.save(rows);
+    await this.repository.manager.transaction(async manager => {
+      const record = await manager.findOne(CertificateEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!record) throw new NotFoundException('certificate not found');
+      await this.saveFileRelations(manager, id, dto.fileIds, 'append');
+    });
     return this.getById(id);
+  }
+
+  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], mode: 'append' | 'replace') {
+    const ids = [...new Set(fileIds)];
+    const files = ids.length ? await manager.find(FileEntity, { where: { id: In(ids) } }) : [];
+    if (files.length !== ids.length) throw new NotFoundException('file not found');
+    if (mode === 'replace') await manager.delete(CertificateFileEntity, { certificateId: id });
+    const existing = await manager.find(CertificateFileEntity, { where: { certificateId: id } });
+    const linked = new Set(existing.map(item => item.fileId));
+    const rows = ids.filter(fileId => !linked.has(fileId)).map((fileId, index) => manager.create(CertificateFileEntity, { certificateId: id, fileId, sortOrder: existing.length + index, fileRole: 'primary' }));
+    if (rows.length) await manager.save(CertificateFileEntity, rows);
   }
 
   async getFileDownloadUrl(id: string, fileId: string) {

@@ -13,7 +13,7 @@ const dateColumnType = 'date';
 
 @Index('idx_certificate_reminders_certificate_id', ['certificateId'])
 @Index('idx_certificate_reminders_recipient_user_id_status', ['recipientUserId', 'status'])
-@Index('uk_certificate_reminders_certificate_recipient_scheduled_type', ['certificateId', 'recipientUserId', 'scheduledDate', 'reminderType'], { unique: true })
+@Index('uk_certificate_reminders_certificate_recipient_scheduled_type', ['certificateId', 'recipientUserId', 'scheduledDate', 'reminderType', 'certificateExpiryDate'], { unique: true })
 @Entity({ name: 'certificate_reminders' })
 export class CertificateReminderEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -50,7 +50,7 @@ export class CertificateReminderEntity {
   reminderType!: 'upcoming' | 'overdue';
 
   @Column({ type: 'varchar', length: 16, default: 'pending' })
-  status!: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed';
+  status!: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed' | 'resolved';
 
   @Column({ name: 'scheduled_date', type: dateColumnType })
   scheduledDate!: string;

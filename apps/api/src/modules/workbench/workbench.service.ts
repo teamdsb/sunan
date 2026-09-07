@@ -40,6 +40,8 @@ import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.d
 import { WorkbenchRecordUploadAttachmentDto } from './dto/workbench-record-upload-attachment.dto';
 import { WorkbenchRecordParticipantDto } from './dto/workbench-record-participant.dto';
 
+import { SelfInspectionService, SELF_INSPECTION_MODULE, SELF_INSPECTION_SCHEMA } from './self-inspection.service';
+
 type TemplateType =
   | 'ledger_form'
   | 'operation_flow'
@@ -81,6 +83,9 @@ interface WorkbenchStep {
   status: 'pending' | 'in_progress' | 'completed';
   rectificationRequired: boolean;
   rectificationStatus: string | null;
+  completedBy: string | null;
+  completedAt: string | null;
+  stepPayload: Record<string, unknown>;
 }
 
 interface WorkbenchAttachment {
@@ -118,6 +123,8 @@ interface WorkbenchRecord {
   externalProcessInstanceId: string | null;
   externalStatus: string | null;
   ownerUserId: string;
+  assigneeUserId: string | null;
+  reviewerUserId: string | null;
   visibleRoles: string[];
   payload: Record<string, unknown>;
   steps: WorkbenchStep[];
@@ -1162,27 +1169,7 @@ const INSPECTION_RECTIFICATION_MODULE_SCHEMAS: Record<string, ModuleSchemaDefini
       { stepCode: 'review_close', stepName: '审核关闭' },
     ],
   },
-  shipping_self_inspection: {
-    moduleCode: 'shipping_self_inspection',
-    templateType: 'inspection_rectification',
-    sections: [
-      {
-        key: 'selfInspection',
-        title: '船舶自查信息',
-        fields: [
-          { key: 'vesselName', label: '船舶名称', required: true, inputType: 'text' },
-          { key: 'inspectionScope', label: '检查范围', required: true, inputType: 'text' },
-          { key: 'hazardDescription', label: '问题描述', required: true, inputType: 'textarea' },
-          { key: 'deadline', label: '整改期限', required: true, inputType: 'datetime' },
-        ],
-      },
-    ],
-    stepTemplates: [
-      { stepCode: 'on_site_inspection', stepName: '现场检查' },
-      { stepCode: 'rectification', stepName: '整改执行' },
-      { stepCode: 'review_close', stepName: '审核关闭' },
-    ],
-  },
+  shipping_self_inspection: SELF_INSPECTION_SCHEMA,
   shipping_vessel_inspection: {
     moduleCode: 'shipping_vessel_inspection',
     templateType: 'inspection_rectification',
@@ -1534,6 +1521,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     private readonly ossService: OssService,
     private readonly wecomTokenService: WecomTokenService,
     private readonly wecomHttpGateway: WecomHttpGateway,
+    private readonly selfInspection: SelfInspectionService,
   ) {}
 
   async onModuleInit() {
@@ -1577,6 +1565,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       supportsPrint: moduleItem.supportsPrint,
       supportsStatistics: moduleItem.supportsStatistics,
       mobileFirst: moduleItem.mobileFirst,
+      canCreate: moduleItem.moduleCode !== SELF_INSPECTION_MODULE || this.selfInspection.isManager(user),
     }));
   }
 
@@ -1589,6 +1578,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       throw new ForbiddenException('forbidden');
     }
 
+    if (moduleCode === SELF_INSPECTION_MODULE) return SELF_INSPECTION_SCHEMA;
     const { schemaDefinition } = await this.mustGetModuleTemplate(moduleItem);
     return schemaDefinition;
   }
@@ -1899,6 +1889,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Wave 7 unsupported template type');
     }
 
+    if (dto.moduleCode === SELF_INSPECTION_MODULE) {
+      const id = await this.selfInspection.create(dto, `${SELF_INSPECTION_MODULE}_v1`, dto.payload ?? {}, user);
+      return this.getRecordDetail(id, user);
+    }
+
     const { schemaDefinition, templateCode } = await this.mustGetModuleTemplate(moduleItem);
     const normalizedPayload = this.normalizeCreatePayload(dto.moduleCode, dto.payload);
     this.assertPayloadMatchesSchema(normalizedPayload, schemaDefinition);
@@ -1989,12 +1984,15 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       await this.appendActionLog(record.id, { actionType: 'sensitive_view', source: 'manual', operatorUserId: user.userId, fromStatus: record.status, toStatus: record.status, comment: 'administrator record access', payloadDigest: null });
     }
     const hydrated = await this.hydrateRecord(record);
-    return { ...this.toRecordDetail(hydrated), availableActions: await this.getAvailableActions(record, user) };
+    return { ...this.toRecordDetail(hydrated), ...(record.moduleCode === SELF_INSPECTION_MODULE ? await this.selfInspection.names(record) : {}), availableActions: await this.getAvailableActions(record, user) };
   }
+
+  async listInspectionPeople(user: CurrentUser) { return this.selfInspection.people(user); }
 
   async assignParticipant(recordId: string, dto: WorkbenchRecordParticipantDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
     await this.assertRecordVisible(record, user);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) throw new BadRequestException('自查通过分配执行人和审核人管理，不使用通用参与人');
     if (!user.roles.includes('system_admin') && record.ownerUserId !== user.userId && record.reviewerUserId !== user.userId) {
       throw new ForbiddenException('forbidden');
     }
@@ -2020,6 +2018,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
     let record = await this.mustGetRecord(recordId);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.action(recordId, dto, user);
     await this.assertRecordVisible(record, user);
 
     const steps = await this.stepRepository.find({
@@ -2170,6 +2169,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.upload(recordId, dto, user);
     await this.assertRecordVisible(record, user);
 
     let stepId: string | null = null;
@@ -2241,7 +2241,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (!attachment) throw new NotFoundException('attachment not found');
     const file = await this.fileRepository.findOne({ where: { id: fileId } });
     if (!file) throw new NotFoundException('file not found');
-    return this.ossService.createDownloadSignature(file.ossKey);
+    return this.ossService.createDownloadSignature(record.moduleCode === SELF_INSPECTION_MODULE ? attachment.storagePath ?? file.ossKey : file.ossKey);
   }
 
   async getPrintSnapshot(recordId: string, user: CurrentUser, paperSize: PrintPaperSize = 'A4') {
@@ -2250,7 +2250,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const hydrated = await this.hydrateRecord(record);
 
     const renderedAt = new Date();
-    const snapshotData = {
+    let snapshotData: Record<string, unknown> = {
       title: hydrated.title,
       status: hydrated.status,
       moduleCode: hydrated.moduleCode,
@@ -2260,7 +2260,13 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       attachments: hydrated.attachments,
       paperSize,
     };
-    const pdfBuffer = this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
+    let pdfBuffer: Buffer;
+    if (record.moduleCode === SELF_INSPECTION_MODULE) {
+      const result = await this.selfInspection.print(recordId, user, paperSize);
+      pdfBuffer = result.buffer; snapshotData = result.snapshot;
+    } else {
+      pdfBuffer = this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
+    }
     const printFile = await this.persistWorkbenchPrintPdf({
       fileName: `workbench-${hydrated.id}-${paperSize}.pdf`,
       buffer: pdfBuffer,
@@ -2299,6 +2305,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async createSignatureEvidence(recordId: string, signatureFileId: string, hash: string, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) throw new ConflictException('自查证据请通过检查和整改照片入口提交');
     if (!/^[a-f0-9]{64}$/.test(hash)) throw new BadRequestException('invalid summary hash');
     if (!(await this.fileRepository.exist({ where: { id: signatureFileId } }))) throw new NotFoundException('signature file not found');
     return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'signature', fileId: signatureFileId, summaryHash: hash, captureStatus: 'captured', capturedBy: user.userId, status: 'active', latitude: null, longitude: null, accuracyMeters: null, failureReason: null, addressText: null }));
@@ -2306,6 +2313,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async createLocationEvidence(recordId: string, body: { captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) throw new ConflictException('自查证据请通过检查和整改照片入口提交');
     const captured = body.captureStatus === 'captured';
     if (!['captured', 'manual', 'denied', 'sdk_failed'].includes(body.captureStatus) || (captured && (body.latitude === undefined || body.longitude === undefined || body.accuracyMeters === undefined)) || (!captured && body.captureStatus !== 'manual' && !body.failureReason?.trim())) throw new BadRequestException('invalid location evidence');
     return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'location', fileId: null, summaryHash: null, captureStatus: body.captureStatus, capturedBy: user.userId, status: 'active', latitude: captured ? body.latitude! : null, longitude: captured ? body.longitude! : null, accuracyMeters: captured ? body.accuracyMeters! : null, failureReason: captured ? null : body.failureReason?.trim() ?? null, addressText: body.addressText?.trim() || null }));
@@ -2358,6 +2366,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
       this.logger.warn(`workbench print oss upload failed for ${ossKey}: ${message}`);
+      throw new BadGatewayException('打印文件上传失败，请重试');
     }
 
     return this.fileRepository.save(
@@ -2381,6 +2390,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async launchApproval(dto: WorkbenchApprovalLaunchDto, user: CurrentUser) {
     const record = await this.mustGetRecord(dto.businessRecordId);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) throw new BadRequestException('船舶自查由指定审核人在系统内审核');
     await this.assertRecordVisible(record, user);
     if (dto.moduleCode !== record.moduleCode) {
       throw new BadRequestException('approval module does not match record');
@@ -3594,6 +3604,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       status: 'pending',
       rectificationRequired: false,
       rectificationStatus: null,
+      completedBy: null, completedAt: null, stepPayload: {},
     }));
   }
 
@@ -3765,6 +3776,9 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return {
       ...this.toRecordSummary(record),
       summary: record.summary,
+      ownerUserId: record.ownerUserId,
+      assigneeUserId: record.assigneeUserId,
+      reviewerUserId: record.reviewerUserId,
       externalProcessInstanceId: record.externalProcessInstanceId,
       externalStatus: record.externalStatus,
       steps: record.steps,
@@ -3798,6 +3812,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private async canReadRecord(record: WorkbenchRecordEntity, user: CurrentUser) {
     const moduleItem = await this.mustGetModule(record.moduleCode);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.canRead(record, user);
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) return false;
     if (user.roles.includes('system_admin')) return true;
     const participant = await this.participantRepository.exist({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
@@ -3819,6 +3834,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async getAvailableActions(record: WorkbenchRecordEntity, user: CurrentUser) {
+    if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.availableActions(record, user);
     if (!(await this.canReadRecord(record, user))) return [];
     if (user.roles.includes('system_admin')) return ['start', 'complete_step', 'submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'void', 'reopen', 'delegate', 'transfer'];
     const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
@@ -3868,6 +3884,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       externalProcessInstanceId: record.externalProcessInstanceId,
       externalStatus: record.externalStatus,
       ownerUserId: record.ownerUserId,
+      assigneeUserId: record.assigneeUserId,
+      reviewerUserId: record.reviewerUserId,
       visibleRoles: [...(moduleItem?.visibleRoles ?? ['system_admin'])],
       payload: record.payload ?? {},
       steps,
@@ -3898,6 +3916,9 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         status: item.status as WorkbenchStep['status'],
         rectificationRequired: item.rectificationRequired,
         rectificationStatus: item.rectificationStatus,
+        completedBy: item.completedBy,
+        completedAt: item.completedAt?.toISOString() ?? null,
+        stepPayload: item.stepPayload,
       })),
       attachments.map((item) => ({
         id: item.id,

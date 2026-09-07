@@ -18,6 +18,16 @@ export class WorkbenchRecordCreateDto {
   vesselId?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  assigneeUserId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  reviewerUserId?: string;
+
+  @IsOptional()
   @IsISO8601()
   @IsDateTimeString()
   occurredAt?: string;

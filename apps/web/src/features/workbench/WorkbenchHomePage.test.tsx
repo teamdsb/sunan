@@ -470,7 +470,7 @@ describe('WorkbenchHomePage', () => {
     });
     fireEvent.keyDown(screen.getByLabelText('预计离港时间'), { key: 'Enter', code: 'Enter' });
     fireEvent.blur(screen.getByLabelText('预计离港时间'));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: '船舶ID（可选）' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: '船舶（可选）' }));
     expect(await screen.findByText('苏南022 (SN022)')).toBeInTheDocument();
     fireEvent.click(screen.getByText('苏南022 (SN022)'));
     fireEvent.click(screen.getByText(/提\s*交/));

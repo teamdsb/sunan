@@ -25,6 +25,9 @@ import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { CertificateModule } from 'src/modules/certificate/certificate.module';
+import { CertificateReminderEngineService } from 'src/modules/reminder/certificate-reminder-engine.service';
+import { ReminderClockService } from 'src/modules/reminder/reminder-clock.service';
 import { ReminderModule } from 'src/modules/reminder/reminder.module';
 import { REDIS_CLIENT } from 'src/modules/wecom/wecom.constants';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
@@ -75,7 +78,7 @@ const wecomMessageMock = {
         return buildPgTypeOrmOptions();
       },
     }),
-    ReminderModule,
+    ReminderModule, CertificateModule,
   ],
 })
 class TestModule {}
@@ -434,7 +437,7 @@ describe('ReminderController integration', () => {
       .set('Authorization', 'Bearer token');
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.totalPending).toBe(0);
-    expect(dashboard.body.data.totalOverdue).toBe(1);
+    expect(dashboard.body.data.totalOverdue).toBe(0);
 
     const list = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -444,6 +447,7 @@ describe('ReminderController integration', () => {
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(1);
     expect(list.body.data[0].recipientUserId).toBe('office-user');
+    expect(list.body.data[0].status).toBe('resolved');
 
     const hiddenDetail = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -542,4 +546,53 @@ describe('ReminderController integration', () => {
     expect(managerScan.body.data.jobId).toEqual(expect.any(String));
     expect(managerScan.body.data.acceptedAt).toEqual(expect.any(String));
   });
+  it('更新证照立即消除旧待办，并允许同一天为新的到期周期生成提醒', async () => {
+    const clock = app.get(ReminderClockService);
+    const today = jest.spyOn(clock, 'today').mockReturnValue('2026-03-28');
+    const now = jest.spyOn(clock, 'now').mockReturnValue(new Date('2026-03-28T01:00:00Z'));
+    try {
+      currentUser = { ...currentUser, userId: 'shipping-manager', roles: ['all_authenticated', 'shipping'], departments: ['船务部'] };
+      const vessel = (await dataSource.getRepository(VesselEntity).find())[0]!;
+      const certificate = await dataSource.getRepository(CertificateEntity).save({ certificateTypeId: typeId, ownerType: 'vessel', ownerId: vessel.id, title: '换证闭环测试', expiryDate: '2026-03-29', advanceDays: 30, status: 'active', reminderEnabled: true, reminderRecipientUserId: 'shipping-employee', createdBy: currentUser.userId, updatedBy: currentUser.userId });
+      const engine = app.get(CertificateReminderEngineService);
+      await engine.runScan({ jobId: 'renewal-first', source: 'manual' });
+      const repository = dataSource.getRepository(CertificateReminderEntity);
+      const old = await repository.findOneByOrFail({ certificateId: certificate.id, recipientUserId: 'shipping-employee' });
+      expect(old.status).toBe('sent');
+      await request(app.getHttpServer() as Parameters<typeof request>[0]).patch(`/api/v1/certificates/${certificate.id}`).send({ expiryDate: '2027-03-29T00:00:00+08:00' }).expect(200);
+      const detail = await request(app.getHttpServer() as Parameters<typeof request>[0]).get(`/api/v1/certificate-reminders/${old.id}`).expect(200);
+      expect(detail.body.data).toMatchObject({ status: 'resolved', expiryDate: '2026-03-29' });
+      await request(app.getHttpServer() as Parameters<typeof request>[0]).post(`/api/v1/certificate-reminders/${old.id}/acknowledge`).send({}).expect(409);
+      const pending = await request(app.getHttpServer() as Parameters<typeof request>[0]).get('/api/v1/certificate-reminders').query({ reminderType: 'upcoming', pageSize: 100 }).expect(200);
+      expect(pending.body.data.map((item: { id: string }) => item.id)).not.toContain(old.id);
+      await request(app.getHttpServer() as Parameters<typeof request>[0]).patch(`/api/v1/certificates/${certificate.id}`).send({ expiryDate: '2026-03-30T00:00:00+08:00' }).expect(200);
+      await engine.runScan({ jobId: 'renewal-second', source: 'manual' });
+      await engine.runScan({ jobId: 'renewal-repeat', source: 'manual' });
+      const cycles = await repository.find({ where: { certificateId: certificate.id, recipientUserId: 'shipping-employee' } });
+      expect(cycles).toHaveLength(2);
+      expect(cycles.map(item => item.certificateExpiryDate).sort()).toEqual(['2026-03-29', '2026-03-30']);
+      expect(cycles.every(item => item.status === 'sent')).toBe(true);
+    } finally { today.mockRestore(); now.mockRestore(); }
+  });
+
+  it('扫描期间换证不会被旧快照覆盖，也不会投递旧周期提醒', async () => {
+    const repository = dataSource.getRepository(CertificateEntity);
+    const vessel = (await dataSource.getRepository(VesselEntity).find())[0]!;
+    const certificate = await repository.save({ certificateTypeId: typeId, ownerType: 'vessel', ownerId: vessel.id, title: '并发换证验证', expiryDate: '2026-03-29', advanceDays: 30, status: 'active', reminderEnabled: true, reminderRecipientUserId: 'shipping-employee', createdBy: 'shipping-manager', updatedBy: 'shipping-manager' });
+    const clock = app.get(ReminderClockService);
+    const today = jest.spyOn(clock, 'today').mockReturnValue('2026-03-28');
+    const now = jest.spyOn(clock, 'now').mockReturnValue(new Date('2026-03-28T01:00:00Z'));
+    const originalFind = repository.find.bind(repository);
+    const scanRead = jest.spyOn(repository, 'find').mockImplementationOnce(async options => {
+      const snapshot = await originalFind(options);
+      await repository.update(certificate.id, { expiryDate: '2027-03-29' });
+      return snapshot;
+    });
+    try {
+      await app.get(CertificateReminderEngineService).runScan({ jobId: 'renew-during-scan', source: 'manual' });
+      expect((await repository.findOneByOrFail({ id: certificate.id })).expiryDate).toBe('2027-03-29');
+      expect(await dataSource.getRepository(CertificateReminderEntity).countBy({ certificateId: certificate.id })).toBe(0);
+    } finally { scanRead.mockRestore(); today.mockRestore(); now.mockRestore(); }
+  });
+
 });

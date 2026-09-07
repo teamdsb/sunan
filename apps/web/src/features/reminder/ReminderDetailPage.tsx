@@ -16,6 +16,7 @@ import { FileAttachmentList, type AttachmentFileDescriptor } from '../files/File
 import { useLazyGetCertificateFileDownloadUrlQuery } from '../certificate/certificateApi';
 
 function describeAckStatus(reminder: ReminderItem): string {
+  if (reminder.status === 'resolved') return '证照已更新或停用，无需处理';
   if (reminder.status === 'acknowledged') {
     return '已确认';
   }
@@ -67,15 +68,9 @@ export function ReminderDetailPage() {
       message.success('提醒已确认');
     } catch (error) {
       if ((error as { status?: number }).status === 409) {
-        setLocalReminder((current) =>
-          current
-            ? {
-                ...current,
-                status: 'acknowledged',
-              }
-            : current,
-        );
-        message.info('该提醒已经确认');
+        const latest = await refetch();
+        if (latest.data?.data) setLocalReminder(latest.data.data);
+        message.info('提醒状态已变化，已刷新');
         return;
       }
 
@@ -111,7 +106,7 @@ export function ReminderDetailPage() {
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               <Space wrap>
                 <Tag color={isOverdueReminder(reminder) ? 'red' : 'blue'}>
-                  {isOverdueReminder(reminder) ? '逾期' : '临期'}
+                  {reminder.status === 'resolved' ? '历史提醒' : isOverdueReminder(reminder) ? '逾期' : '临期'}
                 </Tag>
                 <Tag color={isAcknowledged ? 'green' : 'gold'}>{describeAckStatus(reminder)}</Tag>
               </Space>

@@ -118,9 +118,9 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/specs/my/README.md](specs/my/README.md) | `current-index` | `my` | 我的模块规格（里程碑 M1） |
-| [docs/specs/my/db/certificate-reminders.md](specs/my/db/certificate-reminders.md) | `current-spec` | `my` | `certificate_reminders` 表规格 |
+| [docs/specs/my/db/certificate-reminders.md](specs/my/db/certificate-reminders.md) | `historical-archive` | `my` | `certificate_reminders` 表规格 |
 | [docs/specs/my/db/certificate-types.md](specs/my/db/certificate-types.md) | `current-spec` | `my` | `certificate_types` 表规格 |
-| [docs/specs/my/db/certificates.md](specs/my/db/certificates.md) | `current-spec` | `my` | `certificates` 与 `certificate_files` 表规格 |
+| [docs/specs/my/db/certificates.md](specs/my/db/certificates.md) | `historical-archive` | `my` | `certificates` 与 `certificate_files` 表规格 |
 | [docs/specs/my/db/enterprise-policy.md](specs/my/db/enterprise-policy.md) | `current-spec` | `my` | `enterprise_policies` 与 `enterprise_policy_files` 表规格 |
 | [docs/specs/my/db/enterprise-profile.md](specs/my/db/enterprise-profile.md) | `current-spec` | `my` | `enterprise_profiles` 与 `enterprise_profile_files` 表规格 |
 | [docs/specs/my/db/personnel.md](specs/my/db/personnel.md) | `current-spec` | `my` | `personnel` 表规格 |
@@ -171,7 +171,7 @@ replaced_by: []
 | [docs/specs/procurement/db/procurement-dimension-items.md](specs/procurement/db/procurement-dimension-items.md) | `current-spec` | `procurement` | procurement_dimension_items 表规格 |
 | [docs/specs/procurement/db/procurement-order-approvals.md](specs/procurement/db/procurement-order-approvals.md) | `current-spec` | `procurement` | procurement_order_approvals 表规格 |
 | [docs/specs/procurement/db/procurement-order-files.md](specs/procurement/db/procurement-order-files.md) | `current-spec` | `procurement` | procurement_order_files 表规格 |
-| [docs/specs/procurement/db/procurement-orders.md](specs/procurement/db/procurement-orders.md) | `current-spec` | `procurement` | procurement_orders 表规格 |
+| [docs/specs/procurement/db/procurement-orders.md](specs/procurement/db/procurement-orders.md) | `historical-archive` | `procurement` | procurement_orders 表规格 |
 | [docs/specs/procurement/db/procurement-report-approvals.md](specs/procurement/db/procurement-report-approvals.md) | `current-spec` | `procurement` | procurement_report_approvals 表规格 |
 | [docs/specs/procurement/db/procurement-reports.md](specs/procurement/db/procurement-reports.md) | `current-spec` | `procurement` | procurement_reports 表规格 |
 | [docs/specs/procurement/db/schema.md](specs/procurement/db/schema.md) | `current-spec` | `procurement` | 采购模块数据库总览 |
@@ -242,22 +242,22 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/specs/workbench/README.md](specs/workbench/README.md) | `current-index` | `workbench` | 工作平台模块规格 |
+| [docs/specs/workbench/README.md](specs/workbench/README.md) | `current-index` | `workbench` | 工作平台入口 |
 | [docs/specs/workbench/db/workbench-domain-model.md](specs/workbench/db/workbench-domain-model.md) | `current-spec` | `workbench` | 工作平台领域模型 |
 | [docs/specs/workbench/db/workbench-module-matrix.md](specs/workbench/db/workbench-module-matrix.md) | `current-source` | `workbench` | 工作平台模块矩阵 |
 | [docs/specs/workbench/db/workbench-permission-matrix.md](specs/workbench/db/workbench-permission-matrix.md) | `current-spec` | `workbench` | 工作平台权限矩阵（M4 Wave 1 冻结） |
-| [docs/specs/workbench/db/workbench-runtime-schema.md](specs/workbench/db/workbench-runtime-schema.md) | `current-spec` | `workbench` | 工作平台运行时存储规格（M5） |
+| [docs/specs/workbench/db/workbench-runtime-schema.md](specs/workbench/db/workbench-runtime-schema.md) | `historical-archive` | `workbench` | 工作平台运行时存储规格（M5） |
 | [docs/specs/workbench/finance-business-board-blocker.md](specs/workbench/finance-business-board-blocker.md) | `acceptance-archive` | `workbench` | 财务板块 Blocker（M6，已解除） |
 | [docs/specs/workbench/finance-business-board-field-dictionary.md](specs/workbench/finance-business-board-field-dictionary.md) | `conditional-baseline` | `workbench` | 财务板块字段字典（M6 Wave C 自生成补料基线） |
 | [docs/specs/workbench/finance-business-board-flowchart.md](specs/workbench/finance-business-board-flowchart.md) | `conditional-baseline` | `workbench` | 财务板块流程图（M6 Wave C 自生成补料基线） |
 | [docs/specs/workbench/finance-business-board-print-template.md](specs/workbench/finance-business-board-print-template.md) | `conditional-baseline` | `workbench` | 财务板块打印模板（M6 Wave C 自生成补料基线） |
 | [docs/specs/workbench/finance-business-board-sample-forms.md](specs/workbench/finance-business-board-sample-forms.md) | `conditional-baseline` | `workbench` | 财务板块样表（M6 Wave C 自生成补料基线） |
 | [docs/specs/workbench/state/workbench-approval-sync.md](specs/workbench/state/workbench-approval-sync.md) | `current-spec` | `workbench` | 工作平台审批同步状态规格 |
-| [docs/specs/workbench/state/workbench-records.md](specs/workbench/state/workbench-records.md) | `current-spec` | `workbench` | 工作平台记录状态规格 |
+| [docs/specs/workbench/state/workbench-records.md](specs/workbench/state/workbench-records.md) | `historical-archive` | `workbench` | 工作平台记录状态规格 |
 | [docs/specs/workbench/state/workbench-shell.md](specs/workbench/state/workbench-shell.md) | `current-spec` | `workbench` | 工作平台壳层状态规格 |
 | [docs/specs/workbench/ui/workbench-department-modules.md](specs/workbench/ui/workbench-department-modules.md) | `current-spec` | `workbench` | 工作平台部门模块高保真要求 |
 | [docs/specs/workbench/ui/workbench-information-architecture.md](specs/workbench/ui/workbench-information-architecture.md) | `current-spec` | `workbench` | 工作平台信息架构 |
-| [docs/specs/workbench/ui/workbench-template-pages.md](specs/workbench/ui/workbench-template-pages.md) | `current-spec` | `workbench` | 工作平台模板页面规格 |
+| [docs/specs/workbench/ui/workbench-template-pages.md](specs/workbench/ui/workbench-template-pages.md) | `historical-archive` | `workbench` | 工作平台模板页面规格 |
 
 ## archive-root
 

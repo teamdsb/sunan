@@ -1,10 +1,13 @@
 ---
-status: current-spec
+status: historical-archive
 owner: workbench
-updated: 2026-05-04
+updated: 2026-09-07
 replaces: []
 replaced_by: []
 ---
+
+> 已原地封存（2026-09-07）：以下为旧设计快照，不再随功能改动同步维护，也不作为当前实现约束。当前行为见[代码入口](../../../../apps/api/src/database/entities/workbench-record.entity.ts)，数据结构以 entity 和 migration 为准；本次业务修复及发布要求见[原件核查与实施补充](../../../audits/2026-09-07-original-goal-audit.md)。保留路径仅供追溯。
+
 # 工作平台运行时存储规格（M5）
 
 ## 1. 目标

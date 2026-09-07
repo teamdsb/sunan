@@ -16,7 +16,7 @@ export function canAcknowledgeReminder(
   roles: string[],
   reminder: { recipientUserId: string; status: string },
 ): boolean {
-  if (reminder.status === 'acknowledged') {
+  if (['acknowledged', 'resolved'].includes(reminder.status)) {
     return false;
   }
 
@@ -24,5 +24,5 @@ export function canAcknowledgeReminder(
 }
 
 export function isOverdueReminder(reminder: { reminderType: string; status: string }): boolean {
-  return reminder.reminderType === 'overdue' && reminder.status !== 'acknowledged';
+  return reminder.reminderType === 'overdue' && !['acknowledged', 'resolved'].includes(reminder.status);
 }

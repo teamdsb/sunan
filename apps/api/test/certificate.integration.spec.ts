@@ -362,4 +362,16 @@ describe('CertificateController integration', () => {
     expect(dateTimeResponse.status).toBe(201);
     expect((dateTimeResponse.body as { data: { issueDate: string } }).data.issueDate).toBe('2026-01-01');
   });
+  it('换证附件无效时保留原证照和扫描件，不提交部分更新', async () => {
+    currentUser = { ...currentUser, userId: 'manager-1', roles: ['all_authenticated', 'shipping'] };
+    const api = () => request(app.getHttpServer() as Parameters<typeof request>[0]);
+    const created = await api().post('/api/v1/certificates').send({ certificateTypeId: typeId, ownerType: 'vessel', ownerId: vesselId, title: '换证事务验证', expiryDate: '2027-03-01T00:00:00+08:00', fileIds: [fileId] }).expect(201);
+    const id = created.body.data.id as string;
+    await api().patch(`/api/v1/certificates/${id}`).send({ title: '不应提交的标题', expiryDate: '2028-03-01T00:00:00+08:00', fileIds: [crypto.randomUUID()] }).expect(404);
+    const unchanged = await api().get(`/api/v1/certificates/${id}`).expect(200);
+    expect(unchanged.body.data.title).toBe('换证事务验证');
+    expect(unchanged.body.data.expiryDate).toContain('2027-03-01');
+    expect(unchanged.body.data.files.map((file: { id: string }) => file.id)).toEqual([fileId]);
+  });
+
 });

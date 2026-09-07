@@ -122,6 +122,7 @@ describe('WorkbenchController integration', () => {
     dataSource = moduleRef.get(DataSource);
     workbenchService = moduleRef.get(WorkbenchService);
     ossService = moduleRef.get(OssService);
+    jest.spyOn(ossService, 'uploadBuffer').mockResolvedValue(undefined);
     wecomTokenServiceMock.getAccessToken.mockResolvedValue('test-access-token');
     wecomHttpGatewayMock.createApprovalTemplate.mockResolvedValue({
       template_id: 'tpl-shipping-voyage',
@@ -133,6 +134,8 @@ describe('WorkbenchController integration', () => {
       },
     });
   });
+
+  beforeEach(() => { jest.spyOn(ossService, 'uploadBuffer').mockResolvedValue(undefined).mockClear(); });
 
   it('claims queued exports once and leaves running jobs untouched during recovery', async () => {
     const exportJobRepository = dataSource.getRepository(ExportJobEntity);
@@ -1378,7 +1381,7 @@ describe('WorkbenchController integration', () => {
     expect(response.status).toBe(403);
   });
 
-  it('rejects an illegal close transition from assigned', async () => {
+  it('rejects closing an unassigned historical self-inspection', async () => {
     const recordRepository = dataSource.getRepository(WorkbenchRecordEntity);
     const record = await recordRepository.save(
       recordRepository.create({
@@ -1420,7 +1423,7 @@ describe('WorkbenchController integration', () => {
       .set('Authorization', 'Bearer token')
       .send({ actionType: 'close_record' });
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(403);
   });
 
   it('rejects a visible non-executor step action and permits the assigned executor', async () => {
@@ -1428,8 +1431,8 @@ describe('WorkbenchController integration', () => {
     const stepRepository = dataSource.getRepository(WorkbenchRecordStepEntity);
     const record = await recordRepository.save(
       recordRepository.create({
-        moduleCode: 'shipping_self_inspection',
-        templateCode: 'shipping_self_inspection_v1',
+        moduleCode: 'shipping_vessel_inspection',
+        templateCode: 'shipping_vessel_inspection_v1',
         recordNo: `WBSTEP${Date.now()}`,
         recordSource: 'manual',
         status: 'in_progress',

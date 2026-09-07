@@ -17,6 +17,9 @@ import { WorkbenchService } from './workbench.service';
 export class WorkbenchController {
   constructor(private readonly service: WorkbenchService) {}
 
+  @Get('inspection-people')
+  async inspectionPeople(@CurrentUserDecorator() user: CurrentUser) { return { data: await this.service.listInspectionPeople(user) }; }
+
   @Get('modules')
   async listModules(@CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.listModules(user) };

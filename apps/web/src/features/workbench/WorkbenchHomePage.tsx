@@ -59,6 +59,7 @@ import {
   useCreateWorkbenchSignatureEvidenceMutation,
   useCreateWorkbenchLocationEvidenceMutation,
 } from './workbenchApi';
+import { SelfInspectionPanel, InspectionPeopleFields } from './SelfInspectionPanel';
 import { EvidencePanel } from './EvidencePanel';
 import { useGetMasterDataVesselsQuery } from './masterDataApi';
 import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
@@ -430,13 +431,13 @@ export function WorkbenchHomePage({
       : moduleFilter === 'requiresApproval'
         ? '审批相关记录'
         : '全部模块记录');
-  const canCreateRecord =
+  const canCreateRecord = activeModule?.canCreate !== false && (
     activeModule?.templateType === 'ledger_form' ||
     activeModule?.templateType === 'operation_flow' ||
     activeModule?.templateType === 'inspection_rectification' ||
     activeModule?.templateType === 'attendance_statistics' ||
     activeModule?.templateType === 'service_asset' ||
-    activeModule?.templateType === 'wecom_approval';
+    activeModule?.templateType === 'wecom_approval');
   const showHomeReturn =
     routeAware &&
     (Boolean(initialModuleCode) ||
@@ -698,16 +699,25 @@ export function WorkbenchHomePage({
       }),
     );
 
+    try {
     await createWorkbenchRecord({
       moduleCode: activeModuleCode,
       title: values.title,
       summary: values.summary,
       vesselId: values.vesselId,
+      assigneeUserId: values.assigneeUserId,
+      reviewerUserId: values.reviewerUserId,
       occurredAt: values.occurredAt
         ? (toShanghaiIso(values.occurredAt) as string)
         : undefined,
       payload,
     }).unwrap();
+
+    } catch (error) {
+      const body = (error as { data?: { message?: string; error?: { message?: string } } })?.data;
+      messageApi.error(body?.error?.message ?? body?.message ?? '创建失败，请检查填写内容后重试');
+      return;
+    }
 
     setCreateOpen(false);
     form.resetFields();
@@ -1571,12 +1581,14 @@ export function WorkbenchHomePage({
                 <Space wrap style={{ marginTop: 12 }}>
                   <Button
                     loading={printingSnapshot}
+                    disabled={detailResponse.data.moduleCode === 'shipping_self_inspection' && detailResponse.data.status !== 'closed'}
                     onClick={() => void triggerPrint('A4')}
                   >
                     打印 A4
                   </Button>
                   <Button
                     loading={printingSnapshot}
+                    disabled={detailResponse.data.moduleCode === 'shipping_self_inspection' && detailResponse.data.status !== 'closed'}
                     onClick={() => void triggerPrint('A3')}
                   >
                     打印 A3
@@ -1615,6 +1627,7 @@ export function WorkbenchHomePage({
               ) : null}
             </div>
 
+            {detailResponse.data.moduleCode === 'shipping_self_inspection' ? <SelfInspectionPanel key={detailResponse.data.id} record={detailResponse.data} /> : (
             <div>
               <Typography.Title level={5}>步骤</Typography.Title>
               <List
@@ -1772,6 +1785,7 @@ export function WorkbenchHomePage({
                 </Space>
               ) : null}
             </div>
+            )}
 
             {detailResponse.data.moduleCode === 'goa_training' ? (
               <div>
@@ -1828,10 +1842,12 @@ export function WorkbenchHomePage({
               />
             </div>
 
+            {detailResponse.data.moduleCode !== 'shipping_self_inspection' && (
             <EvidencePanel recordId={detailResponse.data.id} summary={detailResponse.data.summary} attachments={detailResponse.data.attachments}
               onUpload={async (file) => { await uploadWorkbenchRecordAttachment({ recordId: detailResponse.data.id, data: { category: 'evidence', fileId: file.id } }).unwrap(); }}
               onSignature={async (signatureFileId, businessSummaryHash) => { await createSignatureEvidence({ recordId: detailResponse.data.id, signatureFileId, businessSummaryHash }).unwrap(); messageApi.success('签名证据已保存'); }}
               onLocation={async (body) => { await createLocationEvidence({ recordId: detailResponse.data.id, ...body }).unwrap(); messageApi.success(body.captureStatus === 'captured' ? '定位证据已保存' : '定位异常说明已保存'); }} />
+            )}
 
             <div>
               <Typography.Title level={5}>操作日志</Typography.Title>
@@ -1932,7 +1948,7 @@ export function WorkbenchHomePage({
             >
               <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="船舶ID（可选）" name="vesselId">
+            <Form.Item label={activeModuleCode === 'shipping_self_inspection' ? '船舶' : '船舶（可选）'} name="vesselId" rules={activeModuleCode === 'shipping_self_inspection' ? [{ required: true, message: '请选择船舶' }] : []}>
               <Select
                 allowClear
                 showSearch
@@ -1945,6 +1961,8 @@ export function WorkbenchHomePage({
                 }
               />
             </Form.Item>
+
+            {activeModuleCode === 'shipping_self_inspection' && <InspectionPeopleFields />}
 
             {moduleSchemaResponse?.data.templateType === 'operation_flow' &&
             moduleSchemaResponse.data.stepTemplates?.length ? (

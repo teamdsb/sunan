@@ -18,6 +18,7 @@ export interface WorkbenchModuleItem {
   supportsPrint: boolean;
   supportsStatistics: boolean;
   mobileFirst: boolean;
+  canCreate?: boolean;
 }
 
 export interface WorkbenchAlert {
@@ -48,6 +49,9 @@ export interface WorkbenchStep {
   status: string;
   rectificationRequired: boolean;
   rectificationStatus: string | null;
+  completedBy?: string | null;
+  completedAt?: string | null;
+  stepPayload?: Record<string, unknown>;
 }
 
 export interface WorkbenchAttachment {
@@ -79,6 +83,11 @@ export interface WorkbenchRecordDetail extends WorkbenchRecordSummary {
   actionLogs: WorkbenchActionLog[];
   payload: Record<string, unknown>;
   availableActions?: string[];
+  ownerUserId?: string;
+  assigneeUserId?: string | null;
+  reviewerUserId?: string | null;
+  assigneeName?: string;
+  reviewerName?: string;
 }
 
 export interface WorkbenchRecordQuery {
@@ -129,6 +138,8 @@ export interface WorkbenchRecordCreatePayload {
   summary: string;
   vesselId?: string;
   occurredAt?: string;
+  assigneeUserId?: string;
+  reviewerUserId?: string;
   payload?: Record<string, unknown>;
 }
 
@@ -142,7 +153,8 @@ export interface WorkbenchRecordActionPayload {
     | 'submit_review'
     | 'request_rework'
     | 'close_record'
-    | 'archive';
+    | 'archive'
+    | 'void';
   comment?: string;
   payload?: Record<string, unknown>;
 }
@@ -232,6 +244,7 @@ export interface WorkbenchIssueLink {
 
 export const workbenchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getInspectionPeople: builder.query<{ data: Array<{ userId: string; name: string; canExecute: boolean; canReview: boolean }> }, void>({ query: () => ({ url: '/workbench/inspection-people' }) }),
     getWorkbenchModules: builder.query<{ data: WorkbenchModuleItem[] }, void>({
       query: () => ({ url: '/workbench/modules' }),
       providesTags: ['Workbench'],
@@ -398,6 +411,7 @@ export const workbenchApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetInspectionPeopleQuery,
   useGetWorkbenchModulesQuery,
   useGetWorkbenchModuleSchemaQuery,
   useGetWorkbenchDashboardQuery,
