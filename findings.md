@@ -7,6 +7,15 @@ replaced_by: []
 ---
 # 发现与决策
 
+## 2026-08-31：0.0.7 工作台布局修改再次生产发布
+- 本轮仅 `apps/web/src/app/app.css` 影响运行时：工作台左右栏改为内容顶对齐；折叠状态按响应式列数隐藏第三行及之后的模块卡片，确保桌面/窄屏/移动端均保留完整两行。对应 CSS 回归测试与操作手册同步更新。
+- 包版本继续为 `0.0.7`，`apps/web/src` 无平台版本显示引用；API 没有代码变更，也没有新增 migration，因此只重建/切换 Web，避免无意义重启 API 和 Nginx。
+- 本地完整门禁通过：Web 60/272、API unit 24/125、API integration 18/84、双端 build、API lint、21/21 OpenAPI、276 份 Markdown 索引和 diff 格式。
+- 生产 Web 新镜像摘要为 `sha256:6a3876d31ed7c795e62eb1ed3436916083644656943c3552d10b1272eab37fb5`，创建时间 `2026-08-31 23:29:42 +08:00`，OCI version `0.0.7`；公网入口加载的新 CSS 为 `/assets/index-BraWNGPA.css`。
+- 生产备份批次 `20260831232537` 和源码/回滚批次 `20260831232655` 已验证；旧 Web 摘要 `sha256:4d0eae9f...a2a35810` 可通过 `sunan-web:rollback-20260831232655` 回切，旧源码位于 `/dev/sunan/sunan-source/backup-20260831232655`。
+- 发布后六个长期服务、25 条 migration、API live/ready、401 鉴权边界、8 条 SPA 路由、最新资源、Nginx 配置、TLS、timer、近 10 分钟日志和备份完整性均通过。企业微信三端真实工作台交互仍需现场验收。
+- 工具问题有三项：本地 API workspace 链接缺失，通过 `CI=1 pnpm install --frozen-lockfile` 恢复；动态回滚标签拼接错误，改用固定镜像名；首轮复验漏传批次变量，修正后完整重跑。三项均未造成生产业务中断或数据变更。
+
 ## 2026-08-31：0.0.7 再次生产发布（阶段 27 后续修改，完成）
 - 本轮继续沿用全局版本 `0.0.7`，未修改前端页面版本显示；`apps/web/src` 无 `SUNAN_VERSION` 或版本展示引用，数据库 migration 数量仍为 25。
 - 本地发布门禁已通过：Web 60 文件/270 项、API 单测 24 套件/125 项、API 集成 18 套件/84 项；API/Web build、API lint、21 份 OpenAPI、276 份 Markdown 索引、版本扫描和 `git diff --check` 均通过。

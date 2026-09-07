@@ -7,6 +7,23 @@ replaced_by: []
 ---
 # 进度日志
 
+## 会话：2026-08-31（0.0.7 工作台布局修改再次生产发布）
+
+### 阶段 29：部署调查与执行
+- **状态：** completed
+- 用户要求再次上线最新修改，版本保持 `0.0.7`，不修改前端页面版本显示。
+- 本轮工作树只有 4 个改动文件：工作台 CSS、对应 CSS 回归测试、操作手册 Markdown/DOCX；运行时变更仅在 Web，API 无改动、无新 migration，仍为 25 条。
+- 本地门禁通过：Web 60 文件/272 项，API 单测 24 套件/125 项，API PostgreSQL 集成 18 套件/84 项；API/Web build、API lint、21 份 OpenAPI、276 份 Markdown 索引和 `git diff --check` 均通过。
+- 本地工作区初始缺少 `apps/api/node_modules` 链接，首个 API 单测命令未找到 Jest；首次非交互 `pnpm install` 又因无 TTY 拒绝清理依赖目录。改用 `CI=1 pnpm install --frozen-lockfile` 恢复依赖链接后，API 单测和集成测试均新鲜通过。
+- 生产预检通过：六个长期服务正常，API live/ready 正常，现网三个应用均为 `0.0.7`，数据库 25 条 migration。
+- 生产备份批次 `20260831232537` 已完成：PostgreSQL dump、配置归档和 Redis RDB 的 SHA-256 全部通过；RDB 检查为 61 keys/55 expires（1 个检查时已过期），PostgreSQL dump 目录为 551 条非注释项。
+- 源码批次 `20260831232655` 已完成版本、25 条 migration、敏感文件和生成目录校验并原子切换；旧源码为 `/dev/sunan/sunan-source/backup-20260831232655`。本地/生产 `app.css` SHA-256 均为 `862b034eb72ae7b8f4dce05ae610841fadacf449e7e544b24bf3c726e721f28c`。
+- 回滚标签首次脚本因动态服务名拼接产生非法镜像引用，在第一个 `docker tag` 前失败；运行容器未受影响。随后改用固定镜像名逐项打标签，旧 API/Web/Nginx 摘要均保留为 `rollback-20260831232655`。
+- 新 Web 镜像构建并切换完成，摘要为 `sha256:6a3876d31ed7c795e62eb1ed3436916083644656943c3552d10b1272eab37fb5`，OCI 版本为 `0.0.7`；生产和公网均命中新 CSS `/assets/index-BraWNGPA.css`。API 与 Nginx 未重建，继续运行已验证摘要 `sha256:87a83a70...effe7b0bf38b` 和 `sha256:e50f75e1...62f8507237d9d`。
+- 独立生产复验通过：六个服务 running、API healthy、25 条 migration、live/ready 200、受保护证书接口 401、8 条 SPA 直达路由和最新 CSS/JS 资源 200、Nginx `-t`、TLS 至 2026-10-16、WeCom IP 同步 timer enabled/active、近 10 分钟 API/Web/Nginx 错误标记为 0，无一次性容器残留。
+- 首轮生产复验忘记传递源码批次变量，回滚标签检查拼成空标签并提前退出；其前置核心断言虽通过但整轮未采信。传入固定批次后完整重跑并退出 0。
+- 企业微信 iOS/Android/桌面真实登录与工作台交互继续保留为用户现场验收项。
+
 ## 会话：2026-08-31（0.0.7 再次生产发布，阶段 27 后续修改）
 
 ### 阶段 28：部署调查与执行
