@@ -20,7 +20,7 @@ replaced_by: []
 ## 2. 验收条目
 | 条目 | 结果 | 证据 |
 |---|---|---|
-| C-1 门禁检索报告保留 | 通过 | `docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md` |
+| C-1 门禁检索报告保留 | 通过 | （旧文件已清理，历史原文见 Git；当前说明：`docs/specs/workbench/finance-business-board-blocker.md`） |
 | 自生成补料四件套是否齐全 | 通过 | 字段字典/样表/流程图/打印模板 4 份文档 |
 | `finance_business_board` 模块是否落地 | 通过 | `apps/api/src/modules/workbench/workbench.service.ts` |
 | 财务角色是否可见并可创建记录 | 通过 | `apps/api/test/workbench.integration.spec.ts` |

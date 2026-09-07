@@ -67,7 +67,7 @@ replaced_by: []
 
 - 结论：完成（材料与执行边界收口）。
 - 依据：
-  - 真机回归与留痕模板已冻结：`docs/archive/superseded/wecom/workbench-real-device-regression.md`
+  - 真机回归与留痕模板已冻结：（旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`）
   - 上线检查清单已冻结：`docs/specs/wecom/workbench-go-live-checklist.md`
 - 备注：真机执行证据（截图/录屏）需由业务测试设备按模板补录。
 

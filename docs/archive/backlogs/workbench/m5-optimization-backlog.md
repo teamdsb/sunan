@@ -24,7 +24,7 @@ replaced_by: []
 | 优先级 | 主题 | 是否首批开发 | 目标 | 关键依赖 | 验收口径 |
 |---|---|---|---|---|---|
 | P0 | 工作平台运行时持久化 | 是 | 将记录、步骤、附件、打印快照、审批实例从内存态迁移为 PostgreSQL 运行时实体 | `db/workbench-runtime-schema.md`、TypeORM migration | 工作平台不再依赖内存 `Map` |
-| P0 | 企业微信真机回归留痕 | 是 | 在目标环境形成 iOS / Android 真机回归证据 | `docs/archive/superseded/wecom/workbench-real-device-regression.md` | 每条核心链路都有截图或录屏、设备信息、执行人、时间 |
+| P0 | 企业微信真机回归留痕 | 是 | 在目标环境形成 iOS / Android 真机回归证据 | （旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`） | 每条核心链路都有截图或录屏、设备信息、执行人、时间 |
 | P0 | 审批桥容错与告警 | 是 | 补齐回调失败、对账失败、重试失败的治理闭环 | `docs/specs/wecom/approval-ops-spec.md` | 审批异常实例可检索、可重试、可对账、可审计 |
 | P0 | 权限矩阵自动化校验 | 是 | 将模块可见性和关键动作权限纳入自动化回归 | `docs/specs/workbench/db/workbench-permission-matrix.md` | 关键角色路径有自动化用例和 CI 检查 |
 | P1 | 统计口径固化与导出 | 是 | 固定月度统计导出模板和财务对账口径 | `api/workbench-platform-api.yaml` | 导出与在线统计、财务对账结果一致 |

@@ -70,6 +70,7 @@ const errors = [];
 const statuses = new Map();
 
 for (const file of files) {
+  if (file === 'AGENTS.md') continue;
   const meta = frontmatter(file);
   if (!meta) {
     errors.push(`${file}: missing YAML front matter`);

@@ -170,7 +170,7 @@ replaced_by: []
 ## M6 对照与修复入口
 - 逐条需求对照表：`docs/archive/audits/M6-逐条需求对照表.md`
 - 按优先级修复清单（分 wave）：`docs/archive/backlogs/common/M6-优先级修复清单（分wave）.md`
-- Wave C（C-1）门禁历史报告：`docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md`
+- Wave C（C-1）门禁历史报告：（旧文件已清理，历史原文见 Git；当前说明：`docs/specs/workbench/finance-business-board-blocker.md`）
 - Wave C（C-2）补料与落地验收：`docs/archive/acceptance/common/acceptance-m6-wavec.md`
 - Wave D 治理收口报告：`docs/archive/acceptance/common/m6-waved-governance-closure.md`
 - Wave D 验收归档：`docs/archive/acceptance/common/acceptance-m6-waved.md`

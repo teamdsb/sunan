@@ -38,7 +38,6 @@ replaced_by: []
 | 归档 | 状态 | 说明 |
 |---|---|---|
 | `docs/archive/acceptance/wecom/` | 验收归档 | M6 Wave 3 验收与 2026-04-22 preflight |
-| `docs/archive/superseded/wecom/workbench-real-device-regression.md` | 已取代 | M5 工作平台真机回归模板；改用 `real-device-regression-matrix.md` |
 
 ## 使用规则
 

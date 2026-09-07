@@ -10,14 +10,14 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：276 个 Markdown 文件。
+总数：275 个 Markdown 文件。
 
 ## repository-root
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [AGENTS.md](../AGENTS.md) | `current-index` | `repository` | Repository Guidelines |
-| [CLAUDE.md](../CLAUDE.md) | `current-index` | `repository` | CLAUDE.md |
+| [AGENTS.md](../AGENTS.md) | `` | `` | 仓库指南 |
+| [CLAUDE.md](../CLAUDE.md) | `current-index` | `repository` | Claude Code 入口 |
 | [README.md](../README.md) | `current-index` | `repository` | sunan |
 | [deploy/README.md](../deploy/README.md) | `current-index` | `operations` | 苏南船舶部署文档索引 |
 | [deploy/backup-restore.md](../deploy/backup-restore.md) | `operations` | `operations` | 备份与恢复手册 |
@@ -61,7 +61,6 @@ replaced_by: []
 | [docs/architecture/adr/002-react-antd-pro.md](architecture/adr/002-react-antd-pro.md) | `current-source` | `architecture` | ADR-002 React 18 + Ant Design Pro |
 | [docs/architecture/adr/003-nestjs-postgresql.md](architecture/adr/003-nestjs-postgresql.md) | `current-source` | `architecture` | ADR-003 NestJS + PostgreSQL |
 | [docs/architecture/adr/004-aliyun-oss-storage.md](architecture/adr/004-aliyun-oss-storage.md) | `current-source` | `architecture` | ADR-004 阿里云 OSS 文件存储 |
-| [docs/architecture/adr/005-sdd-tdd-methodology.md](architecture/adr/005-sdd-tdd-methodology.md) | `current-source` | `architecture` | ADR-005 SDD + TDD 开发方法 |
 
 ## guides
 
@@ -69,7 +68,7 @@ replaced_by: []
 |---|---|---|---|
 | [docs/guides/getting-started.md](guides/getting-started.md) | `current-index` | `guides` | 快速开始 |
 | [docs/guides/qa-testing-my-module.md](guides/qa-testing-my-module.md) | `historical-archive` | `guides` | "我的"模块 QA 测试指南 |
-| [docs/guides/sdd-workflow.md](guides/sdd-workflow.md) | `current-source` | `guides` | SDD 工作流程 |
+| [docs/guides/sdd-workflow.md](guides/sdd-workflow.md) | `current-source` | `guides` | 开发流程 |
 | [docs/guides/testing-strategy.md](guides/testing-strategy.md) | `current-source` | `guides` | 测试策略 |
 | [docs/guides/wecom-dev-setup.md](guides/wecom-dev-setup.md) | `current-spec` | `guides` | 企业微信开发环境配置 |
 
@@ -352,18 +351,6 @@ replaced_by: []
 |---|---|---|---|
 | [docs/archive/backlogs/workbench/m5-optimization-backlog.md](archive/backlogs/workbench/m5-optimization-backlog.md) | `historical-archive` | `archive` | 工作平台 M5 实施 Backlog |
 
-## archive/superseded/wecom
-
-| 文档 | 状态 | 负责人 | 标题 |
-|---|---|---|---|
-| [docs/archive/superseded/wecom/workbench-real-device-regression.md](archive/superseded/wecom/workbench-real-device-regression.md) | `superseded` | `archive` | 工作平台企业微信真机回归与留痕模板（M5） |
-
-## archive/superseded/workbench
-
-| 文档 | 状态 | 负责人 | 标题 |
-|---|---|---|---|
-| [docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md](archive/superseded/workbench/finance-business-board-c1-gate-report.md) | `superseded` | `archive` | 财务板块 C-1 补料关口执行报告（M6） |
-
 ## archive/templates/common
 
 | 文档 | 状态 | 负责人 | 标题 |
@@ -437,6 +424,8 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
+| [docs/audits/2026-09-07-document-test-ablation.md](audits/2026-09-07-document-test-ablation.md) | `audit-snapshot` | `repository` | 文档与测试消融记录 |
+| [docs/audits/2026-09-07-original-goal-audit.md](audits/2026-09-07-original-goal-audit.md) | `audit-snapshot` | `repository` | 原始目标与主要业务链路核查 |
 | [docs/audits/frontend-backend-api-coverage.md](audits/frontend-backend-api-coverage.md) | `audit-snapshot` | `frontend` | 前后端接口覆盖审计 |
 
 ## handbook

@@ -29,7 +29,7 @@ Wave 1（M5 文档冻结）已完成。
 | 工作平台运行时存储规格已冻结 | 通过 | `docs/specs/workbench/db/workbench-runtime-schema.md` |
 | 工作平台平台接口已升级为持久化型契约 | 通过 | `docs/specs/workbench/api/workbench-platform-api.yaml` |
 | 工作平台审批接口已补齐管理员检索/重试/对账契约 | 通过 | `docs/specs/workbench/api/workbench-approval-api.yaml` |
-| 审批运维规格与真机回归模板已形成 | 通过 | `docs/specs/wecom/approval-ops-spec.md`、`docs/archive/superseded/wecom/workbench-real-device-regression.md` |
+| 审批运维规格与真机回归模板已形成 | 通过 | `docs/specs/wecom/approval-ops-spec.md`、（旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`） |
 | 遗留模块已进入模块矩阵与 UI 边界文档 | 通过 | `docs/specs/workbench/db/workbench-module-matrix.md`、`docs/specs/workbench/ui/workbench-department-modules.md` |
 | M5 backlog 已从优化清单升级为实施清单 | 通过 | `docs/archive/backlogs/workbench/m5-optimization-backlog.md` |
 

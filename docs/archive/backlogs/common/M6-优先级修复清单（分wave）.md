@@ -207,7 +207,7 @@ replaced_by: []
 
 ### Wave C 当前记录（2026-04-22）
 - 已完成 `C-1`：
-  - 保留初次门禁不通过报告：`docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md`
+  - 保留初次门禁不通过报告：（旧文件已清理，历史原文见 Git；当前说明：`docs/specs/workbench/finance-business-board-blocker.md`）
   - 在产品负责人授权下，已生成补料四件套并冻结基线：
     - `docs/specs/workbench/finance-business-board-sample-forms.md`
     - `docs/specs/workbench/finance-business-board-field-dictionary.md`

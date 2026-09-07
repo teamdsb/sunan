@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-08-05
+updated: 2026-09-07
 replaces: []
 replaced_by: []
 ---
@@ -28,6 +28,8 @@ replaced_by: []
 
 | 场景 | 入口 |
 |---|---|
+| 原始目标与主要链路核查 | [2026-09-07 原件对照](audits/2026-09-07-original-goal-audit.md) |
+| 本轮文档与测试消融 | [2026-09-07 消融记录](audits/2026-09-07-document-test-ablation.md) |
 | 完整 Markdown 清单 | [inventory.md](inventory.md) |
 | 历史归档目录 | [archive/README.md](archive/README.md) |
 | Agent/仓库工作规则 | [../AGENTS.md](../AGENTS.md) |
@@ -65,8 +67,6 @@ replaced_by: []
 | [archive/audits/M6-逐条需求对照表.md](archive/audits/M6-逐条需求对照表.md) | `audit-snapshot` | 基于 2026-04-22 代码审计；复审需重新跑代码对照 |
 | [archive/backlogs/common/M6-优先级修复清单（分wave）.md](archive/backlogs/common/M6-优先级修复清单（分wave）.md) | `historical-archive` | Wave A-D 已完成，证据看 `docs/archive/acceptance/common/` |
 | [archive/backlogs/workbench/m5-optimization-backlog.md](archive/backlogs/workbench/m5-optimization-backlog.md) | `historical-archive` | M5 backlog，M6 后新优化需重新立项 |
-| [archive/superseded/wecom/workbench-real-device-regression.md](archive/superseded/wecom/workbench-real-device-regression.md) | `superseded` | 使用 [specs/wecom/real-device-regression-matrix.md](specs/wecom/real-device-regression-matrix.md) |
-| [archive/superseded/workbench/finance-business-board-c1-gate-report.md](archive/superseded/workbench/finance-business-board-c1-gate-report.md) | `superseded` | 使用 `finance-business-board-blocker.md` 与 `finance-business-board-*.md` |
 
 ## 维护规则
 

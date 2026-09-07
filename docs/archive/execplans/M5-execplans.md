@@ -43,7 +43,7 @@ replaced_by: []
 - `docs/archive/execplans/M5-execplans.md`
 - `docs/specs/workbench/db/workbench-runtime-schema.md`
 - `docs/specs/wecom/approval-ops-spec.md`
-- `docs/archive/superseded/wecom/workbench-real-device-regression.md`
+- （旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`）
 - `docs/archive/backlogs/workbench/m5-optimization-backlog.md`
 - `docs/specs/workbench/api/workbench-platform-api.yaml`
 - `docs/specs/workbench/api/workbench-approval-api.yaml`
@@ -68,7 +68,7 @@ replaced_by: []
 - 已完成企业微信审批运维与真机回归规格冻结：
   - `docs/specs/wecom/approval-ops-spec.md`
   - `docs/specs/wecom/workbench-go-live-checklist.md`
-  - `docs/archive/superseded/wecom/workbench-real-device-regression.md`
+  - （旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`）
 - 已完成遗留模块边界纳入：
   - `docs/specs/workbench/db/workbench-module-matrix.md`
   - `docs/specs/workbench/ui/workbench-department-modules.md`
@@ -138,7 +138,7 @@ replaced_by: []
   - `pnpm --filter api build` 通过。
   - `pnpm --filter api test -- workbench.integration.spec.ts` 通过（单元+集成）。
 - 说明：
-  - WS-3B 的“真机回归留痕”执行模板已在 Wave 1 冻结（`docs/archive/superseded/wecom/workbench-real-device-regression.md`），本轮完成了后端能力和验收链路，真机执行记录需按模板由业务测试设备补录。
+  - WS-3B 的“真机回归留痕”执行模板已在 Wave 1 冻结（（旧文件已清理，历史原文见 Git；当前说明：`docs/specs/wecom/real-device-regression-matrix.md`）），本轮完成了后端能力和验收链路，真机执行记录需按模板由业务测试设备补录。
 
 ## Wave 4：数据正确性与交付一致性
 

@@ -1,11 +1,13 @@
 ---
 status: current-index
 owner: workbench
-updated: 2026-07-04
+updated: 2026-09-07
 replaces: []
 replaced_by: []
 ---
 # 工作平台模块规格
+
+> 2026-09-07 已对照原始《工作台.zip》核查；[主要链路差异与复现](../../audits/2026-09-07-original-goal-audit.md) 显示考勤导出、整改关闭等尚有缺口。下方历史里程碑状态不代表原始目标全部兑现。
 
 ## 模块定位
 
@@ -45,14 +47,13 @@ replaced_by: []
 
 - 当前真源：`db/workbench-module-matrix.md` 是模块矩阵真源；M6 及后续模块入口以它为准。
 - 条件基线：`finance-business-board-*.md` 是 M6 自生成补料基线；后续收到财务部正式样表时，应以变更单替换并回归验证。
-- 已取代：`docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md` 只保留 C-1 初判历史，当前以 `finance-business-board-blocker.md` 和补料基线为准。
 - 历史归档：M4/M5/M6 验收和 M5 backlog 已迁入 `docs/archive/`，不作为当前待办清单。
 
 ## M6 差异基线
 
 以下差异在 M6 中必须显式收口：
 
-1. `docs/execplans.md` 现在是历史入口 stub，M1-M6 执行计划正文已迁入 `docs/archive/execplans/`。
+1. `docs/execplans.md` 为当前里程碑状态入口，M1-M8 历史执行计划正文在 `docs/archive/execplans/`，M9 仍暂停。
 2. 工作平台已从单页壳层升级为模块页、详情页、统计页、审批页路由（Wave 2 已完成）。
 3. 聚合模块 `business_operation_flow` 已降级为 legacy-only，新建入口使用拆分模块（Wave 2 已完成）。
 4. `海图更新` 已作为真实模块落地，字段范围覆盖更新批次、适用船舶、版本号、更新日期、更新说明、附件、确认记录、下次提醒日期（Wave 2 已完成）。

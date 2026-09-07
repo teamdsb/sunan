@@ -13,7 +13,7 @@ replaced_by: []
 
 ## C-1 与 C-2 执行记录（2026-04-22）
 
-- C-1 门禁初次结论：仓库缺少原始样表/字段字典/流程图/打印模板，见 `docs/archive/superseded/workbench/finance-business-board-c1-gate-report.md`。
+- C-1 门禁初次结论：仓库缺少原始样表/字段字典/流程图/打印模板，见 （旧文件已清理，历史原文见 Git；当前说明：`docs/specs/workbench/finance-business-board-blocker.md`）。
 - 变更触发：产品负责人在本线程明确指令“由你自己生成财务板块原始补料，然后完成 Wave C”。
 - 执行动作：项目组按指令生成 M6 可落地补料基线，并据此完成 C-2 代码与测试。
 
