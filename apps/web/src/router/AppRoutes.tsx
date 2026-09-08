@@ -292,6 +292,10 @@ export function AppRoutes() {
             element={renderLazyPage(<WorkbenchModulePage />)}
           />
           <Route
+            path="/workbench/self-inspection/records/:recordId"
+            element={renderLazyPage(<WorkbenchRecordDetailPage />)}
+          />
+          <Route
             path={workbenchRouteConfig.recordDetail.path}
             element={renderLazyPage(<WorkbenchRecordDetailPage />)}
           />

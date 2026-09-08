@@ -59,7 +59,7 @@ describe('自查操作区', () => {
     fireEvent.click(screen.getByRole('button', { name: '审核通过并关闭' }));
     expect(action).not.toHaveBeenCalled();
     fireEvent.change(
-      screen.getByRole('textbox', { name: '检查整改审核说明' }),
+      screen.getByRole('textbox', { name: '审核意见' }),
       { target: { value: '复核照片，整改合格' } },
     );
     fireEvent.click(screen.getByRole('button', { name: '审核通过并关闭' }));
@@ -109,6 +109,6 @@ describe('自查操作区', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('照片上传')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByText('整改前证据')).toBeInTheDocument();
+    expect(screen.getByText('查看检查、整改与审核记录')).toBeInTheDocument();
   });
 });

@@ -62,6 +62,7 @@ export function AppShell() {
   const activeNavItemKey = useMemo(() => resolveActiveNavItemKey(location.pathname), [location.pathname]);
   const [openGroupKey, setOpenGroupKey] = useState<string | null>(activeNavGroupKey);
   const isMyRoute = location.pathname === '/my' || location.pathname.startsWith('/my/');
+  const isSelfInspection = location.pathname === '/workbench/modules/shipping_self_inspection' || location.pathname.startsWith('/workbench/self-inspection/');
   const isMyHomeRoute = location.pathname === '/my';
   const currentModuleKey = useMemo(() => {
     const moduleKey = location.pathname.split('/').filter(Boolean)[0] ?? 'my';
@@ -70,7 +71,7 @@ export function AppShell() {
       : 'my';
   }, [location.pathname]);
   const moduleRootPath = moduleRootPathMap[currentModuleKey];
-  const showMobileBack = location.pathname !== moduleRootPath;
+  const showMobileBack = isSelfInspection ? location.pathname.includes('/records/') : location.pathname !== moduleRootPath;
 
   useEffect(() => {
     setOpenGroupKey(activeNavGroupKey);
@@ -93,7 +94,7 @@ export function AppShell() {
   };
 
   const navigateBack = () => {
-    navigate(moduleRootPath);
+    navigate(isSelfInspection ? '/workbench/modules/shipping_self_inspection' : moduleRootPath);
   };
 
   const toggleGroup = (groupKey: string) => {
@@ -125,6 +126,7 @@ export function AppShell() {
         `shell-layout-module-${currentModuleKey}`,
         isMyRoute ? 'shell-layout-my' : '',
         isMyHomeRoute ? 'shell-layout-my-home' : '',
+        isSelfInspection ? 'shell-layout-self-inspection' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -147,10 +149,10 @@ export function AppShell() {
               </span>
               <div>
                 <Typography.Title level={3} className="shell-mobile-page-title">
-                  苏南船舶管理
+                  {isSelfInspection ? '船舶自查' : '苏南船舶管理'}
                 </Typography.Title>
                 <Typography.Paragraph className="shell-mobile-page-subtitle">
-                  企业微信 H5 工作台
+                  {isSelfInspection ? '检查 · 整改 · 审核' : '企业微信 H5 工作台'}
                 </Typography.Paragraph>
               </div>
             </div>
@@ -331,7 +333,7 @@ export function AppShell() {
           </Space>
         </Drawer>
       </div>
-      <nav className="shell-mobile-bottom-nav" aria-label="底部模块导航">
+      {!isSelfInspection && <nav className="shell-mobile-bottom-nav" aria-label="底部模块导航">
         {moduleNavItems.map((item) => {
           const Icon = bottomIconMap[item.path as keyof typeof bottomIconMap] ?? HomeOutlined;
           const active = isActiveModule(item.matchPrefixes);
@@ -349,7 +351,7 @@ export function AppShell() {
             </button>
           );
         })}
-      </nav>
+      </nav>}
     </Layout>
   );
 }

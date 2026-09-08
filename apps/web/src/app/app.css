@@ -7456,3 +7456,17 @@ body {
     width: 100%;
   }
 }
+
+.inspection-task-list { display: grid; gap: 12px; width: 100%; }
+.inspection-task-entry { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: 100%; padding: 18px; border: 1px solid #cadce7; border-radius: 10px; text-align: left; background: #f7fafc; color: #173c58; cursor: pointer; font: inherit; }
+.inspection-task-entry > span { font-size: 12px; color: #286284; }
+.inspection-task-entry > strong { font-size: 17px; overflow-wrap: anywhere; }
+.inspection-task-entry > small { color: #627685; line-height: 1.6; }
+
+.shell-layout-self-inspection .shell-sidebar { display: none; }
+.shell-layout-self-inspection .shell-main-layout { grid-template-columns: minmax(0, 1fr); }
+.self-inspection-detail { max-width: 680px; margin: 0 auto; padding-bottom: 32px; }
+.self-inspection-detail h2 { font-size: 23px; }
+.inspection-history { width: 100%; padding: 14px 0; border-top: 1px solid #e1e9ed; }
+.inspection-history summary { color: #4a6375; cursor: pointer; margin-bottom: 12px; }
+.inspection-print { margin-top: 24px; padding: 18px; background: white; border: 1px solid #d3e1e8; border-radius: 12px; }

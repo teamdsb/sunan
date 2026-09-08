@@ -9,6 +9,7 @@ import { useFileUpload } from './useFileUpload';
 
 interface FileUploadFieldProps {
   category: FileCategory;
+  extensions?: string[];
   value?: FileRecord | null;
   onChange?: (file: FileRecord | null) => void;
   enableWecomCapture?: boolean;
@@ -17,6 +18,7 @@ interface FileUploadFieldProps {
 
 export function FileUploadField({
   category,
+  extensions,
   value = null,
   onChange,
   enableWecomCapture = false,
@@ -47,6 +49,11 @@ export function FileUploadField({
       return;
     }
 
+    if (extensions && !extensions.includes(selectedFile.name.split('.').pop()?.toLowerCase() ?? '')) {
+      setDownloadError('请选择 JPEG 或 PNG 照片');
+      return;
+    }
+    setDownloadError(null);
     setLastSelectedFile(selectedFile);
     const uploaded = await uploadFile(selectedFile);
     if (uploaded) {
@@ -93,7 +100,7 @@ export function FileUploadField({
             <Space direction="vertical" size={2}>
               <Typography.Text>
                 支持格式：
-                {policy.extensions.map((item) => item.toUpperCase()).join('、')}
+                {(extensions ?? policy.extensions).map((item) => item.toUpperCase()).join('、')}
               </Typography.Text>
               <Typography.Text>
                 单个文件不超过 {Math.round(policy.maxSize / 1024 / 1024)}MB
@@ -117,7 +124,7 @@ export function FileUploadField({
       <input
         ref={inputRef}
         type="file"
-        accept={policy?.accept}
+        accept={extensions ? extensions.map((item) => `.${item}`).join(',') : policy?.accept}
         hidden
         data-testid="file-input"
         onChange={(event) => {

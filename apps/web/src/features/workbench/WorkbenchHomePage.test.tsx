@@ -18,6 +18,8 @@ vi.mock('../files/useFileUpload', () => ({
 }));
 
 const mockNavigate = vi.fn();
+let mockSearchParams = new URLSearchParams();
+const mockSetSearchParams = vi.fn();
 const mockGetWorkbenchDashboardQuery = vi.fn();
 const mockGetWorkbenchRecordsQuery = vi.fn();
 const mockGetWorkbenchRecordQuery = vi.fn();
@@ -43,10 +45,12 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
   };
 });
 
 vi.mock('./workbenchApi', () => ({
+  useGetInspectionPeopleQuery: () => ({ data: { data: [] } }),
   useGetWorkbenchDashboardQuery: () => mockGetWorkbenchDashboardQuery(),
   useGetWorkbenchRecordsQuery: (params: unknown, options: unknown) =>
     mockGetWorkbenchRecordsQuery(params, options),
@@ -109,6 +113,8 @@ vi.mock('../../hooks/useWecomJsSdk', () => ({
 
 describe('WorkbenchHomePage', () => {
   beforeEach(() => {
+    mockSearchParams = new URLSearchParams();
+    mockSetSearchParams.mockReset();
     vi.clearAllMocks();
     window.scrollTo = mockScrollTo;
     window.requestAnimationFrame = (callback: FrameRequestCallback) => {
@@ -769,4 +775,17 @@ describe('WorkbenchHomePage', () => {
       { skip: false },
     );
   });
+  it('从首页下发入口直接打开自查表单，不显示无关模块', async () => {
+    mockSearchParams = new URLSearchParams('create=1');
+    mockGetWorkbenchDashboardQuery.mockReturnValue({ data: { data: { modules: [{ moduleCode: 'shipping_self_inspection', moduleName: '船舶自查', templateType: 'inspection_rectification', canCreate: true }], alerts: [] } } });
+    render(<WorkbenchHomePage initialModuleCode="shipping_self_inspection" routeAware />);
+    expect(await screen.findByRole('button', { name: '确认下发' })).toBeInTheDocument();
+    expect(screen.getByLabelText('检查任务名称')).toBeInTheDocument();
+    expect(screen.queryByText('任务看板')).not.toBeInTheDocument();
+    expect(screen.queryByText('考勤统计')).not.toBeInTheDocument();
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
+    expect(mockSetSearchParams.mock.calls[0][0].has('create')).toBe(false);
+    expect(screen.getByRole('heading', { name: '自查任务' })).toBeInTheDocument();
+  });
+
 });

@@ -36,7 +36,7 @@ import {
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ResponsiveTable } from '../../components/ResponsiveTable';
 import { useWecomJsSdk } from '../../hooks/useWecomJsSdk';
 import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
@@ -294,6 +294,7 @@ export function WorkbenchHomePage({
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const wecomApprovalSdk = useWecomJsSdk({
     jsApiList: [],
     agentJsApiList: WECOM_APPROVAL_AGENT_JS_API_LIST,
@@ -422,6 +423,7 @@ export function WorkbenchHomePage({
     });
     return labels;
   }, [moduleSchemaResponse?.data.sections]);
+  const focusedInspection = activeModuleCode === 'shipping_self_inspection' || detailResponse?.data?.moduleCode === 'shipping_self_inspection';
   const isAttendanceView =
     statisticsOnly || activeModule?.templateType === 'attendance_statistics';
   const resolvedRecordListTitle =
@@ -646,6 +648,15 @@ export function WorkbenchHomePage({
     setCreateOpen(true);
   };
 
+  useEffect(() => {
+    if (activeModuleCode !== 'shipping_self_inspection' || activeModule?.canCreate !== true || searchParams.get('create') !== '1') return;
+    form.resetFields();
+    setCreateOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('create');
+    setSearchParams(next, { replace: true });
+  }, [activeModuleCode, activeModule?.canCreate, searchParams, setSearchParams, form]);
+
   const openWecomApprovalPage = async (
     config: WorkbenchApprovalLaunchConfig,
   ) => {
@@ -726,7 +737,7 @@ export function WorkbenchHomePage({
       return;
     }
     if (activeModule?.templateType === 'inspection_rectification') {
-      messageApi.success('检查整改记录已创建，可在详情中推进整改闭环');
+      messageApi.success(focusedInspection ? '已下发，执行人打开企业微信「船舶自查」即可查看任务。' : '检查整改记录已创建，可在详情中推进整改闭环');
       return;
     }
     if (activeModule?.templateType === 'attendance_statistics') {
@@ -1053,12 +1064,12 @@ export function WorkbenchHomePage({
       ) : null}
       <section className="page-hero sunan-page-hero workbench-command-hero">
         <div>
-          <Typography.Title level={2}>{heroTitle}</Typography.Title>
+          <Typography.Title level={2}>{focusedInspection ? '船舶自查' : heroTitle}</Typography.Title>
           <Typography.Paragraph type="secondary">
-            {heroDescription}
+            {focusedInspection ? (canCreateRecord ? '下发检查任务，查看船员整改进度，再由指定审核人确认完成。' : '打开任务查看要求，完成检查与整改后提交审核。') : heroDescription}
           </Typography.Paragraph>
         </div>
-        {routeAware ? (
+        {focusedInspection ? <Typography.Text type="secondary">主管下发 → 船员检查整改 → 指定审核人复核</Typography.Text> : routeAware ? (
           <Space wrap className="sunan-hero-actions">
             {showHomeReturn ? (
               <Button onClick={goHome}>返回工作台首页</Button>
@@ -1075,6 +1086,7 @@ export function WorkbenchHomePage({
         ) : null}
       </section>
 
+      {!focusedInspection && <>
       <section className="workbench-stats-grid">
         <article className="workbench-stat-card">
           <Statistic
@@ -1147,7 +1159,9 @@ export function WorkbenchHomePage({
         </section>
       ) : null}
 
-      {!statisticsOnly ? (
+      </>}
+
+      {!statisticsOnly && !focusedInspection ? (
         <section className="workbench-board-layout">
           <div className="workbench-board-main">
             <div className="sunan-panel-heading">
@@ -1308,11 +1322,11 @@ export function WorkbenchHomePage({
               wrap
             >
               <Typography.Title level={4}>
-                {resolvedRecordListTitle}
+                {focusedInspection ? '自查任务' : resolvedRecordListTitle}
               </Typography.Title>
               {canCreateRecord ? (
                 <Button type="primary" onClick={openCreateDrawer}>
-                  {activeModule?.templateType === 'operation_flow'
+                  {focusedInspection ? '下发自查任务' : activeModule?.templateType === 'operation_flow'
                     ? '新建作业闭环记录'
                     : activeModule?.templateType === 'inspection_rectification'
                       ? '新建检查整改记录'
@@ -1327,7 +1341,17 @@ export function WorkbenchHomePage({
               ) : null}
             </Space>
 
-            <ResponsiveTable<WorkbenchRecordSummary>
+            {focusedInspection ? (
+              <div className="inspection-task-list">
+                {recordsLoading ? <Typography.Text>正在加载自查任务…</Typography.Text> : recordsError ? <Typography.Text type="danger">任务加载失败，请刷新重试。</Typography.Text> : records.length ? records.map((record) => (
+                  <button type="button" className="inspection-task-entry" key={record.id} onClick={() => navigate(`/workbench/self-inspection/records/${record.id}`)}>
+                    <span>{({ assigned: '待船员开始检查', in_progress: '船员检查 / 整改中', pending_review: '待指定审核人复核', rework_required: '已退回，待补充整改', closed: '已审核完成', voided: '已作废' } as Record<string, string>)[record.status] ?? '待查看'}</span>
+                    <strong>{record.title}</strong>
+                    <small>{formatShanghaiDateTime(record.occurredAt)} · 查看任务与操作 <RightOutlined /></small>
+                  </button>
+                )) : <Empty description={canCreateRecord ? '还没有自查任务，点击上方按钮下发第一条。' : '暂未收到自查任务，主管下发后会显示在这里。'} />}
+              </div>
+            ) : <ResponsiveTable<WorkbenchRecordSummary>
               rowKey="id"
               loading={recordsLoading}
               dataSource={records}
@@ -1371,7 +1395,7 @@ export function WorkbenchHomePage({
                   render: (value: string) => formatShanghaiDateTime(value),
                 },
               ]}
-            />
+            />}
           </Space>
         </Card>
       </section>
@@ -1892,7 +1916,7 @@ export function WorkbenchHomePage({
 
       <Drawer
         title={
-          activeModule
+          focusedInspection ? '下发自查任务' : activeModule
             ? `${
                 activeModule.templateType === 'operation_flow'
                   ? '新建作业闭环记录'
@@ -1918,7 +1942,7 @@ export function WorkbenchHomePage({
             onClick={() => void submitCreateRecord()}
             loading={creatingRecord}
           >
-            提交
+            {focusedInspection ? '确认下发' : '提交'}
           </Button>
         }
       >
@@ -1926,28 +1950,29 @@ export function WorkbenchHomePage({
           <Empty description="请先选择模块" />
         ) : (
           <Form layout="vertical" form={form}>
+            {focusedInspection && <Alert type="info" showIcon message="先说清楚检查什么，再选择执行人和审核人" description="下发后由执行人检查整改，审核人负责复核；两人不能相同。" style={{ marginBottom: 20 }} />}
             <Form.Item
-              label="记录标题"
+              label={focusedInspection ? '检查任务名称' : '记录标题'}
               name="title"
               rules={[{ required: true, message: '请输入记录标题' }]}
             >
-              <Input placeholder="输入记录标题" />
+              <Input placeholder={focusedInspection ? '例如：甲板护栏检查' : '输入记录标题'} />
             </Form.Item>
             <Form.Item
-              label="摘要"
+              label={focusedInspection ? '检查要求' : '摘要'}
               name="summary"
               rules={[{ required: true, message: '请输入摘要' }]}
             >
-              <Input.TextArea rows={3} placeholder="输入摘要说明" />
+              <Input.TextArea rows={3} placeholder={focusedInspection ? '告诉船员检查哪些部位、重点注意什么' : '输入摘要说明'} />
             </Form.Item>
-            <Form.Item
+            {!focusedInspection && <Form.Item
               label="发生时间（可选）"
               name="occurredAt"
               getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })}
               getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}
             >
               <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} style={{ width: '100%' }} />
-            </Form.Item>
+            </Form.Item>}
             <Form.Item label={activeModuleCode === 'shipping_self_inspection' ? '船舶' : '船舶（可选）'} name="vesselId" rules={activeModuleCode === 'shipping_self_inspection' ? [{ required: true, message: '请选择船舶' }] : []}>
               <Select
                 allowClear
@@ -1989,7 +2014,7 @@ export function WorkbenchHomePage({
               </Card>
             ) : null}
 
-            {moduleSchemaResponse?.data.templateType ===
+            {!focusedInspection && moduleSchemaResponse?.data.templateType ===
               'inspection_rectification' &&
             moduleSchemaResponse.data.stepTemplates?.length ? (
               <Card

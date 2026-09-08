@@ -69,7 +69,7 @@ export function InspectionPeopleFields() {
         />
       </Form.Item>
       <Typography.Paragraph type="secondary">
-        人员首次登录企业微信应用后出现在名单中。下发后，执行人可在船舶自查记录中找到任务。
+        人员首次登录企业微信应用后出现在名单中。下发后，执行人打开企业微信「船舶自查」即可找到任务。
       </Typography.Paragraph>
     </>
   );
@@ -98,9 +98,46 @@ export function SelfInspectionPanel({
   const [result, setResult] = useState<string>();
   const allowed = new Set(record.availableActions ?? []);
   const current = record.steps.find((step) => step.status !== 'completed');
+  const reviewing = allowed.has('close_record');
+  const executing = allowed.has('complete_step');
+  const commentLabel = reviewing
+    ? '审核意见'
+    : current?.stepCode === 'rectification'
+      ? '整改说明'
+      : '检查说明';
+  const returnedAt = record.steps.find(
+    (step) => step.stepCode === 'rectification',
+  )?.stepPayload?.returnedAt;
+  const evidenceFiles = (category: string) =>
+    record.attachments.filter(
+      (item) =>
+        item.category === category &&
+        (category !== 'after_rectification' ||
+          !returnedAt ||
+          new Date(item.uploadedAt).getTime() >=
+            new Date(String(returnedAt)).getTime()),
+    );
+  const returnReason = record.steps
+    .map((step) => step.stepPayload?.returnReason)
+    .find(Boolean);
+  const stageMessage = allowed.has('start')
+    ? '轮到你检查：阅读要求后，点击开始检查。'
+    : executing
+      ? current?.stepCode === 'rectification'
+        ? '轮到你整改：填写处理措施，上传本轮整改后的照片，再提交审核。'
+        : '轮到你检查：选择检查结果。发现问题时，说明问题并上传现场照片。'
+      : reviewing
+        ? '轮到你审核：对照检查与整改证据，决定通过或退回补充。'
+        : record.status === 'pending_review'
+          ? `已提交，等待 ${record.reviewerName ?? '指定审核人'} 复核。`
+          : record.status === 'closed'
+            ? '任务已完成。可回看执行过程与打印记录。'
+            : record.status === 'voided'
+              ? '任务已作废，无需继续操作。'
+              : `等待 ${record.assigneeName ?? '执行人'} 检查整改。`;
   const submit = async (data: WorkbenchRecordActionPayload) => {
     if (!['start'].includes(data.actionType) && !comment.trim()) {
-      messageApi.warning('请填写操作说明');
+      messageApi.warning(`请填写${commentLabel}`);
       return;
     }
     try {
@@ -111,7 +148,13 @@ export function SelfInspectionPanel({
       setComment('');
       setResult(undefined);
       setAssignOpen(false);
-      messageApi.success('记录已更新');
+      messageApi.success(
+        data.actionType === 'request_rework'
+          ? '已退回，等待执行人补充整改。'
+          : data.actionType === 'close_record'
+            ? '审核通过，任务已完成。'
+            : '已保存，请按当前提示继续。',
+      );
     } catch (error) {
       messageApi.error(errorMessage(error));
     }
@@ -120,6 +163,20 @@ export function SelfInspectionPanel({
     <Card title="自查与整改" size="small">
       {context}
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Alert
+          type={reviewing ? 'info' : 'success'}
+          showIcon
+          message={stageMessage}
+        />
+        {Boolean(returnReason) &&
+          !['closed', 'voided'].includes(record.status) && (
+            <Alert
+              type="warning"
+              showIcon
+              message="退回要求"
+              description={String(returnReason)}
+            />
+          )}
         {!record.assigneeUserId || !record.reviewerUserId ? (
           <Alert
             type="warning"
@@ -130,57 +187,6 @@ export function SelfInspectionPanel({
             执行人：{record.assigneeName ?? record.assigneeUserId}　审核人：
             {record.reviewerName ?? record.reviewerUserId}
           </Typography.Text>
-        )}
-        {record.steps.map((step) => (
-          <div key={step.stepCode}>
-            <Typography.Text strong>{step.stepName}</Typography.Text>
-            <Typography.Paragraph>
-              {String(
-                step.stepPayload?.comment ??
-                  step.stepPayload?.returnReason ??
-                  '尚无执行记录',
-              )}
-            </Typography.Paragraph>
-            {step.completedAt && (
-              <Typography.Text type="secondary">
-                {step.completedBy === record.assigneeUserId
-                  ? (record.assigneeName ?? step.completedBy)
-                  : (record.reviewerName ?? step.completedBy)}{' '}
-                · {formatShanghaiDateTime(step.completedAt)}
-              </Typography.Text>
-            )}
-          </div>
-        ))}
-        {allowed.has('assign') && (
-          <Button onClick={() => setAssignOpen((value) => !value)}>
-            重新分配
-          </Button>
-        )}
-        {assignOpen && (
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={{
-              assigneeUserId: record.assigneeUserId,
-              reviewerUserId: record.reviewerUserId,
-            }}
-          >
-            <Alert
-              type="warning"
-              message="重新分配会重新开始本次检查，原操作日志和照片保留。"
-              style={{ marginBottom: 12 }}
-            />
-            <InspectionPeopleFields />
-            <Button
-              loading={isLoading}
-              onClick={async () => {
-                const values = await form.validateFields();
-                await submit({ actionType: 'assign', payload: values });
-              }}
-            >
-              确认分配
-            </Button>
-          </Form>
         )}
         {allowed.has('complete_step') &&
           current?.stepCode === 'on_site_inspection' && (
@@ -206,6 +212,7 @@ export function SelfInspectionPanel({
             <FileUploadField
               key={`${record.id}-${record.status}-${current?.stepCode}`}
               category="workbench-attachments"
+              extensions={['jpg', 'jpeg', 'png']}
               onChange={async (file) => {
                 if (!file) return;
                 try {
@@ -232,37 +239,56 @@ export function SelfInspectionPanel({
             </Typography.Text>
           </div>
         )}
-        {['before_rectification', 'after_rectification'].map((category) => (
-          <div key={category}>
-            <Typography.Text strong>
-              {category === 'before_rectification'
-                ? '整改前证据'
-                : '整改后证据'}
-            </Typography.Text>
-            <FileAttachmentList
-              files={record.attachments
-                .filter((item) => item.category === category)
-                .map((item) => ({
-                  id: item.fileId,
-                  fileName: item.fileName,
-                  mimeType: item.mimeType,
-                  fileSize: item.fileSize,
-                }))}
-              getUrl={async (file) =>
-                (
-                  await getUrl({
-                    recordId: record.id,
-                    fileId: file.id,
-                  }).unwrap()
-                ).data.downloadUrl
-              }
-            />
+        {['before_rectification', 'after_rectification'].map(
+          (category) =>
+            evidenceFiles(category).length > 0 && (
+              <div key={category}>
+                <Typography.Text strong>
+                  {category === 'before_rectification'
+                    ? '整改前证据'
+                    : '整改后证据'}
+                </Typography.Text>
+                <FileAttachmentList
+                  files={evidenceFiles(category).map((item) => ({
+                    id: item.fileId,
+                    fileName: item.fileName,
+                    mimeType: item.mimeType,
+                    fileSize: item.fileSize,
+                  }))}
+                  getUrl={async (file) =>
+                    (
+                      await getUrl({
+                        recordId: record.id,
+                        fileId: file.id,
+                      }).unwrap()
+                    ).data.downloadUrl
+                  }
+                />
+              </div>
+            ),
+        )}
+        {reviewing && (
+          <div>
+            <Typography.Paragraph>
+              <strong>检查发现：</strong>
+              {String(record.steps[0]?.stepPayload?.comment ?? '见检查记录')}
+            </Typography.Paragraph>
+            <Typography.Paragraph>
+              <strong>本轮整改：</strong>
+              {String(record.steps[1]?.stepPayload?.comment ?? '见整改记录')}
+            </Typography.Paragraph>
           </div>
-        ))}
-        {allowed.size > 0 && (
+        )}
+        {(executing || reviewing) && (
           <Input.TextArea
-            aria-label="检查整改审核说明"
-            placeholder="填写检查结果、整改措施或审核意见"
+            aria-label={commentLabel}
+            placeholder={
+              reviewing
+                ? '说明是否合格；退回时写清需要补充什么'
+                : current?.stepCode === 'rectification'
+                  ? '具体修复了什么，结果如何'
+                  : '说明检查发现的问题或合格情况'
+            }
             maxLength={2000}
             rows={3}
             value={comment}
@@ -316,16 +342,81 @@ export function SelfInspectionPanel({
               审核通过并关闭
             </Button>
           )}
-          {allowed.has('void') && (
-            <Button
-              danger
-              loading={isLoading}
-              onClick={() => void submit({ actionType: 'void' })}
-            >
-              作废任务
-            </Button>
-          )}
         </Space>
+        <details className="inspection-history">
+          <summary>查看检查、整改与审核记录</summary>
+          {record.steps.map((step) => (
+            <div key={step.stepCode}>
+              <Typography.Text strong>{step.stepName}</Typography.Text>
+              <Typography.Paragraph>
+                {String(
+                  step.stepPayload?.comment ??
+                    step.stepPayload?.returnReason ??
+                    '尚无执行记录',
+                )}
+              </Typography.Paragraph>
+              {step.completedAt && (
+                <Typography.Text type="secondary">
+                  {step.completedBy === record.assigneeUserId
+                    ? (record.assigneeName ?? step.completedBy)
+                    : (record.reviewerName ?? step.completedBy)}{' '}
+                  · {formatShanghaiDateTime(step.completedAt)}
+                </Typography.Text>
+              )}
+            </div>
+          ))}
+        </details>
+        {(allowed.has('assign') || allowed.has('void')) && (
+          <details className="inspection-history">
+            <summary>任务管理：重新分配 / 作废</summary>
+            <Input.TextArea
+              aria-label="任务调整原因"
+              placeholder="请说明重新分配或作废的原因"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+            {allowed.has('assign') && (
+              <Button onClick={() => setAssignOpen((value) => !value)}>
+                重新分配
+              </Button>
+            )}
+            {assignOpen && (
+              <Form
+                form={form}
+                layout="vertical"
+                initialValues={{
+                  assigneeUserId: record.assigneeUserId,
+                  reviewerUserId: record.reviewerUserId,
+                }}
+              >
+                <Alert
+                  type="warning"
+                  message="重新分配会重新开始本次检查，原操作日志和照片保留。"
+                  style={{ marginBottom: 12 }}
+                />
+                <InspectionPeopleFields />
+                <Button
+                  loading={isLoading}
+                  onClick={async () => {
+                    const values = await form.validateFields();
+                    await submit({ actionType: 'assign', payload: values });
+                  }}
+                >
+                  确认分配
+                </Button>
+              </Form>
+            )}
+            {allowed.has('void') && (
+              <Button
+                danger
+                loading={isLoading}
+                onClick={() => void submit({ actionType: 'void' })}
+              >
+                作废任务
+              </Button>
+            )}
+          </details>
+        )}
         {record.status === 'closed' && (
           <Alert
             type="success"
