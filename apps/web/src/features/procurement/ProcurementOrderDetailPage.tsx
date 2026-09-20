@@ -323,14 +323,15 @@ export function ProcurementOrderDetailPage() {
       cancelText: '取消',
       okButtonProps: { danger: true, loading: isUnlinking },
       onOk: async () => {
-        if (!reason.trim()) throw new Error('请输入解除原因');
-        await unlinkAttachment({
-          id,
-          fileId: file.id,
-          reason: reason.trim(),
-        }).unwrap();
-        messageApi.success('附件关联已解除，原文件未被删除');
-        await refetch();
+        try {
+          if (!reason.trim()) throw new Error('请输入解除原因');
+          await unlinkAttachment({ id, fileId: file.id, reason: reason.trim() }).unwrap();
+          messageApi.success('附件关联已解除，无其他引用的文件将在 24 小时后回收');
+          await refetch();
+        } catch (error) {
+          messageApi.error(error instanceof Error ? error.message : '附件解除失败，请稍后重试');
+          throw error;
+        }
       },
     });
   };

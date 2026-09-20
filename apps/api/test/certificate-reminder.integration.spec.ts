@@ -439,10 +439,18 @@ describe('ReminderController integration', () => {
     expect(dashboard.body.data.totalPending).toBe(0);
     expect(dashboard.body.data.totalOverdue).toBe(0);
 
-    const list = await request(
+    const defaultList = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
       .get('/api/v1/certificate-reminders?page=1&pageSize=20')
+      .set('Authorization', 'Bearer token');
+    expect(defaultList.status).toBe(200);
+    expect(defaultList.body.data).toHaveLength(0);
+
+    const list = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/certificate-reminders?page=1&pageSize=20&status=resolved')
       .set('Authorization', 'Bearer token');
     expect(list.status).toBe(200);
     expect(list.body.data).toHaveLength(1);

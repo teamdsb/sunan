@@ -66,6 +66,14 @@ export class MasterDataService {
     return { data: this.vehicleDto(await this.vehicles.save(row)) };
   }
 
+  async removeVehicle(id: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    const row = await this.vehicles.findOne({ where: { id, deletedAt: IsNull() } });
+    if (!row) throw new NotFoundException('vehicle not found');
+    row.deletedAt = new Date();
+    await this.vehicles.save(row);
+  }
+
   async listVessels(query: MasterDataListQueryDto, user: CurrentUser) {
     const rows = await this.vessels.find({ where: { deletedAt: IsNull() }, order: { name: 'ASC' } });
     const keyword = query.keyword?.trim();
@@ -99,6 +107,14 @@ export class MasterDataService {
     return { data: this.vesselDto(await this.vessels.save(row)) };
   }
 
+  async removeVessel(id: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    const row = await this.vessels.findOne({ where: { id, deletedAt: IsNull() } });
+    if (!row) throw new NotFoundException('vessel not found');
+    row.deletedAt = new Date();
+    await this.vessels.save(row);
+  }
+
   async listPersonnel(query: MasterDataListQueryDto, user: CurrentUser) {
     const keyword = query.keyword?.trim(); const rows = await this.personnel.find({ where: { deletedAt: IsNull() }, order: { name: 'ASC' } });
     const includeInactive = query.includeInactive === 'true' && this.isManager(user);
@@ -122,6 +138,14 @@ export class MasterDataService {
     if (dto.wecomUserId && dto.wecomUserId !== row.wecomUserId && await this.personnel.exists({ where: { wecomUserId: dto.wecomUserId, deletedAt: IsNull() } })) throw new ConflictException('wecom identity already mapped');
     Object.assign(row, { name: dto.name ?? row.name, departmentCode: dto.departmentCode ?? row.departmentCode, wecomUserId: dto.wecomUserId ?? row.wecomUserId, position: dto.position ?? row.position, mobile: dto.mobile ?? row.mobile, employmentStatus: dto.employmentStatus ?? row.employmentStatus, remarks: dto.remarks ?? row.remarks });
     return { data: this.personnelDto(await this.personnel.save(row), user) };
+  }
+
+  async removePersonnel(id: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    const row = await this.personnel.findOne({ where: { id, deletedAt: IsNull() } });
+    if (!row) throw new NotFoundException('personnel not found');
+    row.deletedAt = new Date();
+    await this.personnel.save(row);
   }
 
   async createAssignment(dto: AssignmentCreateDto, user: CurrentUser) {
@@ -166,6 +190,15 @@ export class MasterDataService {
     if (dto.vesselId) { const vessel = await this.vessel(dto.vesselId); if (vessel.status !== 'active') throw new UnprocessableEntityException('inactive vessel cannot own new equipment'); }
     Object.assign(row, { code: dto.code ?? row.code, name: dto.name ?? row.name, categoryId: category?.id ?? row.categoryId, vesselId: dto.vesselId ?? row.vesselId, serialNo: dto.serialNo ?? row.serialNo, status: dto.status ?? row.status, remarks: dto.remarks ?? row.remarks, updatedBy: user.userId });
     return { data: this.equipmentDto(await this.equipment.save(row)) };
+  }
+
+  async removeEquipment(id: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    const row = await this.equipment.findOne({ where: { id, deletedAt: IsNull() } });
+    if (!row) throw new NotFoundException('equipment not found');
+    row.deletedAt = new Date();
+    row.updatedBy = user.userId;
+    await this.equipment.save(row);
   }
 
   async selector(type: string, query: MasterDataListQueryDto, user: CurrentUser) {

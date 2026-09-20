@@ -1,4 +1,5 @@
 import { ReminderExpiryCycle1710000025000 } from 'src/database/migrations/1710000025000-reminder-expiry-cycle';
+import { FileOrphanRetention1710000026000 } from 'src/database/migrations/1710000026000-file-orphan-retention';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { ImagePullPolicy } from 'testcontainers';
@@ -13,6 +14,7 @@ import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.
 import { EnterpriseProfileFileEntity } from 'src/database/entities/enterprise-profile-file.entity';
 import { EnterpriseProfileEntity } from 'src/database/entities/enterprise-profile.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { FileRecycleJobEntity } from 'src/database/entities/file-recycle-job.entity';
 import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
 import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
 import { ExportJobEntity } from 'src/database/entities/export-job.entity';
@@ -112,6 +114,7 @@ import {
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
   FileEntity,
+  FileRecycleJobEntity,
   EvidenceAuditEntity,
   EvidenceRecordEntity, ExportJobEntity,
   MasterDataImportBatchEntity, MasterDataImportRowEntity,
@@ -212,6 +215,7 @@ const ALL_TEST_MIGRATIONS = [
   WorkbenchVoyageSchemaV21710000023000,
   CertificateReminderPreferences1710000024000,
   ReminderExpiryCycle1710000025000,
+  FileOrphanRetention1710000026000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

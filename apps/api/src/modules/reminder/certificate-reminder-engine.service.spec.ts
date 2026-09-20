@@ -538,7 +538,7 @@ describe('CertificateReminderEngineService', () => {
     expect(reminderRepo.save).not.toHaveBeenCalled();
   });
 
-  it('creates a new reminder on the next day when the previous reminder is still unacknowledged', async () => {
+  it('reuses the existing reminder cycle on the next day instead of creating a duplicate', async () => {
     const { CertificateReminderEngineService } = await import('./certificate-reminder-engine.service');
 
     const certificate = makeCertificate({
@@ -609,9 +609,9 @@ describe('CertificateReminderEngineService', () => {
 
     const result = await service.runScan({ jobId: 'job-5', source: 'manual' });
 
-    expect(result.createdCount).toBe(1);
-    expect(reminderRepo.upsert).toHaveBeenCalledTimes(1);
-    expect(reminderRepo.save).toHaveBeenCalledTimes(1);
+    expect(result.createdCount).toBe(0);
+    expect(reminderRepo.upsert).not.toHaveBeenCalled();
+    expect(reminderRepo.save).not.toHaveBeenCalled();
   });
 
   it('retries a same-day pending reminder instead of dropping it', async () => {

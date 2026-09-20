@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: operations
-updated: 2026-06-13
+updated: 2026-09-20
 replaces: []
 replaced_by: []
 ---
@@ -11,7 +11,7 @@ replaced_by: []
 
 ## 工作目标
 
-本项目采用 Docker Compose 在单台服务器部署前端、后端、PostgreSQL、Redis、MinIO OSS、Nginx。所有生产数据和配置集中在 `/dev/sunan` 下，便于备份、迁移和审计。
+本项目采用 Docker Compose 在单台服务器部署前端、后端、PostgreSQL、Redis、MinIO OSS、Nginx。所有生产数据和配置集中在 `/srv/sunan` 下，便于备份、迁移和审计。
 
 ## 安全边界
 
@@ -19,15 +19,15 @@ replaced_by: []
 - 可以通过 SSH 登录服务器检查状态和执行部署命令。
 - 不要输出真实 Secret、密码、Token、EncodingAESKey、JWT Secret。
 - 如必须确认某个敏感变量是否存在，只输出变量名和 `SET/EMPTY`，不要输出值。
-- 修改生产 `.env` 前先备份：`cp /dev/sunan/deploy/.env /dev/sunan/deploy/.env.bak-$(date +%Y%m%d%H%M%S)`。
+- 修改生产 `.env` 前先备份：`cp /srv/sunan/deploy/.env /srv/sunan/deploy/.env.bak-$(date +%Y%m%d%H%M%S)`。
 - 数据库、Redis、OSS 是生产持久化数据，任何删除、重建、清空前都必须先备份并获得明确确认。
 
 ## 操作习惯
 
 - 所有远程命令用 `set -e`，失败即停止。
 - 每次部署前先看容器状态，部署后必须做健康检查。
-- 只改前端时，也要知道 `docker compose up -d --build sunan-web` 可能因为 `depends_on`/构建依赖触发其他镜像检查；操作后要确认所有容器恢复。
-- 使用 `docker compose --env-file /dev/sunan/deploy/.env`，不要依赖当前 shell 环境。
+- 镜像在本机构建为 `linux/amd64` 后上传、校验、加载；生产不执行构建。按服务使用 `up -d --no-deps --no-build` 切换，操作后确认所有容器恢复。
+- 使用 `docker compose --env-file /srv/sunan/deploy/.env`，不要依赖当前 shell 环境。
 - 修改 Nginx 配置后先 `nginx -t`，通过后再 reload。
 - 证书和企业微信回调 IP 同步都有 systemd timer，优先检查 timer 状态，不要手工乱改生成文件。
 
@@ -39,10 +39,10 @@ replaced_by: []
 docker compose down -v
 docker volume rm
 docker system prune -a --volumes
-rm -rf /dev/sunan/sunan-db/data
-rm -rf /dev/sunan/sunan-redis/data
-rm -rf /dev/sunan/sunan-oss/data
-rm -rf /dev/sunan/deploy/.env
+rm -rf /srv/sunan/sunan-db/data
+rm -rf /srv/sunan/sunan-redis/data
+rm -rf /srv/sunan/sunan-oss/data
+rm -rf /srv/sunan/deploy/.env
 ```
 
 ## 服务器登录
@@ -55,20 +55,20 @@ ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem -o StrictHostKeyChecking=no root@
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem -o StrictHostKeyChecking=no root@39.106.103.45 'set -e
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env ps
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env ps
 '
 ```
 
 ## 敏感变量检查方式
 
-不要 `cat /dev/sunan/deploy/.env`。用下面方式确认变量是否存在：
+不要 `cat /srv/sunan/deploy/.env`。用下面方式确认变量是否存在：
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 '
 set -e
 for key in DB_PASSWORD REDIS_PASSWORD OSS_ACCESS_KEY_SECRET JWT_SECRET WECOM_AGENT_SECRET WECOM_CALLBACK_TOKEN WECOM_ENCODING_AES_KEY; do
-  if grep -q "^${key}=." /dev/sunan/deploy/.env; then
+  if grep -q "^${key}=." /srv/sunan/deploy/.env; then
     echo "${key}=SET"
   else
     echo "${key}=EMPTY"

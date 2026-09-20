@@ -9,6 +9,7 @@ const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockPublish = vi.fn();
 const mockDisable = vi.fn();
+const mockDelete = vi.fn();
 
 vi.mock('./officeApi', () => ({
   useGetOfficeCategoriesQuery: () => mockCategories(),
@@ -18,6 +19,7 @@ vi.mock('./officeApi', () => ({
   useUpdateOfficeEntryMutation: () => [mockUpdate, { isLoading: false }],
   usePublishOfficeEntryMutation: () => [mockPublish, { isLoading: false }],
   useDisableOfficeEntryMutation: () => [mockDisable, { isLoading: false }],
+  useDeleteOfficeEntryMutation: () => [mockDelete, { isLoading: false }],
 }));
 
 describe('OfficeAdminPage', () => {

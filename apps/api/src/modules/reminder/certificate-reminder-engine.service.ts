@@ -76,12 +76,17 @@ export class CertificateReminderEngineService {
     const vehicleById = new Map(vehicles.map((row) => [row.id, row]));
     const personnelById = new Map(personnel.map((row) => [row.id, row]));
     const equipmentById = new Map(equipment.map((row) => [row.id, row]));
-    const reminderByKey = new Map(
-      reminders.map((reminder) => [
-        this.makeReminderKey(reminder.certificateId, reminder.recipientUserId, reminder.scheduledDate, reminder.reminderType, reminder.certificateExpiryDate),
-        reminder,
-      ]),
-    );
+    // A reminder belongs to one certificate/recipient/expiry cycle. Reuse the
+    // existing row across daily scans so an overdue certificate does not
+    // create one new row (and one new WeCom message) every day.
+    const reminderByCycleKey = new Map<string, CertificateReminderEntity>();
+    for (const reminder of reminders) {
+      const key = this.makeReminderCycleKey(reminder.certificateId, reminder.recipientUserId, reminder.certificateExpiryDate, reminder.reminderType);
+      const current = reminderByCycleKey.get(key);
+      if (!current || (reminder.status === 'acknowledged' && current.status !== 'acknowledged') || (reminder.status !== 'acknowledged' && current.status !== 'acknowledged' && reminder.scheduledDate > current.scheduledDate)) {
+        reminderByCycleKey.set(key, reminder);
+      }
+    }
     const acknowledgedReminderKeys = new Set(
       reminders
         .filter((reminder) => reminder.status === 'acknowledged')
@@ -149,17 +154,17 @@ export class CertificateReminderEngineService {
 
       for (const recipientUserId of recipients) {
         assertLeaseValid();
-        const reminderKey = this.makeReminderKey(certificate.id, recipientUserId, scheduledDate, reminderType, certificate.expiryDate);
         const reminderCycleKey = this.makeReminderCycleKey(
           certificate.id,
           recipientUserId,
           certificate.expiryDate,
+          reminderType,
         );
-        if (acknowledgedReminderKeys.has(reminderCycleKey)) {
+        if (acknowledgedReminderKeys.has(this.makeReminderCycleKey(certificate.id, recipientUserId, certificate.expiryDate))) {
           continue;
         }
 
-        const existingReminder = reminderByKey.get(reminderKey);
+        const existingReminder = reminderByCycleKey.get(reminderCycleKey);
         if (existingReminder) {
           if (existingReminder.status === 'sent' || existingReminder.status === 'acknowledged') {
             continue;
@@ -200,7 +205,7 @@ export class CertificateReminderEngineService {
 
         const sendLockToken = await this.acquireSendLock(reminder);
         if (!sendLockToken) {
-          reminderByKey.set(reminderKey, reminder);
+          reminderByCycleKey.set(reminderCycleKey, reminder);
           continue;
         }
 
@@ -271,7 +276,7 @@ export class CertificateReminderEngineService {
         }
 
         await this.reminderRepository.save(reminder);
-        reminderByKey.set(reminderKey, reminder);
+        reminderByCycleKey.set(reminderCycleKey, reminder);
       }
     }
 
@@ -473,22 +478,13 @@ export class CertificateReminderEngineService {
     return Math.trunc((expiry.getTime() - current.getTime()) / 86_400_000);
   }
 
-  private makeReminderKey(
-    certificateId: string,
-    recipientUserId: string,
-    scheduledDate: string,
-    reminderType: string,
-    certificateExpiryDate: string,
-  ): string {
-    return [certificateId, recipientUserId, scheduledDate, reminderType, certificateExpiryDate].join(':');
-  }
-
   private makeReminderCycleKey(
     certificateId: string,
     recipientUserId: string,
     certificateExpiryDate: string,
+    reminderType?: string,
   ): string {
-    return [certificateId, recipientUserId, certificateExpiryDate].join(':');
+    return [certificateId, recipientUserId, certificateExpiryDate, reminderType ?? 'cycle'].join(':');
   }
 
   private describeError(error: unknown): string {

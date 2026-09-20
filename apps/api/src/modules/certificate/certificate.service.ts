@@ -19,6 +19,7 @@ import { CertificateGroupQueryDto } from './dto/certificate-group-query.dto';
 import { CertificateListQueryDto } from './dto/certificate-list-query.dto';
 import { CertificateUpdateDto } from './dto/certificate-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
+import { auditAttachmentRemoval, lockAttachmentFiles, scheduleFileRecycle } from 'src/modules/files/file-retention';
 import { CertificateReminderJobService } from 'src/modules/reminder/certificate-reminder-job.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
@@ -199,7 +200,7 @@ export class CertificateService {
   async update(id: string, dto: CertificateUpdateDto, user: CurrentUser) {
     this.ensureManager(user);
     await this.repository.manager.transaction(async manager => {
-      const entity = await manager.findOne(CertificateEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      const entity = await manager.findOne(CertificateEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!entity) throw new NotFoundException('certificate not found');
 
       const nextOwnerType = dto.ownerType ?? entity.ownerType;
@@ -233,7 +234,7 @@ export class CertificateService {
 
     await manager.save(CertificateEntity, entity);
 
-    if (dto.fileIds) await this.saveFileRelations(manager, id, dto.fileIds, 'replace');
+    if (dto.fileIds) await this.saveFileRelations(manager, id, dto.fileIds, 'replace', user.userId);
     });
 
     void this.enqueueReminderScan();
@@ -242,31 +243,42 @@ export class CertificateService {
 
   async remove(id: string, user: CurrentUser) {
     this.ensureManager(user);
-    const entity = await this.findOneOrThrow(id);
-    entity.deletedAt = new Date();
-    entity.updatedBy = user.userId;
-    await this.repository.save(entity);
+    await this.repository.manager.transaction(async (manager) => {
+      const entity = await manager.findOne(CertificateEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!entity) throw new NotFoundException('certificate not found');
+      const files = await manager.find(CertificateFileEntity, { where: { certificateId: id } });
+      entity.deletedAt = new Date();
+      entity.updatedBy = user.userId;
+      await manager.save(entity);
+      await manager.delete(CertificateFileEntity, { certificateId: id });
+      await auditAttachmentRemoval(manager, 'certificate', id, files.map((file) => file.fileId), user.userId, '删除业务记录');
+      await scheduleFileRecycle(manager, files.map((file) => file.fileId));
+    });
   }
 
   async bindFiles(id: string, dto: CertificateBindFilesDto, user: CurrentUser) {
     this.ensureManager(user);
     await this.repository.manager.transaction(async manager => {
-      const record = await manager.findOne(CertificateEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      const record = await manager.findOne(CertificateEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!record) throw new NotFoundException('certificate not found');
       await this.saveFileRelations(manager, id, dto.fileIds, 'append');
     });
     return this.getById(id);
   }
 
-  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], mode: 'append' | 'replace') {
+  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], mode: 'append' | 'replace', operatorUserId?: string) {
     const ids = [...new Set(fileIds)];
-    const files = ids.length ? await manager.find(FileEntity, { where: { id: In(ids) } }) : [];
-    if (files.length !== ids.length) throw new NotFoundException('file not found');
+    const removed = mode === 'replace' ? await manager.find(CertificateFileEntity, { where: { certificateId: id } }) : [];
+    const available = await lockAttachmentFiles(manager, [...ids, ...removed.map((row) => row.fileId)]);
+    if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
     if (mode === 'replace') await manager.delete(CertificateFileEntity, { certificateId: id });
     const existing = await manager.find(CertificateFileEntity, { where: { certificateId: id } });
     const linked = new Set(existing.map(item => item.fileId));
     const rows = ids.filter(fileId => !linked.has(fileId)).map((fileId, index) => manager.create(CertificateFileEntity, { certificateId: id, fileId, sortOrder: existing.length + index, fileRole: 'primary' }));
     if (rows.length) await manager.save(CertificateFileEntity, rows);
+    const removedIds = removed.filter((row) => !ids.includes(row.fileId)).map((row) => row.fileId);
+    if (operatorUserId) await auditAttachmentRemoval(manager, 'certificate', id, removedIds, operatorUserId, '替换附件');
+    await scheduleFileRecycle(manager, removedIds);
   }
 
   async getFileDownloadUrl(id: string, fileId: string) {
@@ -278,6 +290,19 @@ export class CertificateService {
     const file = await this.fileRepository.findOne({ where: { id: fileId } });
     if (!file) throw new NotFoundException('file not found');
     return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
+  async unbindFile(id: string, fileId: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    await this.repository.manager.transaction(async (manager) => {
+      const record = await manager.findOne(CertificateEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!record) throw new NotFoundException('certificate not found');
+      const result = await manager.delete(CertificateFileEntity, { certificateId: id, fileId });
+      if (result.affected) {
+        await auditAttachmentRemoval(manager, 'certificate', id, [fileId], user.userId, '删除附件');
+        await scheduleFileRecycle(manager, [fileId]);
+      }
+    });
   }
 
   private ensureManager(user: CurrentUser) {

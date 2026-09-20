@@ -152,6 +152,10 @@ export const certificateApi = baseApi.injectEndpoints({
         'ReminderDashboard',
       ],
     }),
+    deleteCertificate: builder.mutation<void, string>({
+      query: (id) => ({ url: `/certificates/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Certificate', 'ReminderDashboard'],
+    }),
     bindCertificateFiles: builder.mutation<
       ApiEnvelope<CertificateItem>,
       { id: string; fileIds: string[] }
@@ -165,6 +169,10 @@ export const certificateApi = baseApi.injectEndpoints({
         { type: 'Certificate', id: arg.id },
         'Certificate',
       ],
+    }),
+    unbindCertificateFile: builder.mutation<void, { id: string; fileId: string }>({
+      query: ({ id, fileId }) => ({ url: `/certificates/${id}/files/${fileId}`, method: 'DELETE' }),
+      invalidatesTags: (_r, _e, arg) => [{ type: 'Certificate', id: arg.id }, 'Certificate'],
     }),
     getCertificateFileDownloadUrl: builder.query<
       ApiEnvelope<{ downloadUrl: string; expiresAt: string }>,
@@ -186,6 +194,8 @@ export const {
   useGetCertificateByIdQuery,
   useCreateCertificateMutation,
   useUpdateCertificateMutation,
+  useDeleteCertificateMutation,
   useBindCertificateFilesMutation,
+  useUnbindCertificateFileMutation,
   useLazyGetCertificateFileDownloadUrlQuery,
 } = certificateApi;

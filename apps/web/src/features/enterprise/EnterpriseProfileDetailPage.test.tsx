@@ -6,6 +6,8 @@ import { EnterpriseProfileDetailPage } from './EnterpriseProfileDetailPage';
 const mockGetById = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockUnbind = vi.fn();
+const mockDelete = vi.fn();
 const mockGetFileDownloadUrl = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
@@ -17,7 +19,9 @@ vi.mock('../files/FileUploadField', () => ({
 vi.mock('./enterpriseApi', () => ({
   useGetEnterpriseProfileByIdQuery: () => mockGetById(),
   useUpdateEnterpriseProfileMutation: () => [mockUpdate, { isLoading: false }],
+  useDeleteEnterpriseProfileMutation: () => [mockDelete, { isLoading: false }],
   useBindEnterpriseProfileFilesMutation: () => [mockBind],
+  useUnbindEnterpriseProfileFileMutation: () => [mockUnbind],
   useLazyGetEnterpriseProfileFileDownloadUrlQuery: () => [
     mockGetFileDownloadUrl,
   ],

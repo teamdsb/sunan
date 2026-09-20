@@ -79,7 +79,7 @@ function formatShortcutDescription(
     policyTotal?: number;
     certificateTotal?: number;
     warningTotal?: number;
-    onlineVesselCount?: number;
+    monitoredVesselCount?: number;
   },
 ) {
   const descriptions: Record<string, string> = {
@@ -87,7 +87,7 @@ function formatShortcutDescription(
     '/my/enterprise-policy': `制度文档 ${formatCount(values.policyTotal)} 份`,
     '/my/certificates': `有效证照 ${formatCount(values.certificateTotal)} 张`,
     '/my/reminders': `${formatCount(values.warningTotal)} 项即将到期`,
-    '/my/monitors': `${formatCount(values.onlineVesselCount)} 艘在线运行`,
+    '/my/monitors': `${formatCount(values.monitoredVesselCount)} 艘已配置监控`,
     '/my/settings': '账号与系统设置',
   };
 
@@ -133,7 +133,7 @@ export function MyHomePage() {
   );
   const workbenchDashboard = workbenchDashboardQuery.data?.data;
   const activeMonitors = monitors.filter((item) => item.isActive);
-  const onlineVesselCount = monitorQuery.data
+  const monitoredVesselCount = monitorQuery.data
     ? uniqueCount(activeMonitors, (item) => item.vesselId)
     : undefined;
   const pendingTotal =
@@ -167,7 +167,7 @@ export function MyHomePage() {
   const departmentLabel = formatDepartmentNames(currentUser);
 
   const heroStats = [
-    { label: '在线船舶', value: formatCount(onlineVesselCount) },
+    { label: '监控船舶', value: formatCount(monitoredVesselCount) },
     { label: '有效证照', value: formatCount(certificateTotal) },
     { label: '当前待办', value: formatCount(pendingTotal) },
     { label: '证照预警', value: formatCount(warningTotal) },
@@ -306,7 +306,7 @@ export function MyHomePage() {
                 policyTotal,
                 certificateTotal,
                 warningTotal,
-                onlineVesselCount,
+                monitoredVesselCount,
               });
 
               return (

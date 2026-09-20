@@ -1,9 +1,11 @@
-import { Alert, Button, Card, DatePicker, Form, Input, InputNumber, Segmented, Select, Space, Switch, Typography, message } from 'antd';
+import { Alert, Button, Card, DatePicker, Form, Input, InputNumber, Popconfirm, Segmented, Select, Space, Switch, Typography, message } from 'antd';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useAppSelector } from '../../app/hooks';
 import { canManageCompanyContent } from '../auth/permissions';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 import { FileUploadField } from '../files/FileUploadField';
 import { FileAttachmentList } from '../files/FileAttachmentList';
 import { formatShanghaiDateTime, toShanghaiDateTimeLocal, toShanghaiIso } from '../../utils/dateTime';
@@ -16,7 +18,9 @@ import {
   useGetCertificateOwnersQuery,
   useGetCertificateTypesQuery,
   useLazyGetCertificateFileDownloadUrlQuery,
+  useUnbindCertificateFileMutation,
   useUpdateCertificateMutation,
+  useDeleteCertificateMutation,
 } from './certificateApi';
 
 const ownerTabs = [
@@ -44,12 +48,16 @@ type CertificateFormValues = {
 
 export function CertificateDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const roles = useAppSelector((state) => state.auth.currentUser?.roles ?? []);
   const canManage = canManageCompanyContent(roles);
   const { data, isLoading } = useGetCertificateByIdQuery(id, { skip: !id });
   const [updateCertificate, { isLoading: saving }] = useUpdateCertificateMutation();
+  const [deleteCertificate] = useDeleteCertificateMutation();
   const [bindFiles] = useBindCertificateFilesMutation();
   const [getFileDownloadUrl] = useLazyGetCertificateFileDownloadUrlQuery();
+  const [unbindFile] = useUnbindCertificateFileMutation();
   const [upload, setUpload] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -112,7 +120,10 @@ export function CertificateDetailPage() {
                         reminderRecipientUserId: values.reminderRecipientUserId ?? null,
                       },
                     }).unwrap();
-                    if (upload?.id) await bindFiles({ id, fileIds: [upload.id] }).unwrap();
+                    if (upload?.id) {
+                      await bindFiles({ id, fileIds: [upload.id] }).unwrap();
+                      setUpload(null);
+                    }
                     messageApi.success('电子证照已更新');
                   } catch (error) {
                     const message = error instanceof Error ? error.message : '保存失败，请稍后重试';
@@ -146,12 +157,21 @@ export function CertificateDetailPage() {
                 <Form.Item name="reminderEnabled" label="企业微信提醒" valuePropName="checked" extra="关闭后仍保留证照，但扫描不会生成或发送提醒"><Switch /></Form.Item>
                 <Form.Item name="reminderRecipientUserId" label="提醒负责人" extra="可不设置；未设置时按部门规则通知"><Select allowClear showSearch optionFilterProp="label" placeholder="可选负责人" options={(recipientResponse?.data ?? []).map((recipient) => ({ value: recipient.userId, label: `${recipient.name}${recipient.position ? ` · ${recipient.position}` : ''}` }))} /></Form.Item>
                 <Form.Item label="附件上传/预览"><FileUploadField category="certificates" value={upload} onChange={setUpload} /></Form.Item>
-                <Space wrap className="detail-action-bar"><Button htmlType="submit" type="primary" loading={saving}>保存</Button></Space>
+                <Space wrap className="detail-action-bar">
+                  <Button htmlType="submit" type="primary" loading={saving}>保存</Button>
+                  <Popconfirm title="确定删除这张证照吗？" description="删除后将从证照列表和提醒中停用。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deleteCertificate(id).unwrap(); messageApi.success('电子证照已删除'); navigate(resolveBackHref(myRouteConfig.certificates.path, location.search)); } catch (error) { messageApi.error(error instanceof Error ? error.message : '删除失败'); } }}>
+                    <Button danger>删除</Button>
+                  </Popconfirm>
+                </Space>
               </Form>
             ) : <Alert type="info" showIcon message="你没有维护证照的权限。" />}
             <Typography.Title level={5} style={{ marginTop: 16 }}>已绑定附件</Typography.Title>
             <FileAttachmentList
               files={item.files}
+              allowDelete={canManage}
+              onDelete={async (file) => {
+                await unbindFile({ id, fileId: file.id }).unwrap();
+              }}
               getUrl={async (file) => {
                 const response = await getFileDownloadUrl({ id, fileId: file.id }).unwrap();
                 return response.data.downloadUrl;

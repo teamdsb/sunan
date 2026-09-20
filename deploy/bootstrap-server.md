@@ -72,21 +72,21 @@ docker info | sed -n '/Registry Mirrors:/,/Live Restore/p'
 
 ```bash
 mkdir -p \
-  /dev/sunan/deploy \
-  /dev/sunan/sunan-source/current \
-  /dev/sunan/sunan-db/data \
-  /dev/sunan/sunan-redis/data \
-  /dev/sunan/sunan-oss/data \
-  /dev/sunan/sunan-api/logs \
-  /dev/sunan/sunan-nginx/conf.d \
-  /dev/sunan/sunan-nginx/certs \
-  /dev/sunan/sunan-nginx/acme \
-  /dev/sunan/sunan-nginx/logs \
-  /dev/sunan/sunan-wecom-ips \
-  /dev/sunan/sunan-images \
-  /dev/sunan/backups
+  /srv/sunan/deploy \
+  /srv/sunan/sunan-source/current \
+  /srv/sunan/sunan-db/data \
+  /srv/sunan/sunan-redis/data \
+  /srv/sunan/sunan-oss/data \
+  /srv/sunan/sunan-api/logs \
+  /srv/sunan/sunan-nginx/conf.d \
+  /srv/sunan/sunan-nginx/certs \
+  /srv/sunan/sunan-nginx/acme \
+  /srv/sunan/sunan-nginx/logs \
+  /srv/sunan/sunan-wecom-ips \
+  /srv/sunan/sunan-images \
+  /srv/sunan/backups
 
-chmod 700 /dev/sunan/deploy /dev/sunan/backups
+chmod 700 /srv/sunan/deploy /srv/sunan/backups
 ```
 
 ## 4. 上传部署文件
@@ -94,9 +94,9 @@ chmod 700 /dev/sunan/deploy /dev/sunan/backups
 从本地仓库上传：
 
 ```bash
-scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/docker-compose.yml root@39.106.103.45:/dev/sunan/deploy/docker-compose.yml
-scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/.env.example root@39.106.103.45:/dev/sunan/deploy/.env.example
-scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/nginx/sunan.conf root@39.106.103.45:/dev/sunan/sunan-nginx/conf.d/sunan.conf
+scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/docker-compose.yml root@39.106.103.45:/srv/sunan/deploy/docker-compose.yml
+scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/.env.example root@39.106.103.45:/srv/sunan/deploy/.env.example
+scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/nginx/sunan.conf root@39.106.103.45:/srv/sunan/sunan-nginx/conf.d/sunan.conf
 scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/scripts/sunan-update-wecom-callback-ips.py root@39.106.103.45:/usr/local/sbin/sunan-update-wecom-callback-ips
 scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/systemd/sunan-wecom-callback-ip-sync.service root@39.106.103.45:/etc/systemd/system/sunan-wecom-callback-ip-sync.service
 scp -i /Users/yuan/Downloads/teamdsb-sunan.pem deploy/systemd/sunan-wecom-callback-ip-sync.timer root@39.106.103.45:/etc/systemd/system/sunan-wecom-callback-ip-sync.timer
@@ -113,9 +113,9 @@ systemctl enable --now sunan-wecom-callback-ip-sync.timer
 ## 5. 创建生产 `.env`
 
 ```bash
-cp /dev/sunan/deploy/.env.example /dev/sunan/deploy/.env
-chmod 600 /dev/sunan/deploy/.env
-vim /dev/sunan/deploy/.env
+cp /srv/sunan/deploy/.env.example /srv/sunan/deploy/.env
+chmod 600 /srv/sunan/deploy/.env
+vim /srv/sunan/deploy/.env
 ```
 
 需要填入强密码、JWT Secret、企业微信真实参数。变量含义见 `environment-variables.md`。
@@ -131,9 +131,9 @@ openssl rand -base64 36
 按 `deployment-runbook.md` 的“同步源码”执行。确保服务器存在：
 
 ```text
-/dev/sunan/sunan-source/current/package.json
-/dev/sunan/sunan-source/current/apps/api
-/dev/sunan/sunan-source/current/apps/web
+/srv/sunan/sunan-source/current/package.json
+/srv/sunan/sunan-source/current/apps/api
+/srv/sunan/sunan-source/current/apps/web
 ```
 
 ## 7. 初始化 Nginx 和 ACME
@@ -150,7 +150,7 @@ openssl rand -base64 36
 apt-get update
 apt-get install -y certbot
 
-certbot certonly --webroot -w /dev/sunan/sunan-nginx/acme \
+certbot certonly --webroot -w /srv/sunan/sunan-nginx/acme \
   --cert-name qzssncb.com \
   -d qzssncb.com \
   -d app.qzssncb.com \
@@ -169,7 +169,7 @@ cat >/etc/letsencrypt/renewal-hooks/deploy/sunan-nginx-copy.sh <<'EOF'
 set -eu
 CERT_NAME="qzssncb.com"
 SRC="/etc/letsencrypt/live/${CERT_NAME}"
-DST="/dev/sunan/sunan-nginx/certs"
+DST="/srv/sunan/sunan-nginx/certs"
 install -m 0644 "${SRC}/fullchain.pem" "${DST}/qzssncb.com.crt"
 install -m 0600 "${SRC}/privkey.pem" "${DST}/qzssncb.com.key"
 if docker ps --format "{{.Names}}" | grep -qx sunan-nginx; then
@@ -186,22 +186,24 @@ systemctl enable --now certbot.timer
 把企业微信下载的校验文件放到：
 
 ```text
-/dev/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
+/srv/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
 ```
 
 示例：
 
 ```bash
-printf '%s\n' 'syXtjgUoSgMs7TpJ' > /dev/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
-chmod 644 /dev/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
+printf '%s\n' 'syXtjgUoSgMs7TpJ' > /srv/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
+chmod 644 /srv/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
 ```
 
 ## 9. 启动服务
 
+先按照 `deployment-runbook.md` 在本机构建并上传、校验、加载所有服务所需的 `linux/amd64` 镜像（首次初始化也包含数据库、Redis、OSS 及 OSS 初始化镜像），确认 Compose 引用的镜像均已就绪。生产服务器不执行构建。
+
 ```bash
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env up -d --build
-docker compose --env-file /dev/sunan/deploy/.env ps
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env up -d --no-build
+docker compose --env-file /srv/sunan/deploy/.env ps
 ```
 
 ## 10. 初始化企业微信回调 IP
@@ -209,7 +211,7 @@ docker compose --env-file /dev/sunan/deploy/.env ps
 ```bash
 systemctl start sunan-wecom-callback-ip-sync.service
 systemctl status sunan-wecom-callback-ip-sync.service --no-pager
-cat /dev/sunan/sunan-wecom-ips/state.json
+cat /srv/sunan/sunan-wecom-ips/state.json
 ```
 
 ## 11. 最终验证

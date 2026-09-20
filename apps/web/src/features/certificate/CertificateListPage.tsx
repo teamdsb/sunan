@@ -1,4 +1,4 @@
-import { Alert, Button, Card, DatePicker, Drawer, Form, Input, InputNumber, List, Pagination, Segmented, Select, Space, Switch, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, DatePicker, Drawer, Form, Input, InputNumber, List, Pagination, Popconfirm, Segmented, Select, Space, Switch, Tag, Typography, message } from 'antd';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
@@ -14,6 +14,7 @@ import {
   type CertificateItem,
   type CreateCertificateInput,
   useCreateCertificateMutation,
+  useDeleteCertificateMutation,
   useGetCertificateOwnersQuery,
   useGetCertificateReminderRecipientsQuery,
   useGetCertificateTypesQuery,
@@ -87,6 +88,7 @@ export function CertificateListPage() {
   const { data: ownerResponse, isLoading: loadingOwners } = useGetCertificateOwnersQuery({ ownerType: createOwnerType });
   const { data: recipientResponse } = useGetCertificateReminderRecipientsQuery(undefined, { skip: !canManage });
   const [createCertificate, { isLoading: creating }] = useCreateCertificateMutation();
+  const [deleteCertificate] = useDeleteCertificateMutation();
 
   const items = useMemo(() => data?.data ?? [], [data]);
   const certificateTypes = useMemo(() => typeResponse?.data ?? [], [typeResponse]);
@@ -262,12 +264,18 @@ export function CertificateListPage() {
           <List
             dataSource={items}
             renderItem={(item) => (
-              <List.Item>
+              <List.Item
+                actions={canManage ? [
+                  <Button key="edit" type="link" icon={<EditOutlined />} href={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>编辑</Button>,
+                  <Popconfirm key="delete" title="确定删除这张证照吗？" description="删除后将从证照列表和提醒中停用。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deleteCertificate(item.id).unwrap(); messageApi.success('电子证照已删除'); } catch (error) { messageApi.error(toErrorMessage(error)); } }}>
+                    <Button danger type="link">删除</Button>
+                  </Popconfirm>,
+                ] : undefined}
+              >
                 <List.Item.Meta
                   title={<Space><Link to={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>{item.title}</Link><Tag>{item.certificateTypeName}</Tag></Space>}
                   description={<Space direction="vertical" size={2}><Typography.Text>持有对象：{item.ownerName}（{ownerTypeLabelMap[item.ownerType] ?? item.ownerType}）</Typography.Text><Typography.Text type="secondary">编号：{item.certificateNo || '-'} · 签发：{formatShanghaiDateTime(item.issueDate)} · 到期：{formatShanghaiDateTime(item.expiryDate)}</Typography.Text><Typography.Text type="secondary">签发机构：{item.issuer || '-'} · 附件：{(item.files ?? []).length} 个 · 提醒：{item.reminderEnabled === false ? '已关闭' : item.reminderRecipientUserId || '按部门规则'}</Typography.Text></Space>}
                 />
-                {canManage ? <Button type="link" icon={<EditOutlined />} href={buildDetailHref(myRouteConfig.certificates.path, item.id, location.search)} onClick={rememberScrollPosition}>编辑</Button> : null}
               </List.Item>
             )}
           />

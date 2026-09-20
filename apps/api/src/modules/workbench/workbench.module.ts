@@ -1,3 +1,5 @@
+import { WorkbenchLearningService } from './workbench-learning.service';
+import { WorkbenchFuelService } from './workbench-fuel.service';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -48,6 +50,6 @@ import { WorkbenchService } from './workbench.service';
     ]),
   ],
   controllers: [WorkbenchController, WorkbenchApprovalController],
-  providers: [WorkbenchService, SelfInspectionService, RoleResolverService],
+  providers: [WorkbenchLearningService, WorkbenchFuelService, WorkbenchService, SelfInspectionService, RoleResolverService],
 })
 export class WorkbenchModule {}

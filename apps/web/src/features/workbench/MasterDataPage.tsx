@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Drawer, Empty, Form, Input, List, Segmented, Select, Space, Spin, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Drawer, Empty, Form, Input, List, Popconfirm, Segmented, Select, Space, Spin, Tag, Typography, message } from 'antd';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
@@ -17,6 +17,10 @@ import {
   useUpdateMasterDataPersonnelMutation,
   useUpdateMasterDataVehicleMutation,
   useUpdateMasterDataVesselMutation,
+  useDeleteMasterDataEquipmentMutation,
+  useDeleteMasterDataPersonnelMutation,
+  useDeleteMasterDataVehicleMutation,
+  useDeleteMasterDataVesselMutation,
   type MasterDataInput,
   type MasterDataItem,
 } from './masterDataApi';
@@ -54,6 +58,10 @@ export function MasterDataPage() {
   const [updateEquipment] = useUpdateMasterDataEquipmentMutation();
   const [createVehicle] = useCreateMasterDataVehicleMutation();
   const [updateVehicle] = useUpdateMasterDataVehicleMutation();
+  const [deleteVessel] = useDeleteMasterDataVesselMutation();
+  const [deleteVehicle] = useDeleteMasterDataVehicleMutation();
+  const [deletePersonnel] = useDeleteMasterDataPersonnelMutation();
+  const [deleteEquipment] = useDeleteMasterDataEquipmentMutation();
 
   const openCreate = () => {
     setEditing(null);
@@ -71,14 +79,27 @@ export function MasterDataPage() {
     const values = await form.validateFields();
     const { type: _type, ...payload } = values;
     try {
-      const mutation = (type === 'vessels' ? (editing ? updateVessel : createVessel) : type === 'vehicles' ? (editing ? updateVehicle : createVehicle) : type === 'personnel' ? (editing ? updatePersonnel : createPersonnel) : (editing ? updateEquipment : createEquipment)) as unknown as ((arg: unknown) => Promise<unknown>) | undefined;
-      if (!mutation) throw new Error('主数据维护接口不可用');
-      const result = editing ? await mutation({ id: editing.id, data: payload }) : await mutation(payload);
-      await (result as unknown as { unwrap: () => Promise<unknown> }).unwrap();
+      if (editing) {
+        const update = type === 'vessels' ? updateVessel : type === 'vehicles' ? updateVehicle : type === 'personnel' ? updatePersonnel : updateEquipment;
+        await update({ id: editing.id, data: payload }).unwrap();
+      } else {
+        const create = type === 'vessels' ? createVessel : type === 'vehicles' ? createVehicle : type === 'personnel' ? createPersonnel : createEquipment;
+        await create(payload).unwrap();
+      }
       messageApi.success(`${labels[type]}${editing ? '已更新' : '已新增'}`);
       setDrawerOpen(false);
     } catch (error) {
       messageApi.error(error instanceof Error ? error.message : '保存失败');
+    }
+  };
+
+  const remove = async (item: MasterDataItem) => {
+    try {
+      const mutation = type === 'vessels' ? deleteVessel : type === 'vehicles' ? deleteVehicle : type === 'personnel' ? deletePersonnel : deleteEquipment;
+      await mutation(item.id).unwrap();
+      messageApi.success(`${labels[type]}已删除`);
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 
@@ -92,7 +113,7 @@ export function MasterDataPage() {
     <Space direction="vertical" style={{ width: '100%', marginTop: 20 }}>
       <Segmented block value={type} options={Object.entries(labels).map(([value, label]) => ({ value, label }))} onChange={(value) => { setType(value as MasterType); setKeyword(''); }} />
       <Card title="受控搜索选择器" size="small"><Space direction="vertical" style={{ width: '100%' }}><Input.Search aria-label="搜索主数据" placeholder="按名称或编码搜索，不需输入 UUID" value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Select aria-label="选择主数据" showSearch loading={selector.isLoading} optionFilterProp="label" placeholder={`选择有效${labels[type]}`} options={options} notFoundContent={selector.isLoading ? <Spin size="small" /> : '没有可选择的有效对象'} /></Space></Card>
-      <Card title={`${labels[type]}档案`} loading={list.isLoading}>{(list.data?.data ?? []).length ? <List dataSource={list.data?.data} renderItem={(item) => <List.Item actions={canManage ? [<Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openEdit(item)}>编辑</Button>] : undefined}><List.Item.Meta title={item.name} description={item.code ?? item.id} /><Tag color="green">{item.status === 'active' ? '有效' : item.status ?? '有效'}</Tag></List.Item>} /> : <Empty description={`暂无可见${labels[type]}`} />}</Card>
+      <Card title={`${labels[type]}档案`} loading={list.isLoading}>{(list.data?.data ?? []).length ? <List dataSource={list.data?.data} renderItem={(item) => <List.Item actions={canManage ? [<Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openEdit(item)}>编辑</Button>, <Popconfirm key="delete" title={`确定删除${labels[type]}“${item.name}”吗？`} description="删除后将从证照持有对象选择器中移除。" okText="删除" cancelText="取消" onConfirm={() => void remove(item)}><Button key="delete-button" danger type="link">删除</Button></Popconfirm>] : undefined}><List.Item.Meta title={item.name} description={item.code ?? item.id} /><Tag color="green">{item.status === 'active' ? '有效' : item.status ?? '有效'}</Tag></List.Item>} /> : <Empty description={`暂无可见${labels[type]}`} />}</Card>
     </Space>
     {canManage ? <Drawer title={`${editing ? '编辑' : '新增'}${labels[type]}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={480} extra={<Button type="primary" onClick={() => void submit()}>保存</Button>}>
       <Form form={form} layout="vertical">
@@ -100,7 +121,7 @@ export function MasterDataPage() {
         {type === 'vehicles' ? <><Form.Item name="plateNumber" label="车牌号" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="vehicleType" label="车辆类型"><Input /></Form.Item></> : null}
         {type === 'personnel' ? <><Form.Item name="name" label="姓名" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="departmentCode" label="部门编码" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="wecomUserId" label="企业微信成员标识"><Input /></Form.Item><Form.Item name="position" label="职位"><Input /></Form.Item><Form.Item name="mobile" label="手机号"><Input /></Form.Item><Form.Item name="employmentStatus" label="任职状态" initialValue="active"><Select options={[{ value: 'active', label: '在职' }, { value: 'inactive', label: '停用' }, { value: 'left', label: '离职' }]} /></Form.Item></> : null}
         {type === 'equipment' ? <><Form.Item name="code" label="设备编码" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="name" label="设备名称" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="categoryCode" label="设备类别编码" rules={[{ required: !editing, message: '请输入设备类别编码' }]}><Input placeholder={editing ? '留空表示保持原类别' : undefined} /></Form.Item><Form.Item name="vesselId" label="所属船舶" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" options={vesselOptions} /></Form.Item><Form.Item name="serialNo" label="序列号"><Input /></Form.Item></> : null}
-        {type !== 'personnel' ? <Form.Item name="status" label="状态" initialValue="active"><Select options={[{ value: 'active', label: '有效' }, { value: 'inactive', label: '停用' }, { value: 'retired', label: '报废' }]} /></Form.Item> : null}
+        {type !== 'personnel' ? <Form.Item name="status" label="状态" initialValue="active"><Select options={[{ value: 'active', label: '有效' }, { value: 'inactive', label: '停用' }, ...(type === 'vessels' ? [] : [{ value: 'retired', label: '报废' }])]} /></Form.Item> : null}
         <Form.Item name="remarks" label="备注"><Input.TextArea rows={3} /></Form.Item>
       </Form>
     </Drawer> : null}

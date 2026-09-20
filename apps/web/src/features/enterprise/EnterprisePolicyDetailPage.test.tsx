@@ -7,6 +7,7 @@ const mockGetById = vi.fn();
 const mockVersions = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockUnbind = vi.fn();
 const mockGetFileDownloadUrl = vi.fn();
 
 vi.mock('../files/FileUploadField', () => ({
@@ -19,7 +20,9 @@ vi.mock('./enterpriseApi', () => ({
   useGetEnterprisePolicyByIdQuery: () => mockGetById(),
   useGetEnterprisePolicyVersionsQuery: () => mockVersions(),
   useUpdateEnterprisePolicyMutation: () => [mockUpdate, { isLoading: false }],
+  useDeleteEnterprisePolicyMutation: () => [vi.fn()],
   useBindEnterprisePolicyFilesMutation: () => [mockBind],
+  useUnbindEnterprisePolicyFileMutation: () => [mockUnbind],
   useLazyGetEnterprisePolicyFileDownloadUrlQuery: () => [
     mockGetFileDownloadUrl,
   ],

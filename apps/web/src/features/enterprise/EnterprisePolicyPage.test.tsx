@@ -10,6 +10,7 @@ import {
 const mockList = vi.fn();
 const mockCreate = vi.fn();
 const mockPublish = vi.fn();
+const mockDelete = vi.fn();
 const mockCurrentUser = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
@@ -30,6 +31,7 @@ vi.mock('./enterpriseApi', () => ({
   useGetEnterprisePoliciesQuery: (params: unknown) => mockList(params),
   useCreateEnterprisePolicyMutation: () => [mockCreate, { isLoading: false }],
   usePublishEnterprisePolicyMutation: () => [mockPublish],
+  useDeleteEnterprisePolicyMutation: () => [mockDelete],
   useGetEnterprisePolicyByIdQuery: () => ({
     data: {
       data: {
@@ -52,6 +54,7 @@ vi.mock('./enterpriseApi', () => ({
   }),
   useUpdateEnterprisePolicyMutation: () => [vi.fn(), { isLoading: false }],
   useBindEnterprisePolicyFilesMutation: () => [vi.fn()],
+  useUnbindEnterprisePolicyFileMutation: () => [vi.fn()],
   useLazyGetEnterprisePolicyFileDownloadUrlQuery: () => [vi.fn()],
 }));
 

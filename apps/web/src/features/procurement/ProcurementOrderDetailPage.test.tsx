@@ -57,6 +57,10 @@ vi.mock('../files/FileUploadField', () => ({
   ),
 }));
 
+vi.mock('../files/filesApi', () => ({
+  useDeleteOrphanedFileMutation: () => [vi.fn(() => ({ unwrap: () => Promise.resolve() }))],
+}));
+
 vi.mock('./procurementApi', () => ({
   useGetProcurementOrderQuery: (id: string, options?: unknown) =>
     mockGetOrder(id, options),

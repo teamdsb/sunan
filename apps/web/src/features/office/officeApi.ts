@@ -36,7 +36,7 @@ export interface OfficeAuditRecord {
   entryId: string;
   entryTitle: string;
   categoryCode: string;
-  action: 'create' | 'update' | 'publish' | 'disable' | 'open';
+  action: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open';
   operatorUserId: string;
   payloadSnapshot: Record<string, unknown>;
   createdAt: string;
@@ -118,6 +118,10 @@ export const officeApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/office/admin/entries/${id}/disable`, method: 'POST' }),
       invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
     }),
+    deleteOfficeEntry: builder.mutation<void, string>({
+      query: (id) => ({ url: `/office/admin/entries/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['OfficeAdminEntry', 'OfficeEntry', 'OfficeAudit'],
+    }),
   }),
 });
 
@@ -131,4 +135,5 @@ export const {
   useUpdateOfficeEntryMutation,
   usePublishOfficeEntryMutation,
   useDisableOfficeEntryMutation,
+  useDeleteOfficeEntryMutation,
 } = officeApi;

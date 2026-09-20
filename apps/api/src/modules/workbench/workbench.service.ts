@@ -1,3 +1,9 @@
+import { VesselEntity } from 'src/database/entities/vessel.entity';
+import { attendanceReport, attendanceWorkbook, fuelReport, reportMonth, LEARNING_MODULES, FUEL_MODULE, FUEL_MEASUREMENT } from './business-reports';
+import { attendancePdf, learningPdf, fuelWorkbook, learningWorkbook } from './business-report-formats';
+import { WorkbenchLearningService, canReadLearning, isLearningManager, learningState } from './workbench-learning.service';
+import { WorkbenchFuelService } from './workbench-fuel.service';
+import { FuelActualDto, FuelMeasurementDto, LearningPublishDto } from './dto/workbench-business.dto';
 import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { readFileSync } from 'fs';
@@ -25,8 +31,7 @@ import { OssService } from 'src/modules/files/oss.service';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 import type { WecomApprovalTemplateCreateRequest } from 'src/modules/wecom/wecom.types';
-import { In, IsNull, Repository } from 'typeorm';
-import * as XLSX from 'xlsx';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { WorkbenchApprovalCallbackDto } from './dto/workbench-approval-callback.dto';
 import { WorkbenchApprovalInstanceListQueryDto } from './dto/workbench-approval-instance-list-query.dto';
 import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto';
@@ -110,6 +115,8 @@ interface WorkbenchActionLog {
 }
 
 interface WorkbenchRecord {
+  recordNo: string;
+  departmentCode: string;
   id: string;
   moduleCode: string;
   templateCode: string;
@@ -706,9 +713,6 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'trainer', label: '主讲人', required: true, inputType: 'text' },
           { key: 'hours', label: '培训学时', required: true, inputType: 'number' },
           { key: 'participants', label: '参训人员', required: true, inputType: 'textarea' },
-          { key: 'learningStatus', label: '学习状态', required: true, inputType: 'text', placeholder: 'not_started/in_progress/completed' },
-          { key: 'learningProgressPercent', label: '学习进度(%)', required: true, inputType: 'number' },
-          { key: 'completedAt', label: '完成时间', required: false, inputType: 'datetime' },
         ],
       },
     ],
@@ -777,7 +781,7 @@ const LEDGER_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'vesselName', label: '船舶', required: true, inputType: 'text' },
           { key: 'crewNames', label: '船员名单', required: true, inputType: 'textarea' },
           { key: 'trainingTheme', label: '培训主题', required: true, inputType: 'text' },
-          { key: 'totalHours', label: '总学时', required: true, inputType: 'number' },
+          { key: 'totalHours', label: '每人培训学时', required: true, inputType: 'number' },
         ],
       },
     ],
@@ -1353,9 +1357,6 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'fuelType', label: '燃油类型', required: true, inputType: 'text' },
           { key: 'bunkeringDate', label: '加油日期', required: true, inputType: 'datetime' },
           { key: 'bunkeringAmount', label: '本次加油量', required: true, inputType: 'number' },
-          { key: 'remainingFuelAmount', label: '剩余油量', required: true, inputType: 'number' },
-          { key: 'monthlyFuelConsumption', label: '月油耗', required: true, inputType: 'number' },
-          { key: 'reportMonth', label: '月报月份', required: true, inputType: 'text', placeholder: 'YYYY-MM' },
           { key: 'requestedAmount', label: '申请加注量', required: false, inputType: 'number' },
           { key: 'reason', label: '申请原因', required: true, inputType: 'textarea' },
           { key: 'remark', label: '备注', required: false, inputType: 'textarea' },
@@ -1390,7 +1391,6 @@ const SERVICE_ASSET_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
           { key: 'requestType', label: '事项类型', required: true, inputType: 'text' },
           { key: 'requestor', label: '申请人', required: true, inputType: 'text' },
           { key: 'requestSummary', label: '事项说明', required: true, inputType: 'textarea' },
-          { key: 'completedAt', label: '完成时间', required: false, inputType: 'datetime' },
         ],
       },
     ],
@@ -1464,8 +1464,29 @@ const WECOM_APPROVAL_MODULE_SCHEMAS: Record<string, ModuleSchemaDefinition> = {
   },
 };
 
+WORKBENCH_MODULES.push({ moduleCode: FUEL_MEASUREMENT, moduleName: '燃油月末测量', departmentCode: 'shipping', templateType: 'ledger_form', requiresApproval: false, supportsPrint: true, supportsStatistics: true, mobileFirst: true, sortOrder: 172, visibleRoles: ['system_admin', 'general_office', 'shipping', 'crew'] });
+
+for (const schema of Object.values(ATTENDANCE_MODULE_SCHEMAS)) {
+  schema.sections[0]!.fields.push(
+    { key: 'workHours', label: '实际工时（小时）', required: false, inputType: 'number' },
+    { key: 'workStartedAt', label: '作业开始时间', required: false, inputType: 'datetime' },
+    { key: 'workEndedAt', label: '作业结束时间', required: false, inputType: 'datetime' },
+  );
+}
+for (const schema of Object.values(OPERATION_FLOW_MODULE_SCHEMAS)) {
+  schema.sections[0]!.fields.push(
+    { key: 'workerNames', label: '作业人员（逗号分隔）', required: false, inputType: 'textarea' },
+    { key: 'workHours', label: '每人实际作业工时（小时）', required: false, inputType: 'number' },
+    { key: 'workStartedAt', label: '作业开始时间', required: false, inputType: 'datetime' },
+    { key: 'workEndedAt', label: '作业结束时间', required: false, inputType: 'datetime' },
+  );
+}
+
 const WORKBENCH_MODULE_DEFAULTS = new Map(WORKBENCH_MODULES.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
 const MODULE_SCHEMA_VERSIONS: Record<string, number> = {
+  goa_training: 2, shipping_training_hours: 2, shipping_case_study: 2,
+  finance_attendance: 2, shipping_attendance: 2, business_signin_desk: 2, shipping_fuel_bunkering_approval: 2,
+  ...Object.fromEntries(Object.keys(OPERATION_FLOW_MODULE_SCHEMAS).map(code => [code, 2])),
   shipping_voyage_approval: 2,
 };
 const MODULE_SCHEMA_DEFINITIONS: Record<string, ModuleSchemaDefinition> = {
@@ -1522,6 +1543,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     private readonly wecomTokenService: WecomTokenService,
     private readonly wecomHttpGateway: WecomHttpGateway,
     private readonly selfInspection: SelfInspectionService,
+    private readonly learning: WorkbenchLearningService,
+    private readonly fuel: WorkbenchFuelService,
   ) {}
 
   async onModuleInit() {
@@ -1565,7 +1588,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       supportsPrint: moduleItem.supportsPrint,
       supportsStatistics: moduleItem.supportsStatistics,
       mobileFirst: moduleItem.mobileFirst,
-      canCreate: moduleItem.moduleCode !== SELF_INSPECTION_MODULE || this.selfInspection.isManager(user),
+      canCreate: moduleItem.moduleCode === FUEL_MEASUREMENT ? false : LEARNING_MODULES.includes(moduleItem.moduleCode) ? isLearningManager(user) : moduleItem.moduleCode !== SELF_INSPECTION_MODULE || this.selfInspection.isManager(user),
     }));
   }
 
@@ -1574,7 +1597,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (moduleItem.legacyOnly) {
       throw new NotFoundException('module schema not found');
     }
-    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
+    if (!LEARNING_MODULES.includes(moduleCode) && !this.hasRoleAccess(user, moduleItem.visibleRoles)) {
       throw new ForbiddenException('forbidden');
     }
 
@@ -1583,10 +1606,35 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return schemaDefinition;
   }
 
+  async learningPeople(user: CurrentUser) { return this.learning.people(user); }
+  async learningStatistics(user: CurrentUser, month?: string) { return this.learning.statistics(user, month); }
+  async publishLearning(id: string, dto: LearningPublishDto, user: CurrentUser) { await this.assertRecordVisible(await this.mustGetRecord(id), user); return this.learning.publish(id, dto, user); }
+  async confirmLearning(id: string, materialId: string, user: CurrentUser) { return this.learning.confirm(id, materialId, user); }
+  async fuelStatistics(user: CurrentUser, month?: string) {
+    const report = fuelReport(await this.listVisibleRecords(user), month);
+    const ids = [...new Set([...report.rows.map(row => row.vesselId), ...report.receipts.map(row => row.vesselId), ...report.unconfirmed.map(row => row.vesselId)])].filter((id): id is string => Boolean(id && /^[0-9a-f-]{36}$/i.test(id)));
+    const vessels = ids.length ? await this.recordRepository.manager.find(VesselEntity, {where:{id:In(ids)},withDeleted:true}) : [];
+    for (const row of report.rows) row.vesselName = vessels.find(v => v.id === row.vesselId)?.name ?? row.vesselName;
+    const receipts = report.receipts.map(row => ({...row,vesselName:vessels.find(v => v.id === row.vesselId)?.name ?? row.vesselId}));
+    return { ...report, receipts, unconfirmed: report.unconfirmed.map(row => ({...row, vesselName: vessels.find(v => v.id === row.vesselId)?.name ?? row.vesselId ?? '未关联船舶'})), canMeasure: user.roles.some(role => ['system_admin','general_office','shipping','crew'].includes(role)) };
+  }
+  async recordFuelActual(id: string, dto: FuelActualDto, user: CurrentUser) { await this.assertRecordVisible(await this.mustGetRecord(id), user); return this.fuel.actual(id, dto, user); }
+  async recordFuelMeasurement(dto: FuelMeasurementDto, user: CurrentUser) { return this.fuel.measurement(dto, user); }
+  async exportBusinessReport(kind: 'learning' | 'fuel', user: CurrentUser, month?: string) {
+    const fuel = kind === 'fuel' ? await this.fuelStatistics(user, month) : null;
+    const learning = kind === 'learning' ? await this.learningStatistics(user, month) : null;
+    const buffer = fuel ? await fuelWorkbook(fuel) : await learningWorkbook(learning!, month);
+    const ossKey = `workbench/exports/${randomUUID()}.xlsx`;
+    const fileName = `${kind}-${month || reportMonth()}.xlsx`;
+    await this.ossService.uploadBuffer(ossKey, buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', fileName);
+    await this.fileRepository.save(this.fileRepository.create({ossKey,fileName,mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',fileSize:buffer.length,category:'workbench_export',uploadedBy:user.userId}));
+    return this.ossService.createDownloadSignature(ossKey);
+  }
+
   async getDashboard(user: CurrentUser) {
     const modules = await this.listModules(user);
     const visibleRecords = await this.listVisibleRecords(user);
-    const pendingTotal = visibleRecords.filter((record) => PENDING_STATUSES.has(record.status)).length;
+    const pendingTotal = visibleRecords.filter((record) => this.learningPending(record, user)).length;
     const approvalPendingTotal = visibleRecords.filter((record) => record.status === 'approval_pending').length;
 
     const alerts: Array<{ code: string; message: string }> = [];
@@ -1605,10 +1653,19 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  async getAttendanceStatistics(user: CurrentUser, month?: string) {
+  private async attendanceData(user: CurrentUser, month?: string, departmentCode?: string) {
+    const records = await this.listVisibleRecords(user);
+    const ids = [...new Set(records.map(r => r.vesselId).filter((id): id is string => Boolean(id && /^[0-9a-f-]{36}$/i.test(id))))];
+    const vessels = ids.length ? await this.recordRepository.manager.find(VesselEntity,{where:{id:In(ids)},withDeleted:true}) : [];
+    const named = records.map(r => ({...r,payload:{...r.payload,vesselName:vessels.find(v => v.id === r.vesselId)?.name ?? r.payload.vesselName}}));
+    return {records,report:attendanceReport(named,month,departmentCode)};
+  }
+
+  async getAttendanceStatistics(user: CurrentUser, month?: string, departmentCode?: string) {
     const monthPrefix = this.normalizeMonth(month);
-    const visibleRecords = await this.listVisibleRecords(user);
-    const recordsInMonth = visibleRecords.filter((record) => record.occurredAt.startsWith(monthPrefix));
+    const {records:visibleRecords,report} = await this.attendanceData(user, monthPrefix, departmentCode);
+    const recordIds = new Set(report.details.map(row => row.recordId));
+    const recordsInMonth = visibleRecords.filter(record => recordIds.has(record.id));
 
     const runtimeModules = await this.listRuntimeModules();
     const attendanceModules = runtimeModules.filter((moduleItem) => moduleItem.templateType === 'attendance_statistics' && !moduleItem.legacyOnly);
@@ -1628,15 +1685,12 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const operationSourceRecords = recordsInMonth.filter((record) => operationSourceCodes.has(record.moduleCode));
     const mergedCount = attendanceRecords.length + operationSourceRecords.length;
 
-    const morningCount =
-      attendanceRecords.filter((record) => this.toLowerString(record.payload.period) === 'am').length +
-      operationSourceRecords.filter((record) => this.getHour(record.occurredAt) < 12).length;
+    const morningCount = new Set(report.details.filter(row => row.period === 'am').map(row => row.recordId)).size;
     const afternoonCount = mergedCount - morningCount;
 
-    const inRangeCount =
-      attendanceRecords.filter((record) => this.toBoolean(record.payload.locationInRange)).length +
-      operationSourceRecords.filter((record) => this.isQinzhouRange(record)).length;
-    const outRangeCount = Math.max(mergedCount - inRangeCount, 0);
+    const inRangeCount = new Set(report.details.filter(row => row.locationInRange === true).map(row => row.recordId)).size;
+    const outRangeCount = new Set(report.details.filter(row => row.locationInRange === false).map(row => row.recordId)).size;
+    const unknownRangeCount = mergedCount - inRangeCount - outRangeCount;
 
     const businessTripCount = attendanceRecords.filter((record) => {
       const dutyType = this.toLowerString(record.payload.dutyType);
@@ -1665,7 +1719,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     });
 
     return {
-      month: monthPrefix,
+      ...report,
+      canExport: user.roles.some(role => ['system_admin', 'general_office', 'finance'].includes(role)),
       summary: {
         totalCheckIns: mergedCount,
         financeAndShippingCheckIns: attendanceRecords.length,
@@ -1674,6 +1729,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         afternoonCount,
         inRangeCount,
         outRangeCount,
+        unknownRangeCount,
         businessTripCount,
         normalDutyCount,
       },
@@ -1686,7 +1742,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
     const month = this.normalizeMonth(query.month);
     const exportFormat = query.exportFormat ?? 'xlsx';
-    const job = await this.exportJobRepository.save(this.exportJobRepository.create({ sourceType: 'attendance', sourceId: month, querySnapshot: { month, departmentCode: query.departmentCode ?? null }, exportFormat, status: 'queued', resultFileId: null, failureMessage: null, retryCount: 0, requestedBy: user.userId, startedAt: null, finishedAt: null }));
+    const {report} = await this.attendanceData(user, month, query.departmentCode);
+    const job = await this.exportJobRepository.save(this.exportJobRepository.create({ sourceType: 'attendance', sourceId: month, querySnapshot: { month, departmentCode: query.departmentCode ?? null, report }, exportFormat, status: 'queued', resultFileId: null, failureMessage: null, retryCount: 0, requestedBy: user.userId, startedAt: null, finishedAt: null }));
     this.queueAttendanceExport(job.id);
 
     this.logger.log(
@@ -1705,6 +1762,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     this.assertAttendanceAdmin(user);
     const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
     if (!job) throw new NotFoundException('export job not found');
+    if (job.requestedBy !== user.userId && !user.roles.includes('system_admin')) throw new ForbiddenException('只能访问自己创建的导出');
     return this.toExportJob(job);
   }
 
@@ -1712,6 +1770,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     this.assertAttendanceAdmin(user);
     const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
     if (!job) throw new NotFoundException('export job not found');
+    if (job.requestedBy !== user.userId && !user.roles.includes('system_admin')) throw new ForbiddenException('只能访问自己创建的导出');
     if (job.status !== 'failed') throw new ConflictException('only failed export job can be retried');
     Object.assign(job, { status: 'queued', resultFileId: null, failureMessage: null, retryCount: job.retryCount + 1, startedAt: null, finishedAt: null });
     await this.exportJobRepository.save(job); this.queueAttendanceExport(job.id);
@@ -1722,6 +1781,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const job = await this.exportJobRepository.findOne({ where: { id: jobId, sourceType: 'attendance' } });
     this.assertAttendanceAdmin(user);
     if (!job || job.status !== 'succeeded' || !job.resultFileId) throw new NotFoundException('export result not found');
+    if (job.requestedBy !== user.userId && !user.roles.includes('system_admin')) throw new ForbiddenException('只能访问自己创建的导出');
     const file = await this.fileRepository.findOne({ where: { id: job.resultFileId } });
     if (!file) throw new NotFoundException('export file not found');
     return this.ossService.createDownloadSignature(file.ossKey);
@@ -1739,12 +1799,12 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (!job) return;
     try {
       const month = typeof job.querySnapshot.month === 'string' ? job.querySnapshot.month : '';
-      const departmentCode = typeof job.querySnapshot.departmentCode === 'string' ? job.querySnapshot.departmentCode : '';
-      const content = `month,departmentCode,generatedAt\n${month},${departmentCode},${new Date().toISOString()}\n`;
+      const report = job.querySnapshot.report as ReturnType<typeof attendanceReport> | undefined;
+      if (!report) throw new BadRequestException('旧导出任务没有数据范围快照，请重新发起导出');
       const isPdf = job.exportFormat === 'pdf';
       const extension = isPdf ? 'pdf' : 'xlsx';
       const mimeType = isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      const buffer = isPdf ? this.buildPdf({ title: 'Attendance Export', lines: content.trim().split('\n'), paperSize: 'A4' }) : this.buildAttendanceWorkbook(month, departmentCode);
+      const buffer = isPdf ? await attendancePdf(report, startedAt) : await attendanceWorkbook(report, startedAt);
       const ossKey = `workbench/exports/${new Date().getUTCFullYear()}/${String(new Date().getUTCMonth() + 1).padStart(2, '0')}/${randomUUID()}.${extension}`;
       await this.ossService.uploadBuffer(ossKey, buffer, mimeType, `attendance-${month}.${extension}`);
       const file = await this.fileRepository.save(this.fileRepository.create({ ossKey, fileName: `attendance-${month}.${extension}`, mimeType, fileSize: buffer.length, category: 'workbench_export', uploadedBy: job.requestedBy }));
@@ -1778,13 +1838,6 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         if (this.exportRecoveryInFlight === task) this.exportRecoveryInFlight = null;
       });
     this.exportRecoveryInFlight = task;
-  }
-
-  private buildAttendanceWorkbook(month: string, departmentCode: string): Buffer {
-    const workbook = XLSX.utils.book_new();
-    const sheet = XLSX.utils.json_to_sheet([{ month, departmentCode, generatedAt: new Date().toISOString() }]);
-    XLSX.utils.book_append_sheet(workbook, sheet, '考勤导出');
-    return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }
 
   private async recoverExportJobs(): Promise<void> {
@@ -1874,8 +1927,18 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (moduleItem.legacyOnly) {
       throw new BadRequestException('legacy module is read-only');
     }
-    if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) {
+    if (!this.hasRoleAccess(user, moduleItem.visibleRoles) || (LEARNING_MODULES.includes(dto.moduleCode) && !isLearningManager(user))) {
       throw new ForbiddenException('forbidden');
+    }
+    if (dto.moduleCode === FUEL_MODULE) {
+      if (!dto.vesselId || !/^[0-9a-f-]{36}$/i.test(dto.vesselId)) throw new BadRequestException('请选择有效船舶');
+      const vessel = await this.recordRepository.manager.findOneBy(VesselEntity, {id:dto.vesselId,status:'active'});
+      if (!vessel) throw new BadRequestException('请选择有效船舶');
+      if (user.roles.includes('crew') && !isLearningManager(user) && !user.departments.some(code => code === dto.vesselId || code === `vessel:${dto.vesselId}`)) throw new ForbiddenException('只能为所属船舶申请加注');
+    }
+    if (dto.moduleCode === FUEL_MEASUREMENT) throw new BadRequestException('请使用月末测量入口');
+    for (const key of ['learning', 'fuelActual', 'learningStatus', 'learningProgressPercent', 'completedAt']) {
+      if (dto.payload?.[key] !== undefined) throw new BadRequestException('学习进度和加注实绩由专用入口维护');
     }
 
     if (
@@ -1984,7 +2047,14 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       await this.appendActionLog(record.id, { actionType: 'sensitive_view', source: 'manual', operatorUserId: user.userId, fromStatus: record.status, toStatus: record.status, comment: 'administrator record access', payloadDigest: null });
     }
     const hydrated = await this.hydrateRecord(record);
-    return { ...this.toRecordDetail(hydrated), ...(record.moduleCode === SELF_INSPECTION_MODULE ? await this.selfInspection.names(record) : {}), availableActions: await this.getAvailableActions(record, user) };
+    const publicPayload = { ...hydrated.payload };
+    delete publicPayload.learning;
+    if (LEARNING_MODULES.includes(record.moduleCode) && !isLearningManager(user)) {
+      const own = this.learning.view(record, user)?.learners[0];
+      Object.assign(publicPayload, {participants:user.name,crewNames:user.name,learningAudience:user.name,learningProgressPercent:own?.progressPercent ?? 0,learningStatus:own?.completedAt ? 'completed' : 'in_progress',completedAt:own?.completedAt ?? null});
+      hydrated.actionLogs = hydrated.actionLogs.filter(log => log.actionType !== 'confirm_learning' || log.operatorUserId === user.userId);
+    }
+    return { ...this.toRecordDetail(hydrated), payload: publicPayload, learning: this.learning.view(record, user), canManageLearning: isLearningManager(user), canRecordFuel: record.moduleCode === FUEL_MODULE && record.status === 'approval_passed' && (isLearningManager(user) || record.ownerUserId === user.userId), ...(record.moduleCode === SELF_INSPECTION_MODULE ? await this.selfInspection.names(record) : {}), availableActions: await this.getAvailableActions(record, user) };
   }
 
   async listInspectionPeople(user: CurrentUser) { return this.selfInspection.people(user); }
@@ -1992,6 +2062,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   async assignParticipant(recordId: string, dto: WorkbenchRecordParticipantDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
     await this.assertRecordVisible(record, user);
+    if (LEARNING_MODULES.includes(record.moduleCode)) throw new BadRequestException('学习成员通过下发学习配置');
     if (record.moduleCode === SELF_INSPECTION_MODULE) throw new BadRequestException('自查通过分配执行人和审核人管理，不使用通用参与人');
     if (!user.roles.includes('system_admin') && record.ownerUserId !== user.userId && record.reviewerUserId !== user.userId) {
       throw new ForbiddenException('forbidden');
@@ -2018,6 +2089,10 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async performRecordAction(recordId: string, dto: WorkbenchRecordActionDto, user: CurrentUser) {
     let record = await this.mustGetRecord(recordId);
+    if (record.moduleCode === FUEL_MODULE) throw new BadRequestException('已登记实绩的记录请通过实绩入口更正');
+    if (record.moduleCode === FUEL_MEASUREMENT || LEARNING_MODULES.includes(record.moduleCode)) throw new BadRequestException('请使用该业务的专用操作入口');
+    if (LEARNING_MODULES.includes(record.moduleCode) && !isLearningManager(user)) throw new ForbiddenException('仅管理人员可维护培训记录');
+    if (dto.payload && ['learning', 'fuelActual', 'learningStatus', 'learningProgressPercent', 'completedAt'].some(key => key in dto.payload!)) throw new BadRequestException('禁止通过通用操作修改学习进度或加注实绩');
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.action(recordId, dto, user);
     await this.assertRecordVisible(record, user);
 
@@ -2169,12 +2244,25 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
+    if (!LEARNING_MODULES.includes(record.moduleCode)) return this.saveAttachment(recordId, dto, user);
+    return this.recordRepository.manager.transaction(async manager => {
+      const locked = await manager.findOne(WorkbenchRecordEntity, {where:{id:recordId},lock:{mode:'pessimistic_write'}});
+      if (!locked || !isLearningManager(user) || learningState(locked)) throw new ConflictException('学习下发后不可变更材料');
+      return this.saveAttachment(recordId, dto, user, manager);
+    });
+  }
+
+  private async saveAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser, manager = this.recordRepository.manager) {
+    const record = await manager.findOne(WorkbenchRecordEntity, { where: { id: recordId } });
+    if (!record) throw new NotFoundException('record not found');
+    const attachments = manager.getRepository(WorkbenchRecordAttachmentEntity);
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.upload(recordId, dto, user);
     await this.assertRecordVisible(record, user);
+    if (LEARNING_MODULES.includes(record.moduleCode) && (!isLearningManager(user) || learningState(record))) throw new ConflictException('已下发的学习内容不可变更，请创建新的学习记录');
 
     let stepId: string | null = null;
     if (dto.stepCode?.trim()) {
-      const step = await this.stepRepository.findOne({
+      const step = await manager.getRepository(WorkbenchRecordStepEntity).findOne({
         where: {
           businessRecordId: record.id,
           stepCode: dto.stepCode.trim(),
@@ -2186,14 +2274,14 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       stepId = step.id;
     }
 
-    const file = await this.fileRepository.findOne({ where: { id: dto.fileId } });
+    const file = await manager.getRepository(FileEntity).findOne({ where: { id: dto.fileId } });
     if (!file) {
       throw new NotFoundException('file not found');
     }
 
     const uploadedAt = new Date();
-    const attachment = await this.attachmentRepository.save(
-      this.attachmentRepository.create({
+    const attachment = await attachments.save(
+      attachments.create({
         businessRecordId: record.id,
         stepId,
         category: dto.category,
@@ -2215,7 +2303,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       toStatus: record.status,
       comment: dto.remark ?? null,
       payloadDigest: null,
-    });
+    }, manager);
 
     return {
       id: attachment.id,
@@ -2255,7 +2343,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       status: hydrated.status,
       moduleCode: hydrated.moduleCode,
       summary: hydrated.summary,
-      payload: hydrated.payload,
+      payload: LEARNING_MODULES.includes(record.moduleCode) ? {learning: this.learning.view(record,user)} : hydrated.payload,
       steps: hydrated.steps,
       attachments: hydrated.attachments,
       paperSize,
@@ -2264,6 +2352,9 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (record.moduleCode === SELF_INSPECTION_MODULE) {
       const result = await this.selfInspection.print(recordId, user, paperSize);
       pdfBuffer = result.buffer; snapshotData = result.snapshot;
+    } else if (LEARNING_MODULES.includes(record.moduleCode)) {
+      const view = this.learning.view(record,user);
+      pdfBuffer = await learningPdf({title: record.title, summary: record.summary, recordNo: record.recordNo, learning: view, paperSize, generatedAt: renderedAt});
     } else {
       pdfBuffer = this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
     }
@@ -2392,6 +2483,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const record = await this.mustGetRecord(dto.businessRecordId);
     if (record.moduleCode === SELF_INSPECTION_MODULE) throw new BadRequestException('船舶自查由指定审核人在系统内审核');
     await this.assertRecordVisible(record, user);
+    if (LEARNING_MODULES.includes(record.moduleCode)) {
+      const learning = learningState(record);
+      if (!isLearningManager(user)) throw new ForbiddenException('仅管理人员可发起培训审批');
+      if (!learning || learning.learners.some(p => !p.completedAt)) throw new ConflictException('全部参训人完成学习后才能发起审批');
+    }
     if (dto.moduleCode !== record.moduleCode) {
       throw new BadRequestException('approval module does not match record');
     }
@@ -2720,7 +2816,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     record.externalStatus = normalizedDto.status;
     record.status = mirrorStatus;
 
-    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.save(record)]);
+    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.update(record.id, {externalStatus:record.externalStatus,status:record.status})]);
 
     await this.appendActionLog(record.id, {
       actionType: 'approval_callback',
@@ -2924,7 +3020,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     record.externalStatus = externalStatus;
     record.status = mirrorStatus;
 
-    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.save(record)]);
+    await Promise.all([this.approvalSyncRepository.save(instance), this.recordRepository.update(record.id, {externalStatus:record.externalStatus,status:record.status})]);
 
     await this.appendActionLog(record.id, {
       actionType,
@@ -3523,14 +3619,14 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private async listVisibleModules(user: CurrentUser) {
     const runtimeModules = await this.listRuntimeModules();
-    return runtimeModules.filter((moduleItem) => moduleItem.enabled && !moduleItem.legacyOnly && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort(
+    return runtimeModules.filter((moduleItem) => moduleItem.enabled && !moduleItem.legacyOnly && (LEARNING_MODULES.includes(moduleItem.moduleCode) || this.hasRoleAccess(user, moduleItem.visibleRoles))).sort(
       (a, b) => a.sortOrder - b.sortOrder,
     );
   }
 
   private async listReadableModules(user: CurrentUser) {
     const runtimeModules = await this.listRuntimeModules();
-    return runtimeModules.filter((moduleItem) => moduleItem.enabled && this.hasRoleAccess(user, moduleItem.visibleRoles)).sort((a, b) => a.sortOrder - b.sortOrder);
+    return runtimeModules.filter((moduleItem) => moduleItem.enabled && (LEARNING_MODULES.includes(moduleItem.moduleCode) || this.hasRoleAccess(user, moduleItem.visibleRoles))).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   private async listVisibleRecords(user: CurrentUser) {
@@ -3553,36 +3649,18 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return allowed.filter((item) => item.readable).map((item) => this.toRecordModel(item.record));
   }
 
+  private learningPending(record: WorkbenchRecord, user: CurrentUser) {
+    if (!PENDING_STATUSES.has(record.status)) return false;
+    if (!LEARNING_MODULES.includes(record.moduleCode) || isLearningManager(user)) return true;
+    const learning = record.payload.learning as import('./workbench-learning.service').LearningState | undefined;
+    return Boolean(learning?.learners.some(p => p.userId === user.userId && !p.completedAt));
+  }
+
   private async computePendingCounts(user: CurrentUser) {
-    const moduleCodes = (await this.listVisibleModules(user)).map((moduleItem) => moduleItem.moduleCode);
-    if (moduleCodes.length === 0) {
-      return new Map<string, number>();
-    }
-
-    const rows = await this.recordRepository
-      .createQueryBuilder('record')
-      .select('record.module_code', 'moduleCode')
-      .addSelect('COUNT(*)', 'pendingCount')
-      .where('record.module_code IN (:...moduleCodes)', { moduleCodes })
-      .andWhere('record.status IN (:...statuses)', { statuses: [...PENDING_STATUSES] })
-      .groupBy('record.module_code')
-      .getRawMany<{
-        modulecode?: string;
-        moduleCode?: string;
-        pendingcount?: string;
-        pendingCount?: string;
-      }>();
-
-    const result = new Map<string, number>();
-    for (const row of rows) {
-      const moduleCode = row.moduleCode ?? row.modulecode;
-      const pendingCount = Number(row.pendingCount ?? row.pendingcount ?? 0);
-      if (moduleCode) {
-        result.set(moduleCode, pendingCount);
-      }
-    }
-
-    return result;
+    const records = await this.listVisibleRecords(user);
+    const counts = new Map<string, number>();
+    for (const record of records) if (this.learningPending(record, user)) counts.set(record.moduleCode, (counts.get(record.moduleCode) ?? 0) + 1);
+    return counts;
   }
 
   private hasRoleAccess(user: CurrentUser, visibleRoles: string[]) {
@@ -3608,15 +3686,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     }));
   }
 
-  private normalizeMonth(month?: string) {
-    if (!month) {
-      return new Date().toISOString().slice(0, 7);
-    }
-    if (!/^\d{4}-\d{2}$/.test(month)) {
-      throw new BadRequestException('month format must be YYYY-MM');
-    }
-    return month;
-  }
+  private normalizeMonth(month?: string) { return reportMonth(month); }
 
   private toLowerString(value: unknown) {
     return this.toScalarString(value).trim().toLowerCase();
@@ -3642,23 +3712,6 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       return `${value}`;
     }
     return '';
-  }
-
-  private toBoolean(value: unknown) {
-    const normalized = this.toLowerString(value);
-    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
-  }
-
-  private getHour(iso: string) {
-    const date = new Date(iso);
-    return Number.isNaN(date.getTime()) ? 0 : date.getUTCHours();
-  }
-
-  private isQinzhouRange(record: WorkbenchRecord) {
-    const berth = this.toLowerString(record.payload.berth);
-    const workArea = this.toLowerString(record.payload.workArea);
-    const vesselName = this.toLowerString(record.payload.vesselName);
-    return berth.includes('qz') || berth.includes('qinzhou') || workArea.includes('钦州') || workArea.includes('qinzhou') || vesselName.includes('钦州');
   }
 
   private buildPdf(input: { title: string; lines: string[]; paperSize: PrintPaperSize }): Buffer {
@@ -3775,6 +3828,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   private toRecordDetail(record: WorkbenchRecord) {
     return {
       ...this.toRecordSummary(record),
+      templateCode: record.templateCode,
       summary: record.summary,
       ownerUserId: record.ownerUserId,
       assigneeUserId: record.assigneeUserId,
@@ -3813,6 +3867,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   private async canReadRecord(record: WorkbenchRecordEntity, user: CurrentUser) {
     const moduleItem = await this.mustGetModule(record.moduleCode);
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.canRead(record, user);
+    if (LEARNING_MODULES.includes(record.moduleCode)) return canReadLearning(record, user);
     if (!this.hasRoleAccess(user, moduleItem.visibleRoles)) return false;
     if (user.roles.includes('system_admin')) return true;
     const participant = await this.participantRepository.exist({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
@@ -3835,6 +3890,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private async getAvailableActions(record: WorkbenchRecordEntity, user: CurrentUser) {
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.availableActions(record, user);
+    if ([FUEL_MODULE, FUEL_MEASUREMENT, ...LEARNING_MODULES].includes(record.moduleCode)) return [];
     if (!(await this.canReadRecord(record, user))) return [];
     if (user.roles.includes('system_admin')) return ['start', 'complete_step', 'submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'void', 'reopen', 'delegate', 'transfer'];
     const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
@@ -3872,6 +3928,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const moduleItem = WORKBENCH_MODULE_DEFAULTS.get(record.moduleCode);
     return {
       id: record.id,
+      recordNo: record.recordNo,
+      departmentCode: record.departmentCode,
       moduleCode: record.moduleCode,
       templateCode: record.templateCode,
       title: record.title,
@@ -4002,9 +4060,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       comment: string | null;
       payloadDigest: string | null;
     },
+    manager: EntityManager = this.recordRepository.manager,
   ) {
-    await this.actionLogRepository.save(
-      this.actionLogRepository.create({
+    const logs = manager.getRepository(WorkbenchRecordActionLogEntity);
+    await logs.save(
+      logs.create({
         businessRecordId,
         actionType: log.actionType,
         source: log.source,
@@ -4069,6 +4129,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private normalizeCreatePayload(moduleCode: string, payload: Record<string, unknown> | undefined): Record<string, unknown> {
     const normalized = { ...(payload ?? {}) };
+    if (normalized.workHours !== undefined && (typeof normalized.workHours !== 'number' || !Number.isFinite(normalized.workHours) || normalized.workHours < 0 || normalized.workHours > 744)) throw new BadRequestException('工时必须为 0 到 744 的数字');
+    const start = normalized.workStartedAt, end = normalized.workEndedAt;
+    if (Boolean(start) !== Boolean(end)) throw new BadRequestException('作业开始和结束时间必须一起填写');
+    if (start && end && (typeof start !== 'string' || typeof end !== 'string' || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(end)) || Date.parse(end) < Date.parse(start))) throw new BadRequestException('作业结束时间不能早于开始时间');
+
     if (moduleCode === 'goa_meeting') {
       if (!this.toScalarString(normalized.retentionUntil).trim()) {
         const retention = new Date();

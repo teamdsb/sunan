@@ -1,3 +1,4 @@
+import { FuelActualDto, FuelMeasurementDto, LearningConfirmDto, LearningPublishDto } from './dto/workbench-business.dto';
 import { Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -36,8 +37,8 @@ export class WorkbenchController {
   }
 
   @Get('statistics/attendance')
-  async getAttendanceStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: await this.service.getAttendanceStatistics(user, month) };
+  async getAttendanceStatistics(@Query('month') month: string | undefined, @Query('departmentCode') departmentCode: string | undefined, @CurrentUserDecorator() user: CurrentUser) {
+    return { data: await this.service.getAttendanceStatistics(user, month, departmentCode) };
   }
 
   @Get('statistics/attendance/export')
@@ -67,6 +68,25 @@ export class WorkbenchController {
   async reconcileAttendance(@Body() dto: WorkbenchAttendanceReconcileDto, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.reconcileAttendanceStatistics(dto, user) };
   }
+
+  @Get('learning/people')
+  async learningPeople(@CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.learningPeople(user)}; }
+  @Get('statistics/learning')
+  async learningStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.learningStatistics(user, month)}; }
+  @Get('statistics/learning/export')
+  async learningExport(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.exportBusinessReport('learning', user, month)}; }
+  @Post('records/:recordId/learning/publish')
+  async publishLearning(@Param('recordId') id: string, @Body() dto: LearningPublishDto, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.publishLearning(id,dto,user)}; }
+  @Post('records/:recordId/learning/confirm')
+  async confirmLearning(@Param('recordId') id: string, @Body() dto: LearningConfirmDto, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.confirmLearning(id,dto.materialId,user)}; }
+  @Get('statistics/fuel')
+  async fuelStatistics(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.fuelStatistics(user,month)}; }
+  @Get('statistics/fuel/export')
+  async fuelExport(@Query('month') month: string | undefined, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.exportBusinessReport('fuel',user,month)}; }
+  @Post('records/:recordId/fuel-actual')
+  async fuelActual(@Param('recordId') id: string, @Body() dto: FuelActualDto, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.recordFuelActual(id,dto,user)}; }
+  @Post('fuel/measurements')
+  async fuelMeasurement(@Body() dto: FuelMeasurementDto, @CurrentUserDecorator() user: CurrentUser) { return {data: await this.service.recordFuelMeasurement(dto,user)}; }
 
   @Get('records')
   async listRecords(@Query() query: WorkbenchRecordListQueryDto, @CurrentUserDecorator() user: CurrentUser) {

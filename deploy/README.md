@@ -26,10 +26,10 @@ replaced_by: []
 - 服务器：`root@39.106.103.45`
 - SSH 密钥：`/Users/yuan/Downloads/teamdsb-sunan.pem`
 - 本地仓库：`/Users/yuan/项目/sunan/sunan`
-- 服务器部署根目录：`/dev/sunan`
-- 服务器 Compose 文件：`/dev/sunan/deploy/docker-compose.yml`
-- 服务器环境变量：`/dev/sunan/deploy/.env`
-- 服务器源码目录：`/dev/sunan/sunan-source/current`
+- 服务器部署根目录：`/srv/sunan`
+- 服务器 Compose 文件：`/srv/sunan/deploy/docker-compose.yml`
+- 服务器环境变量：`/srv/sunan/deploy/.env`
+- 服务器源码目录：`/srv/sunan/sunan-source/current`
 - 前端域名：`https://app.qzssncb.com`
 - 后端域名：`https://api.qzssncb.com`
 - OSS S3 域名：`https://oss.qzssncb.com`
@@ -46,9 +46,9 @@ replaced_by: []
 
 ## 绝对不要做
 
-- 不要把 `/dev/sunan/deploy/.env` 中的真实密码、JWT Secret、企业微信 Secret、Token、EncodingAESKey 写入仓库文档。
+- 不要把 `/srv/sunan/deploy/.env` 中的真实密码、JWT Secret、企业微信 Secret、Token、EncodingAESKey 写入仓库文档。
 - 不要执行 `docker compose down -v`，除非明确要清空生产数据。
-- 不要删除 `/dev/sunan/sunan-db/data`、`/dev/sunan/sunan-redis/data`、`/dev/sunan/sunan-oss/data`。
+- 不要删除 `/srv/sunan/sunan-db/data`、`/srv/sunan/sunan-redis/data`、`/srv/sunan/sunan-oss/data`。
 - 不要用 `docker system prune -a --volumes`。
 - 不要用 `git reset --hard` 或覆盖用户未说明的本地改动。
 
@@ -56,7 +56,7 @@ replaced_by: []
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 \
-  'cd /dev/sunan/deploy && docker compose --env-file /dev/sunan/deploy/.env ps'
+  'cd /srv/sunan/deploy && docker compose --env-file /srv/sunan/deploy/.env ps'
 
 curl -fsS https://api.qzssncb.com/api/health
 curl -fsS https://api.qzssncb.com/api/health/ready

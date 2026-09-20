@@ -102,7 +102,7 @@ export class OfficeService {
 
     const where: {
       entryId?: string;
-      action?: 'create' | 'update' | 'publish' | 'disable' | 'open';
+      action?: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open';
       operatorUserId?: string;
     } = {};
 
@@ -227,6 +227,14 @@ export class OfficeService {
     const saved = await this.entryRepository.save(entity);
     await this.writeAudit(saved.id, 'disable', user.userId, { status: saved.status });
     return this.toAdminEntryDto(saved, user);
+  }
+
+  async deleteEntry(id: string, user: CurrentUser): Promise<void> {
+    const entity = await this.mustFindManageableEntry(id, user);
+    entity.deletedAt = new Date();
+    entity.updatedBy = user.userId;
+    await this.entryRepository.save(entity);
+    await this.writeAudit(id, 'delete', user.userId, { status: entity.status });
   }
 
   private applyKeywordAndCategoryFilters(qb: ReturnType<Repository<OfficeEntryEntity>['createQueryBuilder']>, keyword?: string, categoryCode?: string) {
@@ -356,7 +364,7 @@ export class OfficeService {
     }
   }
 
-  private async writeAudit(entryId: string, action: 'create' | 'update' | 'publish' | 'disable' | 'open', operatorUserId: string, payloadSnapshot: Record<string, unknown>) {
+  private async writeAudit(entryId: string, action: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open', operatorUserId: string, payloadSnapshot: Record<string, unknown>) {
     await this.auditRepository.save(this.auditRepository.create({ entryId, action, operatorUserId, payloadSnapshot }));
   }
 

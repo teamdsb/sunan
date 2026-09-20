@@ -69,6 +69,10 @@ export const filesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['File'],
     }),
+    deleteOrphanedFile: builder.mutation<void, string>({
+      query: (id) => ({ url: `/files/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['File'],
+    }),
   }),
 });
 
@@ -78,4 +82,5 @@ export const {
   useCreateFileFromWecomMutation,
   useCreateFilePresignMutation,
   useLazyGetFileDownloadUrlQuery,
+  useDeleteOrphanedFileMutation,
 } = filesApi;

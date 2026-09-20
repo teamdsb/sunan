@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       TZ: Asia/Shanghai
     volumes:
-      - /dev/sunan/sunan-db/data:/var/lib/postgresql/data
+      - /srv/sunan/sunan-db/data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
@@ -45,7 +45,7 @@ services:
         "+@all",
       ]
     volumes:
-      - /dev/sunan/sunan-redis/data:/data
+      - /srv/sunan/sunan-redis/data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "--user", "${REDIS_USER}", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -69,7 +69,7 @@ services:
       MINIO_SERVER_URL: https://oss.qzssncb.com
       TZ: Asia/Shanghai
     volumes:
-      - /dev/sunan/sunan-oss/data:/data
+      - /srv/sunan/sunan-oss/data:/data
     networks:
       - sunan
 
@@ -95,14 +95,14 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: apps/api/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
     image: sunan-api:${SUNAN_VERSION:-stable}
     container_name: sunan-api
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
     env_file:
-      - /dev/sunan/deploy/.env
+      - /srv/sunan/deploy/.env
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -133,8 +133,8 @@ services:
       timeout: 5s
       retries: 12
     volumes:
-      - /dev/sunan/sunan-api/logs:/app/logs
-      - /dev/sunan/sunan-wecom-ips:/run/sunan/wecom-ips:ro
+      - /srv/sunan/sunan-api/logs:/app/logs
+      - /srv/sunan/sunan-wecom-ips:/run/sunan/wecom-ips:ro
     networks:
       - sunan
 
@@ -143,7 +143,7 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: apps/web/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
       args:
         VITE_API_BASE_URL: https://api.qzssncb.com/api/v1
         VITE_WECOM_CORP_ID: ${WECOM_CORP_ID}
@@ -153,7 +153,7 @@ services:
     container_name: sunan-web
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
     depends_on:
       sunan-api:
         condition: service_healthy
@@ -165,12 +165,12 @@ services:
       context: ${SUNAN_SOURCE_DIR}
       dockerfile: docker/nginx/Dockerfile
       labels:
-        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+        org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
     image: sunan-nginx:${SUNAN_VERSION:-stable}
     container_name: sunan-nginx
     restart: unless-stopped
     labels:
-      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.7}
+      org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
     depends_on:
       sunan-web:
         condition: service_started
@@ -182,11 +182,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /dev/sunan/sunan-nginx/conf.d:/etc/nginx/conf.d:ro
-      - /dev/sunan/sunan-nginx/certs:/etc/nginx/certs:ro
-      - /dev/sunan/sunan-nginx/acme:/var/www/certbot:ro
-      - /dev/sunan/sunan-wecom-ips:/etc/nginx/wecom:ro
-      - /dev/sunan/sunan-nginx/logs:/var/log/nginx
+      - /srv/sunan/sunan-nginx/conf.d:/etc/nginx/conf.d:ro
+      - /srv/sunan/sunan-nginx/certs:/etc/nginx/certs:ro
+      - /srv/sunan/sunan-nginx/acme:/var/www/certbot:ro
+      - /srv/sunan/sunan-wecom-ips:/etc/nginx/wecom:ro
+      - /srv/sunan/sunan-nginx/logs:/var/log/nginx
     networks:
       - sunan
 

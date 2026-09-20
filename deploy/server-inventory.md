@@ -1,13 +1,13 @@
 ---
 status: operations
 owner: operations
-updated: 2026-08-10
+updated: 2026-09-20
 replaces: []
 replaced_by: []
 ---
 # 生产服务器资源清单
 
-更新时间：2026-08-10
+更新时间：2026-09-20
 
 ## 基本信息
 
@@ -17,7 +17,8 @@ replaced_by: []
 - 登录用户：`root`
 - SSH 密钥：`/Users/yuan/Downloads/teamdsb-sunan.pem`
 - 服务器时区：建议保持 `Asia/Shanghai`
-- 部署根目录：`/dev/sunan`
+- 部署根目录：`/srv/sunan`（`/dev/vda3`，ext4 持久化磁盘）
+- `/dev/sunan` 仅为兼容软链接，由 systemd-tmpfiles 开机创建；Docker 启动依赖 `/srv/sunan` 挂载。
 
 ## 域名分配
 
@@ -37,9 +38,9 @@ replaced_by: []
 | `sunan-redis` | `sunan-redis` | `sunan-redis:7.4-stable` | Redis ACL + AOF |
 | `sunan-oss` | `sunan-oss` | `sunan-oss:2025-09-07-stable` | MinIO 对象存储 |
 | `sunan-oss-init` | `sunan-oss-init` | `sunan-oss-mc:2025-08-13-stable` | 初始化 bucket |
-| `sunan-api` | `sunan-api` | `sunan-api:0.0.7` | NestJS API |
-| `sunan-web` | `sunan-web` | `sunan-web:0.0.7` | Vite 静态前端 |
-| `sunan-nginx` | `sunan-nginx` | `sunan-nginx:0.0.7` | 反向代理和 TLS |
+| `sunan-api` | `sunan-api` | `sunan-api:0.0.8` | NestJS API |
+| `sunan-web` | `sunan-web` | `sunan-web:0.0.8` | Vite 静态前端 |
+| `sunan-nginx` | `sunan-nginx` | `sunan-nginx:0.0.8` | 反向代理和 TLS |
 
 所有容器在 Docker 网络 `sunan` 内通信。
 
@@ -47,19 +48,19 @@ replaced_by: []
 
 | 路径 | 用途 | 注意 |
 |---|---|---|
-| `/dev/sunan/deploy` | Compose、`.env`、部署配置 | `.env` 不入仓库 |
-| `/dev/sunan/sunan-source/current` | 当前部署源码 | Compose 的 `SUNAN_SOURCE_DIR` 指向这里 |
-| `/dev/sunan/sunan-source/backup-*` | 历史源码备份 | 可保留最近 5 份 |
-| `/dev/sunan/sunan-db/data` | PostgreSQL 数据 | 不可删除 |
-| `/dev/sunan/sunan-redis/data` | Redis AOF 数据 | 不可删除 |
-| `/dev/sunan/sunan-oss/data` | MinIO 对象文件 | 不可删除 |
-| `/dev/sunan/sunan-api/logs` | API 日志 | 可按保留策略清理 |
-| `/dev/sunan/sunan-nginx/conf.d` | Nginx 配置 | 对应本地 `deploy/nginx/sunan.conf` |
-| `/dev/sunan/sunan-nginx/certs` | Nginx 证书副本 | 由 certbot hook 更新 |
-| `/dev/sunan/sunan-nginx/acme` | ACME 和企业微信域名校验文件 | HTTP/HTTPS 可访问 |
-| `/dev/sunan/sunan-nginx/logs` | Nginx 日志 | 可按保留策略清理 |
-| `/dev/sunan/sunan-wecom-ips` | 企业微信回调 IP 白名单 | 由 systemd timer 更新 |
-| `/dev/sunan/sunan-images` | 镜像/备份预留目录 | 不作为主要交付物 |
+| `/srv/sunan/deploy` | Compose、`.env`、部署配置 | `.env` 不入仓库 |
+| `/srv/sunan/sunan-source/current` | 当前部署源码 | Compose 的 `SUNAN_SOURCE_DIR` 指向这里 |
+| `/srv/sunan/sunan-source/backup-*` | 历史源码备份 | 可保留最近 5 份 |
+| `/srv/sunan/sunan-db/data` | PostgreSQL 数据 | 不可删除 |
+| `/srv/sunan/sunan-redis/data` | Redis AOF 数据 | 不可删除 |
+| `/srv/sunan/sunan-oss/data` | MinIO 对象文件 | 不可删除 |
+| `/srv/sunan/sunan-api/logs` | API 日志 | 可按保留策略清理 |
+| `/srv/sunan/sunan-nginx/conf.d` | Nginx 配置 | 对应本地 `deploy/nginx/sunan.conf` |
+| `/srv/sunan/sunan-nginx/certs` | Nginx 证书副本 | 由 certbot hook 更新 |
+| `/srv/sunan/sunan-nginx/acme` | ACME 和企业微信域名校验文件 | HTTP/HTTPS 可访问 |
+| `/srv/sunan/sunan-nginx/logs` | Nginx 日志 | 可按保留策略清理 |
+| `/srv/sunan/sunan-wecom-ips` | 企业微信回调 IP 白名单 | 由 systemd timer 更新 |
+| `/var/backups/sunan` | 数据、源码和镜像归档 | 按发布批次保留，限制读取权限 |
 
 ## 账号命名规则
 
@@ -69,7 +70,7 @@ replaced_by: []
 - Redis ACL 用户：`sunan`
 - MinIO Access Key：`sunan`
 
-真实密码在服务器 `/dev/sunan/deploy/.env`，不要写入文档。
+真实密码在服务器 `/srv/sunan/deploy/.env`，不要写入文档。
 
 ## 系统定时任务
 
@@ -96,7 +97,7 @@ systemctl status sunan-wecom-callback-ip-sync.timer --no-pager
   - `api.qzssncb.com`
   - `oss.qzssncb.com`
   - `oss-console.qzssncb.com`
-- 2026-06-08 远端检查结果：有效期 `2026-05-19 12:50:40 UTC` 到 `2026-08-17 12:50:39 UTC`
+- 2026-09-20 远端检查结果：有效期 `2026-09-16 22:38:31 UTC` 到 `2026-12-15 22:38:30 UTC`
 
 证书续费 hook：
 

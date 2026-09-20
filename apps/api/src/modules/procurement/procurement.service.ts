@@ -1,3 +1,4 @@
+import { scheduleFileRecycle } from 'src/modules/files/file-retention';
 import {
   BadRequestException,
   ConflictException,
@@ -856,12 +857,20 @@ export class ProcurementService {
       throw new NotFoundException('attachment not found');
     }
 
-    await this.orderFileRepository.remove(relation);
-    await this.evidenceAuditRepository.save(this.evidenceAuditRepository.create({
-      objectType: 'procurement_order', objectId: order.id, fileId, action: 'unlink_attachment',
-      reason: reason.trim(), operatorUserId: user.userId, requestId: null,
-      metadata: { relationId: relation.id, relationType: relation.relationType },
-    }));
+    await this.dataSource.transaction(async (manager) => {
+      const currentOrder = await manager.findOne(ProcurementOrderEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (currentOrder?.status !== 'draft') throw new UnprocessableEntityException('only draft order attachment can be unlinked');
+      const file = await manager.findOne(FileEntity, { where: { id: fileId } });
+      const result = await manager.delete(ProcurementOrderFileEntity, { orderId: id, fileId });
+      if (!result.affected) return;
+      await manager.save(EvidenceAuditEntity, manager.create(EvidenceAuditEntity, {
+        objectType: 'procurement_order', objectId: order.id, fileId: null, action: 'unlink_attachment',
+        reason: reason.trim(), operatorUserId: user.userId, requestId: null,
+        metadata: { relationId: relation.id, relationType: relation.relationType, fileId,
+          fileName: file?.fileName, fileSize: file?.fileSize, mimeType: file?.mimeType, ossKey: file?.ossKey },
+      }));
+      await scheduleFileRecycle(manager, [fileId]);
+    });
   }
 
   async getOrderAttachmentDownloadUrl(

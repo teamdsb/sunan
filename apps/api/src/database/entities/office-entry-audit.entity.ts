@@ -12,7 +12,7 @@ export class OfficeEntryAuditEntity {
   entryId!: string;
 
   @Column({ type: 'varchar', length: 32 })
-  action!: 'create' | 'update' | 'publish' | 'disable' | 'open';
+  action!: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open';
 
   @Column({ name: 'operator_user_id', type: 'varchar', length: 64 })
   operatorUserId!: string;

@@ -1,3 +1,4 @@
+import type { Learning } from './businessApi';
 import { baseApi } from '../../app/baseApi';
 
 export type WorkbenchTemplateType =
@@ -36,6 +37,7 @@ export interface WorkbenchDashboard {
 export interface WorkbenchRecordSummary {
   id: string;
   moduleCode: string;
+  templateCode?: string;
   title: string;
   status: string;
   vesselId: string | null;
@@ -76,6 +78,9 @@ export interface WorkbenchActionLog {
 
 export interface WorkbenchRecordDetail extends WorkbenchRecordSummary {
   summary: string;
+  learning?: Learning | null;
+  canManageLearning?: boolean;
+  canRecordFuel?: boolean;
   externalProcessInstanceId: string | null;
   externalStatus: string | null;
   steps: WorkbenchStep[];
@@ -134,6 +139,7 @@ export interface WorkbenchModuleSchema {
 
 export interface WorkbenchRecordCreatePayload {
   moduleCode: string;
+  templateCode?: string;
   title: string;
   summary: string;
   vesselId?: string;
@@ -193,6 +199,9 @@ export interface WorkbenchApprovalLaunchResult {
 }
 
 export interface WorkbenchAttendanceStatistics {
+  canExport?: boolean;
+  people?: Array<{personKey:string;personName:string;departmentCode:string;departmentName?:string;days:number;recordCount:number;workHours:number;missingHours:number}>;
+  details?: Array<{recordId:string;recordNo:string;personKey:string;personName:string;departmentCode:string;departmentName?:string;statusName?:string;vesselName:string;occurredAt:string;period:string;workHours:number|null;status:string}>;
   month: string;
   summary: {
     totalCheckIns: number;
@@ -264,7 +273,7 @@ export const workbenchApi = baseApi.injectEndpoints({
     }),
     getWorkbenchAttendanceStatistics: builder.query<
       { data: WorkbenchAttendanceStatistics },
-      { month?: string } | void
+      { month?: string; departmentCode?: string } | void
     >({
       query: (params) => ({ url: '/workbench/statistics/attendance', params }),
       providesTags: ['Workbench'],

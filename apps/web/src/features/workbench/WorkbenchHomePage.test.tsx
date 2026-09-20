@@ -8,6 +8,8 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkbenchHomePage } from './WorkbenchHomePage';
 
+vi.mock('./FuelPanel', () => ({ FuelStatisticsPanel: () => <div>燃油月报组件</div>, FuelActualPanel: () => <div>燃油实绩组件</div> }));
+vi.mock('./AttendanceDetailsPanel', () => ({ AttendanceDetailsPanel: () => <div>考勤明细组件</div> }));
 vi.mock('../files/FileUploadField', () => ({
   FileUploadField: () => <button type="button">上传文件</button>,
 }));
@@ -229,7 +231,7 @@ describe('WorkbenchHomePage', () => {
       isLoading: false,
     });
     mockGetWorkbenchAttendanceStatisticsQuery.mockReturnValue({
-      data: {
+      currentData: {
         data: {
           month: '2026-04',
           summary: {

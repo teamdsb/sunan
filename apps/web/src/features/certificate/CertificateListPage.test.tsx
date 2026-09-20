@@ -9,6 +9,7 @@ const mockSettings = vi.fn();
 const mockTypes = vi.fn();
 const mockOwners = vi.fn();
 const mockCreate = vi.fn();
+const mockDelete = vi.fn();
 const mockCurrentUser = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
@@ -26,6 +27,7 @@ vi.mock('./certificateApi', () => ({
   useGetCertificateOwnersQuery: (params: unknown) => mockOwners(params),
   useGetCertificateReminderRecipientsQuery: () => ({ data: { data: [] }, isLoading: false }),
   useCreateCertificateMutation: () => [mockCreate, { isLoading: false }],
+  useDeleteCertificateMutation: () => [mockDelete, { isLoading: false }],
 }));
 
 vi.mock('../settings/settingsApi', () => ({

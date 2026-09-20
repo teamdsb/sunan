@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
@@ -189,6 +190,15 @@ export class OssService {
     const bytes = Buffer.from(await object.Body.transformToByteArray());
     if (bytes.length > maxBytes) throw new Error('文件超过读取大小限制');
     return bytes;
+  }
+
+  async deleteObject(ossKey: string): Promise<void> {
+    if (this.aliyunClient) {
+      await (this.aliyunClient as OSS & { delete: (key: string) => Promise<unknown> }).delete(ossKey);
+      return;
+    }
+
+    await this.getS3Client().send(new DeleteObjectCommand({ Bucket: appEnv.OSS_BUCKET, Key: ossKey }));
   }
 
   async checkConnection(): Promise<void> {

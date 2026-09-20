@@ -74,12 +74,10 @@ const SINGLE_IMAGE_MAX_WIDTH = 600;
 const SINGLE_IMAGE_MAX_HEIGHT = 760;
 const TWO_UP_IMAGE_MAX_WIDTH = 280;
 const TWO_UP_IMAGE_MAX_HEIGHT = 620;
-const LONG_IMAGE_RATIO = 2.65;
-const LONG_IMAGE_PART_RATIO = 2.4;
 
 // Current pagination after rendering proportionally scaled figures on A4.
 // Recheck these hints after changing body copy or image dimensions.
-const CHAPTER_PAGE_HINTS = [3, 6, 8, 16, 25, 42, 50, 72, 82, 84, 86, 90, 91, 92];
+const CHAPTER_PAGE_HINTS = [3, 5, 7, 14, 24, 45, 53, 70, 81, 83, 85, 89];
 
 function stripFrontMatter(markdown) {
   if (!markdown.startsWith('---\n')) return markdown;
@@ -355,32 +353,18 @@ async function imageAsset(relativePath) {
       const resizedMetadata = await sharp(resized).metadata();
       const resizedWidth = resizedMetadata.width ?? renderWidth;
       const resizedHeight = resizedMetadata.height ?? 900;
-      const partCount = ratio > LONG_IMAGE_RATIO
-        ? Math.ceil(ratio / LONG_IMAGE_PART_RATIO)
-        : 1;
-      const parts = [];
-
-      // Split only genuinely long captures. Equal contiguous slices preserve every source pixel.
-      for (let partIndex = 0; partIndex < partCount; partIndex += 1) {
-        const top = Math.floor((partIndex * resizedHeight) / partCount);
-        const bottom = Math.floor(((partIndex + 1) * resizedHeight) / partCount);
-        const height = bottom - top;
-        const data = await sharp(resized)
-          .extract({ left: 0, top, width: resizedWidth, height })
-          .png()
-          .toBuffer();
-        parts.push({
-          data,
-          pixelWidth: resizedWidth,
-          pixelHeight: height,
-        });
-      }
+      // Keep every screenshot as one complete image. The renderer scales it
+      // proportionally to fit the page; it never crops or slices screenshots.
+      const parts = [{
+        data: resized,
+        pixelWidth: resizedWidth,
+        pixelHeight: resizedHeight,
+      }];
       return {
         isPlaceholder: false,
         ratio,
-        twoUpEligible: partCount === 1 && ratio >= 1.55,
-        pairedSlices:
-          partCount === 2 && sourceWidth <= 1_200 && ratio <= 4.6,
+        twoUpEligible: ratio >= 1.55,
+        pairedSlices: false,
         parts,
       };
     })());

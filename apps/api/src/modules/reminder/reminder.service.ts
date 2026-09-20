@@ -111,6 +111,7 @@ export class ReminderService {
     const certificates = await this.certificateRepository.find({ withDeleted: true });
     const certificateById = new Map(certificates.map(certificate => [certificate.id, certificate]));
     reminders = reminders.map(reminder => this.resolveCycleStatus(reminder, certificateById.get(reminder.certificateId)));
+    reminders = this.dedupeReminderCycles(reminders);
     const context = await this.resolveViewerContext(user);
 
     if (context.roles.has('system_admin')) {
@@ -228,12 +229,31 @@ export class ReminderService {
         return false;
       }
 
+      // The default dashboard/list view is actionable work. Acknowledged and
+      // resolved reminders remain available through an explicit status filter,
+      // but should not continue occupying the default board.
+      if (!query.status && ['acknowledged', 'resolved'].includes(item.status)) {
+        return false;
+      }
+
       if (query.ownerType && item.ownerType !== query.ownerType) {
         return false;
       }
 
       return true;
     });
+  }
+
+  private dedupeReminderCycles(reminders: CertificateReminderEntity[]): CertificateReminderEntity[] {
+    const byCycle = new Map<string, CertificateReminderEntity>();
+    for (const reminder of reminders) {
+      const key = [reminder.certificateId, reminder.recipientUserId, reminder.certificateExpiryDate, reminder.reminderType].join(':');
+      const current = byCycle.get(key);
+      if (!current || (reminder.status === 'acknowledged' && current.status !== 'acknowledged') || (reminder.status !== 'acknowledged' && current.status !== 'acknowledged' && (reminder.scheduledDate > current.scheduledDate || (reminder.scheduledDate === current.scheduledDate && reminder.createdAt > current.createdAt)))) {
+        byCycle.set(key, reminder);
+      }
+    }
+    return [...byCycle.values()];
   }
 
   private sortReminders(reminders: CertificateReminderEntity[]): CertificateReminderEntity[] {

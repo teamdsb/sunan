@@ -1,3 +1,6 @@
+import { AttendanceDetailsPanel } from './AttendanceDetailsPanel';
+import { LearningPanel, LearningStatisticsPanel, LEARNING_MODULES, businessError } from './LearningPanel';
+import { FuelActualPanel, FuelStatisticsPanel } from './FuelPanel';
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -26,7 +29,6 @@ import {
   Form,
   Input,
   List,
-  Progress,
   Select,
   Space,
   Statistic,
@@ -280,13 +282,9 @@ export function WorkbenchHomePage({
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [statisticsMonth, setStatisticsMonth] = useState(() =>
-    new Date().toISOString().slice(0, 7),
+    dayjs().format('YYYY-MM'),
   );
-  const [trainingProgressPercent, setTrainingProgressPercent] =
-    useState<string>('0');
-  const [trainingProgressStatus, setTrainingProgressStatus] = useState<
-    'not_started' | 'in_progress' | 'completed'
-  >('not_started');
+  const [statisticsDepartment, setStatisticsDepartment] = useState<string>();
   const [alertNoticeVisible, setAlertNoticeVisible] = useState(true);
   const [mobileModulesExpanded, setMobileModulesExpanded] = useState(false);
   const [mobileRecordsExpanded, setMobileRecordsExpanded] = useState(false);
@@ -353,11 +351,11 @@ export function WorkbenchHomePage({
   const { data: vesselsResponse, isLoading: vesselsLoading } =
     useGetMasterDataVesselsQuery(undefined, { skip: !createOpen });
   const {
-    data: attendanceStatisticsResponse,
-    isLoading: attendanceStatisticsLoading,
+    currentData: attendanceStatisticsResponse,
+    isFetching: attendanceStatisticsLoading,
     isError: attendanceStatisticsError,
   } = useGetWorkbenchAttendanceStatisticsQuery(
-    statisticsMonth ? { month: statisticsMonth } : undefined,
+    statisticsMonth ? { month: statisticsMonth, departmentCode: statisticsDepartment } : undefined,
     {
       skip:
         !statisticsOnly &&
@@ -415,7 +413,12 @@ export function WorkbenchHomePage({
     : null;
   const availableActions = new Set(detailResponse?.data?.availableActions ?? []);
   const schemaFieldLabelMap = useMemo(() => {
-    const labels = new Map<string, string>();
+    const labels = new Map<string, string>([
+      ['hours', '每人完成学时'], ['totalHours', '每人完成学时'],
+      ['participants', '参训成员'], ['crewNames', '参训船员'],
+      ['learningAudience', '学习对象'], ['learningProgressPercent', '学习进度（%）'],
+      ['learningStatus', '学习状态'], ['completedAt', '学习完成时间'],
+    ]);
     moduleSchemaResponse?.data.sections.forEach((section) => {
       section.fields.forEach((field) => {
         labels.set(field.key, field.label);
@@ -576,39 +579,6 @@ export function WorkbenchHomePage({
       setActiveModuleCode(detailResponse.data.moduleCode);
     }
   }, [activeModuleCode, detailResponse?.data?.moduleCode]);
-
-  useEffect(() => {
-    if (!detailResponse?.data) {
-      setTrainingProgressPercent('0');
-      setTrainingProgressStatus('not_started');
-      return;
-    }
-    if (detailResponse.data.moduleCode === 'goa_training') {
-      const progressRaw = detailResponse.data.payload.learningProgressPercent;
-      const progressNumber =
-        typeof progressRaw === 'number'
-          ? progressRaw
-          : Number(String(progressRaw ?? '').trim());
-      setTrainingProgressPercent(
-        Number.isFinite(progressNumber) ? String(progressNumber) : '0',
-      );
-      const statusRaw = String(
-        detailResponse.data.payload.learningStatus ?? '',
-      ).trim();
-      if (
-        statusRaw === 'in_progress' ||
-        statusRaw === 'completed' ||
-        statusRaw === 'not_started'
-      ) {
-        setTrainingProgressStatus(statusRaw);
-      } else {
-        setTrainingProgressStatus('not_started');
-      }
-    } else {
-      setTrainingProgressPercent('0');
-      setTrainingProgressStatus('not_started');
-    }
-  }, [detailResponse?.data]);
 
   const goHome = () => navigate('/workbench');
   const openModule = (moduleCode: string) => {
@@ -797,52 +767,41 @@ export function WorkbenchHomePage({
       );
       return;
     }
-    const record = detailResponse.data;
-    const result = await launchWorkbenchApproval({
-      moduleCode: record.moduleCode,
-      businessRecordId: record.id,
-      templateCode: `${record.moduleCode}_v1`,
-      title: record.title,
-      applicantUserId: 'current_user',
-      summary: record.summary,
-      payload: record.payload,
-    }).unwrap();
+    try {
+      const record = detailResponse.data;
+      const result = await launchWorkbenchApproval({
+        moduleCode: record.moduleCode,
+        businessRecordId: record.id,
+        templateCode: record.templateCode ?? `${record.moduleCode}_v1`,
+        title: record.title,
+        applicantUserId: 'current_user',
+        summary: record.summary,
+        payload: record.payload,
+      }).unwrap();
 
-    const opened = await openWecomApprovalPage(result.data.wecomLaunchConfig);
-    if (opened) {
-      messageApi.success(`企业微信审批页已打开：${result.data.thirdNo}`);
+      const opened = await openWecomApprovalPage(result.data.wecomLaunchConfig);
+      if (opened) {
+        messageApi.success(`企业微信审批页已打开：${result.data.thirdNo}`);
+      }
+    } catch (error) {
+      messageApi.error(businessError(error));
     }
   };
 
   const triggerPrint = async (paperSize: 'A4' | 'A3') => {
     if (!detailResponse?.data) return;
-    const result = await triggerPrintSnapshot({
-      recordId: detailResponse.data.id,
-      paperSize,
-    }).unwrap();
-    messageApi.success(
-      `打印快照已生成：${result.data.paperSize} / ${result.data.renderedFormat}`,
-    );
-  };
-
-  const triggerTrainingProgressUpdate = async () => {
-    if (
-      !detailResponse?.data ||
-      detailResponse.data.moduleCode !== 'goa_training'
-    )
-      return;
-    const parsed = Number(trainingProgressPercent);
-    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
-      messageApi.warning('学习进度需为 0-100 的数字');
-      return;
+    try {
+      const result = await triggerPrintSnapshot({
+        recordId: detailResponse.data.id,
+        paperSize,
+      }).unwrap();
+      if (result.data.downloadUrl) window.open(result.data.downloadUrl, '_blank', 'noopener,noreferrer');
+      messageApi.success(
+        `打印快照已生成：${result.data.paperSize} / ${result.data.renderedFormat}`,
+      );
+    } catch (error) {
+      messageApi.error(businessError(error));
     }
-    await triggerRecordAction(detailResponse.data.id, 'update_payload', {
-      learningStatus: trainingProgressStatus,
-      learningProgressPercent: parsed,
-      ...(trainingProgressStatus === 'completed'
-        ? { completedAt: new Date().toISOString() }
-        : {}),
-    });
   };
 
   if (showMobileWorkbenchHome) {
@@ -1310,7 +1269,7 @@ export function WorkbenchHomePage({
         </section>
       ) : null}
 
-      <section
+      {!statisticsOnly && <section
         id="workbench-record-list"
         className="page-card-grid workbench-record-grid"
         style={{ scrollMarginTop: 88 }}
@@ -1398,7 +1357,7 @@ export function WorkbenchHomePage({
             />}
           </Space>
         </Card>
-      </section>
+      </section>}
 
       {isAttendanceView ? (
         <section className="page-card-grid">
@@ -1414,11 +1373,8 @@ export function WorkbenchHomePage({
               ) : null}
               <div className="sunan-query-grid">
                 <Typography.Title level={4}>月度考勤统计</Typography.Title>
-                <Input
-                  value={statisticsMonth}
-                  onChange={(event) => setStatisticsMonth(event.target.value)}
-                  placeholder="YYYY-MM"
-                />
+                <DatePicker picker="month" value={dayjs(`${statisticsMonth}-01`)} allowClear={false} onChange={value => value && setStatisticsMonth(value.format('YYYY-MM'))} />
+                <Select allowClear placeholder="全部可见部门" value={statisticsDepartment} onChange={setStatisticsDepartment} options={Object.entries(departmentLabelMap).map(([value,label])=>({value,label}))} />
               </div>
               <div
                 className="workbench-attendance-stat-grid"
@@ -1555,10 +1511,13 @@ export function WorkbenchHomePage({
                   },
                 ]}
               />
+              <AttendanceDetailsPanel report={attendanceStatisticsResponse?.data} month={statisticsMonth} departmentCode={statisticsDepartment} />
             </Space>
           </Card>
         </section>
       ) : null}
+      {activeModuleCode && LEARNING_MODULES.includes(activeModuleCode) && <LearningStatisticsPanel />}
+      {['shipping_fuel_bunkering_approval', 'shipping_fuel_measurement'].includes(activeModuleCode ?? '') && <FuelStatisticsPanel />}
 
       <Drawer
         title="记录详情"
@@ -1620,6 +1579,7 @@ export function WorkbenchHomePage({
                 </Space>
               ) : null}
               {detailModule?.requiresApproval &&
+              (!LEARNING_MODULES.includes(detailResponse.data.moduleCode) || (detailResponse.data.canManageLearning && detailResponse.data.learning?.completionRate === 100)) &&
               !detailResponse.data.externalProcessInstanceId ? (
                 <Button
                   type="primary"
@@ -1811,49 +1771,14 @@ export function WorkbenchHomePage({
             </div>
             )}
 
-            {detailResponse.data.moduleCode === 'goa_training' ? (
-              <div>
-                <Typography.Title level={5}>学习进度</Typography.Title>
-                <Progress
-                  percent={Math.max(
-                    0,
-                    Math.min(100, Number(trainingProgressPercent) || 0),
-                  )}
-                />
-                <div className="sunan-query-grid" style={{ marginTop: 8 }}>
-                  <Select
-                    value={trainingProgressStatus}
-                    onChange={(
-                      value: 'not_started' | 'in_progress' | 'completed',
-                    ) => setTrainingProgressStatus(value)}
-                    options={[
-                      { value: 'not_started', label: '未开始' },
-                      { value: 'in_progress', label: '进行中' },
-                      { value: 'completed', label: '已完成' },
-                    ]}
-                  />
-                  <Input
-                    value={trainingProgressPercent}
-                    onChange={(event) =>
-                      setTrainingProgressPercent(event.target.value)
-                    }
-                    placeholder="0-100"
-                  />
-                  <Button
-                    loading={actionSubmitting}
-                    onClick={() => void triggerTrainingProgressUpdate()}
-                  >
-                    更新学习进度
-                  </Button>
-                </div>
-              </div>
-            ) : null}
+            {LEARNING_MODULES.includes(detailResponse.data.moduleCode) && <LearningPanel record={detailResponse.data} />}
+            {detailResponse.data.moduleCode === 'shipping_fuel_bunkering_approval' && <FuelActualPanel record={detailResponse.data} />}
 
             <div>
               <Typography.Title level={5}>台账字段</Typography.Title>
               <List
                 bordered
-                dataSource={Object.entries(detailResponse.data.payload)}
+                dataSource={Object.entries(detailResponse.data.payload).filter(([key]) => key !== 'fuelActual')}
                 locale={{ emptyText: '暂无字段数据' }}
                 renderItem={([key, value]) => (
                   <List.Item>
@@ -1866,7 +1791,7 @@ export function WorkbenchHomePage({
               />
             </div>
 
-            {detailResponse.data.moduleCode !== 'shipping_self_inspection' && (
+            {detailResponse.data.moduleCode !== 'shipping_self_inspection' && (!LEARNING_MODULES.includes(detailResponse.data.moduleCode) || (detailResponse.data.canManageLearning && !detailResponse.data.learning)) && (
             <EvidencePanel recordId={detailResponse.data.id} summary={detailResponse.data.summary} attachments={detailResponse.data.attachments}
               onUpload={async (file) => { await uploadWorkbenchRecordAttachment({ recordId: detailResponse.data.id, data: { category: 'evidence', fileId: file.id } }).unwrap(); }}
               onSignature={async (signatureFileId, businessSummaryHash) => { await createSignatureEvidence({ recordId: detailResponse.data.id, signatureFileId, businessSummaryHash }).unwrap(); messageApi.success('签名证据已保存'); }}
@@ -1973,7 +1898,7 @@ export function WorkbenchHomePage({
             >
               <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} style={{ width: '100%' }} />
             </Form.Item>}
-            <Form.Item label={activeModuleCode === 'shipping_self_inspection' ? '船舶' : '船舶（可选）'} name="vesselId" rules={activeModuleCode === 'shipping_self_inspection' ? [{ required: true, message: '请选择船舶' }] : []}>
+            <Form.Item label={['shipping_self_inspection','shipping_fuel_bunkering_approval'].includes(activeModuleCode ?? '') ? '船舶' : '船舶（可选）'} name="vesselId" rules={['shipping_self_inspection','shipping_fuel_bunkering_approval'].includes(activeModuleCode ?? '') ? [{ required: true, message: '请选择船舶' }] : []}>
               <Select
                 allowClear
                 showSearch

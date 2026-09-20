@@ -4,12 +4,13 @@
   Card,
   Form,
   Input,
+  Popconfirm,
   Select,
   Space,
   Typography,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FileUploadField } from '../files/FileUploadField';
 import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
@@ -18,8 +19,12 @@ import {
   useBindEnterpriseProfileFilesMutation,
   useGetEnterpriseProfileByIdQuery,
   useLazyGetEnterpriseProfileFileDownloadUrlQuery,
+  useUnbindEnterpriseProfileFileMutation,
   useUpdateEnterpriseProfileMutation,
+  useDeleteEnterpriseProfileMutation,
 } from './enterpriseApi';
+import { myRouteConfig } from '../../router/myRouteConfig';
+import { resolveBackHref } from '../../router/myRouteState';
 
 const categoryOptions = [
   { value: 'license', label: '资质' },
@@ -34,14 +39,18 @@ const statusOptions = [
 
 export function EnterpriseProfileDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { data, isLoading } = useGetEnterpriseProfileByIdQuery(id, {
     skip: !id,
   });
   const [updateProfile, { isLoading: saving }] =
     useUpdateEnterpriseProfileMutation();
+  const [deleteProfile] = useDeleteEnterpriseProfileMutation();
   const [bindFiles] = useBindEnterpriseProfileFilesMutation();
   const [getFileDownloadUrl] =
     useLazyGetEnterpriseProfileFileDownloadUrlQuery();
+  const [unbindFile] = useUnbindEnterpriseProfileFileMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [form] = Form.useForm<{
@@ -92,6 +101,7 @@ export function EnterpriseProfileDetailPage() {
               await updateProfile({ id, data: values }).unwrap();
               if (currentUpload?.id) {
                 await bindFiles({ id, fileIds: [currentUpload.id] }).unwrap();
+                setUploaded(null);
               }
             } catch (error) {
               setSaveError(
@@ -123,6 +133,9 @@ export function EnterpriseProfileDetailPage() {
             <Button htmlType="submit" type="primary" loading={saving}>
               保存
             </Button>
+            <Popconfirm title="确定删除此企业资料吗？" description="删除后将从资料列表中移除。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deleteProfile(id).unwrap(); navigate(resolveBackHref(myRouteConfig.enterpriseProfile.path, location.search)); } catch (error) { setSaveError(error instanceof Error ? error.message : '删除失败'); } }}>
+              <Button danger>删除</Button>
+            </Popconfirm>
           </Space>
         </Form> : <Alert type="info" showIcon message="你没有维护此企业资料的权限。" />}
         {profile ? (
@@ -132,6 +145,10 @@ export function EnterpriseProfileDetailPage() {
             </Typography.Title>
             <FileAttachmentList
               files={profile.files}
+              allowDelete={canManage}
+              onDelete={async (file) => {
+                await unbindFile({ id, fileId: file.id }).unwrap();
+              }}
               getUrl={async (file) => {
                 const response = await getFileDownloadUrl({
                   id,

@@ -61,4 +61,10 @@ export class EnterprisePolicyController {
   ) {
     return { data: await this.service.getFileDownloadUrl(id, fileId) };
   }
+
+  @Delete(':id/files/:fileId')
+  @HttpCode(204)
+  async unbindFile(@Param('id') id: string, @Param('fileId') fileId: string, @CurrentUserDecorator() user: CurrentUser) {
+    await this.service.unbindFile(id, fileId, user);
+  }
 }

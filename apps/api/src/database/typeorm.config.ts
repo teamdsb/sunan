@@ -1,4 +1,6 @@
 import { ReminderExpiryCycle1710000025000 } from './migrations/1710000025000-reminder-expiry-cycle';
+import { FileOrphanRetention1710000026000 } from './migrations/1710000026000-file-orphan-retention';
+import { FileRecycleJobEntity } from './entities/file-recycle-job.entity';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { appEnv } from '../config/env';
@@ -145,6 +147,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     CapaVerificationEntity,
     InspectionCapaActionLogEntity,
     FileEntity,
+    FileRecycleJobEntity,
     EvidenceAuditEntity,
     EvidenceRecordEntity, ExportJobEntity,
     MasterDataImportBatchEntity, MasterDataImportRowEntity,
@@ -217,6 +220,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     WorkbenchVoyageSchemaV21710000023000,
     CertificateReminderPreferences1710000024000,
     ReminderExpiryCycle1710000025000,
+    FileOrphanRetention1710000026000,
   ],
   synchronize: false,
 });

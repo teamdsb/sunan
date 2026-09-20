@@ -12,6 +12,7 @@ import { DataSource } from 'typeorm';
 
 import { configureApp } from 'src/app.bootstrap';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { ExportJobEntity } from 'src/database/entities/export-job.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
@@ -169,7 +170,7 @@ describe('WorkbenchController integration', () => {
       exportJobRepository.create({
         sourceType: 'attendance',
         sourceId: '2026-03',
-        querySnapshot: { month: '2026-03', departmentCode: null },
+        querySnapshot: { month: '2026-03', departmentCode: null, report: {month:'2026-03',details:[],people:[]} },
         exportFormat: 'xlsx',
         status: 'queued',
         resultFileId: null,
@@ -766,9 +767,9 @@ describe('WorkbenchController integration', () => {
     ).map((field) => field.key);
     expect(trainingFields).toEqual(
       expect.arrayContaining([
-        'learningStatus',
-        'learningProgressPercent',
-        'completedAt',
+        'trainingType',
+        'hours',
+        'participants',
       ]),
     );
 
@@ -848,8 +849,6 @@ describe('WorkbenchController integration', () => {
           trainer: '培训讲师A',
           hours: 4,
           participants: '张三,李四',
-          learningStatus: 'in_progress',
-          learningProgressPercent: 50,
         },
       });
     expect(createTrainingResponse.status).toBe(201);
@@ -869,40 +868,9 @@ describe('WorkbenchController integration', () => {
           learningProgressPercent: 100,
         },
       });
-    expect(updateTrainingPayloadResponse.status).toBe(201);
-    expect(
-      (
-        updateTrainingPayloadResponse.body as {
-          data: {
-            status: string;
-            approvalLaunchConfig: { templateId: string; thirdNo: string };
-          };
-        }
-      ).data,
-    ).toMatchObject({
-      status: 'approval_pending',
-      approvalLaunchConfig: {
-        templateId: 'tpl-shipping-voyage',
-      },
-    });
-
-    const trainingDetailResponse = await request(
-      app.getHttpServer() as Parameters<typeof request>[0],
-    )
-      .get(`/api/v1/workbench/records/${trainingRecordId}`)
-      .set('Authorization', 'Bearer token');
-    expect(trainingDetailResponse.status).toBe(200);
-    expect(
-      (
-        trainingDetailResponse.body as {
-          data: { externalProcessInstanceId: string | null };
-        }
-      ).data.externalProcessInstanceId,
-    ).toMatch(/^SN-/);
-    expect(
-      (trainingDetailResponse.body as { data: { approvalChannel: string } })
-        .data.approvalChannel,
-    ).toBe('wecom_native');
+    expect(updateTrainingPayloadResponse.status).toBe(400);
+    const trainingRecord = await dataSource.getRepository(WorkbenchRecordEntity).findOneByOrFail({id:trainingRecordId});
+    expect(trainingRecord.externalProcessInstanceId).toBeNull();
 
     const meetingSchemaResponse = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
@@ -1133,15 +1101,13 @@ describe('WorkbenchController integration', () => {
         'fuelType',
         'bunkeringDate',
         'bunkeringAmount',
-        'remainingFuelAmount',
-        'monthlyFuelConsumption',
-        'reportMonth',
         'reason',
         'remark',
         'requestedAmount',
       ]),
     );
 
+    const fuelVessel = await dataSource.getRepository(VesselEntity).save({code:'FUEL-INTEGRATION',name:'燃油集成验证专用船',status:'active',category:'main_vessel'});
     const createFuelResponse = await request(
       app.getHttpServer() as Parameters<typeof request>[0],
     )
@@ -1151,7 +1117,7 @@ describe('WorkbenchController integration', () => {
         moduleCode: 'shipping_fuel_bunkering_approval',
         title: '燃油加注-苏南012',
         summary: '2026-04 月报与加油记录',
-        vesselId: 'sunan-012',
+        vesselId: fuelVessel.id,
         payload: {
           vesselName: '苏南012',
           fuelType: '柴油',

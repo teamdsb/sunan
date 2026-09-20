@@ -12,6 +12,7 @@ import {
   Tag,
   Typography,
   message,
+  Popconfirm,
 } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
@@ -24,6 +25,7 @@ import {
   OfficeEntryMutationPayload,
   useCreateOfficeEntryMutation,
   useDisableOfficeEntryMutation,
+  useDeleteOfficeEntryMutation,
   useGetOfficeAdminAuditsQuery,
   useGetOfficeAdminEntriesQuery,
   useGetOfficeCategoriesQuery,
@@ -58,6 +60,7 @@ const auditActionLabelMap: Record<string, string> = {
   update: '更新',
   publish: '发布',
   disable: '停用',
+  delete: '删除',
   open: '打开',
 };
 
@@ -110,6 +113,7 @@ export function OfficeAdminPage() {
     usePublishOfficeEntryMutation();
   const [disableEntry, { isLoading: isDisabling }] =
     useDisableOfficeEntryMutation();
+  const [deleteEntry] = useDeleteOfficeEntryMutation();
   const [open, setOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<OfficeAdminEntry | null>(
     null,
@@ -172,6 +176,15 @@ export function OfficeAdminPage() {
     [disableEntry, messageApi],
   );
 
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteEntry(id).unwrap();
+      messageApi.success('办事入口已删除');
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : '删除失败');
+    }
+  }, [deleteEntry, messageApi]);
+
   const columns: ColumnsType<OfficeAdminEntry> = useMemo(
     () => [
       { title: '标题', dataIndex: 'title', key: 'title' },
@@ -231,6 +244,9 @@ export function OfficeAdminPage() {
                 停用
               </Button>
             ) : null}
+            <Popconfirm key="delete" title="确定删除此办事入口吗？" description="删除后将从治理列表和工作台入口中移除。" okText="删除" cancelText="取消" onConfirm={() => void handleDelete(record.id)}>
+              <Button danger>删除</Button>
+            </Popconfirm>
           </Space>
         ),
       },
@@ -238,6 +254,7 @@ export function OfficeAdminPage() {
     [
       categories,
       handleDisable,
+      handleDelete,
       handleEdit,
       handlePublish,
       isDisabling,

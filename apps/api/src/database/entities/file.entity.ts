@@ -37,4 +37,7 @@ export class FileEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: timestampColumnType })
   updatedAt!: Date;
+
+  @Column({ name: 'orphaned_at', type: timestampColumnType, nullable: true })
+  orphanedAt!: Date | null;
 }

@@ -1,4 +1,4 @@
-import { Button, List, message } from 'antd';
+import { Button, List, Popconfirm, message } from 'antd';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
@@ -17,6 +17,47 @@ interface FileAttachmentListProps {
   getUrl: (file: AttachmentFileDescriptor) => Promise<string>;
   emptyText?: string;
   extraActions?: (file: AttachmentFileDescriptor) => ReactNode[];
+  allowDelete?: boolean;
+  onDelete?: (file: AttachmentFileDescriptor) => Promise<void>;
+  onDeleted?: (fileId: string) => void;
+}
+
+function AttachmentDeleteAction({
+  file,
+  onDelete,
+  onDeleted,
+}: {
+  file: AttachmentFileDescriptor;
+  onDelete?: (file: AttachmentFileDescriptor) => Promise<void>;
+  onDeleted?: (fileId: string) => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+
+  return (
+    <>
+      <Popconfirm
+        title="删除附件？"
+        description={<div style={{ maxWidth: 280, overflowWrap: 'anywhere' }}>移除“{file.fileName}”；无其他引用的文件将在 24 小时后自动回收。</div>}
+        okText="删除"
+        cancelText="取消"
+        onConfirm={async () => {
+          if (!onDelete || deleting) return;
+          setDeleting(true);
+          try {
+            await onDelete(file);
+            message.success('附件已移除，无其他引用的文件将在 24 小时后回收');
+            onDeleted?.(file.id);
+          } catch (error) {
+            const detail = error as { data?: { message?: string | string[]; error?: { message?: string } } };
+            const reason = detail?.data?.message ?? detail?.data?.error?.message;
+            message.error(error instanceof Error ? error.message : Array.isArray(reason) ? reason.join('；') : reason || '附件删除失败，请稍后重试');
+          } finally { setDeleting(false); }
+        }}
+      >
+        <Button danger type="link" loading={deleting}>删除</Button>
+      </Popconfirm>
+    </>
+  );
 }
 
 function formatFileSize(size: number): string {
@@ -31,6 +72,9 @@ export function FileAttachmentList({
   getUrl,
   emptyText = '暂无附件',
   extraActions,
+  allowDelete = false,
+  onDelete,
+  onDeleted,
 }: FileAttachmentListProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedFile, setSelectedFile] =
@@ -55,6 +99,7 @@ export function FileAttachmentList({
     <>
       {contextHolder}
       <List
+        rowKey="id"
         dataSource={files}
         locale={{ emptyText }}
         renderItem={(file) => (
@@ -76,6 +121,9 @@ export function FileAttachmentList({
                 下载
               </Button>,
               ...(extraActions?.(file) ?? []),
+              ...(allowDelete && onDelete ? [
+                <AttachmentDeleteAction key="delete" file={file} onDelete={onDelete} onDeleted={onDeleted} />,
+              ] : []),
             ]}
           >
             <List.Item.Meta

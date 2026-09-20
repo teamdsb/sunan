@@ -1,4 +1,4 @@
-﻿import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
 export class ShipMonitorListQueryDto {
@@ -7,8 +7,9 @@ export class ShipMonitorListQueryDto {
   vesselId?: string;
 
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }: { value: unknown }) =>
+    value === 'true' ? true : value === 'false' ? false : value,
+  )
   @IsBoolean()
   activeOnly?: boolean = true;
 }
-

@@ -1,13 +1,13 @@
 ---
 status: current-index
 owner: workbench
-updated: 2026-09-07
+updated: 2026-09-20
 replaces: []
 replaced_by: []
 ---
 # 工作平台入口
 
-工作平台覆盖各部门业务入口，实际完成范围见[原件核查与实施补充](../../audits/2026-09-07-original-goal-audit.md)。历史里程碑的“已完成”不代表原始目标全部兑现；M9 继续暂停。
+工作平台覆盖各部门业务入口，实际完成范围见[原件核查与实施补充](../../audits/2026-09-07-original-goal-audit.md)。考勤、个人学习和船舶燃油的本轮补齐见[业务规则](business-reporting.md)。历史里程碑的“已完成”不代表原始目标全部兑现；M9 继续暂停。
 
 | 需要了解的内容 | 入口 |
 |---|---|
@@ -16,7 +16,7 @@ replaced_by: []
 | 页面与操作 | [WorkbenchHomePage.tsx](../../../apps/web/src/features/workbench/WorkbenchHomePage.tsx)、[SelfInspectionPanel.tsx](../../../apps/web/src/features/workbench/SelfInspectionPanel.tsx) |
 | 接口契约 | [平台 API](api/workbench-platform-api.yaml)、[审批 API](api/workbench-approval-api.yaml) |
 | 数据结构与变更 | `apps/api/src/database/entities/`、`apps/api/src/database/migrations/` |
-| 关键回归 | `apps/api/test/self-inspection.integration.spec.ts`、`apps/api/test/workbench.integration.spec.ts` |
+| 关键回归 | `apps/api/test/self-inspection.integration.spec.ts`、`apps/api/test/workbench.integration.spec.ts`、`apps/api/test/workbench-business.integration.spec.ts` |
 | 企业微信配置与审批桥 | [企业微信入口](../wecom/README.md) |
 | 安全领域与计划状态 | [安全领域](../safety/README.md)、[里程碑状态](../../execplans.md) |
 

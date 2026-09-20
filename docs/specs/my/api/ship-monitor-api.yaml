@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Ship Monitor API
   version: 1.0.0
-  description: 船舶监控模块 API 规格。
+  description: 船舶监控入口 API。仅 system_admin 可新增、修改和软删除；其他登录用户只能读取启用项。
 servers:
   - url: /api/v1
 tags:
@@ -22,6 +22,7 @@ paths:
             format: uuid
         - name: activeOnly
           in: query
+          description: 默认仅启用项；仅 system_admin 可用 false 获取含停用项的列表。
           schema:
             type: boolean
             default: true
@@ -40,6 +41,7 @@ paths:
     post:
       tags: [ShipMonitors]
       summary: 创建监控端口
+      description: 仅 system_admin 可操作；船舶必须存在、未删除且有效。同船舶下未删除入口的名称唯一。
       requestBody:
         required: true
         content:
@@ -53,10 +55,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShipMonitorDetailResponse'
+        '400':
+          description: UUID、名称、HTTP(S) 地址或其他输入无效
+        '403':
+          description: 仅系统管理员可配置
+        '404':
+          description: 船舶不存在或已删除
+        '409':
+          description: 该船舶已存在同名监控入口
+        '422':
+          description: 船舶已停用
   '/ship-monitors/{id}':
     get:
       tags: [ShipMonitors]
       summary: 获取监控端口详情
+      description: 普通用户读取停用项返回 404；管理员可读取停用项。
       parameters:
         - $ref: '#/components/parameters/Id'
       responses:
@@ -66,9 +79,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShipMonitorDetailResponse'
+        '404':
+          description: 入口不存在、已删除或当前用户不可见
     patch:
       tags: [ShipMonitors]
       summary: 更新监控端口
+      description: 仅 system_admin 可操作；换船及启用时要求船舶有效。原船舶停用或删除后仍允许停用旧入口。
       parameters:
         - $ref: '#/components/parameters/Id'
       requestBody:
@@ -84,18 +100,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShipMonitorDetailResponse'
+        '400':
+          description: UUID、名称、HTTP(S) 地址或其他输入无效
+        '403':
+          description: 仅系统管理员可配置
+        '404':
+          description: 入口或待关联船舶不存在或已删除
+        '409':
+          description: 该船舶已存在同名监控入口
+        '422':
+          description: 待关联或待启用入口的船舶已停用
     delete:
       tags: [ShipMonitors]
       summary: 删除监控端口
+      description: 仅 system_admin 可操作；软删除。原船舶停用或删除后仍允许删除旧入口。
       parameters:
         - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: No Content
+        '403':
+          description: 仅系统管理员可配置
+        '404':
+          description: 入口不存在或已删除
   '/ship-monitors/vessels/{vesselId}':
     get:
       tags: [ShipMonitors]
       summary: 按船舶查询监控端口
+      description: 系统管理员可见启用及停用项；普通用户仅可见启用项。
       parameters:
         - name: vesselId
           in: path
@@ -141,6 +173,11 @@ components:
           format: uuid
         vesselName:
           type: string
+          nullable: true
+          description: 关联船舶当前名称，包含软删除船舶；关联信息缺失时为 null。
+        vesselCode:
+          type: string
+          nullable: true
         monitorName:
           type: string
         endpointUrl:
@@ -166,27 +203,46 @@ components:
           format: uuid
         monitorName:
           type: string
+          minLength: 1
+          maxLength: 128
+          description: 去除首尾空白后校验，不允许纯空白。
         endpointUrl:
           type: string
           format: uri
+          description: 必须包含 http:// 或 https://，支持内网域名、IP 和端口，不允许 URL 内用户名和密码。
         accessMode:
           type: string
           enum: [external, embed]
         sortOrder:
           type: integer
+          minimum: 0
+          maximum: 2147483647
+          default: 0
+        isActive:
+          type: boolean
+          default: true
     ShipMonitorUpdateRequest:
       type: object
       properties:
+        vesselId:
+          type: string
+          format: uuid
         monitorName:
           type: string
+          minLength: 1
+          maxLength: 128
+          description: 去除首尾空白后校验，不允许纯空白。
         endpointUrl:
           type: string
           format: uri
+          description: 必须包含 http:// 或 https://，支持内网域名、IP 和端口，不允许 URL 内用户名和密码。
         accessMode:
           type: string
           enum: [external, embed]
         sortOrder:
           type: integer
+          minimum: 0
+          maximum: 2147483647
         isActive:
           type: boolean
     ShipMonitorDetailResponse:

@@ -1,6 +1,6 @@
 ﻿import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDate } from 'src/common/date/business-date';
 import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.entity';
@@ -12,6 +12,7 @@ import { EnterprisePolicyCreateDto } from './dto/enterprise-policy-create.dto';
 import { EnterprisePolicyListQueryDto } from './dto/enterprise-policy-list-query.dto';
 import { EnterprisePolicyUpdateDto } from './dto/enterprise-policy-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
+import { auditAttachmentRemoval, lockAttachmentFiles, scheduleFileRecycle } from 'src/modules/files/file-retention';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -78,7 +79,9 @@ export class EnterprisePolicyService {
 
   async update(id: string, dto: EnterprisePolicyUpdateDto, user: CurrentUser) {
     this.ensureManager(user);
-    const entity = await this.findOneOrThrow(id);
+    await this.repository.manager.transaction(async (manager) => {
+    const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+    if (!entity) throw new NotFoundException('record not found');
     await this.ensureDepartmentAccess(entity, user);
 
     if (entity.status === 'published' && dto.status !== 'deprecated') {
@@ -99,23 +102,30 @@ export class EnterprisePolicyService {
       entity.publishedAt = new Date();
     }
 
-    await this.repository.save(entity);
 
     if (dto.fileIds) {
-      await this.fileRelRepository.delete({ enterprisePolicyId: id });
-      await this.bindFiles(id, { fileIds: dto.fileIds }, user);
+      await this.saveFileRelations(manager, id, dto.fileIds, user, true);
     }
+    await manager.save(entity);
+    });
 
     return this.getById(id, user);
   }
 
   async remove(id: string, user: CurrentUser): Promise<void> {
     this.ensureManager(user);
-    const entity = await this.findOneOrThrow(id);
-    await this.ensureDepartmentAccess(entity, user);
-    entity.deletedAt = new Date();
-    entity.updatedBy = user.userId;
-    await this.repository.save(entity);
+    await this.repository.manager.transaction(async (manager) => {
+      const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!entity) throw new NotFoundException('record not found');
+      await this.ensureDepartmentAccess(entity, user);
+      const files = await manager.find(EnterprisePolicyFileEntity, { where: { enterprisePolicyId: id } });
+      entity.deletedAt = new Date();
+      entity.updatedBy = user.userId;
+      await manager.save(entity);
+      await manager.delete(EnterprisePolicyFileEntity, { enterprisePolicyId: id });
+      await auditAttachmentRemoval(manager, 'enterprise_policy', id, files.map((file) => file.fileId), user.userId, '删除业务记录');
+      await scheduleFileRecycle(manager, files.map((file) => file.fileId));
+    });
   }
 
   async publish(id: string, user: CurrentUser) {
@@ -146,18 +156,12 @@ export class EnterprisePolicyService {
 
   async bindFiles(id: string, dto: EnterprisePolicyBindFilesDto, user: CurrentUser) {
     this.ensureManager(user);
-    const entity = await this.findOneOrThrow(id);
-    await this.ensureDepartmentAccess(entity, user);
-
-    const files = await this.fileRepository.find({ where: { id: In(dto.fileIds) } });
-    if (files.length !== dto.fileIds.length) throw new NotFoundException('file not found');
-
-    const existing = await this.fileRelRepository.find({ where: { enterprisePolicyId: id } });
-    const existingSet = new Set(existing.map((row) => row.fileId));
-    const rows = dto.fileIds.filter((fileId) => !existingSet.has(fileId)).map((fileId, index) =>
-      this.fileRelRepository.create({ enterprisePolicyId: id, fileId, sortOrder: existing.length + index }),
-    );
-    if (rows.length) await this.fileRelRepository.save(rows);
+    await this.repository.manager.transaction(async (manager) => {
+      const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!entity) throw new NotFoundException('record not found');
+      await this.ensureDepartmentAccess(entity, user);
+      await this.saveFileRelations(manager, id, dto.fileIds, user);
+    });
     return this.getById(id, user);
   }
 
@@ -171,6 +175,37 @@ export class EnterprisePolicyService {
     if (!file) throw new NotFoundException('file not found');
     return this.ossService.createDownloadSignature(file.ossKey);
   }
+
+  async unbindFile(id: string, fileId: string, user: CurrentUser): Promise<void> {
+    this.ensureManager(user);
+    await this.repository.manager.transaction(async (manager) => {
+      const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!entity) throw new NotFoundException('record not found');
+      await this.ensureDepartmentAccess(entity, user);
+      const result = await manager.delete(EnterprisePolicyFileEntity, { enterprisePolicyId: id, fileId });
+      if (result.affected) {
+        await auditAttachmentRemoval(manager, 'enterprise_policy', id, [fileId], user.userId, '删除附件');
+        await scheduleFileRecycle(manager, [fileId]);
+      }
+    });
+  }
+
+  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], user: CurrentUser, replace = false) {
+    const ids = [...new Set(fileIds)];
+    const existing = await manager.find(EnterprisePolicyFileEntity, { where: { enterprisePolicyId: id } });
+    const removed = replace ? existing.filter((row) => !ids.includes(row.fileId)) : [];
+    const available = await lockAttachmentFiles(manager, [...ids, ...removed.map((row) => row.fileId)]);
+    if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
+    if (removed.length) await manager.delete(EnterprisePolicyFileEntity, { id: In(removed.map((row) => row.id)) });
+    const linked = new Set(existing.map((row) => row.fileId));
+    const rows = ids.filter((fileId) => !linked.has(fileId)).map((fileId, index) =>
+      manager.create(EnterprisePolicyFileEntity, { enterprisePolicyId: id, fileId, sortOrder: existing.length + index }));
+    if (rows.length) await manager.save(EnterprisePolicyFileEntity, rows);
+    const removedIds = removed.map((row) => row.fileId);
+    await auditAttachmentRemoval(manager, 'enterprise_policy', id, removedIds, user.userId, '替换附件');
+    await scheduleFileRecycle(manager, removedIds);
+  }
+
 
   private ensureManager(user: CurrentUser) {
     if (user.roles.includes('system_admin')) return;

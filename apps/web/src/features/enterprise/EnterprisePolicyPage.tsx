@@ -6,10 +6,12 @@ import {
   Form,
   Input,
   List,
+  Popconfirm,
   Pagination,
   Select,
   Space,
   Typography,
+  message,
 } from 'antd';
 import { ArrowLeftOutlined, DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
@@ -32,10 +34,12 @@ import {
   type EnterprisePolicy,
   useBindEnterprisePolicyFilesMutation,
   useCreateEnterprisePolicyMutation,
+  useDeleteEnterprisePolicyMutation,
   useGetEnterprisePoliciesQuery,
   useGetEnterprisePolicyByIdQuery,
   useGetEnterprisePolicyVersionsQuery,
   useLazyGetEnterprisePolicyFileDownloadUrlQuery,
+  useUnbindEnterprisePolicyFileMutation,
   usePublishEnterprisePolicyMutation,
   useUpdateEnterprisePolicyMutation,
 } from './enterpriseApi';
@@ -79,6 +83,8 @@ export function EnterprisePolicyPage() {
   const [createPolicy, { isLoading: creating }] =
     useCreateEnterprisePolicyMutation();
   const [publishPolicy] = usePublishEnterprisePolicyMutation();
+  const [deletePolicy] = useDeleteEnterprisePolicyMutation();
+  const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<{
     title: string;
     policyCode: string;
@@ -100,6 +106,7 @@ export function EnterprisePolicyPage() {
 
   return (
     <section className="page-hero">
+      {contextHolder}
       <Typography.Title level={2}>企业制度</Typography.Title>
       <Typography.Paragraph type="secondary">
         创建、发布和查询企业制度，统一维护版本与附件。
@@ -212,7 +219,7 @@ export function EnterprisePolicyPage() {
                     onClick={() => void publishPolicy(item.id)}
                   >
                     发布
-                  </Button>] : []),
+                  </Button>, <Popconfirm key="delete" title="确定删除此制度吗？" description="删除后将从制度列表中移除。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deletePolicy(item.id).unwrap(); messageApi.success('企业制度已删除'); } catch (error) { messageApi.error(error instanceof Error ? error.message : '删除失败'); } }}><Button danger type="link">删除</Button></Popconfirm>] : []),
                   <Link
                     key="detail"
                     to={buildDetailHref(
@@ -266,8 +273,10 @@ export function EnterprisePolicyDetailPage() {
   });
   const [updatePolicy, { isLoading: saving }] =
     useUpdateEnterprisePolicyMutation();
+  const [deletePolicy] = useDeleteEnterprisePolicyMutation();
   const [bindFiles] = useBindEnterprisePolicyFilesMutation();
   const [getFileDownloadUrl] = useLazyGetEnterprisePolicyFileDownloadUrlQuery();
+  const [unbindFile] = useUnbindEnterprisePolicyFileMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [form] = Form.useForm<{
@@ -350,6 +359,7 @@ export function EnterprisePolicyDetailPage() {
               await updatePolicy({ id, data: values }).unwrap();
               if (uploaded?.id) {
                 await bindFiles({ id, fileIds: [uploaded.id] }).unwrap();
+                setUploaded(null);
               }
             } catch (error) {
               setSaveError(
@@ -384,6 +394,9 @@ export function EnterprisePolicyDetailPage() {
             <Button htmlType="submit" type="primary" loading={saving}>
               保存
             </Button>
+            <Popconfirm title="确定删除此企业制度吗？" description="删除后将从制度列表中移除。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deletePolicy(id).unwrap(); navigate(resolveBackHref(myRouteConfig.enterprisePolicy.path, location.search)); } catch (error) { setSaveError(error instanceof Error ? error.message : '删除失败'); } }}>
+              <Button danger>删除</Button>
+            </Popconfirm>
           </Space>
         </Form> : <Alert type="info" showIcon message="你没有维护此企业制度的权限。" />}
 
@@ -394,6 +407,10 @@ export function EnterprisePolicyDetailPage() {
             </Typography.Title>
             <FileAttachmentList
               files={policy.files}
+              allowDelete={canManage}
+              onDelete={async (file) => {
+                await unbindFile({ id, fileId: file.id }).unwrap();
+              }}
               getUrl={async (file) => {
                 const response = await getFileDownloadUrl({
                   id,

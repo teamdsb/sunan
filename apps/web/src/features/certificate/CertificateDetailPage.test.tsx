@@ -6,6 +6,8 @@ import { CertificateDetailPage } from './CertificateDetailPage';
 const mockGet = vi.fn();
 const mockUpdate = vi.fn();
 const mockBind = vi.fn();
+const mockUnbind = vi.fn();
+const mockDelete = vi.fn();
 const mockGetFileDownloadUrl = vi.fn();
 const mockCurrentUser = vi.fn();
 
@@ -23,13 +25,19 @@ vi.mock('../files/FileUploadField', () => ({
   ),
 }));
 
+vi.mock('../files/filesApi', () => ({
+  useDeleteOrphanedFileMutation: () => [vi.fn(() => ({ unwrap: () => Promise.resolve() }))],
+}));
+
 vi.mock('./certificateApi', () => ({
   useGetCertificateByIdQuery: () => mockGet(),
   useGetCertificateTypesQuery: () => ({ data: { data: [] }, isLoading: false }),
   useGetCertificateOwnersQuery: () => ({ data: { data: [] }, isLoading: false }),
   useGetCertificateReminderRecipientsQuery: () => ({ data: { data: [] }, isLoading: false }),
   useUpdateCertificateMutation: () => [mockUpdate, { isLoading: false }],
+  useDeleteCertificateMutation: () => [mockDelete, { isLoading: false }],
   useBindCertificateFilesMutation: () => [mockBind],
+  useUnbindCertificateFileMutation: () => [mockUnbind],
   useLazyGetCertificateFileDownloadUrlQuery: () => [mockGetFileDownloadUrl],
 }));
 

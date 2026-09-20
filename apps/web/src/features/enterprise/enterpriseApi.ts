@@ -117,6 +117,16 @@ export const enterpriseApi = baseApi.injectEndpoints({
         url: `/enterprise-profiles/${id}/files/${fileId}/download-url`,
       }),
     }),
+    unbindEnterpriseProfileFile: builder.mutation<void, { id: string; fileId: string }>({
+      query: ({ id, fileId }) => ({
+        url: `/enterprise-profiles/${id}/files/${fileId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'EnterpriseProfile', id: arg.id },
+        'EnterpriseProfile',
+      ],
+    }),
     deleteEnterpriseProfile: builder.mutation<void, string>({
       query: (id) => ({ url: `/enterprise-profiles/${id}`, method: 'DELETE' }),
       invalidatesTags: ['EnterpriseProfile'],
@@ -188,6 +198,17 @@ export const enterpriseApi = baseApi.injectEndpoints({
         url: `/enterprise-policies/${id}/files/${fileId}/download-url`,
       }),
     }),
+    unbindEnterprisePolicyFile: builder.mutation<void, { id: string; fileId: string }>({
+      query: ({ id, fileId }) => ({
+        url: `/enterprise-policies/${id}/files/${fileId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'EnterprisePolicy', id: arg.id },
+        'EnterprisePolicy',
+        'PolicyVersion',
+      ],
+    }),
     publishEnterprisePolicy: builder.mutation<
       ApiEnvelope<EnterprisePolicy>,
       string
@@ -212,6 +233,7 @@ export const {
   useUpdateEnterpriseProfileMutation,
   useBindEnterpriseProfileFilesMutation,
   useLazyGetEnterpriseProfileFileDownloadUrlQuery,
+  useUnbindEnterpriseProfileFileMutation,
   useDeleteEnterpriseProfileMutation,
   useGetEnterprisePoliciesQuery,
   useGetEnterprisePolicyByIdQuery,
@@ -220,6 +242,7 @@ export const {
   useUpdateEnterprisePolicyMutation,
   useBindEnterprisePolicyFilesMutation,
   useLazyGetEnterprisePolicyFileDownloadUrlQuery,
+  useUnbindEnterprisePolicyFileMutation,
   usePublishEnterprisePolicyMutation,
   useDeleteEnterprisePolicyMutation,
 } = enterpriseApi;

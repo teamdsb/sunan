@@ -16,8 +16,8 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 
 
-ENV_FILE = Path(os.environ.get("SUNAN_ENV_FILE", "/dev/sunan/deploy/.env"))
-OUTPUT_DIR = Path(os.environ.get("SUNAN_WECOM_IP_DIR", "/dev/sunan/sunan-wecom-ips"))
+ENV_FILE = Path(os.environ.get("SUNAN_ENV_FILE", "/srv/sunan/deploy/.env"))
+OUTPUT_DIR = Path(os.environ.get("SUNAN_WECOM_IP_DIR", "/srv/sunan/sunan-wecom-ips"))
 CALLBACK_LIST = OUTPUT_DIR / "callback-ip-list.txt"
 CALLBACK_AUTO_LIST = OUTPUT_DIR / "callback-ip-list.auto.txt"
 API_DOMAIN_LIST = OUTPUT_DIR / "api-domain-ip-list.txt"

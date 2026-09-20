@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, List, Pagination, Select, Space, Tag, Typography } from 'antd';
+import { Button, Card, Form, Input, List, Pagination, Popconfirm, Select, Space, Tag, Typography, message } from 'antd';
 import { DownOutlined, FilterOutlined, UpOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useState } from 'react';
@@ -50,6 +50,7 @@ export function EnterpriseProfilePage() {
   const { data, isLoading } = useGetEnterpriseProfilesQuery({ page, pageSize, category, status });
   const [createProfile, { isLoading: creating }] = useCreateEnterpriseProfileMutation();
   const [deleteProfile] = useDeleteEnterpriseProfileMutation();
+  const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<{ title: string; category: string }>();
   const [showFilters, setShowFilters] = useState(false);
 
@@ -61,6 +62,7 @@ export function EnterpriseProfilePage() {
 
   return (
     <section className="page-hero">
+      {contextHolder}
       <Typography.Title level={2}>企业资料</Typography.Title>
       <Typography.Paragraph type="secondary">
         创建、筛选和维护企业资料，集中管理分类、状态与附件。
@@ -142,9 +144,7 @@ export function EnterpriseProfilePage() {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  ...(item.canManage ? [<Button key="delete" danger size="small" onClick={() => void deleteProfile(item.id)}>
-                    删除
-                  </Button>] : []),
+                  ...(item.canManage ? [<Popconfirm key="delete" title="确定删除此企业资料吗？" description="删除后将从资料列表中移除。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deleteProfile(item.id).unwrap(); messageApi.success('企业资料已删除'); } catch (error) { messageApi.error(error instanceof Error ? error.message : '删除失败'); } }}><Button danger size="small">删除</Button></Popconfirm>] : []),
                   <Link key="detail" to={buildDetailHref(myRouteConfig.enterpriseProfile.path, item.id, location.search)}>
                     详情
                   </Link>,

@@ -32,7 +32,7 @@ WW_verify_syXtjgUoSgMs7TpJ.txt
 服务器位置：
 
 ```text
-/dev/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
+/srv/sunan/sunan-nginx/acme/WW_verify_syXtjgUoSgMs7TpJ.txt
 ```
 
 可访问地址：
@@ -51,7 +51,7 @@ curl -fsS https://app.qzssncb.com/WW_verify_syXtjgUoSgMs7TpJ.txt
 
 ## 真实参数来源
 
-真实值写在服务器 `/dev/sunan/deploy/.env`，不要写入仓库。
+真实值写在服务器 `/srv/sunan/deploy/.env`，不要写入仓库。
 
 | 变量 | 后台位置 |
 |---|---|
@@ -68,7 +68,7 @@ curl -fsS https://app.qzssncb.com/WW_verify_syXtjgUoSgMs7TpJ.txt
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 '
 set -e
 for key in WECOM_CORP_ID WECOM_AGENT_ID WECOM_AGENT_SECRET WECOM_CALLBACK_TOKEN WECOM_ENCODING_AES_KEY; do
-  if grep -q "^${key}=." /dev/sunan/deploy/.env; then echo "${key}=SET"; else echo "${key}=EMPTY"; fi
+  if grep -q "^${key}=." /srv/sunan/deploy/.env; then echo "${key}=SET"; else echo "${key}=EMPTY"; fi
 done
 '
 ```
@@ -101,7 +101,7 @@ deploy/scripts/sunan-update-wecom-callback-ips.py
 输出目录：
 
 ```text
-/dev/sunan/sunan-wecom-ips
+/srv/sunan/sunan-wecom-ips
 ```
 
 关键文件：
@@ -120,7 +120,7 @@ deploy/scripts/sunan-update-wecom-callback-ips.py
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 'set -e
 systemctl start sunan-wecom-callback-ip-sync.service
 systemctl status sunan-wecom-callback-ip-sync.service --no-pager
-cat /dev/sunan/sunan-wecom-ips/state.json
+cat /srv/sunan/sunan-wecom-ips/state.json
 docker exec sunan-nginx nginx -t
 '
 ```
@@ -144,7 +144,7 @@ Nginx 对以下路径启用企业微信来源 IP allow/deny：
 4. 查后端日志：
 
 ```bash
-docker compose --env-file /dev/sunan/deploy/.env logs -f sunan-api
+docker compose --env-file /srv/sunan/deploy/.env logs -f sunan-api
 ```
 
 ## 工作平台审批真实调用链路

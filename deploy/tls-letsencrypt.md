@@ -27,8 +27,8 @@ Nginx 容器读取：
 服务器实际文件：
 
 ```text
-/dev/sunan/sunan-nginx/certs/qzssncb.com.crt
-/dev/sunan/sunan-nginx/certs/qzssncb.com.key
+/srv/sunan/sunan-nginx/certs/qzssncb.com.crt
+/srv/sunan/sunan-nginx/certs/qzssncb.com.key
 ```
 
 ## 自动续费
@@ -42,8 +42,8 @@ Nginx 容器读取：
 hook 逻辑：
 
 ```sh
-install -m 0644 /etc/letsencrypt/live/qzssncb.com/fullchain.pem /dev/sunan/sunan-nginx/certs/qzssncb.com.crt
-install -m 0600 /etc/letsencrypt/live/qzssncb.com/privkey.pem /dev/sunan/sunan-nginx/certs/qzssncb.com.key
+install -m 0644 /etc/letsencrypt/live/qzssncb.com/fullchain.pem /srv/sunan/sunan-nginx/certs/qzssncb.com.crt
+install -m 0600 /etc/letsencrypt/live/qzssncb.com/privkey.pem /srv/sunan/sunan-nginx/certs/qzssncb.com.key
 docker exec sunan-nginx nginx -s reload
 ```
 
@@ -51,7 +51,7 @@ docker exec sunan-nginx nginx -s reload
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 'set -e
-openssl x509 -in /dev/sunan/sunan-nginx/certs/qzssncb.com.crt \
+openssl x509 -in /srv/sunan/sunan-nginx/certs/qzssncb.com.crt \
   -noout -subject -issuer -dates -ext subjectAltName
 systemctl status certbot.timer --no-pager
 systemctl list-timers --all --no-pager | grep certbot
@@ -76,11 +76,11 @@ certbot renew --dry-run --cert-name qzssncb.com --non-interactive
 
 ## 手动重新签发或扩展域名
 
-确保 DNS 已解析到 `39.106.103.45`，80 端口开放，Nginx 的 `/.well-known/acme-challenge/` 指向 `/dev/sunan/sunan-nginx/acme`。
+确保 DNS 已解析到 `39.106.103.45`，80 端口开放，Nginx 的 `/.well-known/acme-challenge/` 指向 `/srv/sunan/sunan-nginx/acme`。
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 'set -e
-certbot certonly --webroot -w /dev/sunan/sunan-nginx/acme \
+certbot certonly --webroot -w /srv/sunan/sunan-nginx/acme \
   --cert-name qzssncb.com \
   --expand \
   -d qzssncb.com \
@@ -98,6 +98,6 @@ docker exec sunan-nginx nginx -s reload
 
 ## 常见问题
 
-- `certbot renew` 失败：检查 80 端口、安全组、防火墙、DNS、`/dev/sunan/sunan-nginx/acme` 是否挂载。
+- `certbot renew` 失败：检查 80 端口、安全组、防火墙、DNS、`/srv/sunan/sunan-nginx/acme` 是否挂载。
 - 浏览器证书旧：执行 hook 后确认 Nginx reload，再用 `openssl s_client -connect app.qzssncb.com:443 -servername app.qzssncb.com` 检查。
 - 新增子域名：先加 DNS，再扩展证书，再修改 Nginx。

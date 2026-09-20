@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -42,6 +42,12 @@ export class FilesController {
     return {
       data: await this.filesService.getDownloadUrl(ossKey),
     };
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async deleteIfOrphaned(@Param('id', new ParseUUIDPipe()) id: string, @CurrentUserDecorator() currentUser: CurrentUser) {
+    await this.filesService.deleteIfOrphaned(id, currentUser);
   }
 
   @Post('from-wecom')

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
@@ -62,5 +62,11 @@ export class OfficeController {
   @Post('admin/entries/:id/disable')
   async disableEntry(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.disableEntry(id, user) };
+  }
+
+  @Delete('admin/entries/:id')
+  @HttpCode(204)
+  async deleteEntry(@Param('id') id: string, @CurrentUserDecorator() user: CurrentUser) {
+    await this.service.deleteEntry(id, user);
   }
 }

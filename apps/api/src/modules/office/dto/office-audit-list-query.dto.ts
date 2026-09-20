@@ -7,8 +7,8 @@ export class OfficeAuditListQueryDto {
   entryId?: string;
 
   @IsOptional()
-  @IsIn(['create', 'update', 'publish', 'disable', 'open'])
-  action?: 'create' | 'update' | 'publish' | 'disable' | 'open';
+  @IsIn(['create', 'update', 'publish', 'disable', 'delete', 'open'])
+  action?: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open';
 
   @IsOptional()
   @IsString()

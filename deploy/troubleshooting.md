@@ -13,8 +13,8 @@ replaced_by: []
 
 ```bash
 ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 'set -e
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env ps
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env ps
 docker ps --format "{{.Names}} {{.Status}}"
 curl -fsS https://api.qzssncb.com/api/health
 curl -fsSI https://app.qzssncb.com | head -n 5
@@ -33,10 +33,10 @@ curl -fsSI https://app.qzssncb.com
 2. 检查 Nginx 和 web：
 
 ```bash
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env ps sunan-web sunan-nginx
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=100 sunan-web
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=100 sunan-nginx
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env ps sunan-web sunan-nginx
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=100 sunan-web
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=100 sunan-nginx
 ```
 
 3. 检查 Nginx 配置：
@@ -48,9 +48,9 @@ docker exec sunan-nginx nginx -t
 ## API 不健康
 
 ```bash
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env ps sunan-api sunan-db sunan-redis sunan-oss
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-api
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env ps sunan-api sunan-db sunan-redis sunan-oss
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=200 sunan-api
 docker exec sunan-db pg_isready -U sunan -d sunan
 docker exec sunan-redis redis-cli --user sunan -a "$REDIS_PASSWORD" ping
 ```
@@ -63,14 +63,14 @@ docker exec sunan-redis redis-cli --user sunan -a "$REDIS_PASSWORD" ping
 
 ```bash
 docker exec -it sunan-db psql -U sunan -d sunan -c "select now();"
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-db
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=200 sunan-db
 ```
 
 磁盘满会导致数据库异常：
 
 ```bash
 df -h
-du -sh /dev/sunan/sunan-db/data
+du -sh /srv/sunan/sunan-db/data
 ```
 
 不要删除数据目录。先清理日志或扩容。
@@ -80,8 +80,8 @@ du -sh /dev/sunan/sunan-db/data
 检查：
 
 ```bash
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-redis
-du -sh /dev/sunan/sunan-redis/data
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=200 sunan-redis
+du -sh /srv/sunan/sunan-redis/data
 ```
 
 如果 ACL 认证失败，确认 `.env` 中 `REDIS_USER`/`REDIS_PASSWORD` 与 Compose 一致，然后重启 Redis 和 API。
@@ -93,8 +93,8 @@ du -sh /dev/sunan/sunan-redis/data
 ```bash
 curl -fsSI https://oss.qzssncb.com
 curl -fsSI https://oss-console.qzssncb.com
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-oss
-du -sh /dev/sunan/sunan-oss/data
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=200 sunan-oss
+du -sh /srv/sunan/sunan-oss/data
 ```
 
 常见原因：
@@ -131,7 +131,7 @@ docker exec sunan-nginx nginx -s reload
 命令：
 
 ```bash
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-api | grep -i wecom
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=200 sunan-api | grep -i wecom
 ```
 
 ## 企业微信回调失败
@@ -141,7 +141,7 @@ docker compose --env-file /dev/sunan/deploy/.env logs --tail=200 sunan-api | gre
 ```bash
 systemctl status sunan-wecom-callback-ip-sync.timer --no-pager
 systemctl status sunan-wecom-callback-ip-sync.service --no-pager
-cat /dev/sunan/sunan-wecom-ips/state.json
+cat /srv/sunan/sunan-wecom-ips/state.json
 docker exec sunan-nginx nginx -t
 ```
 
@@ -170,7 +170,7 @@ docker exec -it sunan-db psql -U sunan -d sunan -c \
 API 日志：
 
 ```bash
-docker compose --env-file /dev/sunan/deploy/.env logs --tail=300 sunan-api | grep -i approval
+docker compose --env-file /srv/sunan/deploy/.env logs --tail=300 sunan-api | grep -i approval
 ```
 
 ## 回滚
@@ -178,7 +178,7 @@ docker compose --env-file /dev/sunan/deploy/.env logs --tail=300 sunan-api | gre
 优先回滚源码版本，不动数据：
 
 ```bash
-find /dev/sunan/sunan-source -maxdepth 1 -type d -name "backup-*" | sort
+find /srv/sunan/sunan-source -maxdepth 1 -type d -name "backup-*" | sort
 ```
 
 按 `deployment-runbook.md` 的“回滚源码版本”执行。

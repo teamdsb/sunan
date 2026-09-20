@@ -29,6 +29,10 @@ RUN pnpm --filter web build
 
 FROM nginx:stable-alpine
 
+# This image supplies its own listener configuration. The default IPv6 helper
+# invokes apk manifest and can block startup on package repository access.
+RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+
 COPY docker/web/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 

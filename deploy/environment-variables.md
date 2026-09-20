@@ -10,7 +10,7 @@ replaced_by: []
 生产环境变量文件位于服务器：
 
 ```text
-/dev/sunan/deploy/.env
+/srv/sunan/deploy/.env
 ```
 
 本仓库只保存模板：
@@ -25,8 +25,8 @@ deploy/.env.example
 
 | 变量 | 用途 | 示例/说明 |
 |---|---|---|
-| `SUNAN_SOURCE_DIR` | Compose build context | `/dev/sunan/sunan-source/current` |
-| `SUNAN_VERSION` | 当前部署版本，用于容器环境和镜像标签追踪 | `0.0.7` |
+| `SUNAN_SOURCE_DIR` | Compose build context | `/srv/sunan/sunan-source/current` |
+| `SUNAN_VERSION` | 当前部署版本，用于容器环境和镜像标签追踪 | `0.0.8` |
 | `APP_DOMAIN` | 根域名 | `qzssncb.com` |
 | `WEB_PUBLIC_URL` | 前端公网地址 | `https://app.qzssncb.com` |
 | `API_PUBLIC_URL` | 后端公网地址 | `https://api.qzssncb.com` |
@@ -102,20 +102,20 @@ Compose 会关闭默认用户并启用 `sunan` 用户。
 1. 备份：
 
 ```bash
-cp /dev/sunan/deploy/.env /dev/sunan/deploy/.env.bak-$(date +%Y%m%d%H%M%S)
+cp /srv/sunan/deploy/.env /srv/sunan/deploy/.env.bak-$(date +%Y%m%d%H%M%S)
 ```
 
 2. 编辑：
 
 ```bash
-vim /dev/sunan/deploy/.env
+vim /srv/sunan/deploy/.env
 ```
 
 3. 重启相关服务：
 
 ```bash
-cd /dev/sunan/deploy
-docker compose --env-file /dev/sunan/deploy/.env up -d sunan-api sunan-web
+cd /srv/sunan/deploy
+docker compose --env-file /srv/sunan/deploy/.env up -d sunan-api sunan-web
 ```
 
 4. 验证：

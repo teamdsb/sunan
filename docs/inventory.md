@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：275 个 Markdown 文件。
+总数：281 个 Markdown 文件。
 
 ## repository-root
 
@@ -243,6 +243,7 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/specs/workbench/README.md](specs/workbench/README.md) | `current-index` | `workbench` | 工作平台入口 |
+| [docs/specs/workbench/business-reporting.md](specs/workbench/business-reporting.md) | `current-spec` | `workbench` | 考勤、个人学习与船舶燃油规则 |
 | [docs/specs/workbench/db/workbench-domain-model.md](specs/workbench/db/workbench-domain-model.md) | `current-spec` | `workbench` | 工作平台领域模型 |
 | [docs/specs/workbench/db/workbench-module-matrix.md](specs/workbench/db/workbench-module-matrix.md) | `current-source` | `workbench` | 工作平台模块矩阵 |
 | [docs/specs/workbench/db/workbench-permission-matrix.md](specs/workbench/db/workbench-permission-matrix.md) | `current-spec` | `workbench` | 工作平台权限矩阵（M4 Wave 1 冻结） |
@@ -426,12 +427,15 @@ replaced_by: []
 |---|---|---|---|
 | [docs/audits/2026-09-07-document-test-ablation.md](audits/2026-09-07-document-test-ablation.md) | `audit-snapshot` | `repository` | 文档与测试消融记录 |
 | [docs/audits/2026-09-07-original-goal-audit.md](audits/2026-09-07-original-goal-audit.md) | `audit-snapshot` | `repository` | 原始目标与主要业务链路核查 |
+| [docs/audits/2026-09-20-ship-monitor-repair-audit.md](audits/2026-09-20-ship-monitor-repair-audit.md) | `audit-snapshot` | `ship-monitor` | 船舶监控修复与相关功能核查 |
+| [docs/audits/2026-09-20-workbench-business-completion.md](audits/2026-09-20-workbench-business-completion.md) | `audit-snapshot` | `workbench` | 考勤、个人学习与燃油月报补齐记录 |
 | [docs/audits/frontend-backend-api-coverage.md](audits/frontend-backend-api-coverage.md) | `audit-snapshot` | `frontend` | 前后端接口覆盖审计 |
 
 ## handbook
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
+| [docs/handbook/2026-09-20-截图更新清单.md](handbook/2026-09-20-截图更新清单.md) | `operations` | `handbook` | 船舶监控与工作平台补齐后的截图更新清单 |
 | [docs/handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md](handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md) | `audit-snapshot` | `external-reference` | 航运公司 |
 | [docs/handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) | `operations` | `docs` | 苏南船舶管理系统操作手册 |
 
@@ -451,3 +455,5 @@ replaced_by: []
 | [docs/superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md](superpowers/specs/2026-08-04-wecom-department-permissions-avatar-design.md) | `current-spec` | `auth` | 企业微信部门权限与用户头像优化设计 |
 | [docs/superpowers/specs/2026-08-05-handbook-md-docx-design.md](superpowers/specs/2026-08-05-handbook-md-docx-design.md) | `current-spec` | `docs` | 升级版操作手册 Markdown 与 Word 交付设计 |
 | [docs/superpowers/specs/2026-08-09-wecom-avatar-permission-display-design.md](superpowers/specs/2026-08-09-wecom-avatar-permission-display-design.md) | `current-spec` | `auth-and-authorization` | 企业微信头像与权限展示设计 |
+| [docs/superpowers/specs/2026-09-19-ship-monitor-repair-design.md](superpowers/specs/2026-09-19-ship-monitor-repair-design.md) | `current-spec` | `ship-monitor` | 船舶监控新增与管理链路修复设计 |
+| [docs/superpowers/specs/2026-09-20-workbench-business-completion-design.md](superpowers/specs/2026-09-20-workbench-business-completion-design.md) | `current-spec` | `workbench` | 考勤、个人学习与燃油月报补齐 |

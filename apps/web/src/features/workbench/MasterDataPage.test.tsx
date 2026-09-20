@@ -21,6 +21,10 @@ vi.mock('./masterDataApi', () => ({
   useUpdateMasterDataPersonnelMutation: () => [vi.fn()],
   useCreateMasterDataEquipmentMutation: () => [vi.fn()],
   useUpdateMasterDataEquipmentMutation: () => [vi.fn()],
+  useDeleteMasterDataVesselMutation: () => [vi.fn()],
+  useDeleteMasterDataVehicleMutation: () => [vi.fn()],
+  useDeleteMasterDataPersonnelMutation: () => [vi.fn()],
+  useDeleteMasterDataEquipmentMutation: () => [vi.fn()],
 }));
 
 describe('MasterDataPage', () => {
