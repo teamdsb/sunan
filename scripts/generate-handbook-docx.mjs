@@ -42,17 +42,18 @@ const MARGIN_RIGHT = 1_191;
 const MARGIN_BOTTOM = 964;
 const MARGIN_LEFT = 1_191;
 const CONTENT_WIDTH = A4_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
+// Use the installed Chinese family name so PDF export resolves both Regular and Bold.
 const BODY_FONT = {
-  ascii: 'Arial Unicode MS',
-  eastAsia: 'Arial Unicode MS',
-  hAnsi: 'Arial Unicode MS',
-  cs: 'Arial Unicode MS',
+  ascii: '思源黑体 CN',
+  eastAsia: '思源黑体 CN',
+  hAnsi: '思源黑体 CN',
+  cs: '思源黑体 CN',
 };
 const HEADING_FONT = {
-  ascii: 'Arial Unicode MS',
-  eastAsia: 'Arial Unicode MS',
-  hAnsi: 'Arial Unicode MS',
-  cs: 'Arial Unicode MS',
+  ascii: '思源黑体 CN',
+  eastAsia: '思源黑体 CN',
+  hAnsi: '思源黑体 CN',
+  cs: '思源黑体 CN',
 };
 
 const border = { style: BorderStyle.SINGLE, size: 4, color: 'B7C4D3' };
@@ -77,7 +78,7 @@ const TWO_UP_IMAGE_MAX_HEIGHT = 620;
 
 // Current pagination after rendering proportionally scaled figures on A4.
 // Recheck these hints after changing body copy or image dimensions.
-const CHAPTER_PAGE_HINTS = [3, 5, 7, 14, 24, 45, 53, 70, 81, 83, 85, 89];
+const CHAPTER_PAGE_HINTS = [3, 5, 7, 14, 24, 54, 61, 86, 112, 114, 116];
 
 function stripFrontMatter(markdown) {
   if (!markdown.startsWith('---\n')) return markdown;
@@ -88,8 +89,9 @@ function stripFrontMatter(markdown) {
 function extractMetadata(markdown) {
   const version = markdown.match(/\| 系统版本 \| ([^|]+) \|/)?.[1]?.trim() ?? '-';
   const reviewedAt = markdown.match(/\| 核对日期 \| ([^|]+) \|/)?.[1]?.trim() ?? '-';
+  const updatedAt = markdown.match(/\| 图文更新日期 \| ([^|]+) \|/)?.[1]?.trim() ?? reviewedAt;
   const container = markdown.match(/\| 主要运行容器 \| ([^|]+) \|/)?.[1]?.trim() ?? '企业微信 H5';
-  return { version, reviewedAt, container };
+  return { version, reviewedAt, updatedAt, container };
 }
 
 function extractTopLevelHeadings(markdown) {
@@ -142,7 +144,7 @@ function inlineChildren(value, options = {}) {
       pushRun(token.slice(2, -2), { bold: true });
     } else if (token.startsWith('`')) {
       pushRun(token.slice(1, -1), {
-        font: { ascii: 'Menlo', eastAsia: 'Arial Unicode MS', hAnsi: 'Menlo' },
+        font: BODY_FONT,
         color: '34495E',
         shading: { fill: 'EEF2F6', type: ShadingType.CLEAR },
       });
@@ -206,7 +208,7 @@ function tableColumnWidths(rows) {
   return widths;
 }
 
-function createTable(rows, { header = true, widths = null } = {}) {
+function createTable(rows, { header = true, widths = null, compact = false } = {}) {
   const normalizedRows = rows.map((row) => [...row]);
   const columnCount = Math.max(...normalizedRows.map((row) => row.length));
   normalizedRows.forEach((row) => {
@@ -232,14 +234,14 @@ function createTable(rows, { header = true, widths = null } = {}) {
                   header && rowIndex === 0
                     ? { fill: 'DDEBF7', type: ShadingType.CLEAR }
                     : undefined,
-                margins: { top: 90, bottom: 90, left: 110, right: 110 },
+                margins: { top: compact ? 40 : 90, bottom: compact ? 40 : 90, left: 110, right: 110 },
                 children: [
                   new Paragraph({
                     alignment:
                       columnIndex === 0 && /^\d+$/.test(cell)
                         ? AlignmentType.CENTER
                         : AlignmentType.LEFT,
-                    spacing: { before: 0, after: 0, line: 280 },
+                    spacing: { before: 0, after: 0, line: compact ? 240 : 280 },
                     children: inlineChildren(cell, {
                       size: 18,
                       bold: header && rowIndex === 0,
@@ -304,7 +306,6 @@ function captionParagraph(caption, { compact = false } = {}) {
         font: BODY_FONT,
         size: compact ? 16 : 18,
         color: '4B5563',
-        italics: true,
       }),
     ],
   });
@@ -583,7 +584,9 @@ async function parseMarkdown(markdown) {
       const rows = tableLines
         .filter((tableLine) => !isTableSeparator(tableLine))
         .map(splitTableRow);
-      if (rows.length) children.push(createTable(rows));
+      if (rows.length) children.push(createTable(rows, {
+        compact: rows[0][0] === '想完成的事项',
+      }));
       continue;
     }
 
@@ -807,6 +810,7 @@ function coverChildren(metadata, tocEntries) {
         ['运行容器', metadata.container],
         ['适用对象', '企业微信 H5 用户、业务经办人、审批人及系统管理员'],
         ['核对日期', metadata.reviewedAt],
+        ['图文更新日期', metadata.updatedAt],
       ],
       { header: false, widths: [2_700, CONTENT_WIDTH - 2_700] },
     ),

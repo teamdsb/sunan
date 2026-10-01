@@ -435,7 +435,7 @@ replaced_by: []
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
-| [docs/handbook/2026-09-20-截图更新清单.md](handbook/2026-09-20-截图更新清单.md) | `operations` | `handbook` | 船舶监控与工作平台补齐后的截图更新清单 |
+| [docs/handbook/2026-09-20-截图更新清单.md](handbook/2026-09-20-截图更新清单.md) | `operations` | `handbook` | 操作手册截图更新与剩余补拍清单 |
 | [docs/handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md](handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md) | `audit-snapshot` | `external-reference` | 航运公司 |
 | [docs/handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) | `operations` | `docs` | 苏南船舶管理系统操作手册 |
 

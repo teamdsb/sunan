@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-09-20
+updated: 2026-09-28
 replaces: []
 replaced_by: []
 ---
@@ -30,7 +30,7 @@ replaced_by: []
 |---|---|
 | 原始目标与主要链路核查 | [2026-09-07 原件对照](audits/2026-09-07-original-goal-audit.md) |
 | 船舶监控修复与相关功能核查 | [2026-09-20 修复与验收记录](audits/2026-09-20-ship-monitor-repair-audit.md) |
-| 考勤、学习与燃油月报补齐 | [2026-09-20 业务验收](audits/2026-09-20-workbench-business-completion.md) · [手册截图清单](handbook/2026-09-20-截图更新清单.md) |
+| 考勤、学习与燃油月报补齐 | [2026-09-20 业务验收](audits/2026-09-20-workbench-business-completion.md) · [手册截图清单（10 月 1 日核查）](handbook/2026-09-20-截图更新清单.md) |
 | 本轮文档与测试消融 | [2026-09-07 消融记录](audits/2026-09-07-document-test-ablation.md) |
 | 完整 Markdown 清单 | [inventory.md](inventory.md) |
 | 历史归档目录 | [archive/README.md](archive/README.md) |
@@ -38,7 +38,7 @@ replaced_by: []
 | Claude Code 上下文 | [../CLAUDE.md](../CLAUDE.md) |
 | 项目概览 | [../README.md](../README.md) |
 | 原始产品基线 | [需求文档.md](需求文档.md) |
-| 苏南平台操作手册（0.0.8，2026-08-31 核对，2026-09-09 补充） | [Markdown](handbook/苏南船舶管理系统操作手册.md) · [Word](handbook/苏南船舶管理系统操作手册.docx) |
+| 苏南平台操作手册（0.0.8，2026-10-01 图文更新） | [Markdown](handbook/苏南船舶管理系统操作手册.md) · [Word](handbook/苏南船舶管理系统操作手册.docx) · [PPTX 操作介绍](handbook/苏南船舶管理系统操作介绍手册.pptx) · [截图更新清单](handbook/2026-09-20-截图更新清单.md) |
 | 执行计划入口 | [execplans.md](execplans.md) |
 | M7 历史修复执行计划 | [archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) |
 | M8 总验收与最终功能核查 | [archive/acceptance/safety/acceptance-m8-overall.md](archive/acceptance/safety/acceptance-m8-overall.md)、[archive/audits/M8-最终功能实现核查.md](archive/audits/M8-最终功能实现核查.md) |
