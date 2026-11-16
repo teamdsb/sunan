@@ -7,7 +7,7 @@ replaced_by: []
 ---
 # M9 执行计划：平台管理与配置升级
 
-> 状态：已重新规划，功能实施未开始。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本轮规划不代表实现或上线。
+> 状态：已重新规划；M9-W2 后端已实施并有条件验收，W3-W5 尚未完成。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本计划不代表生产上线。
 
 需求与关键规则以 [M9 需求](../requirements/M9-平台管理与配置升级.md) 为准；任务拆分见 [backlog](M9-wave-backlog.md)，执行入口见 [提示词索引](../prompts/README.md)。
 
@@ -25,7 +25,7 @@ replaced_by: []
 | Wave | 目标 | 前置 | 当前状态 | 提示词 |
 |---|---|---|---|---|
 | 1 | 身份、配置契约与迁移基线冻结 | 以当前源码复核本需求 | 有条件通过（契约已冻结，功能未实施） | [W1](../prompts/m9/wave-1-identity-baseline.md) |
-| 2 | 全通讯录与用户授权后端 | W1 | 未开始 | [W2](../prompts/m9/wave-2-user-directory.md) |
+| 2 | 全通讯录与用户授权后端 | W1 | 有条件通过 | [W2](../prompts/m9/wave-2-user-directory.md) · [验收](../acceptance/M9-wave-2.md) |
 | 3 | 管理页面与全业务权限整合 | W2 | 未开始 | [W3](../prompts/m9/wave-3-admin-console.md) |
 | 4 | 后台推送配置与消息整合 | W1；收件人整合依赖 W2/W3 | 未开始 | [W4](../prompts/m9/wave-4-message-settings.md) |
 | 5 | 迁移、回归、操作说明与验收 | W2-W4 | 未开始 | [W5](../prompts/m9/wave-5-release-acceptance.md) |

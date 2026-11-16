@@ -18,6 +18,7 @@ import type {
   WecomTokenResponse,
   WecomUserDetailResponse,
   WecomUserInfoResponse,
+  WecomUserListResponse,
   WecomUserSensitiveDetailResponse,
 } from 'src/modules/wecom/wecom.types';
 
@@ -66,6 +67,21 @@ export class WecomHttpGateway {
       access_token: accessToken,
       userid: userId,
     });
+  }
+
+  async listUsers(
+    accessToken: string,
+    departmentId: number,
+    fetchChild = 0,
+    cursor?: string,
+  ): Promise<WecomUserListResponse> {
+    const params: Record<string, string> = {
+      access_token: accessToken,
+      department_id: String(departmentId),
+      fetch_child: String(fetchChild),
+    };
+    if (cursor) params.cursor = cursor;
+    return this.get<WecomUserListResponse>('/cgi-bin/user/list', params);
   }
 
   async getUserSensitiveDetail(

@@ -15,7 +15,7 @@ import type {
   JwtPayload,
 } from 'src/modules/auth/auth.types';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
-import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 
@@ -28,7 +28,7 @@ export class AuthService {
     private readonly tokenService: WecomTokenService,
     private readonly wecomHttpGateway: WecomHttpGateway,
     private readonly roleResolver: RoleResolverService,
-    private readonly adminService: WecomAdminService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async exchangeCode(code: string): Promise<{
@@ -57,14 +57,6 @@ export class AuthService {
       accessToken,
       departmentIds,
     );
-    const isSystemAdmin = this.adminService.isSystemAdmin(detail.userid);
-    const roles = this.roleResolver.resolveRoles({
-      departmentIds,
-      departmentNames: departments,
-      position: detail.position ?? null,
-      isSystemAdmin,
-    });
-
     const existingUser = await this.wecomUserRepository.findOne({
       where: { userId: detail.userid },
     });
@@ -72,8 +64,8 @@ export class AuthService {
       ? await this.getSensitiveUserDetail(accessToken, userInfo.user_ticket)
       : null;
 
-    const entity = this.wecomUserRepository.create({
-      ...(existingUser ?? {}),
+    const revision = await this.authorizationService.nextSourceRevision();
+    const saved = await this.authorizationService.applySourceProfile({
       userId: detail.userid,
       corpId: appEnv.WECOM_CORP_ID,
       name: detail.name,
@@ -89,14 +81,23 @@ export class AuthService {
         departmentNames: departments,
       }),
       position: detail.position ?? null,
-      isSystemAdmin,
       rawProfile: detail as unknown as Record<string, unknown>,
+      sourceStatus:
+        detail.status === undefined && detail.enable === undefined
+          ? 'active'
+          : (detail.status ?? detail.enable) === 1
+            ? 'active'
+            : 'inactive',
+      sourceStatusUpdatedAt: new Date(),
+      lastLoginAt: new Date(),
+      loginStatus: 'logged_in',
+      sourceRevision: revision,
     });
 
-    await this.wecomUserRepository.save(entity);
-
+    // Re-read after the source transaction so a concurrent admin edit is
+    // reflected in the OAuth response rather than returning a stale snapshot.
     const savedUser = await this.wecomUserRepository.findOneOrFail({
-      where: { userId: detail.userid },
+      where: { userId: saved.user.userId, corpId: appEnv.WECOM_CORP_ID },
     });
 
     return {
@@ -107,7 +108,7 @@ export class AuthService {
       } satisfies JwtPayload),
       expiresIn: 7200,
       privateInfoAuthorized: sensitiveDetail !== null,
-      user: this.toAuthenticatedUser(savedUser, roles),
+      user: this.authorizationService.toAuthenticatedUser(savedUser),
     };
   }
 
@@ -134,7 +135,10 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在');
     }
 
-    const roles = this.resolveRolesForUser(user);
+    if (payload.corpId !== appEnv.WECOM_CORP_ID) {
+      throw new UnauthorizedException('用户不属于当前企业');
+    }
+    const currentUser = this.authorizationService.toAuthenticatedUser(user);
 
     return {
       accessToken: await this.jwtService.signAsync({
@@ -143,45 +147,24 @@ export class AuthService {
         name: user.name,
       } satisfies JwtPayload),
       expiresIn: 7200,
-      user: this.toAuthenticatedUser(user, roles),
+      user: currentUser,
     };
   }
 
-  async getCurrentUser(userId: string): Promise<CurrentUser> {
+  async getCurrentUser(userId: string, expectedCorpId = appEnv.WECOM_CORP_ID): Promise<CurrentUser> {
+    if (expectedCorpId !== appEnv.WECOM_CORP_ID) {
+      throw new UnauthorizedException('用户不属于当前企业');
+    }
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
     if (!user) {
       throw new UnauthorizedException('用户不存在');
     }
 
-    const roles = this.resolveRolesForUser(user);
-
-    return {
-      userId: user.userId,
-      corpId: user.corpId,
-      name: user.name,
-      avatar: user.avatarUrl,
-      departmentIds: this.normalizedDepartmentIdsForUser(user),
-      departments: user.departmentNames,
-      position: user.position,
-      roles,
-      isAdmin: roles.includes('system_admin'),
-    };
+    return this.authorizationService.toCurrentUser(user);
   }
 
-  toAuthenticatedUser(
-    user: WecomUserEntity,
-    roles: string[],
-  ): AuthenticatedUserResponse {
-    return {
-      userId: user.userId,
-      name: user.name,
-      avatar: user.avatarUrl,
-      departmentIds: this.normalizedDepartmentIdsForUser(user),
-      department: user.departmentNames,
-      position: user.position,
-      roles,
-      isAdmin: roles.includes('system_admin'),
-    };
+  toAuthenticatedUser(user: WecomUserEntity): AuthenticatedUserResponse {
+    return this.authorizationService.toAuthenticatedUser(user);
   }
 
   private async resolveDepartmentNames(
@@ -221,16 +204,4 @@ export class AuthService {
     }
   }
 
-  private resolveRolesForUser(user: WecomUserEntity): string[] {
-    return this.roleResolver.resolveRoles({
-      departmentIds: this.normalizedDepartmentIdsForUser(user),
-      departmentNames: user.departmentNames,
-      position: user.position,
-      isSystemAdmin: this.adminService.isSystemAdmin(user.userId),
-    });
-  }
-
-  private normalizedDepartmentIdsForUser(user: WecomUserEntity): number[] {
-    return this.roleResolver.normalizeDepartmentIds(user.departmentIds ?? []);
-  }
 }

@@ -1,5 +1,6 @@
 import { ReminderExpiryCycle1710000025000 } from 'src/database/migrations/1710000025000-reminder-expiry-cycle';
 import { FileOrphanRetention1710000026000 } from 'src/database/migrations/1710000026000-file-orphan-retention';
+import { M9Wave2UserDirectory1710000027000 } from 'src/database/migrations/1710000027000-m9-wave2-user-directory';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { ImagePullPolicy } from 'testcontainers';
@@ -41,6 +42,9 @@ import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VesselPersonnelAssignmentEntity } from 'src/database/entities/vessel-personnel-assignment.entity';
 import { WorkbenchMasterDataReferenceEntity } from 'src/database/entities/workbench-master-data-reference.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { WecomDepartmentEntity } from 'src/database/entities/wecom-department.entity';
+import { WecomSyncBatchEntity } from 'src/database/entities/wecom-sync-batch.entity';
+import { WecomUserAuditEntity } from 'src/database/entities/wecom-user-audit.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
@@ -113,6 +117,9 @@ import {
 
 const ALL_TEST_ENTITIES = [
   WecomUserEntity,
+  WecomDepartmentEntity,
+  WecomSyncBatchEntity,
+  WecomUserAuditEntity,
   FileEntity,
   FileRecycleJobEntity,
   EvidenceAuditEntity,
@@ -216,6 +223,7 @@ const ALL_TEST_MIGRATIONS = [
   CertificateReminderPreferences1710000024000,
   ReminderExpiryCycle1710000025000,
   FileOrphanRetention1710000026000,
+  M9Wave2UserDirectory1710000027000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

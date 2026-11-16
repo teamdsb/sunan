@@ -49,6 +49,7 @@ class TestAppModule implements NestModule {
 describe('AuthController integration', () => {
   let app: INestApplication;
   let expiredToken: string;
+  let wrongCorpToken: string;
 
   const gatewayMock = {
     getUserInfo: jest.fn((_accessToken: string, code: string) => {
@@ -135,6 +136,11 @@ describe('AuthController integration', () => {
         expiresIn: -1,
       },
     );
+    wrongCorpToken = await jwtService.signAsync({
+      sub: 'admin-user',
+      corpId: 'other-corp',
+      name: '寮犱笁',
+    });
   });
 
   afterAll(async () => {
@@ -226,6 +232,16 @@ describe('AuthController integration', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.accessToken).toEqual(expect.any(String));
+  });
+
+  it('rejects a JWT issued for another enterprise', async () => {
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${wrongCorpToken}`);
+
+    expect(response.status).toBe(401);
   });
 
   it('returns current user profile for authenticated request', async () => {

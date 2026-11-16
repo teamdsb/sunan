@@ -50,20 +50,37 @@ describe('AuthService', () => {
       };
       const jwt = { signAsync: jest.fn().mockResolvedValue('jwt') };
       const tokenService = { getAccessToken: jest.fn().mockResolvedValue('token') };
-      const adminService = { isSystemAdmin: jest.fn().mockReturnValue(false) };
+      const authorization = {
+        nextSourceRevision: jest.fn().mockResolvedValue(1),
+        applySourceProfile: jest.fn().mockImplementation(async (input: Partial<WecomUserEntity>) => ({
+          user: Object.assign(user, input),
+          created: false,
+          ignored: false,
+        })),
+        toAuthenticatedUser: jest.fn().mockImplementation((saved: typeof user) => ({
+          userId: saved.userId,
+          name: saved.name,
+          avatar: saved.avatarUrl,
+          departmentIds: saved.departmentIds,
+          department: saved.departmentNames,
+          position: saved.position,
+          roles: ['all_authenticated'],
+          isAdmin: false,
+        })),
+      };
       const service = new AuthService(
         repository as never,
         jwt as never,
         tokenService as never,
         gateway as never,
         new RoleResolverService(),
-        adminService as never,
+        authorization as never,
       );
 
       const result = await service.exchangeCode('code-1');
 
       expect(gateway.getUserSensitiveDetail).toHaveBeenCalledWith('token', 'ticket-1');
-      expect(repository.save).toHaveBeenCalledWith(
+      expect(authorization.applySourceProfile).toHaveBeenCalledWith(
         expect.objectContaining({
           avatarUrl: expectedAvatar,
         }),
@@ -115,7 +132,24 @@ describe('AuthService', () => {
       { getAccessToken: jest.fn().mockResolvedValue('token') } as never,
       gateway as never,
       new RoleResolverService(),
-      { isSystemAdmin: jest.fn().mockReturnValue(false) } as never,
+      {
+        nextSourceRevision: jest.fn().mockResolvedValue(1),
+        applySourceProfile: jest.fn().mockImplementation(async (input: Partial<WecomUserEntity>) => ({
+          user: Object.assign(user, input),
+          created: false,
+          ignored: false,
+        })),
+        toAuthenticatedUser: jest.fn().mockImplementation((saved: typeof user) => ({
+          userId: saved.userId,
+          name: saved.name,
+          avatar: saved.avatarUrl,
+          departmentIds: saved.departmentIds,
+          department: saved.departmentNames,
+          position: saved.position,
+          roles: ['all_authenticated'],
+          isAdmin: false,
+        })),
+      } as never,
     );
 
     const result = await service.exchangeCode('code-1');

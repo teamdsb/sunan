@@ -19,13 +19,13 @@ replaced_by: []
 
 ### 数据结构
 
-- `wecom_users` 增加来源状态/时间、最后登录时间、最后同步时间、来源修订号/批次、平台状态/原因、部门模式与人工部门 ID、角色模式与人工业务角色、授权版本。保留旧 `is_system_admin` 列作兼容快照，但授权服务不读取它。
+- `wecom_users` 增加来源状态/时间、最后登录时间、登录状态、最后同步时间、来源修订号/批次、平台状态/原因、部门模式与人工部门 ID、角色模式与人工业务角色、授权版本。保留旧 `is_system_admin` 列作兼容快照，但授权服务不读取它。
 - `wecom_departments` 保存同一企业的部门 ID、父部门、名称、来源修订号和最近批次，支持多部门成员及人工部门校验。
-- `wecom_sync_batches` 保存触发人、批次修订号、状态、覆盖范围/完整性、起止时间、读取/新增/更新/失败计数和脱敏错误摘要。
-- `wecom_user_audits` 保存操作者、变更来源、原因、变更前后白名单字段、授权版本和时间；不保存 raw profile 全量或 Secret。
+- `wecom_directory_sync_batches` 保存触发人、批次修订号、状态、覆盖范围/完整性、起止时间、读取/新增/更新/失败计数和脱敏错误摘要。
+- `wecom_user_change_audits` 保存操作者、变更来源、原因、变更前后白名单字段、授权版本和时间；不保存 raw profile 全量或 Secret。
 - 使用数据库序列生成单调来源修订号。来源写入在事务中按 `source_revision` 条件更新，旧 OAuth/同步批次不能覆盖较新的来源快照；人工编辑以 `authorization_version` 乐观锁校验，版本不一致返回 409。
 
-来源状态只在企业微信明确返回可用/不可用时更新。同步缺失、可见范围缩小、分页或部门读取失败只记录批次完整性与错误，不自动停用或删除成员。`last_login_at` 仅由成功 OAuth 写入，新增纯同步成员可明确表示“从未登录”，历史空值显示“未知”。
+来源状态只在企业微信明确返回可用/不可用时更新。同步缺失、可见范围缩小、分页或部门读取失败只记录批次完整性与错误，不自动停用或删除成员。`last_login_at` 仅由成功 OAuth 写入；`login_status` 将新增纯同步成员标为 `never`，成功 OAuth 标为 `logged_in`，历史没有可靠登录事实的成员保持 `unknown`。
 
 ### 有效授权
 
@@ -35,7 +35,7 @@ JWT 只保存身份主键和企业标识，不复制角色。每个受保护请�
 
 ### 企业微信同步
 
-`WecomHttpGateway` 增加部门成员读取接口。同步服务使用主应用 token，先读取部门字典，再递归处理根部门可见范围内的成员，按 UserID 去重并对每个成员做局部来源更新。部门读取、分页/分段读取和单成员解析失败会累积到批次；已有成员不会因本批次缺失而改变状态。重复触发在已有进行中批次时返回明确冲突，完成批次可重复执行且按 UserID 幂等。
+`WecomHttpGateway` 增加部门成员读取接口。同步服务使用主应用 token，先读取部门字典，再递归处理根部门可见范围内的成员，按 UserID 去重并对每个成员做局部来源更新；成员接口返回 continuation cursor 时继续读取后续页。部门读取、分页/分段读取和单成员解析失败会累积到批次；已有成员不会因本批次缺失而改变状态。重复触发在已有进行中批次时返回明确冲突，完成批次可重复执行且按 UserID 幂等。
 
 同步接口只允许系统管理员调用，返回批次状态、范围说明、完整性验证状态和计数。列表接口默认返回全部平台状态，支持姓名/UserID、部门、角色、管理员资格、平台状态、登录状态和覆盖状态筛选，并使用白名单字段构建详情和历史。
 
@@ -43,11 +43,12 @@ JWT 只保存身份主键和企业标识，不复制角色。每个受保护请�
 
 新增系统管理员专用控制器：
 
-- `GET /api/v1/admin/users`：分页、搜索和冻结筛选参数。
-- `GET /api/v1/admin/users/:userId`：来源/生效对照、状态、登录/同步时间、授权版本和脱敏审计摘要。
-- `PATCH /api/v1/admin/users/:userId`：仅接受部门模式/部门 ID、角色模式/角色、平台状态和必填原因，并携带 `authorizationVersion`；拒绝 `system_admin`、`isAdmin`、`corpId`、`userId` 等字段。
-- `GET /api/v1/admin/users/:userId/audits`：分页读取变更历史。
-- `POST /api/v1/admin/users/sync`、`GET /api/v1/admin/users/sync/:batchId`：手动同步及批次状态。
+- `GET /api/v1/admin/wecom-users`：分页、搜索和冻结筛选参数。
+- `GET /api/v1/admin/wecom-users/:userId`：来源/生效对照、状态、登录/同步时间、授权版本和脱敏审计摘要。
+- `PATCH /api/v1/admin/wecom-users/:userId/authorization`：仅接受部门模式/部门 ID、角色模式/角色、平台状态和必填原因，并携带 `expectedAuthorizationVersion`；拒绝 `system_admin`、`isAdmin`、`corpId`、`userId` 等字段。
+- `POST /api/v1/admin/wecom-users/:userId/restore-departments`、`POST /api/v1/admin/wecom-users/:userId/restore-roles`：分别恢复部门跟随或角色自动，不隐式清除另一类人工设置。
+- `GET /api/v1/admin/wecom-users/:userId/audits`：分页读取变更历史。
+- `POST /api/v1/admin/wecom-directory-sync`、`GET /api/v1/admin/wecom-directory-sync/:batchId`：手动同步及批次状态。
 
 人工部门 ID 必须存在于当前部门字典；人工角色只能是既有 `general_office`、`finance`、`business`、`shipping`、`logistics`、`crew`。空人工角色是合法的明确授权，不能被自动角色补回。平台停用、恢复跟随与撤销业务角色均记录原因和版本。
 

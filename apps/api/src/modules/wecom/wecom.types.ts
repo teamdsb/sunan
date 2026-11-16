@@ -19,6 +19,30 @@ export interface WecomUserDetailResponse {
   avatar?: string;
   department?: number[];
   position?: string;
+  status?: number;
+  enable?: number;
+  qr_code?: string;
+  errcode?: number;
+  errmsg?: string;
+}
+
+export interface WecomUserListItem {
+  userid: string;
+  name: string;
+  department?: number[];
+  position?: string;
+  avatar?: string;
+  status?: number;
+  enable?: number;
+  is_leader_in_dept?: number[];
+  extattr?: Record<string, unknown>;
+  errcode?: number;
+  errmsg?: string;
+}
+
+export interface WecomUserListResponse {
+  userlist: WecomUserListItem[];
+  next_cursor?: string;
   errcode?: number;
   errmsg?: string;
 }
@@ -26,6 +50,8 @@ export interface WecomUserDetailResponse {
 export interface WecomDepartment {
   id: number;
   name: string;
+  parentid?: number;
+  order?: number;
 }
 
 export interface WecomDepartmentListResponse {

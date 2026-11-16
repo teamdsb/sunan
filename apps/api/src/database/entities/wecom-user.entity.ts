@@ -50,6 +50,51 @@ export class WecomUserEntity {
   @Column({ name: 'is_system_admin', type: 'boolean', default: false })
   isSystemAdmin!: boolean;
 
+  @Column({ name: 'source_status', type: 'varchar', length: 16, default: 'unknown' })
+  sourceStatus!: 'active' | 'inactive' | 'unknown';
+
+  @Column({ name: 'source_status_updated_at', type: 'timestamptz', nullable: true })
+  sourceStatusUpdatedAt!: Date | null;
+
+  @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
+  lastLoginAt!: Date | null;
+
+  @Column({ name: 'login_status', type: 'varchar', length: 16, default: 'unknown' })
+  loginStatus!: 'unknown' | 'never' | 'logged_in';
+
+  @Column({ name: 'last_sync_at', type: 'timestamptz', nullable: true })
+  lastSyncAt!: Date | null;
+
+  @Column({ name: 'source_revision', type: 'bigint', default: 0 })
+  sourceRevision!: number;
+
+  @Column({ name: 'source_batch_id', type: 'uuid', nullable: true })
+  sourceBatchId!: string | null;
+
+  @Column({ name: 'platform_status', type: 'varchar', length: 16, default: 'enabled' })
+  platformStatus!: 'enabled' | 'disabled';
+
+  @Column({ name: 'platform_status_reason', type: 'text', nullable: true })
+  platformStatusReason!: string | null;
+
+  @Column({ name: 'platform_status_changed_at', type: 'timestamptz', nullable: true })
+  platformStatusChangedAt!: Date | null;
+
+  @Column({ name: 'department_mode', type: 'varchar', length: 16, default: 'follow_wecom' })
+  departmentMode!: 'follow_wecom' | 'manual';
+
+  @Column({ name: 'manual_department_ids', type: 'jsonb', default: () => "'[]'::jsonb" })
+  manualDepartmentIds!: number[];
+
+  @Column({ name: 'role_mode', type: 'varchar', length: 16, default: 'auto' })
+  roleMode!: 'auto' | 'manual';
+
+  @Column({ name: 'manual_roles', type: 'jsonb', default: () => "'[]'::jsonb" })
+  manualRoles!: string[];
+
+  @Column({ name: 'authorization_version', type: 'bigint', default: 1 })
+  authorizationVersion!: number;
+
   @Column({
     name: 'raw_profile',
     type: 'jsonb',

@@ -63,6 +63,7 @@ export class RoleResolverService {
     departmentNames: string[];
     position: string | null;
     isSystemAdmin: boolean;
+    allowPositionFallback?: boolean;
   }): string[] {
     const roles = new Set<string>(['all_authenticated']);
 
@@ -82,7 +83,11 @@ export class RoleResolverService {
       });
     }
 
-    if (params.position && /(船员|船长)/.test(params.position)) {
+    if (
+      params.allowPositionFallback !== false &&
+      params.position &&
+      /(船员|船长)/.test(params.position)
+    ) {
       roles.add('crew');
     }
 

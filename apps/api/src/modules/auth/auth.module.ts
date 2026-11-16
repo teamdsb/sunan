@@ -8,6 +8,7 @@ import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { AuthController } from 'src/modules/auth/auth.controller';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { JwtStrategy } from 'src/modules/auth/strategies/jwt.strategy';
 
 @Module({
@@ -22,7 +23,7 @@ import { JwtStrategy } from 'src/modules/auth/strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RoleResolverService, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, RoleResolverService, AuthorizationService, JwtStrategy],
+  exports: [AuthService, AuthorizationService, RoleResolverService],
 })
 export class AuthModule {}

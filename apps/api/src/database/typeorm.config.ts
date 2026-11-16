@@ -52,6 +52,9 @@ import { WorkbenchRecordTransferEntity } from './entities/workbench-record-trans
 import { WorkbenchDelegationEntity } from './entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from './entities/workbench-template.entity';
 import { WecomUserEntity } from './entities/wecom-user.entity';
+import { WecomDepartmentEntity } from './entities/wecom-department.entity';
+import { WecomSyncBatchEntity } from './entities/wecom-sync-batch.entity';
+import { WecomUserAuditEntity } from './entities/wecom-user-audit.entity';
 import {
   SafetyPlanEntity,
   SafetyPlanItemEntity,
@@ -108,6 +111,7 @@ import { Wave7LegacySafetyMigration1710000021000 } from './migrations/1710000021
 import { WecomUserDepartmentIds1710000022000 } from './migrations/1710000022000-wecom-user-department-ids';
 import { WorkbenchVoyageSchemaV21710000023000 } from './migrations/1710000023000-workbench-voyage-schema-v2';
 import { CertificateReminderPreferences1710000024000 } from './migrations/1710000024000-certificate-reminder-preferences';
+import { M9Wave2UserDirectory1710000027000 } from './migrations/1710000027000-m9-wave2-user-directory';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -119,6 +123,9 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   ssl: appEnv.DB_SSL ? { rejectUnauthorized: false } : false,
   entities: [
     WecomUserEntity,
+    WecomDepartmentEntity,
+    WecomSyncBatchEntity,
+    WecomUserAuditEntity,
     SafetyPlanEntity,
     SafetyPlanItemEntity,
     SafetyTaskEntity,
@@ -221,6 +228,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     CertificateReminderPreferences1710000024000,
     ReminderExpiryCycle1710000025000,
     FileOrphanRetention1710000026000,
+    M9Wave2UserDirectory1710000027000,
   ],
   synchronize: false,
 });
