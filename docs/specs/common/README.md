@@ -19,6 +19,7 @@ replaced_by: []
 | `file-upload-spec.md` | 当前规格 | OSS 直传、文件元数据、业务绑定和访问控制 |
 | `frontend-experience-guidelines.md` | 当前规格 | 企业微信 H5 体验、蓝白企业风格、统一控件系统、交互模式、首屏性能和页面改造验收基线 |
 | `notification-spec.md` | 当前规格 | 系统通知、企业微信消息和消息状态约定 |
+| `../m9-wave1-identity-configuration-baseline.md` | 当前源码 | M9 Wave 1 身份、管理员、通知配置和迁移边界冻结；目标行为未实现前不得视作上线 |
 | `operations-observability-m6.md` | 运维上线 | M6 生产运维、可观测、告警和恢复 SOP；后续生产 SOP 可在此演进 |
 
 ## 归档入口

@@ -110,3 +110,17 @@ interface CurrentUserDto {
 - `PROCUREMENT_APPROVAL_BACKEND=internal|wecom_native`
 
 M3 固定使用 `internal`，`wecom_native` 仅作契约预留。
+
+## M9 Wave 1 身份基线（当前源码 / 目标变更）
+
+Wave 1 的冻结结果见 [`docs/specs/m9-wave1-identity-configuration-baseline.md`](../m9-wave1-identity-configuration-baseline.md)。该文档区分当前实现和后续 Wave 2/3 目标，不能作为功能已上线证明。
+
+| 能力 | 当前源码 | M9 目标（尚未实现） |
+|---|---|---|
+| 管理员来源 | `WecomAdminService` 从 env 白名单判断；OAuth 仍把结果写入 `wecom_users.is_system_admin` | env 是唯一授权真源；数据库快照不参与授权、范围或收件人。 |
+| 部门/角色 | OAuth、JWT 和刷新按来源部门/职位推导；职位可补 `crew` | 来源资料与人工部门/角色模式分离；人工角色替换自动角色，人工空列表不回填。 |
+| 平台状态 | 没有平台 `enabled/disabled` 字段；自查旁路从 `raw_profile.status` 判断 | 平台状态独立于企业微信成员状态；disabled 成员的 OAuth、me、旧 token 和刷新均拒绝。 |
+| 并发 | OAuth 对用户整行 `save`，无授权版本 | 管理保存携带授权版本；冲突 `409`；来源更新只写来源字段并拒绝旧批次覆盖。 |
+| 统一生效 | 提醒、自查、采购仍有各自部门/角色读取 | 登录、守卫、业务范围、候选人和通知收件人统一调用有效授权服务。 |
+
+M9 管理 API 均要求 `JwtAuthGuard + RolesGuard(system_admin)`；正常 `/auth/me` 不要求管理员。请求不得接受 `system_admin`、`isAdmin`、`isSystemAdmin`、`corpId` 或任意 raw profile 字段。人工财务部门搭配 `shipping`、空部门、空角色、旧职位、env 管理员提升/撤销与既有 disabled 的组合矩阵和验证方式以 Wave 1 基线为准。

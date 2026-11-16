@@ -24,7 +24,7 @@ replaced_by: []
 
 | Wave | 目标 | 前置 | 当前状态 | 提示词 |
 |---|---|---|---|---|
-| 1 | 身份、配置契约与迁移基线冻结 | 以当前源码复核本需求 | 未开始 | [W1](../prompts/m9/wave-1-identity-baseline.md) |
+| 1 | 身份、配置契约与迁移基线冻结 | 以当前源码复核本需求 | 有条件通过（契约已冻结，功能未实施） | [W1](../prompts/m9/wave-1-identity-baseline.md) |
 | 2 | 全通讯录与用户授权后端 | W1 | 未开始 | [W2](../prompts/m9/wave-2-user-directory.md) |
 | 3 | 管理页面与全业务权限整合 | W2 | 未开始 | [W3](../prompts/m9/wave-3-admin-console.md) |
 | 4 | 后台推送配置与消息整合 | W1；收件人整合依赖 W2/W3 | 未开始 | [W4](../prompts/m9/wave-4-message-settings.md) |

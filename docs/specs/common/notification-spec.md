@@ -47,3 +47,16 @@ replaced_by: []
 ## 通知去重规则
 
 同一证书同一到期提醒周期内，如已发送且对方已确认（`status = acknowledged`），不再重复推送。如未确认，每天重复提醒。M8 任务通知按上节的持久化去重键和投递状态处理，不复用证书提醒确认状态。
+
+## M9 Wave 1 通知配置基线（当前源码 / 目标变更）
+
+统一边界见 [`docs/specs/m9-wave1-identity-configuration-baseline.md`](../m9-wave1-identity-configuration-baseline.md)。当前 `WecomMessageService` 和证书/采购/任务调用链只使用 env 主应用，收件人仍由各业务旁路查询用户表；可选通知应用、配置版本和统一有效收件人尚未实现。
+
+M9 目标规则如下：
+
+- 未设置覆盖或明确清除覆盖时，使用 env 主应用的完整 CorpID、AgentID 和 Secret；不把 env Secret 复制入库。
+- 独立通知应用只允许同企业 AgentID + Secret，Secret 使用 `SYSTEM_SETTINGS_ENCRYPTION_KEY` 加密保存；半配置拒绝，已保存覆盖出错时不得静默回退主应用。
+- 每次尝试记录业务来源、接收人、实际应用、配置来源/版本、结果和脱敏错误；沿用现有业务去重键，成功不得因配置变更重发。
+- 发送前按统一有效部门、角色和账号状态核验收件人；人工指定的有效历史参与人不因部门修改自动替换。
+
+Wave 1 只冻结契约。配置持久化、加密、多实例缓存隔离和证书/采购/任务接入由 Wave 4 实现，真实送达、可见范围和结果不确定处理由 Wave 5 现场验收。

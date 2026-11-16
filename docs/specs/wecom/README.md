@@ -20,6 +20,7 @@ replaced_by: []
 | `approval-native-bridge-spec.md` | 当前规格 | 企业微信原生审批桥接预留与契约 |
 | `approval-ops-spec.md` | 当前规格 | 审批异常、重试、对账和运维闭环 |
 | `callback-security-spec.md` | 当前真源 | 回调签名、时间窗、nonce、幂等、IP 和加密处理 |
+| `../m9-wave1-identity-configuration-baseline.md` | 当前源码 | M9 Wave 1 身份、目录和通知配置边界；区分当前实现与后续目标 |
 
 ## 生产上线与回归
 

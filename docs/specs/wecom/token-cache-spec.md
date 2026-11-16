@@ -103,3 +103,9 @@ interface TokenCacheService {
 | `REDIS_PASSWORD` | Redis 密码（可选） |
 | `WECOM_CORP_ID` | 企业 CorpID（用于获取 access_token） |
 | `WECOM_AGENT_SECRET` | 应用 Secret |
+
+## M9 Wave 1 缓存边界（当前源码 / 目标变更）
+
+当前实现只维护 `wecom:access_token`、`wecom:corp_jsapi_ticket` 和按 AgentID 的 JS-SDK ticket；刷新锁按 token 类型命名，access token 固定使用 env 主应用。它不能安全承载独立通知应用的 token，因为没有 CorpID、应用和配置版本隔离。
+
+Wave 1 冻结的目标键空间为 `wecom:app:{corpId}:{agentId}:v{configVersion}:access_token` 及对应应用级 ticket/刷新锁。OAuth、通讯录、回调和 JS-SDK 继续使用 env 主应用键；独立通知应用只使用自己的键。清除或替换覆盖必须递增配置版本并清除旧应用缓存，`42001` 只刷新当前应用。Redis 降级、锁竞争、密钥解密失败和多实例读取均需在 Wave 4/5 测试中证明，不把当前主应用实现误称为已隔离。

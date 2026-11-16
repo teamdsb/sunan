@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：276 个 Markdown 文件。
+总数：279 个 Markdown 文件。
 
 ## repository-root
 
@@ -30,6 +30,7 @@ replaced_by: []
 | [deploy/troubleshooting.md](../deploy/troubleshooting.md) | `operations` | `operations` | 故障处理手册 |
 | [deploy/wecom-operations.md](../deploy/wecom-operations.md) | `operations` | `operations` | 企业微信运维手册 |
 | [findings.md](../findings.md) | `operations` | `planning` | 发现与决策 |
+| [outputs/wecom-workbench-01a1e305/使用说明.md](../outputs/wecom-workbench-01a1e305/使用说明.md) | `current-source` | `wecom` | 苏南企业微信工作台应用配置包 |
 | [progress.md](../progress.md) | `operations` | `planning` | 进度日志 |
 | [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：苏南平台开发与发布 |
 
@@ -365,6 +366,12 @@ replaced_by: []
 |---|---|---|---|
 | [docs/archive/templates/common/m6-wave6-hypercare-daily-template.md](archive/templates/common/m6-wave6-hypercare-daily-template.md) | `template` | `archive` | M6 Wave 6 Hypercare 每日日志模板 |
 
+## acceptance
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/acceptance/M9-wave-1.md](acceptance/M9-wave-1.md) | `current-source` | `planning` | M9 Wave 1 验收记录 |
+
 ## archive/acceptance/safety
 
 | 文档 | 状态 | 负责人 | 标题 |
@@ -428,6 +435,12 @@ replaced_by: []
 | [docs/handbook/2026-09-20-截图更新清单.md](handbook/2026-09-20-截图更新清单.md) | `operations` | `handbook` | 操作手册截图更新与剩余补拍清单 |
 | [docs/handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md](handbook/航运公司安全管理数字化平台PC、小程序端操作手册.md) | `audit-snapshot` | `external-reference` | 航运公司 |
 | [docs/handbook/苏南船舶管理系统操作手册.md](handbook/苏南船舶管理系统操作手册.md) | `operations` | `docs` | 苏南船舶管理系统操作手册 |
+
+## specs/m9-wave1-identity-configuration-baseline.md
+
+| 文档 | 状态 | 负责人 | 标题 |
+|---|---|---|---|
+| [docs/specs/m9-wave1-identity-configuration-baseline.md](specs/m9-wave1-identity-configuration-baseline.md) | `current-source` | `planning` | M9 Wave 1 身份、配置与迁移基线 |
 
 ## superpowers
 
