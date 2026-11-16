@@ -1,13 +1,13 @@
 ---
 status: current-index
 owner: workbench
-updated: 2026-09-20
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
 # 工作平台入口
 
-工作平台覆盖各部门业务入口，实际完成范围见[原件核查与实施补充](../../audits/2026-09-07-original-goal-audit.md)。考勤、个人学习和船舶燃油的本轮补齐见[业务规则](business-reporting.md)。历史里程碑的“已完成”不代表原始目标全部兑现；M9 继续暂停。
+工作平台覆盖各部门业务入口，实际完成范围见[原件核查与实施补充](../../audits/2026-09-07-original-goal-audit.md)。考勤、个人学习和船舶燃油的本轮补齐见[业务规则](business-reporting.md)。历史里程碑的“已完成”不代表原始目标全部兑现。原 M9 专业安全深化方案已撤销；新 M9 为[平台管理与配置升级](../../requirements/M9-平台管理与配置升级.md)，已规划、实施未开始。
 
 | 需要了解的内容 | 入口 |
 |---|---|

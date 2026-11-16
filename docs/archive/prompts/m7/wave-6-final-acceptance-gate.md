@@ -1,11 +1,13 @@
 ---
 status: historical-archive
 owner: archive
-updated: 2026-07-10
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
 # M7 Wave 6 提示词：最终收口与 M8/M9 重启门禁（历史归档）
+
+> 2026-11-16 维护注：原专业安全 M9 及配套总路线已撤销并删除，以下为历史提示词；其中 M9 不指当前“平台管理与配置升级”，也不提供执行授权。
 
 ```text
 你正在苏南船舶管理系统仓库执行 M7 Wave 6。目标是完成最终收口、验收证据、文档索引校验，并判断 M8/M9 是否可以重新进入当前执行队列。本 Wave 不新增业务功能，除非发现阻断验收的 P0/P1 缺陷。
@@ -20,9 +22,9 @@ replaced_by: []
 - docs/plans/wave-acceptance-template.md
 - docs/prompts/README.md
 - docs/requirements/M6-全量兑现与完美上线.md
-- docs/archive/paused/m9/M8-M9-upgrade-roadmap.md
+- 原 M8-M9 总路线（已于 2026-11-16 随旧 M9 方案删除）
 - docs/archive/execplans/M8-execplans.md
-- docs/archive/paused/m9/M9-execplans.md
+- 原专业安全 M9 执行计划（已于 2026-11-16 删除）
 - docs/specs/common/frontend-experience-guidelines.md
 - docs/specs/wecom/real-device-regression-matrix.md
 

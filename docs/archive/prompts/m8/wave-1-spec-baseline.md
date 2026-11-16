@@ -1,11 +1,13 @@
 ---
 status: historical-archive
 owner: archive
-updated: 2026-06-13
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
 # M8 Wave 1 提示词：文档、架构与规格基线
+
+> 2026-11-16 维护注：原 M8-M9 总路线已随旧专业安全 M9 方案撤销并删除；本文只保留 M8 当时执行口径，不作为当前 M9 的实施依据。
 
 ```text
 你正在苏南船舶管理系统仓库执行 M8 Wave 1。目标是冻结安全管理底座的文档、架构、术语、规格目录和验收门禁，本 Wave 不实现业务代码。
@@ -15,7 +17,7 @@ replaced_by: []
 - docs/README.md
 - docs/guides/sdd-workflow.md
 - docs/requirements/M8-安全管理底座与核心闭环.md
-- docs/archive/paused/m9/M8-M9-upgrade-roadmap.md
+- 原 M8-M9 总路线（已于 2026-11-16 随旧 M9 方案删除）
 - docs/archive/execplans/M8-execplans.md
 - docs/archive/backlogs/safety/M8-wave-backlog.md
 - docs/handbook/苏南船舶管理系统与航运安全管理数字化平台功能对比及升级建议.md

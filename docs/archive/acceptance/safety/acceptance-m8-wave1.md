@@ -1,7 +1,7 @@
 ---
 status: acceptance-archive
 owner: safety
-updated: 2026-07-10
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -26,7 +26,7 @@ replaced_by: []
 
 | 工作包 | 状态 | 证据 |
 |---|---|---|
-| `M8-W1A` | 通过 | `docs/requirements/M8-安全管理底座与核心闭环.md`、`docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`、`docs/archive/execplans/M8-execplans.md`、`docs/archive/backlogs/safety/M8-wave-backlog.md`、`docs/specs/safety/domain-boundaries.md` |
+| `M8-W1A` | 通过 | `docs/requirements/M8-安全管理底座与核心闭环.md`、原 M8-M9 总路线（2026-11-16 随旧 M9 方案删除，历史通过结论保留）、`docs/archive/execplans/M8-execplans.md`、`docs/archive/backlogs/safety/M8-wave-backlog.md`、`docs/specs/safety/domain-boundaries.md` |
 | `M8-W1B` | 通过 | `docs/specs/safety/domain-boundaries.md`、`docs/specs/safety/terminology-and-status.md`、`docs/specs/safety/api/README.md`、`db/README.md`、`state/README.md`、`ui/README.md` |
 | `M8-W1C` | 通过 | `docs/specs/safety/testing-matrix.md`、`docs/specs/safety/migration-principles.md`、`docs/plans/wave-acceptance-template.md`、`docs/archive/prompts/m8/wave-1-spec-baseline.md` |
 

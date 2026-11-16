@@ -1,31 +1,34 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-07-12
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
 # 执行计划入口
 
-> 当前没有正在执行的升级里程碑。M8 已于 2026-07-12 验收归档；M9 已由用户暂停并独立封存，不自动启动。
+> 当前 M9 为“平台管理与配置升级”，已规划、实施未开始。本轮只重做规划，不把需求或计划视为已实现功能。
 
 ## 当前计划
 
-无。恢复 M9 或建立新里程碑前，应先取得用户明确指令并建立新的当前执行入口。
+| 文档 | 用途 |
+|---|---|
+| [M9 需求](requirements/M9-平台管理与配置升级.md) | 用户管理、部门与权限覆盖、重新认证、配置与 env 边界 |
+| [M9 执行计划](plans/M9-execplans.md) | 5 个 Wave 的顺序、交付物和验收门槛 |
+| [M9 Wave backlog](plans/M9-wave-backlog.md) | 待实施工作和验证清单 |
+| [Wave 提示词](prompts/README.md) | 各 Wave 的实施入口；本轮不执行 |
 
-## 已完成与暂停
+M9 计划查看与管理全企业通讯录成员，含从未登录的用户；应用可见范围受限时显示局部结果与限制，完整性未验证不计全目录验收通过。系统管理员身份与主应用企业微信配置继续仅由 env 管理，后台推送应用配置未填写时使用主应用。
 
-| 里程碑 | 状态 | 入口 |
+## 已完成与已撤销
+
+| 里程碑 | 状态 | 入口或说明 |
 |---|---|---|
+| M7 上线体验与导航修复 | 已完成、已归档 | [最终验收](archive/acceptance/common/acceptance-m7-wave6.md) |
 | M8 安全管理底座与核心闭环 | 已完成、已归档 | [总验收](archive/acceptance/safety/acceptance-m8-overall.md)、[最终功能核查](archive/audits/M8-最终功能实现核查.md)、[历史计划](archive/execplans/M8-execplans.md) |
-| M9 专业安全业务深化与体系完善 | 暂停、未开始 | [暂停计划](archive/paused/m9/M9-execplans.md)、[暂停 backlog](archive/paused/m9/M9-wave-backlog.md)、[暂停路线](archive/paused/m9/M8-M9-upgrade-roadmap.md) |
+| 原 M9 专业安全业务深化与体系完善 | 已撤销、从未实施 | 2026-11-16 按用户要求删除原需求和暂停包，不再作为可恢复计划 |
 
-## 当前状态
-
-- M7：已完成并归档，最终验收见 `docs/archive/acceptance/common/acceptance-m7-wave6.md`。
-- M8：Wave 1-7 通过并归档；三端真机、生产存量和生产恢复未在归档任务执行，实际状态已在验收中披露。
-- M9：用户主动暂停；需求和计划保留为 `conditional-baseline`，未实现任何 M9 Wave。
-- 外部海事监管、AIS、CCTV 等系统集成不在 M8/M9 范围。
+M8 Wave 1-7 通过并归档；三端真机、生产存量和生产恢复未在归档任务执行，实际状态已在验收中披露。历史 M7/M8 材料中的 M9 指原专业安全规划，不是新 M9 的依赖或验收证据。
 
 ## 归档位置
 
@@ -33,10 +36,10 @@ replaced_by: []
 - M8 历史 backlog：`docs/archive/backlogs/safety/M8-wave-backlog.md`
 - M8 历史提示词：`docs/archive/prompts/m8/`
 - M8 验收：`docs/archive/acceptance/safety/`
-- M9 暂停包：`docs/archive/paused/m9/`
 
 ## 使用规则
 
-- 每个新 Wave 使用 `docs/plans/wave-acceptance-template.md` 建立独立验收记录。
-- 新需求不要直接修改 M1-M8 历史执行计划。
-- M9 暂停包只能在用户明确恢复后迁回当前计划；恢复时先重做基线与范围评审。
+- 每个新 Wave 使用 [Wave 验收模板](plans/wave-acceptance-template.md) 建立独立验收记录。
+- 当前实现仍以源码、migration 和领域规格为准；新 M9 需求描述的是目标行为。
+- 新需求不要直接修改 M1-M8 历史执行计划或验收结论。
+- 新 M9 不包含原专业安全深化或海事监管、AIS、CCTV 等外部系统集成。

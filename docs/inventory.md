@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：281 个 Markdown 文件。
+总数：276 个 Markdown 文件。
 
 ## repository-root
 
@@ -84,13 +84,15 @@ replaced_by: []
 | [docs/requirements/M6-全量兑现与完美上线.md](requirements/M6-全量兑现与完美上线.md) | `current-spec` | `requirements` | 里程碑 6 需求文档：全量兑现与完美上线 |
 | [docs/requirements/M7-上线体验与导航修复.md](requirements/M7-上线体验与导航修复.md) | `historical-archive` | `requirements` | 里程碑 7 需求文档：上线体验与导航修复（历史归档） |
 | [docs/requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) | `historical-archive` | `requirements` | 里程碑 8 需求文档：安全管理底座与核心闭环（历史归档） |
-| [docs/requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) | `conditional-baseline` | `requirements` | 里程碑 9 需求文档：专业安全业务深化与体系完善 |
+| [docs/requirements/M9-平台管理与配置升级.md](requirements/M9-平台管理与配置升级.md) | `current-source` | `requirements` | 里程碑 9 需求：平台管理与配置升级 |
 | [docs/requirements/非功能需求.md](requirements/非功能需求.md) | `current-source` | `requirements` | 非功能需求 |
 
 ## plans
 
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
+| [docs/plans/M9-execplans.md](plans/M9-execplans.md) | `current-source` | `planning` | M9 执行计划：平台管理与配置升级 |
+| [docs/plans/M9-wave-backlog.md](plans/M9-wave-backlog.md) | `current-source` | `planning` | M9 Wave backlog：平台管理与配置升级 |
 | [docs/plans/README.md](plans/README.md) | `current-index` | `planning` | 当前执行计划索引 |
 | [docs/plans/wave-acceptance-template.md](plans/wave-acceptance-template.md) | `template` | `planning` | Mx Wave N 验收模板 |
 
@@ -99,6 +101,11 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/prompts/README.md](prompts/README.md) | `current-index` | `delivery` | Wave 提示词索引 |
+| [docs/prompts/m9/wave-1-identity-baseline.md](prompts/m9/wave-1-identity-baseline.md) | `current-source` | `planning` | M9 Wave 1 提示词：身份、配置契约与迁移基线 |
+| [docs/prompts/m9/wave-2-user-directory.md](prompts/m9/wave-2-user-directory.md) | `current-source` | `planning` | M9 Wave 2 提示词：全通讯录与用户授权后端 |
+| [docs/prompts/m9/wave-3-admin-console.md](prompts/m9/wave-3-admin-console.md) | `current-source` | `planning` | M9 Wave 3 提示词：管理后台与全业务权限整合 |
+| [docs/prompts/m9/wave-4-message-settings.md](prompts/m9/wave-4-message-settings.md) | `current-source` | `planning` | M9 Wave 4 提示词：后台推送配置与消息整合 |
+| [docs/prompts/m9/wave-5-release-acceptance.md](prompts/m9/wave-5-release-acceptance.md) | `current-source` | `planning` | M9 Wave 5 提示词：迁移回归与验收 |
 
 ## specs/common
 
@@ -379,23 +386,6 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/archive/backlogs/safety/M8-wave-backlog.md](archive/backlogs/safety/M8-wave-backlog.md) | `historical-archive` | `archive` | M8 分 Wave 实施清单（历史归档） |
-
-## archive/paused
-
-| 文档 | 状态 | 负责人 | 标题 |
-|---|---|---|---|
-| [docs/archive/paused/m9/M8-M9-upgrade-roadmap.md](archive/paused/m9/M8-M9-upgrade-roadmap.md) | `conditional-baseline` | `planning` | M8-M9 升级总路线图：安全管理数字化闭环（M9 暂停基线） |
-| [docs/archive/paused/m9/M9-execplans.md](archive/paused/m9/M9-execplans.md) | `conditional-baseline` | `planning` | M9 执行计划：专业安全业务深化与体系完善（暂停基线） |
-| [docs/archive/paused/m9/M9-wave-backlog.md](archive/paused/m9/M9-wave-backlog.md) | `conditional-baseline` | `planning` | M9 分 Wave 实施清单（暂停基线） |
-| [docs/archive/paused/m9/README.md](archive/paused/m9/README.md) | `current-index` | `planning` | M9 暂停计划包 |
-| [docs/archive/paused/m9/prompts/wave-1-baseline-specs.md](archive/paused/m9/prompts/wave-1-baseline-specs.md) | `conditional-baseline` | `delivery` | M9 Wave 1 提示词：M8 基线回归与专业规格冻结 |
-| [docs/archive/paused/m9/prompts/wave-2-personnel-safety.md](archive/paused/m9/prompts/wave-2-personnel-safety.md) | `conditional-baseline` | `delivery` | M9 Wave 2 提示词：人员安全与培训资格 |
-| [docs/archive/paused/m9/prompts/wave-3-ship-operations.md](archive/paused/m9/prompts/wave-3-ship-operations.md) | `conditional-baseline` | `delivery` | M9 Wave 3 提示词：航次与船舶高风险作业 |
-| [docs/archive/paused/m9/prompts/wave-4-emergency-incident.md](archive/paused/m9/prompts/wave-4-emergency-incident.md) | `conditional-baseline` | `delivery` | M9 Wave 4 提示词：应急、事故险情与防台 |
-| [docs/archive/paused/m9/prompts/wave-5-equipment-spares.md](archive/paused/m9/prompts/wave-5-equipment-spares.md) | `conditional-baseline` | `delivery` | M9 Wave 5 提示词：设备维护、修理、备件与采购 |
-| [docs/archive/paused/m9/prompts/wave-6-safety-governance.md](archive/paused/m9/prompts/wave-6-safety-governance.md) | `conditional-baseline` | `delivery` | M9 Wave 6 提示词：安全责任、费用与管理复查 |
-| [docs/archive/paused/m9/prompts/wave-7-documents-audit.md](archive/paused/m9/prompts/wave-7-documents-audit.md) | `conditional-baseline` | `delivery` | M9 Wave 7 提示词：受控文件、内审、统计与档案 |
-| [docs/archive/paused/m9/prompts/wave-8-release-acceptance.md](archive/paused/m9/prompts/wave-8-release-acceptance.md) | `conditional-baseline` | `delivery` | M9 Wave 8 提示词：全域联调、上线与验收 |
 
 ## archive/prompts
 

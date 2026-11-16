@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-苏南船舶管理系统，以企业微信工作台和 H5 页面为主要使用入口，包含我的、办事、采购管理和工作平台。仓库另有安全管理实现与规格；M9 专业安全深化处于暂停状态。
+苏南船舶管理系统，以企业微信工作台和 H5 页面为主要使用入口，包含我的、办事、采购管理和工作平台。仓库另有安全管理实现与规格；原 M9 专业安全深化方案已撤销，现 M9 为“平台管理与配置升级”，已规划、实施未开始。
 
 项目采用 pnpm 管理的单体仓库（monorepo）：后端为 NestJS、TypeORM、PostgreSQL 和 Redis，前端为 React、Vite 和 Ant Design。
 
@@ -20,6 +20,7 @@
 | 我的、办事、采购、工作平台规格 | `docs/specs/my/`、`docs/specs/office/`、`docs/specs/procurement/`、`docs/specs/workbench/` |
 | 通用接口、数据库、认证、前端体验 | `docs/specs/common/README.md` |
 | 企业微信集成 | `docs/specs/wecom/README.md` |
+| M9 平台管理与配置升级 | `docs/requirements/M9-平台管理与配置升级.md`、`docs/plans/M9-execplans.md` |
 | 安全管理规格、里程碑状态 | `docs/specs/safety/README.md`、`docs/execplans.md` |
 | 操作手册 | `docs/handbook/苏南船舶管理系统操作手册.md` |
 

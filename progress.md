@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: planning
-updated: 2026-08-31
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -725,3 +725,22 @@ replaced_by: []
 - 新增 PPT 生成脚本，125 页、85 张不同实拍图、8 章跳转目录、125 页讲解备注；文字/流程可编辑，另导出横版阅读 PDF。
 - 独立视觉 QA 发现并修复章节/结束页文字坐标、上传长图缩放、局部裁切边界；补入年度趋势表头和 PDF 审批区，流程示意保持明确标注。
 - 最终修复 PptxGenJS 备注母版在 presentation.xml 中的元素顺序；DOCX/PPTX OOXML 均验证通过，125 页 PPT 有对应备注和章节跳转。复核后的标注覆盖相应控件，并与 PDF 同步。
+
+
+## 2026-11-16：启动新 M9 规划
+- 已读取 brainstorming、planning-with-files-zh、verification-before-completion 技能；并行审查身份权限、配置推送、原 M9 文档。
+- 已取得用户关于全部通讯录成员范围的明确答复；现状核查完成，进入新计划撰写与旧包清理。
+- 旧 M9 于本轮废止；历史阶段的暂停和验收记录保留，新的实施状态为未开始。
+- 探索时尝试读取的 docs/requirements/README.md、docs/archive/paused/README.md 不存在，改用实际领域与归档入口；一次关键词搜索未匹配，后续直接按源码路径读取。未读取真实 .env。
+- 多文件 patch 因 findings.md 日期与预期不同未应用，已先读取实际文件头，再按文件当前内容更新。
+
+- 已完成新 M9 需求、执行计划、backlog、5 份实施提示词；原 M9 的 13 份需求/暂停文档删除，当前导航与历史失效引用完成更新。
+- 身份与配置审查均完成，已修复管理员停用优先级、全目录验收范围、旁路权限差异、各模块范围组合及授权/通知兼容回滚等实质问题。
+- 待统一生成 inventory、检查文档索引/断链和 git 差异；已有未跟踪 outputs 文档缺 YAML，保持其内容不变。
+
+- 已在独立临时副本运行原始 inventory/index 脚本：276 份版本化/本轮新增 Markdown 全部通过；本轮改动（含归档）链接、旧 M9 路径清理和新文档占位标记检查通过，git diff --check 通过。
+- 原仓库全量 check-doc-index 实际退出 1，仅报已有未跟踪 outputs/wecom-workbench-01a1e305/使用说明.md 缺 YAML 与未入 inventory；未改动该用户产物，不声称全库检查通过。
+- 最后独立复核未发现新功能遗漏；已修正两份 current-spec 设计中把旧 M9 继续称为暂停的表述，明确指向原专业安全方案已撤销，避免误阻止新 M9。
+
+- 最终新鲜复验通过：原始 inventory/index 脚本在版本化 Markdown + 本轮 8 新文档的临时副本中生成并验证 276 份清单；所有改动 Markdown 链接（含归档）、已删除路径与未完成占位检查通过，确认旧 M9 目录/需求已删除，apps/scripts 无改动，git diff --check 通过。
+- 阶段 37 完成，交付新 M9 需求、5 Wave 执行计划、backlog 与 5 份提示词。业务实施、迁移及部署均未开始；既有 outputs 索引问题单独披露。

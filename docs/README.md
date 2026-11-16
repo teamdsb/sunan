@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-09-28
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -42,12 +42,12 @@ replaced_by: []
 | 执行计划入口 | [execplans.md](execplans.md) |
 | M7 历史修复执行计划 | [archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) |
 | M8 总验收与最终功能核查 | [archive/acceptance/safety/acceptance-m8-overall.md](archive/acceptance/safety/acceptance-m8-overall.md)、[archive/audits/M8-最终功能实现核查.md](archive/audits/M8-最终功能实现核查.md) |
-| M9 暂停计划包 | [archive/paused/m9/M9-execplans.md](archive/paused/m9/M9-execplans.md) |
+| M9 平台管理与配置升级（已规划、实施未开始） | [执行计划](plans/M9-execplans.md)、[Wave backlog](plans/M9-wave-backlog.md) |
 | 当前计划与 Wave backlog | [plans/README.md](plans/README.md) |
 | Wave 实施提示词 | [prompts/README.md](prompts/README.md) |
 | M7 历史需求 | [requirements/M7-上线体验与导航修复.md](requirements/M7-上线体验与导航修复.md) |
 | M8 需求 | [requirements/M8-安全管理底座与核心闭环.md](requirements/M8-安全管理底座与核心闭环.md) |
-| M9 需求 | [requirements/M9-专业安全业务深化与体系完善.md](requirements/M9-专业安全业务深化与体系完善.md) |
+| M9 需求 | [requirements/M9-平台管理与配置升级.md](requirements/M9-平台管理与配置升级.md) |
 | 架构入口 | [architecture/overview.md](architecture/overview.md) |
 | 开发流程 | [guides/sdd-workflow.md](guides/sdd-workflow.md) |
 | 通用规格 | [specs/common/README.md](specs/common/README.md) |
@@ -65,10 +65,11 @@ replaced_by: []
 | 文档 | 状态 | 当前替代/说明 |
 |---|---|---|
 | [archive/execplans/M8-execplans.md](archive/execplans/M8-execplans.md) | `historical-archive` | M8 已于 2026-07-12 验收完成，当前实现以 safety 领域规格为准 |
-| [archive/paused/m9/M9-execplans.md](archive/paused/m9/M9-execplans.md) | `conditional-baseline` | M9 已暂停，只有用户明确恢复后才重新进入当前计划 |
 | [archive/audits/M6-逐条需求对照表.md](archive/audits/M6-逐条需求对照表.md) | `audit-snapshot` | 基于 2026-04-22 代码审计；复审需重新跑代码对照 |
 | [archive/backlogs/common/M6-优先级修复清单（分wave）.md](archive/backlogs/common/M6-优先级修复清单（分wave）.md) | `historical-archive` | Wave A-D 已完成，证据看 `docs/archive/acceptance/common/` |
 | [archive/backlogs/workbench/m5-optimization-backlog.md](archive/backlogs/workbench/m5-optimization-backlog.md) | `historical-archive` | M5 backlog，M6 后新优化需重新立项 |
+
+原 M9“专业安全业务深化与体系完善”的需求、暂停计划包和提示词已于 2026-11-16 按用户要求删除；历史材料中的原 M9 指当时的安全业务规划，不是当前 M9 的实施或验收证据。
 
 ## 维护规则
 

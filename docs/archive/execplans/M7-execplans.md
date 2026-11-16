@@ -1,7 +1,7 @@
 ---
 status: historical-archive
 owner: archive
-updated: 2026-07-10
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -195,4 +195,4 @@ npx swagger-cli validate <openapi-file>
 - 提示词：`docs/archive/prompts/m7/`
 - 通用体验：`docs/specs/common/frontend-experience-guidelines.md`
 - 通用上传：`docs/specs/common/file-upload-spec.md`
-- 后续升级历史路线：`docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`
+- 后续升级历史路线：原 M8-M9 总路线已于 2026-11-16 随旧 M9 专业安全方案删除；本文其余 M9 口径保留历史含义，不作为新 M9 的需求或验收依据。

@@ -1,7 +1,7 @@
 ---
 status: acceptance-archive
 owner: delivery
-updated: 2026-07-10
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -103,7 +103,7 @@ replaced_by: []
 - `docs/requirements/M7-上线体验与导航修复.md`
 - `docs/archive/execplans/M7-execplans.md`
 - `docs/archive/backlogs/common/M7-wave-backlog.md`
-- `docs/archive/paused/m9/M8-M9-upgrade-roadmap.md`
+- 原 M8-M9 总路线（已于 2026-11-16 随旧 M9 专业安全方案删除；本文 M9 重启判断保留历史含义，不作为当前 M9 的验收证据）。
 - `docs/specs/common/frontend-experience-guidelines.md`
 - `docs/specs/wecom/real-device-regression-matrix.md`
 

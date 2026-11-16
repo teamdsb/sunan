@@ -1,0 +1,39 @@
+Use case: logo-brand.
+Asset type: one precision sprite atlas containing 20 matching app logos for Sunan maritime enterprise management, to be sliced into separate square icons.
+
+Create exactly ONE portrait image, ideally 2048 pixels wide by 2560 pixels tall, aspect ratio exactly 4:5. This is a strict 4-column by 5-row grid of TWENTY equal square cells. Columns and rows divide the full canvas into equal widths and heights, with ZERO outer margins, ZERO gutters, ZERO grid lines. All twenty cells have the exact same solid deep navy blue background (#102C4A), extending all the way to the cell edges. Do not draw rounded square containers: the entire square cell itself is the app icon background. Center one different white and turquoise symbol in each cell. Put the optical center at the exact center of each cell. Keep every symbol within the central 62% of its cell; generous uniform clear space on all sides.
+
+Style: professional original maritime enterprise icon family, crisp geometric symbols, confident moderately thick rounded white monoline contours combined with occasional simple solid white forms. Tiny restrained turquoise (#41D6C3) accent on every symbol, about 15% of its foreground. Identical optical weight, size, stroke width, line cap style, and restrained detail across all 20. Flat vector-like graphics, clean silhouettes, excellent legibility at 64px. No 3D, no perspective, no gradients, no shadows, no texture, no decorative flourishes. The composition must look like a coherent high-quality system of twenty application marks.
+
+Exact icon position mapping, left to right within each row:
+ROW 1:
+column 1: Maritime system home, a simple house roof enclosing a small ship bow above a turquoise wave.
+column 2: Company documents, two stacked upright sheets with a small building facade on front.
+column 3: Company policies, an open book with a small turquoise check mark.
+column 4: Electronic certificates, a landscape ID/certificate card with small photo circle and turquoise seal.
+
+ROW 2:
+column 1: Certificate expiry reminders, a bell with a small turquoise clock badge.
+column 2: Ship monitoring, a ship hull and cabin with turquoise radar arcs above.
+column 3: Service center, a 3 by 3 matrix of rounded squares with one turquoise tile.
+column 4: Procurement, a shopping cart carrying one small package, turquoise cart wheels.
+
+ROW 3:
+column 1: Purchase approval, upright clipboard with a single large turquoise check.
+column 2: Purchase reports, upright report sheet containing three ascending bar chart bars, one turquoise.
+column 3: Report approval, a report sheet containing a small bar chart and a distinct turquoise circular check badge at lower right.
+column 4: Work platform, four equal rounded tiles arranged in a balanced 2 by 2 grid, three white and one turquoise.
+
+ROW 4:
+column 1: Operations check-in, a location pin containing a turquoise check mark.
+column 2: Crew attendance, a simple crew member bust above a small ship hull with a turquoise clock badge.
+column 3: Attendance statistics, a calendar containing three bar chart columns, one turquoise.
+column 4: Vessel self inspection, a ship bow inside a simple shield outline with a small turquoise check.
+
+ROW 5:
+column 1: Voyage plan approval, a ship above a simplified curved navigation route terminating in a turquoise arrow.
+column 2: Fuel management, a fuel pump with a turquoise droplet.
+column 3: Nautical chart updates, a folded map with a tiny navigation arrow and a turquoise circular refresh arrow.
+column 4: Approval board, three vertical kanban columns in a horizontal board frame with a turquoise check badge.
+
+Critical constraints: EXACTLY 20 symbols, EXACTLY 4 columns and 5 rows, all cells equal square sizes, strict correct order. No letters, no text, no labels, no numbers, no wordmarks, no watermarks anywhere. No graphical elements cross between cells. Uniform solid background color everywhere.

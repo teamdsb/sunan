@@ -1,7 +1,7 @@
 ---
 status: current-index
 owner: archive
-updated: 2026-07-12
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -24,11 +24,12 @@ replaced_by: []
 | `prompts/m7/` | 历史归档 | M7 已完成 Wave 提示词 |
 | `backlogs/safety/` | 历史归档 | M8 已完成 Wave backlog |
 | `prompts/m8/` | 历史归档 | M8 已完成 Wave 提示词 |
-| `paused/m9/` | 暂停基线 | M9 未开始的路线、计划、backlog 和提示词；只在用户明确恢复后启用 |
 | `backlogs/workbench/` | 历史归档 | M5 工作平台 backlog |
 | `superseded/wecom/` | 已取代 | 被后续企业微信文档替代的模板 |
 | `superseded/workbench/` | 已取代 | 被后续工作平台文档替代的记录 |
 | `templates/common/` | 模板 | 历史交付模板 |
+
+原 M9 专业安全深化从未开始实施，其需求、暂停路线、计划、backlog 和提示词已于 2026-11-16 按用户要求删除。M7/M8 验收与审计中涉及原 M9 的结论保留历史口径；当前同编号的“平台管理与配置升级”见 [执行计划入口](../execplans.md)。
 
 ## 使用规则
 

@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: auth
-updated: 2026-08-04
+updated: 2026-11-16
 replaces: []
 replaced_by: []
 ---
@@ -146,4 +146,4 @@ replaced_by: []
 - 不新增系统内角色管理后台。
 - 不根据企业微信部门自动授予 `system_admin`。
 - 不代理、下载或长期缓存企业微信头像文件。
-- 不恢复或扩展已暂停的 M9 安全业务范围。
+- 本设计不新增原专业安全 M9 的扩展业务；该方案已于 2026-11-16 撤销，当前同编号的平台管理升级见 [M9 需求](../../requirements/M9-平台管理与配置升级.md)。
