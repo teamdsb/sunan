@@ -88,6 +88,23 @@ describe('RoleResolverService', () => {
     ).toEqual(['all_authenticated', 'finance']);
   });
 
+  it('falls back to synchronized names for unknown enterprise department ids', () => {
+    expect(
+      service.resolveRoles({
+        departmentIds: [100],
+        departmentNames: ['财务部'],
+        position: null,
+        isSystemAdmin: false,
+      }),
+    ).toEqual(['all_authenticated', 'finance']);
+    expect(
+      service.resolveDepartmentCodes({
+        departmentIds: [100],
+        departmentNames: ['财务部'],
+      }),
+    ).toEqual(['finance_dept']);
+  });
+
   it('adds system admin independently for members in generic departments', () => {
     expect(
       service.resolveRoles({

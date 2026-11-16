@@ -1,5 +1,6 @@
 ﻿import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Optional } from '@nestjs/common';
 import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDate } from 'src/common/date/business-date';
@@ -7,6 +8,7 @@ import { EnterpriseProfileEntity } from 'src/database/entities/enterprise-profil
 import { EnterpriseProfileFileEntity } from 'src/database/entities/enterprise-profile-file.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { EnterpriseProfileBindFilesDto } from './dto/enterprise-profile-bind-files.dto';
 import { EnterpriseProfileCreateDto } from './dto/enterprise-profile-create.dto';
 import { EnterpriseProfileListQueryDto } from './dto/enterprise-profile-list-query.dto';
@@ -28,6 +30,7 @@ export class EnterpriseProfileService {
     @InjectRepository(WecomUserEntity)
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly ossService: OssService,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async list(query: EnterpriseProfileListQueryDto, user: CurrentUser) {
@@ -194,6 +197,13 @@ export class EnterpriseProfileService {
 
   private async getDepartmentCodes(userId: string): Promise<string[]> {
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
+    if (user && this.authorizationService) {
+      try {
+        return this.authorizationService.getEffectiveAuthorization(user).departmentCodes;
+      } catch {
+        return [];
+      }
+    }
     return user?.departmentCodes ?? [];
   }
 

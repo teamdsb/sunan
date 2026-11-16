@@ -49,6 +49,12 @@ interface RefreshResponse {
   user: AuthSuccessPayload['user'];
 }
 
+let accessTokenRefreshPromise: Promise<boolean> | null = null;
+let authFailureRedirected = false;
+let lastCurrentUserInvalidationAt = 0;
+let currentUserRefetchPromise: Promise<unknown> | null = null;
+const CURRENT_USER_INVALIDATION_COOLDOWN_MS = 1000;
+
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
@@ -88,11 +94,33 @@ async function refreshAccessToken(
       }),
     );
     persistToken(response.data.data.accessToken, response.data.data.expiresIn);
+    authFailureRedirected = false;
 
     return true;
   } catch {
     return false;
   }
+}
+
+async function refreshAccessTokenOnce(
+  client: AxiosInstance,
+  api: BaseQueryApi,
+): Promise<boolean> {
+  if (!accessTokenRefreshPromise) {
+    accessTokenRefreshPromise = refreshAccessToken(client, api).finally(() => {
+      accessTokenRefreshPromise = null;
+    });
+  }
+  return accessTokenRefreshPromise;
+}
+
+export function refetchCurrentUserOnce(refetch: () => Promise<unknown>): Promise<unknown> {
+  if (!currentUserRefetchPromise) {
+    currentUserRefetchPromise = Promise.resolve(refetch()).finally(() => {
+      currentUserRefetchPromise = null;
+    });
+  }
+  return currentUserRefetchPromise;
 }
 
 function toQueryError(error: unknown) {
@@ -106,6 +134,8 @@ function toQueryError(error: unknown) {
 export function createAxiosBaseQuery(
   options: AxiosBaseQueryOptions = {},
 ): BaseQueryFn<AxiosBaseQueryArgs, unknown, BaseQueryError> {
+  authFailureRedirected = false;
+  lastCurrentUserInvalidationAt = 0;
   const client =
     options.client ??
     axios.create({
@@ -142,25 +172,59 @@ export function createAxiosBaseQuery(
     } catch (error) {
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 401) {
-        const refreshed = await refreshAccessToken(client, api);
+        const refreshed = await refreshAccessTokenOnce(client, api);
         if (refreshed) {
           try {
             const retryResult = await executeRequest();
             return { data: retryResult.data };
           } catch (retryError) {
+            const retryAxiosError = retryError as AxiosError;
+            if (retryAxiosError.response?.status === 403) {
+              handleForbidden(args, api, onAuthFailure);
+            }
             return { error: toQueryError(retryError) };
           }
         }
 
-        clearToken();
-        api.dispatch(logout());
         const target = getRedirectTarget() ?? getCurrentTarget();
-        onAuthFailure(target);
+        if (!authFailureRedirected) {
+          authFailureRedirected = true;
+          clearToken();
+          api.dispatch(logout());
+          onAuthFailure(target);
+        }
+      }
+
+      if (axiosError.response?.status === 403) {
+        handleForbidden(args, api, onAuthFailure);
       }
 
       return { error: toQueryError(error) };
     }
   };
+}
+
+function handleForbidden(
+  args: AxiosBaseQueryArgs,
+  api: BaseQueryApi,
+  onAuthFailure: (target: string) => void,
+): void {
+  const isCurrentUserRequest = args.url.endsWith('/auth/me') || args.url === '/auth/me';
+  if (isCurrentUserRequest) {
+    if (authFailureRedirected) return;
+    authFailureRedirected = true;
+    clearToken();
+    api.dispatch(logout());
+    const target = getRedirectTarget() ?? getCurrentTarget();
+    onAuthFailure(target);
+    return;
+  }
+
+  const now = Date.now();
+  if (now - lastCurrentUserInvalidationAt >= CURRENT_USER_INVALIDATION_COOLDOWN_MS) {
+    lastCurrentUserInvalidationAt = now;
+    api.dispatch(baseApi.util.invalidateTags(['CurrentUser']));
+  }
 }
 
 export const baseApi = createApi({
@@ -190,6 +254,7 @@ export const baseApi = createApi({
     'ReminderDashboard',
     'ShipMonitor',
     'UserSettings',
+    'UserDirectory',
     'File',
     'MasterData',
   ],

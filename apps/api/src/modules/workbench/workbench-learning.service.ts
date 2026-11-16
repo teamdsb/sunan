@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { DataSource, EntityManager, In } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
@@ -12,6 +13,7 @@ import { WorkbenchRecordAttachmentEntity } from 'src/database/entities/workbench
 import { WorkbenchRecordActionLogEntity } from 'src/database/entities/workbench-record-action-log.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import {
   LEARNING_MODULES,
   round,
@@ -49,7 +51,10 @@ export const canReadLearning = (
 
 @Injectable()
 export class WorkbenchLearningService {
-  constructor(private readonly source: DataSource) {}
+  constructor(
+    private readonly source: DataSource,
+    @Optional() private readonly authorizationService?: AuthorizationService,
+  ) {}
   async people(user: CurrentUser) {
     if (!isLearningManager(user))
       throw new ForbiddenException('仅管理人员可下发学习');
@@ -57,7 +62,15 @@ export class WorkbenchLearningService {
       .getRepository(WecomUserEntity)
       .find({ where: { corpId: user.corpId }, order: { name: 'ASC' } });
     return rows
-      .filter((row) => ![2, 4, 5].includes(Number(row.rawProfile?.status)))
+      .filter((row) => {
+        if (!this.authorizationService) return ![2, 4, 5].includes(Number(row.rawProfile?.status));
+        try {
+          this.authorizationService.getEffectiveAuthorization(row);
+          return true;
+        } catch {
+          return false;
+        }
+      })
       .map((row) => ({ userId: row.userId, name: row.name }));
   }
   private async locked(

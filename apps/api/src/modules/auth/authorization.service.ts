@@ -44,6 +44,7 @@ export interface SourceProfileInput {
 
 export interface EffectiveAuthorization {
   departmentIds: number[];
+  departmentCodes: string[];
   departments: string[];
   roles: string[];
   isAdmin: boolean;
@@ -177,8 +178,25 @@ export class AuthorizationService {
     );
     const departments =
       user.departmentMode === 'manual'
-        ? departmentIds.map((id) => this.roleResolver.resolveFallbackDepartmentName(id))
+        ? departmentIds.map((id) => {
+            const sourceIndex = (user.departmentIds ?? []).indexOf(id);
+            return sourceIndex >= 0
+              ? user.departmentNames?.[sourceIndex] ?? this.roleResolver.resolveFallbackDepartmentName(id)
+              : this.roleResolver.resolveFallbackDepartmentName(id);
+          })
         : user.departmentNames ?? [];
+    const departmentCodes =
+      user.departmentMode === 'manual'
+        ? this.roleResolver.resolveDepartmentCodes({
+            departmentIds,
+            departmentNames: departments,
+          })
+        : user.departmentCodes?.length
+          ? [...new Set(user.departmentCodes)]
+          : this.roleResolver.resolveDepartmentCodes({
+              departmentIds,
+              departmentNames: departments,
+            });
 
     const roles = new Set<string>(['all_authenticated']);
     if (user.roleMode === 'manual') {
@@ -202,6 +220,7 @@ export class AuthorizationService {
 
     return {
       departmentIds,
+      departmentCodes,
       departments,
       roles: [...roles],
       isAdmin,

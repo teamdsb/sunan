@@ -13,9 +13,11 @@ import { CertificateController } from './certificate.controller';
 import { CertificateReferenceController } from './certificate-reference.controller';
 import { CertificateService } from './certificate.service';
 import { OssService } from 'src/modules/files/oss.service';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([
       CertificateEntity,
       CertificateFileEntity,

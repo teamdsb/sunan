@@ -68,10 +68,17 @@ export class RoleResolverService {
     const roles = new Set<string>(['all_authenticated']);
 
     if (params.departmentIds?.length) {
-      params.departmentIds.forEach((departmentId) => {
+      params.departmentIds.forEach((departmentId, index) => {
         const role = DEPARTMENT_BY_ID.get(departmentId)?.role;
         if (role) {
           roles.add(role);
+          return;
+        }
+        const fallbackRole = params.departmentNames[index]
+          ? ROLE_BY_DEPARTMENT_NAME.get(params.departmentNames[index])
+          : undefined;
+        if (fallbackRole) {
+          roles.add(fallbackRole);
         }
       });
     } else {
@@ -105,10 +112,17 @@ export class RoleResolverService {
     const codes = new Set<string>();
 
     if (params.departmentIds?.length) {
-      params.departmentIds.forEach((departmentId) => {
+      params.departmentIds.forEach((departmentId, index) => {
         const code = DEPARTMENT_BY_ID.get(departmentId)?.departmentCode;
         if (code) {
           codes.add(code);
+          return;
+        }
+        const fallbackCode = params.departmentNames[index]
+          ? CODE_BY_DEPARTMENT_NAME.get(params.departmentNames[index])
+          : undefined;
+        if (fallbackCode) {
+          codes.add(fallbackCode);
         }
       });
     } else {

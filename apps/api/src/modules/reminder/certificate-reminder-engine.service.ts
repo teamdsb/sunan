@@ -13,6 +13,7 @@ import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.en
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { REDIS_CLIENT } from 'src/modules/wecom/wecom.constants';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 
@@ -48,6 +49,7 @@ export class CertificateReminderEngineService {
     @Optional()
     @InjectRepository(SafetyEquipmentEntity)
     private readonly equipmentRepository: Repository<SafetyEquipmentEntity> | undefined = undefined,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async runScan(
@@ -242,6 +244,15 @@ export class CertificateReminderEngineService {
 
           const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
           assertLeaseValid();
+          const unavailableReason = await this.recipientUnavailableReason(recipientUserId);
+          if (unavailableReason) {
+            reminder.status = 'failed';
+            reminder.failureReason = unavailableReason;
+            failedCount += 1;
+            await this.reminderRepository.save(reminder);
+            reminderByCycleKey.set(reminderCycleKey, reminder);
+            continue;
+          }
           const result = await this.wecomMessageService.sendTextCard({
             userIds: [recipientUserId],
             title: message.title,
@@ -311,8 +322,8 @@ export class CertificateReminderEngineService {
     const recipients = new Set<string>();
     const configuredRecipient = params.certificate.reminderRecipientUserId?.trim();
     if (configuredRecipient) {
-      const exists = params.users.some((user) => user.userId === configuredRecipient);
-      return exists ? [configuredRecipient] : [];
+      const user = params.users.find((candidate) => candidate.userId === configuredRecipient);
+      return user && this.effectiveAuthorization(user) ? [configuredRecipient] : [];
     }
     const ownerType = params.certificate.ownerType;
 
@@ -337,11 +348,15 @@ export class CertificateReminderEngineService {
     }
 
     if (personnel.wecomUserId) {
-      recipients.add(personnel.wecomUserId);
+      const owner = params.users.find((user) => user.userId === personnel.wecomUserId);
+      if (owner && this.effectiveAuthorization(owner)) {
+        recipients.add(personnel.wecomUserId);
+      }
     }
 
     for (const user of params.users) {
-      if (!user.departmentCodes.includes(personnel.departmentCode)) {
+      const effective = this.effectiveAuthorization(user);
+      if (!effective || !effective.departmentCodes.includes(personnel.departmentCode)) {
         continue;
       }
 
@@ -355,15 +370,34 @@ export class CertificateReminderEngineService {
 
   private collectByRoles(target: Set<string>, users: WecomUserEntity[], roleNames: string[]): void {
     for (const user of users) {
-      const roles = resolveRolesFromDepartments(
-        user.departmentIds ?? [],
-        user.departmentNames,
-        user.departmentCodes ?? [],
-      );
-      if (roles.some((role) => roleNames.includes(role))) {
+      const effective = this.effectiveAuthorization(user);
+      if (effective?.roles.some((role) => roleNames.includes(role))) {
         target.add(user.userId);
       }
     }
+  }
+
+  private effectiveAuthorization(user: WecomUserEntity) {
+    if (!this.authorizationService) {
+      if (user.sourceStatus === 'inactive') return null;
+      if (!user.isSystemAdmin && user.platformStatus === 'disabled') return null;
+      return {
+        roles: resolveRolesFromDepartments(user.departmentIds ?? [], user.departmentNames ?? [], user.departmentCodes ?? []),
+        departmentCodes: user.departmentCodes ?? [],
+      };
+    }
+    try {
+      return this.authorizationService.getEffectiveAuthorization(user);
+    } catch {
+      return null;
+    }
+  }
+
+  private async recipientUnavailableReason(recipientUserId: string): Promise<string | null> {
+    const user = await this.wecomUserRepository.findOne({ where: { userId: recipientUserId } });
+    if (!user) return 'recipient unavailable: user not found';
+    if (this.effectiveAuthorization(user)) return null;
+    return 'recipient unavailable: authorization rejected';
   }
 
   private resolveOwnerName(

@@ -77,8 +77,7 @@ export class UserDirectoryService {
       }
       if (
         query.hasLoggedIn !== undefined &&
-        (query.hasLoggedIn ? user.loginStatus === 'logged_in' : user.loginStatus === 'never') !==
-          query.hasLoggedIn
+        (user.loginStatus === 'logged_in') !== query.hasLoggedIn
       ) {
         return false;
       }
@@ -102,6 +101,52 @@ export class UserDirectoryService {
         coverageStatus: 'unverified',
         coverageNote: '用户范围受主应用企业微信可见范围限制，完整性未验证',
       },
+    };
+  }
+
+  async listDepartments() {
+    const [items, latestBatch] = await Promise.all([
+      this.departmentRepository.find({
+        where: { corpId: appEnv.WECOM_CORP_ID },
+        order: { parentId: 'ASC', name: 'ASC', departmentId: 'ASC' },
+      }),
+      this.syncBatchRepository.findOne({
+        where: { corpId: appEnv.WECOM_CORP_ID },
+        order: { createdAt: 'DESC' },
+      }),
+    ]);
+
+    return {
+      items: items.map((department) => ({
+        id: department.departmentId,
+        parentId: department.parentId,
+        name: department.name,
+        roles: this.roleResolver
+          .resolveRoles({
+            departmentIds: [department.departmentId],
+            departmentNames: [department.name],
+            position: null,
+            isSystemAdmin: false,
+            allowPositionFallback: false,
+          })
+          .filter((role) => role !== 'all_authenticated'),
+        sourceRevision: Number(department.sourceRevision ?? 0),
+      })),
+      scope: latestBatch
+        ? {
+            coverageStatus: latestBatch.coverageStatus,
+            coverageNote: latestBatch.coverageNote,
+            lastSyncAt: latestBatch.finishedAt ?? latestBatch.startedAt,
+            batchId: latestBatch.id,
+            batchStatus: latestBatch.status,
+          }
+        : {
+            coverageStatus: 'unverified',
+            coverageNote: '尚未完成通讯录同步，部门字典完整性未验证',
+            lastSyncAt: null,
+            batchId: null,
+            batchStatus: null,
+          },
     };
   }
 
@@ -420,6 +465,13 @@ export class UserDirectoryService {
         status: user.sourceStatus,
         departmentIds: user.departmentIds ?? [],
         departments: user.departmentNames ?? [],
+        roles: this.roleResolver.resolveRoles({
+          departmentIds: user.departmentIds ?? [],
+          departmentNames: user.departmentNames ?? [],
+          position: user.position,
+          isSystemAdmin: effective.isAdmin,
+          allowPositionFallback: true,
+        }),
         position: user.position,
         lastLoginAt: user.lastLoginAt,
         loginStatus: user.loginStatus,

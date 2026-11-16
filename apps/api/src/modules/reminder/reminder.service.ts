@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 
@@ -9,6 +9,7 @@ import { CertificateFileEntity } from 'src/database/entities/certificate-file.en
 import { FileEntity } from 'src/database/entities/file.entity';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 
 import { isManagementPosition, resolveRolesFromDepartments } from './reminder.constants';
 import { ReminderClockService } from './reminder-clock.service';
@@ -18,6 +19,7 @@ import type { ReminderListQueryDto } from './dto/reminder-list-query.dto';
 interface ViewerContext {
   viewer: WecomUserEntity | null;
   roles: Set<string>;
+  departmentCodes: string[];
 }
 
 @Injectable()
@@ -36,6 +38,7 @@ export class ReminderService {
     @InjectRepository(WecomUserEntity)
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly clock: ReminderClockService,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async dashboard(user: CurrentUser) {
@@ -155,23 +158,26 @@ export class ReminderService {
 
   private async resolveViewerContext(user: CurrentUser): Promise<ViewerContext> {
     const viewer = await this.wecomUserRepository.findOne({ where: { userId: user.userId } });
-    const roles = new Set(user.roles);
+    if (!viewer) return { viewer, roles: new Set(user.roles), departmentCodes: [] };
 
-    if (viewer) {
-      for (const role of resolveRolesFromDepartments(
-        viewer.departmentIds ?? [],
-        viewer.departmentNames,
-        viewer.departmentCodes ?? [],
-      )) {
-        roles.add(role);
-      }
+    if (!this.authorizationService) {
+      return {
+        viewer,
+        roles: new Set(resolveRolesFromDepartments(viewer.departmentIds ?? [], viewer.departmentNames ?? [], viewer.departmentCodes ?? [])),
+        departmentCodes: viewer.departmentCodes ?? [],
+      };
     }
 
-    if (user.roles.includes('system_admin')) {
-      roles.add('system_admin');
+    try {
+      const effective = this.authorizationService.getEffectiveAuthorization(viewer);
+      return {
+        viewer,
+        roles: new Set(effective.roles),
+        departmentCodes: effective.departmentCodes,
+      };
+    } catch {
+      return { viewer, roles: new Set(), departmentCodes: [] };
     }
-
-    return { viewer, roles };
   }
 
   private async canViewReminder(
@@ -210,7 +216,7 @@ export class ReminderService {
       return false;
     }
 
-    return context.viewer.departmentCodes.includes(personnel.departmentCode);
+    return context.departmentCodes.includes(personnel.departmentCode);
   }
 
   private filterReminders(reminders: CertificateReminderEntity[], query: ReminderListQueryDto): CertificateReminderEntity[] {
@@ -311,7 +317,16 @@ export class ReminderService {
       return false;
     }
 
-    return currentUser.departmentCodes.includes(personnel.departmentCode);
+    if (!this.authorizationService) {
+      return currentUser.departmentCodes.includes(personnel.departmentCode);
+    }
+
+    try {
+      const effective = this.authorizationService.getEffectiveAuthorization(currentUser);
+      return effective.departmentCodes.includes(personnel.departmentCode);
+    } catch {
+      return false;
+    }
   }
 
   private async toDto(reminder: CertificateReminderEntity, includeCertificate = false) {

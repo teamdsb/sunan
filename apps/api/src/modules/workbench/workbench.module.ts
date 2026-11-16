@@ -25,10 +25,12 @@ import { WorkbenchController } from './workbench.controller';
 import { SelfInspectionService } from './self-inspection.service';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
 import { WorkbenchService } from './workbench.service';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
 @Module({
   imports: [
     FilesModule,
+    AuthModule,
     WecomModule,
     TypeOrmModule.forFeature([
       WorkbenchModuleEntity,

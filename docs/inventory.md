@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：281 个 Markdown 文件。
+总数：283 个 Markdown 文件。
 
 ## repository-root
 
@@ -372,6 +372,7 @@ replaced_by: []
 |---|---|---|---|
 | [docs/acceptance/M9-wave-1.md](acceptance/M9-wave-1.md) | `current-source` | `planning` | M9 Wave 1 验收记录 |
 | [docs/acceptance/M9-wave-2.md](acceptance/M9-wave-2.md) | `current-source` | `planning` | M9 Wave 2 验收记录 |
+| [docs/acceptance/M9-wave-3.md](acceptance/M9-wave-3.md) | `current-source` | `planning` | M9 Wave 3 验收记录 |
 
 ## archive/acceptance/safety
 
@@ -462,3 +463,4 @@ replaced_by: []
 | [docs/superpowers/specs/2026-09-19-ship-monitor-repair-design.md](superpowers/specs/2026-09-19-ship-monitor-repair-design.md) | `current-spec` | `ship-monitor` | 船舶监控新增与管理链路修复设计 |
 | [docs/superpowers/specs/2026-09-20-workbench-business-completion-design.md](superpowers/specs/2026-09-20-workbench-business-completion-design.md) | `current-spec` | `workbench` | 考勤、个人学习与燃油月报补齐 |
 | [docs/superpowers/specs/2026-11-16-m9-wave2-user-directory-design.md](superpowers/specs/2026-11-16-m9-wave2-user-directory-design.md) | `current-spec` | `planning` | M9 Wave 2 用户目录与授权后端设计 |
+| [docs/superpowers/specs/2026-11-16-m9-wave3-admin-console-design.md](superpowers/specs/2026-11-16-m9-wave3-admin-console-design.md) | `current-spec` | `planning` | M9 Wave 3 管理后台与全业务权限整合设计 |

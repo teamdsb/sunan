@@ -64,6 +64,10 @@ const SettingsPage = lazyNamed(
   () => import('../features/settings/SettingsPage'),
   'SettingsPage',
 );
+const UserManagementPage = lazyNamed(
+  () => import('../features/settings/UserManagementPage'),
+  'UserManagementPage',
+);
 const OfficeHomePage = lazyNamed(
   () => import('../features/office/OfficeHomePage'),
   'OfficeHomePage',
@@ -220,6 +224,10 @@ export function AppRoutes() {
           <Route
             path={myRouteConfig.settings.path}
             element={renderLazyPage(<SettingsPage />)}
+          />
+          <Route
+            path={myRouteConfig.userManagement.path}
+            element={renderLazyPage(<UserManagementPage />)}
           />
           <Route
             path={officeRouteConfig.officeHome.path}

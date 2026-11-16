@@ -13,6 +13,7 @@ import { SafetyEquipmentEntity } from 'src/database/entities/safety-equipment.en
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { CertificateBindFilesDto } from './dto/certificate-bind-files.dto';
 import { CertificateCreateDto } from './dto/certificate-create.dto';
 import { CertificateGroupQueryDto } from './dto/certificate-group-query.dto';
@@ -53,6 +54,7 @@ export class CertificateService {
     private readonly wecomUserRepository: Repository<WecomUserEntity>,
     private readonly ossService: OssService,
     @Optional() private readonly reminderJobService?: CertificateReminderJobService,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async list(query: CertificateListQueryDto) {
@@ -138,7 +140,17 @@ export class CertificateService {
   async listReminderRecipients(user: CurrentUser) {
     this.ensureManager(user);
     const rows = await this.wecomUserRepository.find({ order: { name: 'ASC' } });
-    return rows.map((row) => ({ userId: row.userId, name: row.name, position: row.position }));
+    return rows
+      .filter((row) => {
+        if (!this.authorizationService) return true;
+        try {
+          this.authorizationService.getEffectiveAuthorization(row);
+          return true;
+        } catch {
+          return false;
+        }
+      })
+      .map((row) => ({ userId: row.userId, name: row.name, position: row.position }));
   }
 
   async grouped(query: CertificateGroupQueryDto) {

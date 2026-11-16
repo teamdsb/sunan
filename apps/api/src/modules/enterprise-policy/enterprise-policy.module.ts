@@ -7,9 +7,10 @@ import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { EnterprisePolicyController } from './enterprise-policy.controller';
 import { EnterprisePolicyService } from './enterprise-policy.service';
 import { OssService } from 'src/modules/files/oss.service';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EnterprisePolicyEntity, EnterprisePolicyFileEntity, FileEntity, WecomUserEntity])],
+  imports: [AuthModule, TypeOrmModule.forFeature([EnterprisePolicyEntity, EnterprisePolicyFileEntity, FileEntity, WecomUserEntity])],
   controllers: [EnterprisePolicyController],
   providers: [EnterprisePolicyService, OssService],
   exports: [EnterprisePolicyService],

@@ -13,12 +13,14 @@ import { ProcurementReportEntity } from 'src/database/entities/procurement-repor
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { FilesModule } from 'src/modules/files/files.module';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
 import { ProcurementController } from './procurement.controller';
 import { ProcurementService } from './procurement.service';
 
 @Module({
   imports: [
     FilesModule,
+    AuthModule,
     WecomModule,
     TypeOrmModule.forFeature([
       ProcurementBudgetEntity,

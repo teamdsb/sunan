@@ -1,5 +1,5 @@
 ---
-status: pending-review
+status: current-spec
 owner: planning
 updated: 2026-11-16
 ---

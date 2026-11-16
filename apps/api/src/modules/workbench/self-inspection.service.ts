@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 import { isISO8601, isUUID } from 'class-validator';
@@ -17,6 +18,7 @@ import { DataSource, EntityManager, In } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDateTime } from 'src/common/date/business-date';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -72,6 +74,7 @@ export class SelfInspectionService {
     private readonly source: DataSource,
     private readonly roles: RoleResolverService,
     private readonly oss: OssService,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   private async databaseNow(manager: EntityManager): Promise<Date> {
@@ -173,12 +176,27 @@ export class SelfInspectionService {
   }
 
   private active(member: WecomUserEntity) {
+    if (this.authorizationService) {
+      try {
+        this.authorizationService.getEffectiveAuthorization(member);
+        return true;
+      } catch {
+        return false;
+      }
+    }
     return (
       member.rawProfile.status === undefined || member.rawProfile.status === 1
     );
   }
 
   private memberRoles(member: WecomUserEntity) {
+    if (this.authorizationService) {
+      try {
+        return this.authorizationService.getEffectiveAuthorization(member).roles;
+      } catch {
+        return [];
+      }
+    }
     return this.roles.resolveRoles({
       departmentIds: member.departmentIds,
       departmentNames: member.departmentNames,

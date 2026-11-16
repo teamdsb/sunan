@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +25,8 @@ import {
   SafetyTaskTransferEntity,
 } from 'src/database/entities/safety-plan-task.entity';
 import { VesselEntity } from 'src/database/entities/vessel.entity';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 
 import type {
@@ -75,6 +78,10 @@ export class PlanTaskService {
     @InjectRepository(VesselEntity) private readonly vessels: Repository<VesselEntity>,
     private readonly wecomMessageService: WecomMessageService,
     private readonly dataSource: DataSource,
+    @Optional()
+    @InjectRepository(WecomUserEntity)
+    private readonly wecomUserRepository?: Repository<WecomUserEntity>,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async createPlan(user: CurrentUser, input: PlanInputDto) {
@@ -747,6 +754,33 @@ export class PlanTaskService {
     await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`delivery:${dedupeKey}`]);
     let delivery = await deliveries.findOneBy({ dedupeKey, deletedAt: IsNull() });
     if (delivery?.status === 'sent' || delivery?.status === 'skipped') return delivery;
+    const unavailableReason = await this.recipientUnavailableReason(recipientUserId, manager);
+    if (unavailableReason) {
+      if (delivery) {
+        delivery.status = 'skipped';
+        delivery.failureReason = unavailableReason;
+        delivery.nextRetryAt = null;
+        delivery.updatedBy = actor;
+        return deliveries.save(delivery);
+      }
+      return deliveries.save(deliveries.create({
+        taskId: task.id,
+        recipientUserId,
+        messageType,
+        dedupeKey,
+        payloadSnapshot: { taskId: task.id, title: task.title, dueAt: task.dueAt.toISOString() },
+        status: 'skipped',
+        attemptCount: 0,
+        attemptHistory: [{ attempt: 0, status: 'skipped', failureReason: unavailableReason, attemptedAt: new Date().toISOString() }],
+        wecomErrcode: null,
+        failureReason: unavailableReason,
+        nextRetryAt: null,
+        sentAt: null,
+        createdBy: actor,
+        updatedBy: actor,
+        deletedAt: null,
+      }));
+    }
     if (delivery?.status === 'failed') return delivery;
     if (!delivery) {
       delivery = await deliveries.save(deliveries.create({
@@ -781,6 +815,22 @@ export class PlanTaskService {
     delivery = await this.deliveries.findOneByOrFail({ id: delivery.id });
     const attemptedAt = new Date();
     delivery.wecomErrcode = null;
+    const unavailableReason = await this.recipientUnavailableReason(delivery.recipientUserId);
+    if (unavailableReason) {
+      delivery.status = 'skipped';
+      delivery.failureReason = unavailableReason;
+      delivery.nextRetryAt = null;
+      delivery.attemptHistory = [
+        ...(delivery.attemptHistory ?? []),
+        {
+          attempt: delivery.attemptCount,
+          attemptedAt: attemptedAt.toISOString(),
+          status: 'skipped',
+          failureReason: unavailableReason,
+        },
+      ];
+      return this.deliveries.save(delivery);
+    }
     try {
       const result = await this.wecomMessageService.sendTextCard({
         userIds: [delivery.recipientUserId],
@@ -820,6 +870,29 @@ export class PlanTaskService {
       },
     ];
     return this.deliveries.save(delivery);
+  }
+
+  private async recipientUnavailableReason(
+    recipientUserId: string,
+    manager?: EntityManager,
+  ): Promise<string | null> {
+    const repository = manager?.getRepository(WecomUserEntity) ?? this.wecomUserRepository;
+    if (!repository) return null;
+    const user = await repository.findOne({ where: { userId: recipientUserId } });
+    if (!user) return 'recipient unavailable: user not found';
+
+    if (this.authorizationService) {
+      try {
+        this.authorizationService.getEffectiveAuthorization(user);
+      } catch (error) {
+        return `recipient unavailable: ${error instanceof Error ? error.message : 'authorization rejected'}`;
+      }
+      return null;
+    }
+
+    if (user.sourceStatus === 'inactive') return 'recipient unavailable: WeCom member inactive';
+    if (!user.isSystemAdmin && user.platformStatus === 'disabled') return 'recipient unavailable: platform account disabled';
+    return null;
   }
 
   private async planResponse(plan: SafetyPlanEntity, includeItems = false) {
@@ -973,6 +1046,16 @@ export class PlanTaskService {
     const person = await personnel.findOne({ where: { wecomUserId: userId, deletedAt: IsNull() } });
     if (!person || person.employmentStatus !== 'active') {
       throw new UnprocessableEntityException(`Active personnel mapping not found for ${userId}`);
+    }
+    if (this.wecomUserRepository && this.authorizationService) {
+      const memberRepository = manager?.getRepository(WecomUserEntity) ?? this.wecomUserRepository;
+      const member = await memberRepository.findOne({ where: { userId } });
+      if (!member) throw new UnprocessableEntityException(`Available directory member not found for ${userId}`);
+      try {
+        this.authorizationService.getEffectiveAuthorization(member);
+      } catch {
+        throw new UnprocessableEntityException(`Directory member is unavailable for ${userId}`);
+      }
     }
   }
 

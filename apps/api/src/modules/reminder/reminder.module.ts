@@ -12,6 +12,7 @@ import { VesselEntity } from 'src/database/entities/vessel.entity';
 import { VehicleEntity } from 'src/database/entities/vehicle.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
 import { CertificateReminderEngineService } from './certificate-reminder-engine.service';
 import { CertificateReminderJobService } from './certificate-reminder-job.service';
@@ -23,6 +24,7 @@ import { ReminderService } from './reminder.service';
 @Global()
 @Module({
   imports: [
+    AuthModule,
     WecomModule,
     TypeOrmModule.forFeature([
       CertificateReminderEntity,

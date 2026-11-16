@@ -119,3 +119,15 @@ export class UpdateAdminUserDto {
   @Matches(/\S/)
   reason!: string;
 }
+
+export class RestoreUserAuthorizationDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  expectedAuthorizationVersion!: number;
+
+  @IsString()
+  @MinLength(1)
+  @Matches(/\S/)
+  reason!: string;
+}

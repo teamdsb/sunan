@@ -18,10 +18,13 @@ import { PlanTaskController } from './plan-task.controller';
 import { PlanTaskService } from './plan-task.service';
 import { PlanTaskSchedulerService } from './plan-task-scheduler.service';
 import { WecomModule } from 'src/modules/wecom/wecom.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 
 @Module({
   imports: [
     WecomModule,
+    AuthModule,
     TypeOrmModule.forFeature([
       SafetyPlanEntity,
       SafetyPlanItemEntity,
@@ -35,6 +38,7 @@ import { WecomModule } from 'src/modules/wecom/wecom.module';
       SafetyTaskNotificationDeliveryEntity,
       PersonnelEntity,
       VesselEntity,
+      WecomUserEntity,
     ]),
   ],
   controllers: [PlanTaskController],

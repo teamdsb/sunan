@@ -1,5 +1,8 @@
-﻿import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
+import { store } from '../../app/store';
 import { SettingsPage } from './SettingsPage';
 
 const mockGet = vi.fn();
@@ -22,6 +25,14 @@ vi.mock('./settingsApi', () => ({
 }));
 
 describe('SettingsPage', () => {
+  const renderPage = () => render(
+    <Provider store={store}>
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
+    </Provider>,
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGet.mockReturnValue({
@@ -32,14 +43,14 @@ describe('SettingsPage', () => {
   });
 
   it('saves settings and shows feedback', async () => {
-    render(<SettingsPage />);
+    renderPage();
     fireEvent.click(screen.getByRole('switch'));
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
   });
 
   it('shows rollback error when save fails', async () => {
     mockUpdate.mockReturnValue({ unwrap: () => Promise.reject(new Error('boom')) });
-    render(<SettingsPage />);
+    renderPage();
     fireEvent.click(screen.getByRole('switch'));
     await waitFor(() => expect(screen.getByText(/boom|保存失败/)).toBeInTheDocument());
   });

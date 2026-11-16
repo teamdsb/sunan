@@ -66,8 +66,28 @@ describe('AuthorizationService', () => {
 
     expect(service.getEffectiveAuthorization(user)).toMatchObject({
       departmentIds: [1],
+      departmentCodes: [],
       roles: ['all_authenticated'],
       isAdmin: false,
+    });
+  });
+
+  it('resolves effective department codes from manually selected departments', () => {
+    const service = createService();
+    const user = makeUser({
+      departmentIds: [6],
+      departmentCodes: ['shipping_dept'],
+      departmentNames: ['船务部'],
+      departmentMode: 'manual',
+      manualDepartmentIds: [4, 6],
+      roleMode: 'manual',
+      manualRoles: ['shipping'],
+    });
+
+    expect(service.getEffectiveAuthorization(user)).toMatchObject({
+      departmentIds: [4, 6],
+      departmentCodes: ['finance_dept', 'shipping_dept'],
+      roles: ['all_authenticated', 'shipping'],
     });
   });
 

@@ -17,6 +17,7 @@ import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import {
   AdminUserAuditQueryDto,
   AdminUserListQueryDto,
+  RestoreUserAuthorizationDto,
   UpdateAdminUserDto,
 } from 'src/modules/user-directory/dto/admin-user.dto';
 import { UserDirectoryService } from 'src/modules/user-directory/user-directory.service';
@@ -32,6 +33,11 @@ export class UserDirectoryController {
   @Get(['wecom-users', 'users'])
   async list(@Query() query: AdminUserListQueryDto) {
     return { data: await this.directoryService.listUsers(query) };
+  }
+
+  @Get(['wecom-departments', 'departments'])
+  async departments() {
+    return { data: await this.directoryService.listDepartments() };
   }
 
   @Get(['wecom-users/:userId', 'users/:userId'])
@@ -56,13 +62,13 @@ export class UserDirectoryController {
   @Post(['wecom-users/:userId/restore-departments', 'users/:userId/restore-departments'])
   async restoreDepartments(
     @Param('userId') userId: string,
-    @Body() dto: UpdateAdminUserDto,
+    @Body() dto: RestoreUserAuthorizationDto,
     @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     return {
       data: await this.directoryService.updateUser(
         userId,
-        { ...dto, departmentMode: 'follow_wecom' },
+        { expectedAuthorizationVersion: dto.expectedAuthorizationVersion, reason: dto.reason, departmentMode: 'follow_wecom' },
         currentUser.userId,
       ),
     };
@@ -71,13 +77,13 @@ export class UserDirectoryController {
   @Post(['wecom-users/:userId/restore-roles', 'users/:userId/restore-roles'])
   async restoreRoles(
     @Param('userId') userId: string,
-    @Body() dto: UpdateAdminUserDto,
+    @Body() dto: RestoreUserAuthorizationDto,
     @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     return {
       data: await this.directoryService.updateUser(
         userId,
-        { ...dto, roleMode: 'auto' },
+        { expectedAuthorizationVersion: dto.expectedAuthorizationVersion, reason: dto.reason, roleMode: 'auto' },
         currentUser.userId,
       ),
     };

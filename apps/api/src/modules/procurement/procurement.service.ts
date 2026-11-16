@@ -10,6 +10,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import fontkit from '@pdf-lib/fontkit';
 import {
@@ -34,6 +35,7 @@ import { ProcurementOrderEntity } from 'src/database/entities/procurement-order.
 import { ProcurementReportApprovalEntity } from 'src/database/entities/procurement-report-approval.entity';
 import { ProcurementReportEntity } from 'src/database/entities/procurement-report.entity';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { OssService } from 'src/modules/files/oss.service';
 import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
@@ -198,6 +200,7 @@ export class ProcurementService {
     private readonly ossService: OssService,
     private readonly wecomMessageService: WecomMessageService,
     private readonly wecomAdminService: WecomAdminService,
+    @Optional() private readonly authorizationService?: AuthorizationService,
   ) {}
 
   async getBudgetSummary(year: number, user: CurrentUser) {
@@ -2273,11 +2276,14 @@ export class ProcurementService {
   ): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter(
-        (row) =>
-          row.departmentCodes.includes(departmentCode) ||
-          this.wecomAdminService.isSystemAdmin(row.userId),
-      )
+      .filter((row) => {
+        const effective = this.effectiveAuthorization(row);
+        return Boolean(
+          effective &&
+          (effective.departmentCodes.includes(departmentCode) ||
+            effective.roles.includes('system_admin')),
+        );
+      })
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
@@ -2286,11 +2292,10 @@ export class ProcurementService {
   private async listFinanceApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter(
-        (row) =>
-          row.departmentCodes.includes('finance_dept') ||
-          this.wecomAdminService.isSystemAdmin(row.userId),
-      )
+      .filter((row) => {
+        const effective = this.effectiveAuthorization(row);
+        return Boolean(effective && (effective.roles.includes('finance') || effective.roles.includes('system_admin')));
+      })
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
@@ -2299,14 +2304,31 @@ export class ProcurementService {
   private async listGeneralOfficeApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
     const userIds = rows
-      .filter(
-        (row) =>
-          row.departmentCodes.includes('general_office') ||
-          this.wecomAdminService.isSystemAdmin(row.userId),
-      )
+      .filter((row) => {
+        const effective = this.effectiveAuthorization(row);
+        return Boolean(effective && (effective.roles.includes('general_office') || effective.roles.includes('system_admin')));
+      })
       .map((row) => row.userId);
 
     return [...new Set(userIds)];
+  }
+
+  private effectiveAuthorization(user: WecomUserEntity) {
+    if (this.authorizationService) {
+      try {
+        return this.authorizationService.getEffectiveAuthorization(user);
+      } catch {
+        return null;
+      }
+    }
+
+    if (user.sourceStatus === 'inactive' || user.platformStatus === 'disabled') return null;
+    return {
+      departmentCodes: user.departmentCodes ?? [],
+      roles: this.wecomAdminService.isSystemAdmin(user.userId)
+        ? ['system_admin']
+        : [],
+    };
   }
 
   private async safeSendTextCard(
@@ -2327,7 +2349,11 @@ export class ProcurementService {
       where: { userId: In(uniqueUserIds) },
     });
     const resolvedUserIds = [
-      ...new Set(resolvedUsers.map((item) => item.userId)),
+      ...new Set(
+        resolvedUsers
+          .filter((item) => this.effectiveAuthorization(item))
+          .map((item) => item.userId),
+      ),
     ];
     if (resolvedUserIds.length === 0) {
       return;

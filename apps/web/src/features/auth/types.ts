@@ -6,6 +6,7 @@ export interface CurrentUser {
   department: string[];
   position?: string;
   roles: string[];
+  isAdmin?: boolean;
 }
 
 export interface AuthState {

@@ -44,6 +44,11 @@ export const myRouteConfig = {
     label: '设置',
     description: '调整个人偏好设置。',
   },
+  userManagement: {
+    path: '/my/settings/users',
+    label: '用户管理',
+    description: '管理企业微信成员的平台授权。',
+  },
 } as const;
 
 export const myRouteNavItems = [
