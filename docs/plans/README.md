@@ -1,20 +1,20 @@
 ---
 status: current-index
 owner: planning
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # 当前执行计划索引
 
-> 当前 M9“平台管理与配置升级”已规划、实施未开始。本目录保存当前计划与验收模板。
+> 当前 M9“平台管理与配置升级”W2-W4 已实施，W5 本地演练/回归和操作包有条件通过；现场发布条件仍开放。本目录保存当前计划与验收模板。
 
 ## 当前文件
 
 | 文档 | 状态 | 用途 |
 |---|---|---|
-| [M9-execplans.md](M9-execplans.md) | 已规划、实施未开始 | 5 个 Wave 的执行顺序、交付和验收门槛 |
-| [M9-wave-backlog.md](M9-wave-backlog.md) | 待实施 | 用户目录、权限与部门覆盖、后台配置的工作清单 |
+| [M9-execplans.md](M9-execplans.md) | 本地有条件验收，现场未完成 | 5 个 Wave 的执行顺序、交付和验收门槛 |
+| [M9-wave-backlog.md](M9-wave-backlog.md) | W5本地完成，现场未完成 | 用户目录、权限与部门覆盖、后台配置的工作清单 |
 | [wave-acceptance-template.md](wave-acceptance-template.md) | 模板 | 每个 Wave 的统一验收记录格式 |
 
 ## M9 Wave 顺序

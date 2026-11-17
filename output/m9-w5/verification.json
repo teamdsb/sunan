@@ -1,0 +1,396 @@
+{
+  "wave": "M9-W5",
+  "generatedAt": "2026-11-17T02:31:19.280249+00:00",
+  "status": "conditional-local-acceptance; real field/release conditions remain open",
+  "baseCommit": "428602f72e32941502f64b8bdd1d7d87bb6a8c28",
+  "workingTree": "uncommitted",
+  "node": "v20.20.2",
+  "pnpm": "10.33.0",
+  "pathPrefix": "/opt/homebrew/opt/node@20/bin",
+  "uniqueFullSuiteTests": 601,
+  "qualityGates": [
+    {
+      "command": "pnpm --filter api lint",
+      "exitCode": 0,
+      "log": "api-lint.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "pnpm --filter api test:unit --runInBand",
+      "exitCode": 0,
+      "log": "api-unit.log",
+      "resultSource": "actual command output and exit status collected during this W5 task",
+      "suitesOrFiles": 31,
+      "tests": 171
+    },
+    {
+      "command": "pnpm --filter api test:integration --runInBand",
+      "exitCode": 0,
+      "log": "api-integration.log",
+      "resultSource": "actual command output and exit status collected during this W5 task",
+      "suitesOrFiles": 25,
+      "tests": 153
+    },
+    {
+      "command": "pnpm --filter web test --maxWorkers=1",
+      "exitCode": 0,
+      "log": "web-test.log",
+      "resultSource": "actual command output and exit status collected during this W5 task",
+      "suitesOrFiles": 61,
+      "tests": 277
+    },
+    {
+      "command": "pnpm --filter api build",
+      "exitCode": 0,
+      "log": "api-build.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "pnpm --filter web build",
+      "exitCode": 0,
+      "log": "web-build.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "pnpm --filter api test:integration --runTestsByPath test/m9-wave5-migration.integration.spec.ts",
+      "exitCode": 0,
+      "log": "migration-recovery.log",
+      "resultSource": "actual command output and exit status collected during this W5 task",
+      "suitesOrFiles": 1,
+      "tests": 5,
+      "scope": "affected rerun after adding SQL preflight; excluded from unique test total"
+    },
+    {
+      "command": "pnpm dlx @apidevtools/swagger-cli validate docs/specs/my/api/settings-api.yaml",
+      "exitCode": 0,
+      "log": "openapi-settings.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "pnpm dlx @apidevtools/swagger-cli validate docs/specs/my/api/certificate-reminder-api.yaml",
+      "exitCode": 0,
+      "log": "openapi-reminder.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "pnpm dlx @apidevtools/swagger-cli validate output/m9-w5/openapi-live.json",
+      "exitCode": 0,
+      "log": "openapi-live.log",
+      "resultSource": "actual command output and exit status collected during this W5 task"
+    },
+    {
+      "command": "node scripts/generate-doc-inventory.mjs",
+      "exitCode": 0,
+      "log": "doc-inventory.log"
+    },
+    {
+      "command": "node scripts/check-doc-index.mjs",
+      "exitCode": 0,
+      "log": "doc-index.log"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "log": "diff-check.log"
+    }
+  ],
+  "browser": {
+    "engine": "Chromium",
+    "frontend": "actual React/Vite",
+    "api": "actual Nest auth/controllers and migrated disposable PostgreSQL",
+    "wecomTransport": "synthetic only; no real directory or sends",
+    "widths": [
+      320,
+      1440
+    ],
+    "completedBatchReadsIn4500ms": 0,
+    "manualAuthorization": "department 4 and shipping survived sync/OAuth/old JWT; restore returned department 8 and crew",
+    "draft": {
+      "connectionHttpStatus": 201,
+      "sendHttpStatus": 201,
+      "agentId": "2000001",
+      "recipient": "w5-admin",
+      "persistedSource": "env_main",
+      "persistedVersion": 0
+    },
+    "savedVersion": 1,
+    "blankSecretSave": {
+      "version": 2,
+      "secretOmittedInRequest": true,
+      "secretStored": true
+    },
+    "reloadSecretBlank": true,
+    "explicitClear": {
+      "source": "env_main",
+      "agentId": "1000001",
+      "version": 3
+    },
+    "horizontalOverflow": false,
+    "layoutReview": "representative desktop screenshots and 320px segmented viewport screenshots inspected; full-page fixed-header artifacts not used as mobile layout proof",
+    "warnings": [
+      "React Router future flags",
+      "Ant Design static message context",
+      "Ant Design circular references on save"
+    ]
+  },
+  "rehearsalCommands": {
+    "api": "NODE_ENV=test NODE_PATH=. PATH=/opt/homebrew/opt/node@20/bin:$PATH pnpm exec ts-node --files test/m9-wave5-rehearsal.ts (cwd apps/api)",
+    "web": "VITE_API_BASE_URL=http://127.0.0.1:4319/api/v1 VITE_WECOM_CORP_ID=ww-test-corp VITE_WECOM_AGENT_ID=1000001 VITE_WECOM_REDIRECT_URI=http://localhost:4173/auth/callback PATH=/opt/homebrew/opt/node@20/bin:$PATH pnpm --filter web dev --host 127.0.0.1 --port 4173 --strictPort"
+  },
+  "notExecuted": [
+    "real enterprise target directory reconciliation",
+    "real independent-app delivery for certificate/procurement/task",
+    "real main-app OAuth/SDK/callback boundary",
+    "iOS/Android/desktop WeCom and weak network",
+    "production backup/restore and multi-instance key recovery",
+    "signed compatible rollback image",
+    "M9 field screenshots and Word/PPT refresh"
+  ],
+  "cleanup": {
+    "browserSession": "m9w5 closed",
+    "apiExitCode": 0,
+    "viteTerminatedExitCode": 143,
+    "listening": {
+      "4173": false,
+      "4319": false,
+      "5173": true
+    },
+    "dockerPsExitCode": 0,
+    "dockerPs": [],
+    "existingVite5173Preserved": true,
+    "taskPortsClosed": true
+  },
+  "diagnosticOnlyLogs": [
+    "acceptance-initial-expectation.log",
+    "migration-red.log",
+    "web-loop-red.log",
+    "browser-loop-red.txt"
+  ],
+  "evidence": [
+    {
+      "path": "output/m9-w5/acceptance-initial-expectation.log",
+      "bytes": 1922,
+      "sha256": "515ed925a3fe030ce601bb1f9e80964f7e063bf51ebd2ce691ccab44c81a4bfa"
+    },
+    {
+      "path": "output/m9-w5/api-build.log",
+      "bytes": 73,
+      "sha256": "10e6cae9d46127cdd51b7ff1af0e1003629bb15306e4076a0ab802537480beeb"
+    },
+    {
+      "path": "output/m9-w5/api-integration.log",
+      "bytes": 1923,
+      "sha256": "3f72f16b49add657f9b5ab34f830dd1e00ab6a40b1b99ec9e0db196e4cc69168"
+    },
+    {
+      "path": "output/m9-w5/api-lint.log",
+      "bytes": 89,
+      "sha256": "731e6803d1661909e4f5fe29157e40cca6383cae4bb32feeee085d8475b34501"
+    },
+    {
+      "path": "output/m9-w5/api-unit.log",
+      "bytes": 4236,
+      "sha256": "5322e41cacfdecf27b005b419313cc49043ca06d65930c1c41c3c3d52bee7459"
+    },
+    {
+      "path": "output/m9-w5/browser-api.log",
+      "bytes": 59,
+      "sha256": "af08202f3a9e66fa3dca23c75347150679ff4fa1dcf93d2cc73776eb1754c174"
+    },
+    {
+      "path": "output/m9-w5/browser-loop-green.txt",
+      "bytes": 548,
+      "sha256": "28c591531c621fb5ca896b4f96447fb8da9398267224cb8c44c308156128687f"
+    },
+    {
+      "path": "output/m9-w5/browser-loop-red.txt",
+      "bytes": 637,
+      "sha256": "cc28affe7a632014777c6ba9c63508573c4ff0bb41ac564ede4a45a19dcde73a"
+    },
+    {
+      "path": "output/m9-w5/browser-mobile-restore.txt",
+      "bytes": 1746,
+      "sha256": "d324ad15f2a9775f181996868f0a2ba7f9fdfbd6ea041672390e9aaa9230f420"
+    },
+    {
+      "path": "output/m9-w5/browser-network-before.txt",
+      "bytes": 7533,
+      "sha256": "83bdf4210662dcdb88626f3d9ead16fd85d873783ff5991f044221e2f8eb6398"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-clear.txt",
+      "bytes": 1388,
+      "sha256": "05cfefb4599ec4ef127f11a84615e18a8e65c35a337ee9d9b96cb66320829707"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-console.log",
+      "bytes": 3289,
+      "sha256": "b642f2375dce3150f92c50dce655c90eb6e037d06f6d64877f06bded119dcdce"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-draft.snapshot.yml",
+      "bytes": 5361,
+      "sha256": "36a80a0a38dd72de2423c72de1dd3351b5f951ef8a59d6e772e746e557a0ed71"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-mobile.txt",
+      "bytes": 847,
+      "sha256": "68ef9583a004f29b22c1473017a7ee360beea16125abb41e23f7a5815691c7bf"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-reload.txt",
+      "bytes": 924,
+      "sha256": "1f3779a919d0bb9ab5bf237b20e36d33e9111c5dbdf342f5e749de6c0af597a0"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-retain.txt",
+      "bytes": 1411,
+      "sha256": "ccc17612b3e4a9abfbd416f0444355a820b2e3d9b5ec74e51032114e9ddea3fe"
+    },
+    {
+      "path": "output/m9-w5/browser-notification-saved.snapshot.yml",
+      "bytes": 5294,
+      "sha256": "3f86f423c99387126857d649bd7160089f35769a7b7da0ab14d0c5cce4970175"
+    },
+    {
+      "path": "output/m9-w5/browser-user-before.txt",
+      "bytes": 570,
+      "sha256": "451bdca4893f3fc2c98b23bd2740c7eb55a1c9624f8de6455f85838c4a0c495d"
+    },
+    {
+      "path": "output/m9-w5/browser-user-chain.txt",
+      "bytes": 1466,
+      "sha256": "56d18c734914ac4d703ca44bceec264a0d5816ee9dec0ba043b0d2683dd08095"
+    },
+    {
+      "path": "output/m9-w5/browser-web.log",
+      "bytes": 425,
+      "sha256": "fc398af9c6fc8bd86c3b038ae14abc69220db1b734684b69559b2a1b895f0534"
+    },
+    {
+      "path": "output/m9-w5/cleanup.json",
+      "bytes": 275,
+      "sha256": "23f77ab1f358b453cdbe299110611abc2b719eadb203d61c10caecfbe979f287"
+    },
+    {
+      "path": "output/m9-w5/diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "output/m9-w5/doc-index.log",
+      "bytes": 33,
+      "sha256": "85d09b5fc79d7b557cf927b08a3a0b7e6eb7b2195808a50c30babae007a4015e"
+    },
+    {
+      "path": "output/m9-w5/doc-inventory.log",
+      "bytes": 51,
+      "sha256": "1f9c46425c2bd21aabd5672078efa78ff323331113955637cee0160ebc37b55e"
+    },
+    {
+      "path": "output/m9-w5/document-gates.json",
+      "bytes": 317,
+      "sha256": "2819b2e430cbccbfb719cacb5c1f6bea441d00688530fed4cd84855dbb4d4f88"
+    },
+    {
+      "path": "output/m9-w5/migration-green.log",
+      "bytes": 846,
+      "sha256": "ecb2d33412a31fc8924940bb01aacd3f13e7b5582de872633ee70855b09ba794"
+    },
+    {
+      "path": "output/m9-w5/migration-recovery.log",
+      "bytes": 989,
+      "sha256": "e1ddbc52ff4fb90c4751f55f3c5e004925db89e0e69dba15d71ff0f25e853d21"
+    },
+    {
+      "path": "output/m9-w5/migration-red.log",
+      "bytes": 3829,
+      "sha256": "086fd21ecd6987c81f6c88abd42eb0558483ecc31d3cafc1f192ceb57f8907d3"
+    },
+    {
+      "path": "output/m9-w5/openapi-live.json",
+      "bytes": 24361,
+      "sha256": "8670d4d9da7c06bf1888cb359c664cfca815fd364558777e8d9b6188b0684573"
+    },
+    {
+      "path": "output/m9-w5/openapi-live.log",
+      "bytes": 74,
+      "sha256": "d9ee1205e26fd1a4c5c91574b3b857028a8c3254e40cbb586f789d2a31d0937e"
+    },
+    {
+      "path": "output/m9-w5/openapi-reminder.log",
+      "bytes": 91,
+      "sha256": "0abba34e4141ebfacaea233479cf61cfab90b0e3e83032354bec3585c079d7af"
+    },
+    {
+      "path": "output/m9-w5/openapi-settings.log",
+      "bytes": 79,
+      "sha256": "5446fa3dafed1cea6d0493656ee386a13ea89ea0fcc279e29953a7f880da36cb"
+    },
+    {
+      "path": "output/m9-w5/web-build.log",
+      "bytes": 10698,
+      "sha256": "34956b01f2b91964222afe36ea56c38463449468968f1d23618ce31a38333379"
+    },
+    {
+      "path": "output/m9-w5/web-loop-green.log",
+      "bytes": 2621,
+      "sha256": "e2ea6d27f4782325493ab8cd18f00eabd19286314daed66def12ea055bc9507b"
+    },
+    {
+      "path": "output/m9-w5/web-loop-red.log",
+      "bytes": 8643,
+      "sha256": "435296057293bf47c24ce6436d687d2dfedf52bd0294b017a19031324ab74ba4"
+    },
+    {
+      "path": "output/m9-w5/web-test.log",
+      "bytes": 54293,
+      "sha256": "b0daebeedd3fd0907f277485429e8cdd180123f4ca0e33148e75c69055204af8"
+    },
+    {
+      "path": "output/playwright/m9-w5-notification-1440.png",
+      "bytes": 307473,
+      "sha256": "d32f60145168a6be5b455c038cb3b867815b064db9ed3877e2967db6e8e62030"
+    },
+    {
+      "path": "output/playwright/m9-w5-notification-320.png",
+      "bytes": 190813,
+      "sha256": "01df10e743bb53a0f27606417a70f0e3d7bac8fe2253265e7acf4c3efff2ad88"
+    },
+    {
+      "path": "output/playwright/m9-w5-notification-cleared-1440.png",
+      "bytes": 322437,
+      "sha256": "c8e9615991dcfb34554a179c4cc3034aaf262e78e474109070cfb1cb75c4ee5e"
+    },
+    {
+      "path": "output/playwright/m9-w5-notification-cleared-320.png",
+      "bytes": 82433,
+      "sha256": "5e0fe80ea6000b9bcb663b3f57ae5877909174d8e875bf45b66411ab26dedae5"
+    },
+    {
+      "path": "output/playwright/m9-w5-settings-top-320.png",
+      "bytes": 141689,
+      "sha256": "bed863dcef4ce65b45c0848ed23510db0cb2bd0dc4b45f47118c8f2cc4eac6c4"
+    },
+    {
+      "path": "output/playwright/m9-w5-user-detail-1440.png",
+      "bytes": 249060,
+      "sha256": "768c0afef15af24e29d608f7d1fceda576ea802222c0b6b3e32ba1baeff179ce"
+    },
+    {
+      "path": "output/playwright/m9-w5-user-edit-320.png",
+      "bytes": 165465,
+      "sha256": "546b89daf4d9884dc86e14be8ceeeee2ee305102aaf4b8eac9f6cbec7359ac0c"
+    },
+    {
+      "path": "output/playwright/m9-w5-user-preview-1440.png",
+      "bytes": 173560,
+      "sha256": "a3ae0733928c75aa6f82c96385b71553fad51c9f1274c420b7cb5386726cd4d9"
+    },
+    {
+      "path": "output/playwright/m9-w5-users-320.png",
+      "bytes": 209851,
+      "sha256": "95b1934e877002bd1adf2e9f42151e1bf6c778ce7029ae627a86fcc53d295eb8"
+    }
+  ]
+}

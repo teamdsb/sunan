@@ -1,0 +1,35 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runTestsByPath test/m9-wave5-acceptance.integration.spec.ts
+
+FAIL test/m9-wave5-acceptance.integration.spec.ts (8.937 s)
+  M9 Wave 5 authentication and notification acceptance
+    ✓ preserves manual authorization across sync/OAuth/refresh and independently restores departments/roles (100 ms)
+    ✓ reports a second-page failure without clearing the missing member or manual disabled state (33 ms)
+    ✕ keeps a targeted draft separate from saved settings and sends only to an effective member (15 ms)
+
+  ● M9 Wave 5 authentication and notification acceptance › keeps a targeted draft separate from saved settings and sends only to an effective member
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 422
+    Received: 403
+
+      90 |     expect(rehearsal.controls.sends).toEqual([{ agentid: 2000001, touser: 'w5-admin' }]);
+      91 |     expect((await get('/settings/notification')).body.data).toEqual(before.body.data);
+    > 92 |     expect((await post('/settings/notification/draft-test').send({ testUserId: 'w5-member' })).status).toBe(422);
+         |                                                                                                        ^
+      93 |     expect(rehearsal.controls.sends).toHaveLength(1);
+      94 |   });
+      95 | });
+
+      at Object.<anonymous> (test/m9-wave5-acceptance.integration.spec.ts:92:104)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 2 passed, 3 total
+Snapshots:   0 total
+Time:        8.983 s
+Ran all test suites within paths "test/m9-wave5-acceptance.integration.spec.ts".
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.8 test:integration: `jest --config ./jest.integration.config.ts --runTestsByPath test/m9-wave5-acceptance.integration.spec.ts`
+Exit status 1

@@ -1,0 +1,127 @@
+
+> web@0.0.8 test /Users/yuan/项目/sunan/sunan/apps/web
+> vitest run src/features/settings/UserManagementPage.test.tsx --maxWorkers=1
+
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: An update to UserManagementPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at UserManagementPage (/Users/yuan/项目/sunan/sunan/apps/web/src/features/settings/UserManagementPage.tsx:58:63)
+    at Provider (file:///Users/yuan/%E9%A1%B9%E7%9B%AE/sunan/sunan/node_modules/.pnpm/react-redux@9.2.0_@types+react@18.3.28_react@18.3.1_redux@5.0.1/node_modules/react-redux/dist/react-redux.mjs:875:11)
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: An update to Portal inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at /Users/yuan/项目/sunan/sunan/node_modules/.pnpm/@rc-component+portal@1.1.2_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@rc-component/portal/lib/Portal.js:35:20
+    at Drawer (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/rc-drawer@7.3.0_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/rc-drawer/lib/Drawer.js:18:27)
+    at NoFormStyle (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/form/context.js:32:3)
+    at NoCompactStyle (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/space/Compact.js:52:5)
+    at ContextIsolator (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/_util/ContextIsolator.js:14:5)
+    at Drawer (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/drawer/index.js:40:7)
+    at section
+    at UserManagementPage (/Users/yuan/项目/sunan/sunan/apps/web/src/features/settings/UserManagementPage.tsx:58:63)
+    at Provider (file:///Users/yuan/%E9%A1%B9%E7%9B%AE/sunan/sunan/node_modules/.pnpm/react-redux@9.2.0_@types+react@18.3.28_react@18.3.1_redux@5.0.1/node_modules/react-redux/dist/react-redux.mjs:875:11)
+Warning: An update to Portal inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at /Users/yuan/项目/sunan/sunan/node_modules/.pnpm/@rc-component+portal@1.1.2_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@rc-component/portal/lib/Portal.js:35:20
+    at DialogWrap (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/rc-dialog@9.6.0_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/rc-dialog/lib/DialogWrap.js:27:23)
+    at NoFormStyle (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/form/context.js:32:3)
+    at NoCompactStyle (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/space/Compact.js:52:5)
+    at ContextIsolator (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/_util/ContextIsolator.js:14:5)
+    at Modal (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/antd@5.29.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/antd/lib/modal/Modal.js:55:18)
+    at section
+    at UserManagementPage (/Users/yuan/项目/sunan/sunan/apps/web/src/features/settings/UserManagementPage.tsx:58:63)
+    at Provider (file:///Users/yuan/%E9%A1%B9%E7%9B%AE/sunan/sunan/node_modules/.pnpm/react-redux@9.2.0_@types+react@18.3.28_react@18.3.1_redux@5.0.1/node_modules/react-redux/dist/react-redux.mjs:875:11)
+
+ ❯ src/features/settings/UserManagementPage.test.tsx (1 test | 1 failed) 2100ms
+   × stops polling a completed directory batch while retaining its result on screen 2100ms
+     → expected 2 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/features/settings/UserManagementPage.test.tsx:43:24
+     41|   const completedReads = batchReads();
+     42|   await new Promise((resolve) => setTimeout(resolve, 1800));
+     43|   expect(batchReads()).toBe(completedReads);
+       |                        ^
+     44|   expect(screen.getByText(/读取 3，新增 2，更新 1，失败 0/)).toBeInTheDocument();
+     45| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  10:05:01
+   Duration  4.09s (transform 131ms, setup 114ms, collect 1.39s, tests 2.10s, environment 348ms, prepare 38ms)
+
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  web@0.0.8 test: `vitest run src/features/settings/UserManagementPage.test.tsx --maxWorkers=1`
+Exit status 1

@@ -1,0 +1,73 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runTestsByPath test/m9-wave5-migration.integration.spec.ts
+
+FAIL test/m9-wave5-migration.integration.spec.ts (5.485 s)
+  M9 Wave 5 synthetic legacy migration and rollback
+    ✓ retains legacy role baselines, UUIDs, associations and unknown login facts on incremental migration (12 ms)
+    ✕ refuses destructive W2 down with manual empty roles before any DDL (14 ms)
+    ✕ refuses destructive W2 down with platform disabled before any DDL (13 ms)
+    ✕ refuses destructive W2 down with audit after restoring defaults before any DDL (13 ms)
+
+  ● M9 Wave 5 synthetic legacy migration and rollback › refuses destructive W2 down with manual empty roles before any DDL
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+      84 |     try {
+      85 |       await runner.query(setup);
+    > 86 |       await expect(new M9Wave2UserDirectory1710000027000().down(runner)).rejects.toThrow('不能回滚 M9-W2');
+         |             ^
+      87 |       expect(await runner.query(`SELECT count(*)::int AS count FROM information_schema.columns WHERE table_name='wecom_users' AND column_name='authorization_version'`)).toEqual([{ count: 1 }]);
+      88 |     } finally {
+      89 |       await runner.rollbackTransaction();
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at test/m9-wave5-migration.integration.spec.ts:86:13
+
+  ● M9 Wave 5 synthetic legacy migration and rollback › refuses destructive W2 down with platform disabled before any DDL
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+      84 |     try {
+      85 |       await runner.query(setup);
+    > 86 |       await expect(new M9Wave2UserDirectory1710000027000().down(runner)).rejects.toThrow('不能回滚 M9-W2');
+         |             ^
+      87 |       expect(await runner.query(`SELECT count(*)::int AS count FROM information_schema.columns WHERE table_name='wecom_users' AND column_name='authorization_version'`)).toEqual([{ count: 1 }]);
+      88 |     } finally {
+      89 |       await runner.rollbackTransaction();
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at test/m9-wave5-migration.integration.spec.ts:86:13
+
+  ● M9 Wave 5 synthetic legacy migration and rollback › refuses destructive W2 down with audit after restoring defaults before any DDL
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+      84 |     try {
+      85 |       await runner.query(setup);
+    > 86 |       await expect(new M9Wave2UserDirectory1710000027000().down(runner)).rejects.toThrow('不能回滚 M9-W2');
+         |             ^
+      87 |       expect(await runner.query(`SELECT count(*)::int AS count FROM information_schema.columns WHERE table_name='wecom_users' AND column_name='authorization_version'`)).toEqual([{ count: 1 }]);
+      88 |     } finally {
+      89 |       await runner.rollbackTransaction();
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at test/m9-wave5-migration.integration.spec.ts:86:13
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 1 passed, 4 total
+Snapshots:   0 total
+Time:        5.532 s
+Ran all test suites within paths "test/m9-wave5-migration.integration.spec.ts".
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.8 test:integration: `jest --config ./jest.integration.config.ts --runTestsByPath test/m9-wave5-migration.integration.spec.ts`
+Exit status 1

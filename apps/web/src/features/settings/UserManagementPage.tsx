@@ -121,10 +121,10 @@ export function UserManagementPage() {
 
   useEffect(() => {
     const latestBatch = departmentsQuery.data?.data.scope;
-    if (!activeBatchId && latestBatch?.batchId) {
+    if (!activeBatchId && latestBatch?.batchId && latestBatch.batchId !== lastSyncBatch?.id) {
       setActiveBatchId(latestBatch.batchId);
     }
-  }, [activeBatchId, departmentsQuery.data?.data.scope]);
+  }, [activeBatchId, departmentsQuery.data?.data.scope, lastSyncBatch?.id]);
 
   useEffect(() => {
     if (syncStatus && syncStatus !== 'running') {

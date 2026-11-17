@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：284 个 Markdown 文件。
+总数：286 个 Markdown 文件。
 
 ## repository-root
 
@@ -68,6 +68,7 @@ replaced_by: []
 | 文档 | 状态 | 负责人 | 标题 |
 |---|---|---|---|
 | [docs/guides/getting-started.md](guides/getting-started.md) | `current-index` | `guides` | 快速开始 |
+| [docs/guides/m9-migration-release-runbook.md](guides/m9-migration-release-runbook.md) | `operations` | `operations` | M9 迁移、发布与兼容回滚操作包 |
 | [docs/guides/qa-testing-my-module.md](guides/qa-testing-my-module.md) | `historical-archive` | `guides` | "我的"模块 QA 测试指南 |
 | [docs/guides/sdd-workflow.md](guides/sdd-workflow.md) | `current-source` | `guides` | 开发流程 |
 | [docs/guides/testing-strategy.md](guides/testing-strategy.md) | `current-source` | `guides` | 测试策略 |
@@ -239,7 +240,7 @@ replaced_by: []
 | [docs/specs/wecom/message-push-spec.md](specs/wecom/message-push-spec.md) | `current-spec` | `wecom` | 企业微信消息推送规格 |
 | [docs/specs/wecom/oauth2-spec.md](specs/wecom/oauth2-spec.md) | `current-spec` | `wecom` | 企业微信 OAuth2 规格 |
 | [docs/specs/wecom/procurement-go-live-checklist.md](specs/wecom/procurement-go-live-checklist.md) | `operations` | `wecom` | 采购模块企业微信上线检查清单（Wave5） |
-| [docs/specs/wecom/production-config-matrix.md](specs/wecom/production-config-matrix.md) | `operations` | `wecom` | 企业微信生产配置矩阵（M6） |
+| [docs/specs/wecom/production-config-matrix.md](specs/wecom/production-config-matrix.md) | `operations` | `wecom` | 企业微信配置矩阵（M6 历史与 M9 增量） |
 | [docs/specs/wecom/production-cutover-runbook.md](specs/wecom/production-cutover-runbook.md) | `operations` | `wecom` | 企业微信正式上线切换 Runbook（M6） |
 | [docs/specs/wecom/real-device-regression-matrix.md](specs/wecom/real-device-regression-matrix.md) | `current-source` | `wecom` | 企业微信四大板块真机回归矩阵（M6） |
 | [docs/specs/wecom/template-binding-checklist.md](specs/wecom/template-binding-checklist.md) | `operations` | `wecom` | 企业微信审批模板绑定清单（M6） |
@@ -374,6 +375,7 @@ replaced_by: []
 | [docs/acceptance/M9-wave-2.md](acceptance/M9-wave-2.md) | `current-source` | `planning` | M9 Wave 2 验收记录 |
 | [docs/acceptance/M9-wave-3.md](acceptance/M9-wave-3.md) | `current-source` | `planning` | M9 Wave 3 验收记录 |
 | [docs/acceptance/M9-wave-4.md](acceptance/M9-wave-4.md) | `current-source` | `planning` | M9 Wave 4 验收记录 |
+| [docs/acceptance/M9-wave-5.md](acceptance/M9-wave-5.md) | `current-source` | `planning` | M9 Wave 5 迁移回归与验收 |
 
 ## archive/acceptance/safety
 

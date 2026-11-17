@@ -1,0 +1,16 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runTestsByPath test/m9-wave5-migration.integration.spec.ts
+
+PASS test/m9-wave5-migration.integration.spec.ts (7.477 s)
+  M9 Wave 5 synthetic legacy migration and rollback
+    ✓ retains legacy role baselines, UUIDs, associations and unknown login facts on incremental migration (14 ms)
+    ✓ refuses destructive W2 down with manual empty roles before any DDL (9 ms)
+    ✓ refuses destructive W2 down with platform disabled before any DDL (2 ms)
+    ✓ refuses destructive W2 down with audit after restoring defaults before any DDL (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        7.529 s
+Ran all test suites within paths "test/m9-wave5-migration.integration.spec.ts".

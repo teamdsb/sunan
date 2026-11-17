@@ -1,0 +1,17 @@
+[
+  {
+    "command": "node scripts/generate-doc-inventory.mjs",
+    "exitCode": 0,
+    "log": "doc-inventory.log"
+  },
+  {
+    "command": "node scripts/check-doc-index.mjs",
+    "exitCode": 0,
+    "log": "doc-index.log"
+  },
+  {
+    "command": "git diff --check",
+    "exitCode": 0,
+    "log": "diff-check.log"
+  }
+]

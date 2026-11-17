@@ -1,0 +1,10 @@
+### Result
+{"completedSyncRequestsIn4500ms":0,"urls":[]}
+### Ran Playwright code
+```js
+await (async (page) => { const urls=[]; const onRequest=req=>{if(req.url().includes("/admin/wecom-")) urls.push(new URL(req.url()).pathname)}; page.on("request",onRequest); await new Promise(resolve=>setTimeout(resolve,4500)); page.off("request",onRequest); return {completedSyncRequestsIn4500ms:urls.length,urls}; })(page);
+```
+### Page
+- Page URL: http://localhost:4173/my/settings/users
+- Page Title: 苏南船舶管理系统
+- Console: 3 errors, 2 warnings

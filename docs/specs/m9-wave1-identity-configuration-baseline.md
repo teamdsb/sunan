@@ -43,13 +43,15 @@ replaced_by: []
 | 场景 | 有效部门 | 有效角色 | 兼容与收敛要求 |
 |---|---|---|---|
 | 总经办 | `general_office` | `general_office` | 保留总经办跨部门查询和现有管理能力。 |
-| 人工财务部门 + `shipping` | `finance_dept` | `finance`、`shipping` | 采购按 `shipping` 角色判断审批能力；按部门过滤的接口仍使用财务部门。必须有回归证据。 |
+| 人工财务部门 + `shipping` | `finance_dept` | 人工角色仅 `shipping` | 采购按 `shipping` 角色判断审批能力；按部门过滤的接口仍使用财务部门。必须有回归证据。 |
 | 人工部门为空 | `[]` | 人工列表或仅 `all_authenticated` | 不提供部门范围；角色直接授予的范围按模块规则保留。 |
 | 人工角色为空 | 来源/人工部门 | 仅 `all_authenticated` | 不从来源部门或职位回填额外业务角色。 |
 | 旧职位为船员/船长 | 来源部门 | 仅在 follow + auto 时兼容增加 `crew` | manual 部门或 manual 角色时不得额外补回。 |
 | 船员/船舶关系 | 当前有效角色 + 独立船舶/任务参与关系 | `crew` 不等于任意船舶访问 | 不因平台部门修改转移任务、船舶任职或历史审批人。 |
 | env 管理员提升 | 有效部门照常计算 | 追加 `system_admin` | 原人工 disabled 保留但暂不生效；企业微信账号不可用仍拒绝。 |
 | env 管理员撤销 | 有效部门照常计算 | 移除 `system_admin` | 原人工 disabled 重新生效；所有实例重载 env 后下一请求采用新结果。 |
+
+2026-11-17 W5 校正：上表人工角色替换自动角色，因此人工财务部门 + 人工 `shipping` 不额外添加 `finance`，实际回归见 [W5](../acceptance/M9-wave-5.md)。
 
 当前旁路差异必须单独收敛：提醒服务补算部门/角色，自查从 `raw_profile.status` 判断 active 并按旧字段推导，采购收件人按 `departmentCodes` 加 env 管理员。这些差异不能在 Wave 1 伪装为已经统一。
 

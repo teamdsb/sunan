@@ -7,7 +7,7 @@ replaced_by: []
 ---
 # M9 执行计划：平台管理与配置升级
 
-> 状态：M9-W2、W3、W4 已实施并有条件验收，W5 尚未完成。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本计划不代表生产上线。
+> 状态：M9-W2、W3、W4 已实施并有条件验收，W5 本地迁移回归与操作包有条件通过，真实租户/三端/生产恢复未完成。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本计划不代表生产上线。
 
 需求与关键规则以 [M9 需求](../requirements/M9-平台管理与配置升级.md) 为准；任务拆分见 [backlog](M9-wave-backlog.md)，执行入口见 [提示词索引](../prompts/README.md)。
 
@@ -28,7 +28,7 @@ replaced_by: []
 | 2 | 全通讯录与用户授权后端 | W1 | 有条件通过 | [W2](../prompts/m9/wave-2-user-directory.md) · [验收](../acceptance/M9-wave-2.md) |
 | 3 | 管理页面与全业务权限整合 | W2 | 有条件通过 | [W3](../prompts/m9/wave-3-admin-console.md) · [验收](../acceptance/M9-wave-3.md) |
 | 4 | 后台推送配置与消息整合 | W1；收件人整合依赖 W2/W3 | 有条件通过 | [W4](../prompts/m9/wave-4-message-settings.md) · [验收](../acceptance/M9-wave-4.md) |
-| 5 | 迁移、回归、操作说明与验收 | W2-W4 | 未开始 | [W5](../prompts/m9/wave-5-release-acceptance.md) |
+| 5 | 迁移、回归、操作说明与验收 | W2-W4 | 本地有条件通过，现场未完成 | [W5](../prompts/m9/wave-5-release-acceptance.md) · [验收](../acceptance/M9-wave-5.md) |
 
 W4 的配置持久化、加密与应用缓存隔离可在 W1 后并行。W2/W3 的授权计算服务必须先统一，再完成消息收件人联调。按依赖执行，不使用未确认的日期承诺代替前置验收。
 

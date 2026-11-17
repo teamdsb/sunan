@@ -1,0 +1,14 @@
+{
+  "browserSession": "m9w5 closed",
+  "apiExitCode": 0,
+  "viteTerminatedExitCode": 143,
+  "listening": {
+    "4173": false,
+    "4319": false,
+    "5173": true
+  },
+  "dockerPsExitCode": 0,
+  "dockerPs": [],
+  "existingVite5173Preserved": true,
+  "taskPortsClosed": true
+}

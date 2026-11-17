@@ -1,0 +1,12 @@
+### Result
+{"request":{"expectedConfigVersion":2,"clearOverride":true},"status":200,"config":{"corpId":"ww-test-corp","mainCorpId":"ww-test-corp","mainAgentId":"1000001","configured":false,"source":"env_main","agentId":"1000001","configVersion":3,"secretStored":false,"encryptionKeyAvailable":true,"configurationError":false,"encryptionKeyRotationAvailable":false,"updatedAt":"2026-11-17T02:25:27.192Z"},"clearDisabled":true}
+### Ran Playwright code
+```js
+await (async (page) => { const pending = page.waitForResponse(r=>r.url().endsWith("/settings/notification") && r.request().method()==="PATCH"); await page.getByRole("tooltip").getByRole("button",{name:"清除覆盖",exact:true}).click(); const response=await pending; const result=await response.json(); await page.getByText("当前来源：env 主应用；应用 AgentID：1000001；配置版本：3").waitFor(); await page.screenshot({path:"output/playwright/m9-w5-notification-cleared-1440.png",fullPage:true}); return {request:response.request().postDataJSON(),status:response.status(),config:result.data,clearDisabled:await page.getByRole("button",{name:"clear 清除覆盖"}).isDisabled()}; })(page);
+```
+### Page
+- Page URL: http://localhost:4173/my/settings
+- Page Title: 苏南船舶管理系统
+- Console: 2 errors, 2 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-11-17T02-19-23-263Z.log#L11-L13

@@ -1,0 +1,12 @@
+### Result
+{"secretBlankAfterReload":true,"viewport":{"width":1440,"height":1000},"scrollWidth":1440}
+### Ran Playwright code
+```js
+await (async (page) => { await page.setViewportSize({width:1440,height:1000}); await page.reload(); await page.getByText("当前来源：后台覆盖；应用 AgentID：2000001；配置版本：2").waitFor(); const secretBlank = (await page.getByRole("textbox",{name:"通知应用 Secret"}).inputValue()).length===0; await page.screenshot({path:"output/playwright/m9-w5-notification-1440.png",fullPage:true}); return {secretBlankAfterReload:secretBlank,viewport:page.viewportSize(),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth)}; })(page);
+```
+### Page
+- Page URL: http://localhost:4173/my/settings
+- Page Title: 苏南船舶管理系统
+- Console: 0 errors, 2 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-11-17T02-19-23-263Z.log#L7-L10

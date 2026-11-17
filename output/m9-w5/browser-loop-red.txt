@@ -1,0 +1,6 @@
+### Result
+{"completedSyncRequestsIn4500ms":3,"urls":["/api/v1/admin/wecom-directory-sync/90b4905e-481d-4d2f-8b4c-757a1645db8d","/api/v1/admin/wecom-directory-sync/90b4905e-481d-4d2f-8b4c-757a1645db8d","/api/v1/admin/wecom-directory-sync/90b4905e-481d-4d2f-8b4c-757a1645db8d"]}
+### Ran Playwright code
+```js
+await (async (page) => { const urls=[]; const onRequest=req=>{if(req.url().includes("/admin/wecom-")) urls.push(new URL(req.url()).pathname)}; page.on("request",onRequest); await new Promise(resolve=>setTimeout(resolve,4500)); page.off("request",onRequest); return {completedSyncRequestsIn4500ms:urls.length,urls}; })(page);
+```

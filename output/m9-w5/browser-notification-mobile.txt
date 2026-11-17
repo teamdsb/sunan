@@ -1,0 +1,6 @@
+### Result
+{"viewport":{"width":320,"height":900},"scrollWidth":320,"current":"当前来源：env 主应用；应用 AgentID：1000001；配置版本：3"}
+### Ran Playwright code
+```js
+await (async (page) => { await page.setViewportSize({width:320,height:900}); await page.evaluate(()=>window.scrollTo(0,0)); await page.screenshot({path:"output/playwright/m9-w5-settings-top-320.png"}); await page.getByText("当前来源：env 主应用；应用 AgentID：1000001；配置版本：3").scrollIntoViewIfNeeded(); await page.screenshot({path:"output/playwright/m9-w5-notification-cleared-320.png"}); return {viewport:page.viewportSize(),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth),current:await page.getByText("当前来源：env 主应用；应用 AgentID：1000001；配置版本：3").textContent()}; })(page);
+```

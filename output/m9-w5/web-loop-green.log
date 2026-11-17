@@ -1,0 +1,41 @@
+
+> web@0.0.8 test /Users/yuan/项目/sunan/sunan/apps/web
+> vitest run src/features/settings/UserManagementPage.test.tsx --maxWorkers=1
+
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ ✓ src/features/settings/UserManagementPage.test.tsx (1 test) 2204ms
+   ✓ stops polling a completed directory batch while retaining its result on screen  2198ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  10:06:12
+   Duration  4.15s (transform 135ms, setup 57ms, collect 1.38s, tests 2.20s, environment 286ms, prepare 34ms)
+

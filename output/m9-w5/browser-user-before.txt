@@ -1,0 +1,6 @@
+### Result
+{"memberBeforeSave":["all_authenticated","crew"]}
+### Ran Playwright code
+```js
+await (async (page) => { const login=await page.request.get("http://127.0.0.1:4319/api/v1/auth/wecom/callback?code=member"); if(login.status()!==200) throw new Error("member login failed"); const body=await login.json(); await page.evaluate(token=>sessionStorage.setItem("w5_old_member_token",token),body.data.accessToken); await page.screenshot({path:"output/playwright/m9-w5-user-preview-1440.png",fullPage:true}); return {memberBeforeSave:body.data.user.roles}; })(page);
+```

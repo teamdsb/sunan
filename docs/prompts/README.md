@@ -1,13 +1,13 @@
 ---
 status: current-index
 owner: delivery
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # Wave 提示词索引
 
-> 新 M9“平台管理与配置升级”已规划、实施未开始。以下提示词供后续实施使用；本轮仅重新规划。
+> M9“平台管理与配置升级”W2-W4 已实施，W5 本地迁移回归和操作包有条件通过，真实企微/三端/生产恢复尚未完成。以下提示词保留为执行与复验入口，实际状态见 [W5验收](../acceptance/M9-wave-5.md)。
 
 ## 使用方法
 

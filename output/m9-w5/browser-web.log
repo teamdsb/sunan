@@ -1,0 +1,12 @@
+
+> web@0.0.8 dev /Users/yuan/项目/sunan/sunan/apps/web
+> vite --host 127.0.0.1 --port 4173 --strictPort
+
+
+  VITE v6.4.1  ready in 221 ms
+
+  ➜  Local:   http://127.0.0.1:4173/
+10:06:12 AM [vite] (client) hmr update /src/features/settings/UserManagementPage.tsx
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  web@0.0.8 dev: `vite --host 127.0.0.1 --port 4173 --strictPort`
+Exit status 143

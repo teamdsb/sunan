@@ -1,0 +1,96 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e6]:
+    - generic [ref=f2e7]:
+      - banner [ref=f2e8]:
+        - generic [ref=f2e9]:
+          - button "返回" [ref=f2e10] [cursor=pointer]:
+            - img "left" [ref=f2e12]
+          - generic [ref=f2e20]:
+            - heading "苏南船舶管理" [level=3] [ref=f2e21]
+            - generic [ref=f2e22]: 企业微信 H5 工作台
+          - button "更多" [ref=f2e23] [cursor=pointer]:
+            - generic [ref=f2e24]: 合
+      - main [ref=f2e27]:
+        - generic [ref=f2e28]:
+          - heading "设置" [level=2] [ref=f2e29]
+          - generic [ref=f2e30]: 配置提醒视图、证照分组和消息推送偏好。
+          - generic [ref=f2e31]:
+            - generic [ref=f2e33]:
+              - generic [ref=f2e34]: 平台管理
+              - generic [ref=f2e37]:
+                - generic [ref=f2e38]: 用户部门、业务角色、平台状态和通讯录同步由系统管理员统一维护。
+                - button [ref=f2e39] [cursor=pointer]:
+                  - img "setting" [ref=f2e41]
+                  - link "打开用户管理" [ref=f2e44]:
+                    - /url: /my/settings/users
+            - generic [ref=f2e46]:
+              - generic [ref=f2e47]: 企业微信推送应用
+              - generic [ref=f2e50]:
+                - generic [ref=f2e51]: 主应用由环境变量维护并只读显示；填写同企业通知应用后，证书、采购和任务消息使用该应用。留空 Secret 会保留已存凭据，清除覆盖才会恢复主应用。
+                - table [ref=f2e54]:
+                  - rowgroup [ref=f2e55]:
+                    - row [ref=f2e56]:
+                      - 'cell "主应用 CorpID : ww-test-corp" [ref=f2e57]':
+                        - generic [ref=f2e58]:
+                          - generic [ref=f2e59]: "主应用 CorpID :"
+                          - generic [ref=f2e60]: ww-test-corp
+                    - row [ref=f2e61]:
+                      - 'cell "主应用 AgentID : 1000001" [ref=f2e62]':
+                        - generic [ref=f2e63]:
+                          - generic [ref=f2e64]: "主应用 AgentID :"
+                          - generic [ref=f2e65]: "1000001"
+                - generic [ref=f2e66]:
+                  - generic [ref=f2e68]:
+                    - generic "通知应用 AgentID" [ref=f2e70]
+                    - textbox "通知应用 AgentID" [ref=f2e74]:
+                      - /placeholder: 可选通知应用 AgentID
+                      - text: "2000001"
+                  - generic [ref=f2e76]:
+                    - generic "通知应用 Secret" [ref=f2e78]
+                    - generic [ref=f2e82]:
+                      - textbox "通知应用 Secret" [ref=f2e83]:
+                        - /placeholder: 已保存，留空表示保留
+                      - img "eye-invisible" [ref=f2e85] [cursor=pointer]
+                  - generic [ref=f2e90]:
+                    - generic "定向测试人员" [ref=f2e92]: "* 定向测试人员"
+                    - textbox "* 定向测试人员" [ref=f2e96]:
+                      - /placeholder: 企业微信 UserID
+                      - text: w5-admin
+                  - generic [ref=f2e97]:
+                    - button "api 验证连接" [ref=f2e99] [cursor=pointer]:
+                      - img "api" [ref=f2e189]
+                      - generic [ref=f2e104]: 验证连接
+                    - button "send 发送定向测试" [ref=f2e106] [cursor=pointer]:
+                      - img "send" [ref=f2e199]
+                      - generic [ref=f2e111]: 发送定向测试
+                    - button "save 保存覆盖" [active] [ref=f2e113] [cursor=pointer]:
+                      - img "save" [ref=f2e209]
+                      - generic [ref=f2e118]: 保存覆盖
+                    - button "clear 清除覆盖" [ref=f2e120] [cursor=pointer]:
+                      - img "clear" [ref=f2e213]
+                      - generic [ref=f2e216]: 清除覆盖
+                - generic [ref=f2e121]: 当前来源：后台覆盖；应用 AgentID：2000001；配置版本：1
+                - heading "失败与待核对投递" [level=5] [ref=f2e122]
+                - generic [ref=f2e123]: 暂无待处理投递
+            - generic [ref=f2e130]:
+              - generic [ref=f2e132]:
+                - generic "提醒视图" [ref=f2e134]
+                - generic [ref=f2e140] [cursor=pointer]:
+                  - combobox "提醒视图" [ref=f2e142]
+                  - generic "看板" [ref=f2e143]
+              - generic [ref=f2e145]:
+                - generic "证照分组" [ref=f2e147]
+                - generic [ref=f2e153] [cursor=pointer]:
+                  - combobox "证照分组" [ref=f2e155]
+                  - generic "按证照分类" [ref=f2e156]
+              - generic [ref=f2e158]:
+                - generic "推送通知" [ref=f2e160]
+                - switch "推送通知" [checked] [ref=f2e164] [cursor=pointer]
+    - navigation "底部模块导航" [ref=f2e167]:
+      - button "我的" [ref=f2e168]
+      - button "办事" [ref=f2e173]
+      - button "采购" [ref=f2e178]
+      - button "工作台" [ref=f2e183]
+  - generic [ref=f2e218]:
+    - img "check-circle" [ref=f2e219]
+    - generic [ref=f2e222]: 推送应用配置已保存

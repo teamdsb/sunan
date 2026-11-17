@@ -1,13 +1,13 @@
 ---
 status: current-index
 owner: docs
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # 执行计划入口
 
-> 当前 M9 为“平台管理与配置升级”，已规划、实施未开始。本轮只重做规划，不把需求或计划视为已实现功能。
+> 当前 M9 为“平台管理与配置升级”，W2-W4 已实施，W5 本地迁移回归与操作包有条件通过；[现场条件](acceptance/M9-wave-5.md)仍开放，未生产部署。
 
 ## 当前计划
 
@@ -15,8 +15,8 @@ replaced_by: []
 |---|---|
 | [M9 需求](requirements/M9-平台管理与配置升级.md) | 用户管理、部门与权限覆盖、重新认证、配置与 env 边界 |
 | [M9 执行计划](plans/M9-execplans.md) | 5 个 Wave 的顺序、交付物和验收门槛 |
-| [M9 Wave backlog](plans/M9-wave-backlog.md) | 待实施工作和验证清单 |
-| [Wave 提示词](prompts/README.md) | 各 Wave 的实施入口；本轮不执行 |
+| [M9 Wave backlog](plans/M9-wave-backlog.md) | 已实施范围、现场条件和验证清单 |
+| [Wave 提示词](prompts/README.md) | 各 Wave 的实施与复验入口；生产发布须另行授权 |
 
 M9 计划查看与管理全企业通讯录成员，含从未登录的用户；应用可见范围受限时显示局部结果与限制，完整性未验证不计全目录验收通过。系统管理员身份与主应用企业微信配置继续仅由 env 管理，后台推送应用配置未填写时使用主应用。
 

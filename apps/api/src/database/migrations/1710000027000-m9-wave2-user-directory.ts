@@ -91,6 +91,25 @@ export class M9Wave2UserDirectory1710000027000 implements MigrationInterface {
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
+    // Once M9 identity state has been used, removing these columns can restore
+    // revoked permissions. Roll back application code only to an M9-compatible
+    // version (or stop access/workers); retain this schema and its audit trail.
+    const state: unknown = await queryRunner.query(`SELECT
+      EXISTS (SELECT 1 FROM "wecom_users" WHERE
+        "department_mode" <> 'follow_wecom' OR "role_mode" <> 'auto'
+        OR "platform_status" <> 'enabled' OR "authorization_version" <> 1
+        OR "manual_department_ids" <> '[]'::jsonb OR "manual_roles" <> '[]'::jsonb
+        OR "source_status" <> 'unknown' OR "login_status" <> 'unknown'
+        OR "last_login_at" IS NOT NULL OR "last_sync_at" IS NOT NULL
+        OR "source_revision" <> 0) AS users,
+      EXISTS (SELECT 1 FROM "wecom_user_change_audits") AS audits,
+      EXISTS (SELECT 1 FROM "wecom_directory_sync_batches") AS batches,
+      EXISTS (SELECT 1 FROM "wecom_departments") AS departments`);
+    const rows = (Array.isArray(state) ? state : []) as Array<Record<string, unknown>>;
+    const row = rows[0];
+    if (!row || Object.values(row).some((value) => value !== false && value !== 'f')) {
+      throw new Error('已有 M9 用户授权、来源状态或审计数据，不能回滚 M9-W2；请保留 schema 并使用兼容版本，或暂停访问和推送 worker');
+    }
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_wecom_user_change_audits_user_created_at"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "uq_wecom_directory_sync_batches_running_corp"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_wecom_directory_sync_batches_status_created_at"`);

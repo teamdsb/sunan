@@ -1,0 +1,64 @@
+
+> api@0.0.8 test:unit /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.unit.config.ts --runInBand
+
+PASS src/modules/reminder/certificate-reminder-engine.service.spec.ts (5.586 s)
+[Nest] 73632  - 11/17/2026, 10:01:59 AM     LOG [CertificateReminderEngineService] scan job-1 (manual) created=2 sent=2 failed=0
+[Nest] 73632  - 11/17/2026, 10:01:59 AM     LOG [CertificateReminderEngineService] scan job-2 (manual) created=0 sent=0 failed=0
+[Nest] 73632  - 11/17/2026, 10:01:59 AM     LOG [CertificateReminderEngineService] scan job-3 (manual) created=2 sent=2 failed=0
+[Nest] 73632  - 11/17/2026, 10:01:59 AM     LOG [CertificateReminderEngineService] scan job-3b (manual) created=1 sent=0 failed=1
+[Nest] 73632  - 11/17/2026, 10:01:59 AM     LOG [CertificateReminderEngineService] scan job-4 (manual) created=0 sent=0 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-5 (manual) created=0 sent=0 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-pending (manual) created=0 sent=1 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-8 (manual) created=1 sent=1 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-9 (manual) created=0 sent=1 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-dispatching-fresh (manual) created=0 sent=0 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-dispatching-stale (manual) created=0 sent=1 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-claim (manual) created=0 sent=0 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:00 AM     LOG [CertificateReminderEngineService] scan job-6 (manual) created=2 sent=2 failed=0
+[Nest] 73632  - 11/17/2026, 10:02:01 AM     LOG [CertificateReminderEngineService] scan job-7 (manual) created=2 sent=2 failed=0
+PASS src/modules/reminder/certificate-reminder-job.service.spec.ts
+PASS src/modules/workbench/business-report-formats.spec.ts (5.949 s)
+PASS src/modules/procurement/procurement-report-pdf.spec.ts
+PASS src/modules/files/file-retention.spec.ts
+PASS src/modules/workbench/business-reports.spec.ts
+PASS src/modules/reminder/reminder-scheduler.service.spec.ts
+PASS src/modules/auth/authorization.service.spec.ts
+PASS src/modules/auth/auth.service.spec.ts
+PASS src/modules/plan-task/plan-task-scheduler.service.spec.ts
+PASS src/modules/enterprise-profile/enterprise-profile.service.spec.ts
+PASS src/modules/reminder/reminder.service.spec.ts
+PASS src/modules/wecom/wecom-message.service.spec.ts
+PASS src/modules/ship-monitor/ship-monitor.dto.spec.ts
+(node:73632) Warning: NodeVersionSupportWarning: The AWS SDK for JavaScript (v3)
+versions published after the first week of January 2027
+will require node >=22. You are running node v20.20.2.
+
+To continue receiving updates to AWS services, bug fixes,
+and security updates please upgrade to node >=22.
+
+More information can be found at: https://a.co/c895JFp
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/modules/files/oss.service.spec.ts
+PASS src/modules/files/files.service.spec.ts
+PASS src/modules/wecom/wecom-notification-config.service.spec.ts
+PASS src/modules/enterprise-policy/enterprise-policy.service.spec.ts
+PASS src/health/health.controller.spec.ts
+PASS src/modules/user-directory/user-directory.service.spec.ts
+PASS src/modules/office/office.service.spec.ts
+PASS src/modules/wecom/wecom-token.service.spec.ts
+PASS src/modules/wecom/jssdk-signature.service.spec.ts
+PASS src/modules/reminder/reminder-clock.service.spec.ts
+PASS src/modules/wecom/wecom-callback-validation.service.spec.ts
+PASS src/modules/auth/role-resolver.service.spec.ts
+PASS src/config/env.spec.ts
+PASS src/modules/plan-task/task-domain.spec.ts
+PASS src/modules/inspection-capa/inspection-capa-domain.spec.ts
+PASS src/modules/reminder/reminder.constants.spec.ts
+PASS src/common/date/business-date.spec.ts
+
+Test Suites: 31 passed, 31 total
+Tests:       171 passed, 171 total
+Snapshots:   0 total
+Time:        26.65 s
+Ran all test suites.

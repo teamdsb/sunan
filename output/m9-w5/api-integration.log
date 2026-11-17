@@ -1,0 +1,38 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runInBand
+
+PASS test/m9-wave5-acceptance.integration.spec.ts (12.299 s)
+PASS test/ship-monitor.integration.spec.ts
+PASS test/m9-wave5-migration.integration.spec.ts
+PASS test/enterprise-profile.integration.spec.ts
+PASS test/m9-wave4-notifications.integration.spec.ts (7.363 s)
+[Nest] 73889  - 11/17/2026, 10:02:48 AM   ERROR [FilesService] OSS recycle failed for f106aceb-f813-4937-9e66-e91a3cfd7c54; queued for retry
+PASS test/files.integration.spec.ts
+PASS test/procurement-wave4.integration.spec.ts (7.132 s)
+PASS test/inspection-capa.integration.spec.ts (5.644 s)
+(node:73889) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS test/self-inspection.integration.spec.ts (12.588 s)
+PASS test/enterprise-policy.integration.spec.ts (10.378 s)
+PASS test/user-directory.integration.spec.ts (7.275 s)
+PASS test/certificate.integration.spec.ts (11.1 s)
+PASS test/wave7-migration.integration.spec.ts
+PASS test/plan-task.integration.spec.ts (7.97 s)
+PASS test/procurement.integration.spec.ts
+PASS test/workbench-business.integration.spec.ts
+PASS test/master-data.integration.spec.ts
+PASS test/workbench.integration.spec.ts (5.024 s)
+PASS test/procurement-report.integration.spec.ts
+PASS test/settings.integration.spec.ts
+PASS test/office.integration.spec.ts
+PASS test/certificate-reminder.integration.spec.ts (11.974 s)
+PASS test/procurement-budget.integration.spec.ts
+PASS test/auth.integration.spec.ts
+PASS test/m9-wave4-token.integration.spec.ts
+
+Test Suites: 25 passed, 25 total
+Tests:       153 passed, 153 total
+Snapshots:   0 total
+Time:        152.04 s
+Ran all test suites.

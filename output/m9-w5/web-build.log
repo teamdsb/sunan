@@ -1,0 +1,124 @@
+
+> web@0.0.8 build /Users/yuan/项目/sunan/sunan/apps/web
+> tsc -b && vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 3346 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                 0.66 kB │ gzip:   0.37 kB
+dist/assets/my-home-hero-bg-CZe0-Q5s.webp                      44.78 kB
+dist/assets/index-NlM2wugl.css                                135.58 kB │ gzip:  19.65 kB
+dist/assets/officePermissions-CLDeP5Ei.js                       0.07 kB │ gzip:   0.09 kB
+dist/assets/hooks-D3UY-_mK.js                                   0.10 kB │ gzip:   0.11 kB
+dist/assets/launchOfficeEntry-CYygT7YB.js                       0.23 kB │ gzip:   0.16 kB
+dist/assets/permissions-D6xcbznq.js                             0.36 kB │ gzip:   0.19 kB
+dist/assets/reminderPermissions-CCMihVlF.js                     0.37 kB │ gzip:   0.26 kB
+dist/assets/myRouteState-DYYVgyq1.js                            0.41 kB │ gzip:   0.29 kB
+dist/assets/collapse-BbEVqHco.js                                0.45 kB │ gzip:   0.20 kB
+dist/assets/UpOutlined-C27xnOy1.js                              0.51 kB │ gzip:   0.39 kB
+dist/assets/LeftOutlined-DrBrVS8y.js                            0.52 kB │ gzip:   0.39 kB
+dist/assets/RightOutlined-uUPXnsJC.js                           0.52 kB │ gzip:   0.39 kB
+dist/assets/ArrowLeftOutlined-DxGJn_O2.js                       0.55 kB │ gzip:   0.42 kB
+dist/assets/FilterOutlined-sSArLvoc.js                          0.58 kB │ gzip:   0.44 kB
+dist/assets/CalendarOutlined-BhP21aPZ.js                        0.69 kB │ gzip:   0.44 kB
+dist/assets/authApi-DppLN6oE.js                                 0.71 kB │ gzip:   0.35 kB
+dist/assets/FileTextOutlined-BDbYMETH.js                        0.75 kB │ gzip:   0.49 kB
+dist/assets/RequireAuth-CzVWy4I1.js                             0.78 kB │ gzip:   0.54 kB
+dist/assets/AppstoreOutlined-DCLga8i4.js                        0.85 kB │ gzip:   0.39 kB
+dist/assets/SearchOutlined-DrqgTz-n.js                          0.85 kB │ gzip:   0.54 kB
+dist/assets/monitorApi-6W9dPZM7.js                              0.85 kB │ gzip:   0.36 kB
+dist/assets/dateTime-7s2mIBC3.js                                0.93 kB │ gzip:   0.51 kB
+dist/assets/userPresentation-CvyczLou.js                        1.33 kB │ gzip:   0.83 kB
+dist/assets/reminderApi-DhE9szqP.js                             1.47 kB │ gzip:   0.62 kB
+dist/assets/AuthCallbackPage-b19PkPoL.js                        1.58 kB │ gzip:   0.97 kB
+dist/assets/index-D8kHhRQG.js                                   1.65 kB │ gzip:   0.87 kB
+dist/assets/ReloadOutlined-DGFC_PQV.js                          1.67 kB │ gzip:   0.92 kB
+dist/assets/WorkbenchHomeRoutePage-CHpXgIeA.js                  1.69 kB │ gzip:   0.75 kB
+dist/assets/taskApi-Q_WQNHXP.js                                 1.79 kB │ gzip:   0.56 kB
+dist/assets/WorkbenchAttendancePage-BV6FqWWW.js                 1.84 kB │ gzip:   0.92 kB
+dist/assets/officeApi-DRiDnjSH.js                               1.85 kB │ gzip:   0.51 kB
+dist/assets/WorkbenchModulePage-BKL-QOSO.js                     1.90 kB │ gzip:   0.96 kB
+dist/assets/WorkbenchApprovalPage-CrhmZ1Bv.js                   1.91 kB │ gzip:   0.98 kB
+dist/assets/settingsApi-q6UliQQ8.js                             1.95 kB │ gzip:   0.56 kB
+dist/assets/useBreakpoint-BE-lGrjL.js                           2.08 kB │ gzip:   0.97 kB
+dist/assets/OfficeSearchPage-Dp2MfC8-.js                        2.23 kB │ gzip:   1.16 kB
+dist/assets/certificateApi-HZs13mBB.js                          2.24 kB │ gzip:   0.61 kB
+dist/assets/FileAttachmentList-CezTpizb.js                      2.26 kB │ gzip:   1.27 kB
+dist/assets/index-C1fuVeL0.js                                   2.36 kB │ gzip:   1.14 kB
+dist/assets/SettingOutlined-BYNllDNR.js                         2.79 kB │ gzip:   1.37 kB
+dist/assets/masterDataApi-IAlKRB-N.js                           3.53 kB │ gzip:   0.67 kB
+dist/assets/row-DmMVRSvh.js                                     3.63 kB │ gzip:   1.59 kB
+dist/assets/WorkbenchRecordDetailPage-CrITrcrQ.js               3.69 kB │ gzip:   1.85 kB
+dist/assets/EnterpriseProfileDetailPage-BiH7Um0T.js             3.83 kB │ gzip:   1.93 kB
+dist/assets/ProcurementApprovalPage-DGljodsq.js                 3.94 kB │ gzip:   1.97 kB
+dist/assets/enterpriseApi-BdRHvABH.js                           4.04 kB │ gzip:   0.87 kB
+dist/assets/ProcurementReportApprovalPage-C21Q9sm_.js           4.05 kB │ gzip:   2.02 kB
+dist/assets/index-B6SEA4R6.js                                   4.42 kB │ gzip:   1.77 kB
+dist/assets/workbenchApi-B7AoInRB.js                            4.56 kB │ gzip:   1.50 kB
+dist/assets/index-C0HpV8a_.js                                   4.68 kB │ gzip:   1.92 kB
+dist/assets/EnterpriseProfilePage-DzIjUEUq.js                   4.71 kB │ gzip:   2.29 kB
+dist/assets/ProcurementOrderCreatePage-BfUJ7ec2.js              4.74 kB │ gzip:   1.97 kB
+dist/assets/index-Bjhia6Db.js                                   4.75 kB │ gzip:   2.03 kB
+dist/assets/ReminderDetailPage-CRnv0TRr.js                      5.24 kB │ gzip:   2.27 kB
+dist/assets/useForm-KlgCzmAW.js                                 5.39 kB │ gzip:   2.42 kB
+dist/assets/index-B6clRa0s.js                                   5.47 kB │ gzip:   2.27 kB
+dist/assets/index-CLmmo9my.js                                   5.66 kB │ gzip:   2.22 kB
+dist/assets/index-B_k9_5-l.js                                   5.89 kB │ gzip:   2.63 kB
+dist/assets/FilePreviewModal-DN3RsATk.js                        5.99 kB │ gzip:   2.84 kB
+dist/assets/ProcurementDictionaryAdminPage-B9RBAaFD.js          6.25 kB │ gzip:   2.57 kB
+dist/assets/index-CrcVWp1e.js                                   6.39 kB │ gzip:   2.71 kB
+dist/assets/Sider-C6RDQmU9.js                                   6.66 kB │ gzip:   2.84 kB
+dist/assets/Input-DMTDl01q.js                                   6.78 kB │ gzip:   2.75 kB
+dist/assets/PlanManagementPage-3dnC6gv5.js                      6.79 kB │ gzip:   2.88 kB
+dist/assets/FileUploadField-CBjWMcw1.js                         7.06 kB │ gzip:   3.09 kB
+dist/assets/procurementApi-CYReHjMy.js                          7.17 kB │ gzip:   1.23 kB
+dist/assets/CertificateDetailPage-BSpDCy1Z.js                   7.44 kB │ gzip:   3.17 kB
+dist/assets/Overflow-CxvBEznq.js                                7.45 kB │ gzip:   2.90 kB
+dist/assets/MasterDataPage-gwaJ902c.js                          7.69 kB │ gzip:   3.10 kB
+dist/assets/index-Bu_E1aP_.js                                   8.00 kB │ gzip:   2.72 kB
+dist/assets/MonitorPage-Cz0gDoq9.js                             8.04 kB │ gzip:   3.51 kB
+dist/assets/EnterprisePolicyPage-struBeYc.js                    8.18 kB │ gzip:   3.37 kB
+dist/assets/OfficeAdminPage-18zdRK7q.js                         8.49 kB │ gzip:   3.35 kB
+dist/assets/ProcurementBudgetAdminPage-CbLgUJE_.js              8.66 kB │ gzip:   3.32 kB
+dist/assets/ProcurementOrderDetailPage-BHnzI9kN.js              9.00 kB │ gzip:   3.92 kB
+dist/assets/index-QamKaUMe.js                                   9.03 kB │ gzip:   3.41 kB
+dist/assets/ReminderDashboardPage-6Cyod2gr.js                   9.14 kB │ gzip:   3.85 kB
+dist/assets/ProcurementReportPage-CsVUC1Pv.js                   9.24 kB │ gzip:   3.12 kB
+dist/assets/OfficeHomePage-cKbXegZR.js                          9.63 kB │ gzip:   4.24 kB
+dist/assets/index-CLrLRKk0.js                                  10.03 kB │ gzip:   3.04 kB
+dist/assets/index-uim_7oDq.js                                  10.73 kB │ gzip:   3.96 kB
+dist/assets/ProcurementOrderListPage-20tkq6PX.js               11.01 kB │ gzip:   4.00 kB
+dist/assets/index-BQ2FeG0V.js                                  11.17 kB │ gzip:   4.02 kB
+dist/assets/CertificateListPage-Dittsy5Z.js                    11.45 kB │ gzip:   4.44 kB
+dist/assets/index-DKZ_5f5h.js                                  11.56 kB │ gzip:   4.63 kB
+dist/assets/TaskCenterPage-DA0d_yLa.js                         11.68 kB │ gzip:   4.50 kB
+dist/assets/index-DKclIZqR.js                                  12.11 kB │ gzip:   4.20 kB
+dist/assets/MyHomePage-ODHl88Cv.js                             12.50 kB │ gzip:   4.86 kB
+dist/assets/TaskDetailPage-D7V0bdPN.js                         12.84 kB │ gzip:   4.54 kB
+dist/assets/index-DEQ3MjC6.js                                  13.69 kB │ gzip:   5.16 kB
+dist/assets/AntdIcon-DuZ53bKS.js                               16.29 kB │ gzip:   5.74 kB
+dist/assets/progress-CO14WnTe.js                               16.35 kB │ gzip:   5.97 kB
+dist/assets/InspectionCapaPages-CUDNRL2q.js                    18.95 kB │ gzip:   5.63 kB
+dist/assets/SettingsPage-BLAep-uj.js                           19.07 kB │ gzip:   6.92 kB
+dist/assets/UserManagementPage-ZRrJORz-.js                     20.98 kB │ gzip:   7.57 kB
+dist/assets/Pagination-sWX3HMLF.js                             24.12 kB │ gzip:   7.15 kB
+dist/assets/index-BnLqtY8f.js                                  24.26 kB │ gzip:   8.11 kB
+dist/assets/index-CSZh9Xf5.js                                  24.56 kB │ gzip:   8.71 kB
+dist/assets/AppShell-BUGLMFWa.js                               24.73 kB │ gzip:   7.13 kB
+dist/assets/index-BVWfa8sR.js                                  33.85 kB │ gzip:  10.36 kB
+dist/assets/ProcurementReportRequestDetailPage-N5Ed8pth.js     35.98 kB │ gzip:  10.91 kB
+dist/assets/vendor-http-42ANG6Sg.js                            37.09 kB │ gzip:  14.81 kB
+dist/assets/index-D5YBF8e8.js                                  47.67 kB │ gzip:  17.13 kB
+dist/assets/vendor-state-CKgohu-g.js                           62.68 kB │ gzip:  22.03 kB
+dist/assets/index-Xf5VQjcA.js                                  66.90 kB │ gzip:  21.24 kB
+dist/assets/WorkbenchHomePage-BIqvLzzz.js                      73.15 kB │ gzip:  21.72 kB
+dist/assets/index-9LOfa3gl.js                                  74.13 kB │ gzip:  23.45 kB
+dist/assets/index-Ho2pZYcO.js                                  86.53 kB │ gzip:  28.58 kB
+dist/assets/index-CONUUh8x.js                                 105.53 kB │ gzip:  34.35 kB
+dist/assets/vendor-react-Bs3XLaLW.js                          179.02 kB │ gzip:  58.53 kB
+dist/assets/ResponsiveTable-CSwebHlp.js                       193.83 kB │ gzip:  60.36 kB
+dist/assets/index-DOFff1G5.js                                 295.03 kB │ gzip:  97.15 kB
+dist/assets/heic2any-DHKC1WfV.js                            1,352.91 kB │ gzip: 341.41 kB
+✓ built in 6.56s

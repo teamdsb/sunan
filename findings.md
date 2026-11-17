@@ -1,7 +1,7 @@
 ---
 status: operations
 owner: planning
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
@@ -552,3 +552,22 @@ replaced_by: []
 - W2 只覆盖后端 W2A/W2B/W2C；管理页面、业务权限旁路收口和消息配置留给后续 Wave。
 - 现有全局 ValidationPipe 已启用 `whitelist` 与 `forbidNonWhitelisted`，管理 DTO 可用字段白名单拒绝伪造管理员字段。
 - 设计文档为 `docs/superpowers/specs/2026-11-16-m9-wave2-user-directory-design.md`；来源修订号使用数据库序列，授权版本使用乐观锁。
+
+## 2026-11-17：M9 W5 初查
+- 工作树初始干净；W2-W4 有实际验收，W4 最终 PG/Redis 全量集成为23套件145项，历史 W3 环境阻断不是当前失败结论。
+- 真实企微全目录、实际送达、iOS/Android/桌面及生产恢复均无本轮证据，须明确未执行。
+- W2 migration down() 当前无人工授权/审计保护，需在合成存量演练中验证并按风险修复。
+
+### W5A 演练结果
+- W2 down 在真实 PG 中3项红灯（直接删除人工空角色/停用/审计）；新增删除前保护后5项绿灯。
+- 10种合成历史用户显式角色基线、UUID、实际 user_settings UserID 关联和额外合成 UUID 外键保留；迁移重复执行无待执行项，主 Secret 未入库。
+- pg_dump/pg_restore 恢复到独立数据库通过；故意错密钥保持故障，独立恢复材料可解密；暂停流量时配置版本从备份1递增超过曾用版本2至3，成功不重发、不确定不自动重发，已撤角色/停用不恢复。
+- 本地浏览器 API 初次 ts-node 未启用 --files 导致 ali-oss 本地声明未加载，改为 --files，未改生产类型。
+
+### W5 浏览器发现并修复
+- React→Nest→PG 已接通；同步完成后4.5秒仍发3次相同批次读取。根因是清空 activeBatchId 后部门最新批次又把同一已完成 ID 恢复，持续轮询。
+- 添加真实 RTK Query+组件回归，在旧代码1800ms内批次读取从1增为2（红灯）；修复为不重新跟踪已保存的同一批次结果。
+- 已运行 API 全量集成25套件153项、unit31套件171项、Web61文件277项；preflight SQL 新增后受影响迁移专项5项重跑通过。
+- 浏览器核对人工财务部门+shipping跨同步/OAuth/旧JWT保留，320px恢复跟随部门与自动角色回到部门8/crew；通知草稿不保存，覆盖v1、留空Secret保留v2、显式清除回主应用v3，刷新不回显Secret。320px/1440px均无页面横向溢出。
+- 全量门禁601项不重复计入专项重跑；API lint/build、Web build和两份YAML/实际Nest Swagger校验均通过。Ant Design静态message/circular references及其他开发提示如实记录，不声称零告警。
+- 本地结论为有条件通过；全企业目标核对、真实独立应用送达/主应用边界、三端/弱网、生产恢复/多实例密钥/兼容镜像仍开放，Word/PPT未补M9实拍。

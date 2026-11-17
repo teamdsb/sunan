@@ -1,0 +1,6 @@
+### Result
+{"secretInputBlank":true,"secretOmitted":true,"httpStatus":200,"config":{"corpId":"ww-test-corp","mainCorpId":"ww-test-corp","mainAgentId":"1000001","configured":true,"source":"admin_override","agentId":"2000001","configVersion":2,"secretStored":true,"encryptionKeyAvailable":true,"configurationError":false,"encryptionKeyRotationAvailable":false,"updatedAt":"2026-11-17T02:24:11.668Z"},"viewport":{"width":320,"height":900},"scrollWidth":320}
+### Ran Playwright code
+```js
+await (async (page) => { const before = await page.getByRole("textbox", { name: "通知应用 Secret" }).inputValue(); const responsePromise = page.waitForResponse(r => r.url().endsWith("/settings/notification") && r.request().method() === "PATCH"); await page.getByRole("button", {name:"save 保存覆盖"}).click(); const response = await responsePromise; const body = response.request().postDataJSON(); const result = await response.json(); await page.getByText("当前来源：后台覆盖；应用 AgentID：2000001；配置版本：2").waitFor(); await page.screenshot({path:"output/playwright/m9-w5-notification-320.png",fullPage:true}); return {secretInputBlank:before.length===0, secretOmitted:!Object.prototype.hasOwnProperty.call(body,"secret"), httpStatus:response.status(), config:result.data, viewport:page.viewportSize(),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth)}; })(page);
+```
