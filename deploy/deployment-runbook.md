@@ -47,10 +47,10 @@ curl -fsS https://api.qzssncb.com/api/health/ready
 
 ## 同步源码
 
-交付物包括不含私密环境文件的源码快照、源码 SHA256 清单、`linux/amd64` 镜像归档和镜像 SHA256。使用独立发布批次（例如 `20260920202534`），即使版本仍为 `0.0.8` 也不能覆盖上一批次备份。
+交付物包括不含私密环境文件的源码快照、源码 SHA256 清单、`linux/amd64` 镜像归档和镜像 SHA256。使用独立发布批次（例如 `20261117235900`），即使版本仍为 `0.0.9` 也不能覆盖上一批次备份。
 
 1. 冻结工作区源码；排除 `.git`、`node_modules`、构建输出、`output` 和私密 `.env*`，保留 `.env.example`。记录源码清单和归档 SHA256。
-2. 将源码归档上传到 `/var/backups/sunan/redeploy-0.0.8-<批次>/`，校验 SHA256 后解压至 `/srv/sunan/sunan-source/upload-<批次>`。
+2. 将源码归档上传到 `/var/backups/sunan/redeploy-0.0.9-<批次>/`，校验 SHA256 后解压至 `/srv/sunan/sunan-source/upload-<批次>`。
 3. 完成镜像构建、上传和校验后，在切换前将 `current` 移至 `backup-<批次>`，再将 `upload-<批次>` 改名为 `current`，更新 `latest` 软链接。
 4. 保留旧源码和镜像回滚标签；发布过程不自动清理历史备份。
 
@@ -74,15 +74,15 @@ docker exec sunan-nginx nginx -s reload
 
 ## 构建和启动
 
-### 0.0.8 升级注意事项
+### 0.0.9 升级注意事项
 
-- 本次新增 `1710000025000-reminder-expiry-cycle` 与 `1710000026000-file-orphan-retention`。先构建 API/Web/Nginx 镜像，保留旧运行镜像 ID 和源码，再停止旧 API、备份数据库并启动新 API，避免旧提醒扫描器与新索引并行工作。
-- 生产 `.env` 修改前须备份，只将 `SUNAN_VERSION` 更新为 `0.0.8`。前端不增加版本显示。
+- 本次将 M9-W2 `1710000027000-m9-wave2-user-directory` 与 M9-W4 `1710000028000-m9-wave4-notifications` 增量迁移带入生产。先构建 API/Web/Nginx 镜像，保留旧运行镜像 ID 和源码；完成数据库备份与恢复演练后，先由新 API 执行迁移，再按健康门禁切换 Web/Nginx。
+- 生产 `.env` 修改前须备份，只将 `SUNAN_VERSION` 更新为 `0.0.9`。前端不增加版本显示。
 - API 启动命令自动执行 migration 和幂等 seed；API readiness 通过后再切换 Web/Nginx。可用 `up -d --no-deps --no-build` 分服务切换，避免重建数据库、Redis、OSS。
 - 2026-09-20 起生产目录迁至磁盘上的 `/srv/sunan`。旧 `/dev/sunan` 仅为兼容软链接，由 `/etc/tmpfiles.d/sunan-compat.conf` 在开机时创建；禁止在 `/dev` 下存放生产数据。备份使用 `/var/backups/sunan`。
-- 生产服务器只有约 3.5 GiB 内存，禁止同时在生产构建 API 和 Web。本次使用本机 `linux/amd64` 镜像构建，再传至服务器执行 `docker load` 与 `up -d --no-deps --no-build`。构建镜像前为旧运行镜像 ID 创建独立回滚标签；同为 0.0.8 的发布用批次、源码哈希、镜像 ID 区分。
-- 文件回收迁移会转存采购附件解除审计快照，并给历史解除附件设置新的 24 小时宽限期。发布前备份数据库及 OSS；先在隔离数据库恢复备份并演练迁移。
-- 不可直接套用下方旧源码回滚流程恢复 0.0.7：提醒唯一索引和附件审计已变化，需先停止新 API 并评估兼容性。数据库或 OSS 恢复会覆盖发布后数据，必须明确确认后执行；已回收对象不能只靠数据库回退恢复。
+- 生产服务器只有约 3.5 GiB 内存，禁止同时在生产构建 API 和 Web。本次使用本机 `linux/amd64` 镜像构建，再传至服务器执行 `docker load` 与 `up -d --no-deps --no-build`。构建镜像前为旧运行镜像 ID 创建独立回滚标签；同为 0.0.9 的发布用批次、源码哈希、镜像 ID 区分。
+- 发布前备份数据库及 OSS；先在隔离数据库恢复备份并演练两条 M9 migration。迁移只新增 M9 表/列/约束，不删除既有业务数据；API 启动会幂等执行 schema migration 和 seed。
+- 不可直接套用旧源码回滚流程恢复 0.0.8：M9 授权审计、通知配置和投递记录存在后不得用 migration down 清除。需先停止新 API 并评估兼容性；数据库或 OSS 恢复会覆盖发布后数据，必须明确确认后执行。
 
 ### 本机构建与镜像传输
 
@@ -90,7 +90,7 @@ docker exec sunan-nginx nginx -s reload
 
 ```bash
 RELEASE=20260920202534 # 每次使用新的批次
-VERSION=0.0.8
+VERSION=0.0.9
 # 已创建的构建器示例：docker buildx create --name sunan-release --driver docker-container --driver-opt memory=2g,memory-swap=3g,cpu-quota=200000
 # 以下命令在冻结源码目录运行。
 docker buildx build --builder sunan-release --platform linux/amd64 --load \
@@ -110,7 +110,7 @@ docker save -o images.tar "sunan-api:release-$RELEASE" "sunan-web:release-$RELEA
 shasum -a 256 images.tar > images.tar.sha256
 ```
 
-将归档和校验文件传至对应服务器备份目录，执行 `sha256sum -c images.tar.sha256` 与 `docker load -i images.tar`。核对三个镜像均为 `amd64`，版本标签为 `0.0.8`，批次正确。保留运行中容器的实际镜像 ID，并分别加 `rollback-<批次>` 标签后，才将新镜像标记为 `sunan-api:0.0.8`、`sunan-web:0.0.8`、`sunan-nginx:0.0.8`。
+将归档和校验文件传至对应服务器备份目录，执行 `sha256sum -c images.tar.sha256` 与 `docker load -i images.tar`。核对三个镜像均为 `amd64`，版本标签为 `0.0.9`，批次正确。保留运行中容器的实际镜像 ID，并分别加 `rollback-<批次>` 标签后，才将新镜像标记为 `sunan-api:0.0.9`、`sunan-web:0.0.9`、`sunan-nginx:0.0.9`。
 
 ### 分服务切换
 
@@ -158,7 +158,7 @@ ssh -i /Users/yuan/Downloads/teamdsb-sunan.pem root@39.106.103.45 \
 
 ```bash
 set -e
-B=/var/backups/sunan/redeploy-0.0.8-20260920202534 # 选择实际批次
+B=/var/backups/sunan/redeploy-0.0.9-20261117235900 # 选择实际批次
 R=/srv/sunan
 docker compose -p deploy --env-file "$R/deploy/.env" -f "$R/deploy/docker-compose.yml" -f "$B/rollback-images.yml" \
   up -d --no-deps --no-build --force-recreate --wait --wait-timeout 150 sunan-api

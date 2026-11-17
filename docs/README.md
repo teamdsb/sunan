@@ -39,7 +39,7 @@ replaced_by: []
 | Claude Code 上下文 | [../CLAUDE.md](../CLAUDE.md) |
 | 项目概览 | [../README.md](../README.md) |
 | 原始产品基线 | [需求文档.md](需求文档.md) |
-| 苏南平台操作手册（0.0.8，2026-10-01 图文更新） | [Markdown](handbook/苏南船舶管理系统操作手册.md) · [Word](handbook/苏南船舶管理系统操作手册.docx) · [PPTX 操作介绍](handbook/苏南船舶管理系统操作介绍手册.pptx) · [截图更新清单](handbook/2026-09-20-截图更新清单.md) |
+| 苏南平台操作手册（0.0.9，2026-10-01 图文更新） | [Markdown](handbook/苏南船舶管理系统操作手册.md) · [Word](handbook/苏南船舶管理系统操作手册.docx) · [PPTX 操作介绍](handbook/苏南船舶管理系统操作介绍手册.pptx) · [截图更新清单](handbook/2026-09-20-截图更新清单.md) |
 | 执行计划入口 | [execplans.md](execplans.md) |
 | M7 历史修复执行计划 | [archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) |
 | M8 总验收与最终功能核查 | [archive/acceptance/safety/acceptance-m8-overall.md](archive/acceptance/safety/acceptance-m8-overall.md)、[archive/audits/M8-最终功能实现核查.md](archive/audits/M8-最终功能实现核查.md) |
