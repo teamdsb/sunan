@@ -1,13 +1,13 @@
 ---
 status: current-source
 owner: planning
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # M9 Wave 1 身份、配置与迁移基线
 
-> 本文是 M9-W1A/W1B/W1C 的冻结结果。它记录当前源码证据和后续实现契约；Wave 2、Wave 4 未完成前，目标字段、接口和配置行为均不视为已上线。
+> 本文是 M9-W1A/W1B/W1C 的冻结结果，保留冻结时的源码盘点和验证状态。后续 W2-W4 已实现并有条件验收；当前实施证据见 [W2](../acceptance/M9-wave-2.md)、[W3](../acceptance/M9-wave-3.md)、[W4](../acceptance/M9-wave-4.md)，不代表生产上线。通知接口、实际字段和轮换操作以 [消息规格](wecom/message-push-spec.md) 及 [缓存规格](wecom/token-cache-spec.md) 为准。
 
 ## 1. 范围与证据
 

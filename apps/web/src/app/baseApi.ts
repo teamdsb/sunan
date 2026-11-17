@@ -254,6 +254,8 @@ export const baseApi = createApi({
     'ReminderDashboard',
     'ShipMonitor',
     'UserSettings',
+    'NotificationDelivery',
+    'NotificationConfig',
     'UserDirectory',
     'File',
     'MasterData',

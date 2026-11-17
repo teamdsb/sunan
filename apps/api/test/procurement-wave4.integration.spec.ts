@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { PDFDocument } from 'pdf-lib';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { OssService } from 'src/modules/files/oss.service';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -17,7 +18,7 @@ import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase 
 
 let currentUser = {
   userId: 'shipping-applicant',
-  corpId: 'ww-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: 'Shipping Applicant',
   avatar: null,
   departments: ['船务部'],
@@ -87,7 +88,7 @@ describe('Procurement Wave4 integration', () => {
       wecomUserRepository.create([
         {
           userId: 'shipping-applicant',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Shipping Applicant',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
@@ -98,7 +99,7 @@ describe('Procurement Wave4 integration', () => {
         },
         {
           userId: 'shipping-manager',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Shipping Manager',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
@@ -109,7 +110,7 @@ describe('Procurement Wave4 integration', () => {
         },
         {
           userId: 'finance-manager',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Finance Manager',
           avatarUrl: null,
           departmentCodes: ['finance_dept'],
@@ -120,7 +121,7 @@ describe('Procurement Wave4 integration', () => {
         },
         {
           userId: 'go-approver',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'General Office',
           avatarUrl: null,
           departmentCodes: ['general_office'],

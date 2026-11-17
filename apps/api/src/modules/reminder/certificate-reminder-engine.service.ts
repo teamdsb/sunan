@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
-import { IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import Redis from 'ioredis';
 
 import { appEnv } from 'src/config/env';
@@ -168,7 +168,7 @@ export class CertificateReminderEngineService {
 
         const existingReminder = reminderByCycleKey.get(reminderCycleKey);
         if (existingReminder) {
-          if (existingReminder.status === 'sent' || existingReminder.status === 'acknowledged') {
+          if (existingReminder.status === 'sent' || existingReminder.status === 'acknowledged' || existingReminder.status === 'uncertain') {
             continue;
           }
 
@@ -239,17 +239,21 @@ export class CertificateReminderEngineService {
             ]);
             createdCount += 1;
           } else {
-            await this.reminderRepository.save(reminder);
+            const claim = await this.reminderRepository.update(
+              { id: reminder.id, status: Not(In(['acknowledged', 'resolved'])) },
+              { scheduledDate: reminder.scheduledDate, reminderType: reminder.reminderType, daysBeforeExpiry: reminder.daysBeforeExpiry, status: 'dispatching', sentAt: null, failureReason: null },
+            );
+            if (!claim.affected) continue;
           }
 
           const message = this.buildMessage(reminder, certificate.expiryDate, reminderType, daysUntilExpiry);
           assertLeaseValid();
           const unavailableReason = await this.recipientUnavailableReason(recipientUserId);
-          if (unavailableReason) {
+          if (unavailableReason || (this.authorizationService && !await this.canReceiveNotification(reminder.id, recipientUserId))) {
             reminder.status = 'failed';
-            reminder.failureReason = unavailableReason;
+            reminder.failureReason = unavailableReason ?? 'recipient unavailable: business eligibility changed';
             failedCount += 1;
-            await this.reminderRepository.save(reminder);
+            await this.persistDeliveryResult(reminder);
             reminderByCycleKey.set(reminderCycleKey, reminder);
             continue;
           }
@@ -258,9 +262,17 @@ export class CertificateReminderEngineService {
             title: message.title,
             description: message.description,
             url: message.url,
+            sourceType: 'certificate_reminder',
+            sourceId: reminder.id,
+            dedupeKey: `certificate-reminder:${reminder.id}`,
           });
+          if (result.inFlight) continue;
 
-          if (result.success === false) {
+          if (result.uncertain) {
+            reminder.status = 'uncertain';
+            reminder.failureReason = result.failureReason ?? '发送结果待人工核对';
+            failedCount += 1;
+          } else if (result.success === false) {
             reminder.status = 'failed';
             reminder.failureReason = result.failureReason ?? 'WeCom API error';
             failedCount += 1;
@@ -286,7 +298,7 @@ export class CertificateReminderEngineService {
           await this.releaseSendLock(reminder, sendLockToken);
         }
 
-        await this.reminderRepository.save(reminder);
+        await this.persistDeliveryResult(reminder);
         reminderByCycleKey.set(reminderCycleKey, reminder);
       }
     }
@@ -296,6 +308,24 @@ export class CertificateReminderEngineService {
     );
 
     return { createdCount, sentCount, failedCount };
+  }
+
+  async canReceiveNotification(reminderId: string, recipientUserId: string): Promise<boolean> {
+    const reminder = await this.reminderRepository.findOne({ where: { id: reminderId, recipientUserId } });
+    if (!reminder || reminder.status === 'acknowledged' || reminder.status === 'resolved') return false;
+    const certificate = await this.certificateRepository.findOne({ where: { id: reminder.certificateId, deletedAt: IsNull() } });
+    if (!certificate || certificate.status === 'archived' || !certificate.reminderEnabled || certificate.expiryDate !== reminder.certificateExpiryDate) return false;
+    const [users, personnel] = await Promise.all([
+      this.wecomUserRepository.find(), this.personnelRepository.find({ where: { deletedAt: IsNull() } }),
+    ]);
+    return this.resolveRecipients({ certificate, type: undefined, users, personnelById: new Map(personnel.map((row) => [row.id, row])), equipmentById: new Map(), vesselById: new Map(), vehicleById: new Map() }).includes(recipientUserId);
+  }
+
+  private async persistDeliveryResult(reminder: CertificateReminderEntity) {
+    await this.reminderRepository.update(
+      { id: reminder.id, status: Not(In(['acknowledged', 'resolved'])) },
+      { status: reminder.status, sentAt: reminder.sentAt, failureReason: reminder.failureReason },
+    );
   }
 
   private resolveReminderType(daysUntilExpiry: number, advanceDays: number): ReminderType | null {

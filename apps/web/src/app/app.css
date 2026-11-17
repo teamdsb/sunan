@@ -2153,6 +2153,11 @@ body {
     align-items: start;
   }
 
+  .shell-layout-enterprise:not(.shell-layout-my-home) .notification-save-button:not(:disabled):hover,
+  .shell-layout-enterprise:not(.shell-layout-my-home) .notification-save-button:not(:disabled):focus-visible {
+    color: #ffffff;
+  }
+
   .shell-layout-enterprise:not(.shell-layout-my-home)
     .settings-card
     .ant-form-item {

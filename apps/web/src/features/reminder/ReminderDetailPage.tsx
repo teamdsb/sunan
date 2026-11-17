@@ -151,7 +151,7 @@ export function ReminderDetailPage() {
 
               <Card title="处理记录" size="small">
                 <Descriptions column={1} bordered size="small">
-                  <Descriptions.Item label="发送时间">{reminder.sentAt ? formatShanghaiDateTime(reminder.sentAt) : '未发送'}</Descriptions.Item>
+                  <Descriptions.Item label="发送时间">{reminder.sentAt ? formatShanghaiDateTime(reminder.sentAt) : reminder.status === 'uncertain' ? '送达待核对' : reminder.status === 'dispatching' ? '发送中' : '未发送'}</Descriptions.Item>
                   <Descriptions.Item label="确认时间">{reminder.acknowledgedAt ? formatShanghaiDateTime(reminder.acknowledgedAt) : '未确认'}</Descriptions.Item>
                   <Descriptions.Item label="确认人">{reminder.acknowledgedBy ?? '未确认'}</Descriptions.Item>
                 </Descriptions>

@@ -14,6 +14,7 @@ import {
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CertificateTypeEntity } from 'src/database/entities/certificate-type.entity';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -24,7 +25,7 @@ import { OssService } from 'src/modules/files/oss.service';
 
 let currentUser = {
   userId: 'manager-1',
-  corpId: 'ww-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: 'Manager',
   avatar: null,
   departments: ['船务部'],

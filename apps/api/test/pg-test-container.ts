@@ -1,6 +1,7 @@
 import { ReminderExpiryCycle1710000025000 } from 'src/database/migrations/1710000025000-reminder-expiry-cycle';
 import { FileOrphanRetention1710000026000 } from 'src/database/migrations/1710000026000-file-orphan-retention';
 import { M9Wave2UserDirectory1710000027000 } from 'src/database/migrations/1710000027000-m9-wave2-user-directory';
+import { M9Wave4Notifications1710000028000 } from 'src/database/migrations/1710000028000-m9-wave4-notifications';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { ImagePullPolicy } from 'testcontainers';
@@ -45,6 +46,9 @@ import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { WecomDepartmentEntity } from 'src/database/entities/wecom-department.entity';
 import { WecomSyncBatchEntity } from 'src/database/entities/wecom-sync-batch.entity';
 import { WecomUserAuditEntity } from 'src/database/entities/wecom-user-audit.entity';
+import { WecomNotificationConfigEntity } from 'src/database/entities/wecom-notification-config.entity';
+import { WecomNotificationConfigAuditEntity } from 'src/database/entities/wecom-notification-config-audit.entity';
+import { WecomMessageDeliveryEntity } from 'src/database/entities/wecom-message-delivery.entity';
 import { WecomApprovalCallbackEventEntity } from 'src/database/entities/wecom-approval-callback-event.entity';
 import { WecomApprovalInstanceSyncEntity } from 'src/database/entities/wecom-approval-instance-sync.entity';
 import { WecomApprovalTemplateBindingEntity } from 'src/database/entities/wecom-approval-template-binding.entity';
@@ -120,6 +124,9 @@ const ALL_TEST_ENTITIES = [
   WecomDepartmentEntity,
   WecomSyncBatchEntity,
   WecomUserAuditEntity,
+  WecomNotificationConfigEntity,
+  WecomNotificationConfigAuditEntity,
+  WecomMessageDeliveryEntity,
   FileEntity,
   FileRecycleJobEntity,
   EvidenceAuditEntity,
@@ -224,6 +231,7 @@ const ALL_TEST_MIGRATIONS = [
   ReminderExpiryCycle1710000025000,
   FileOrphanRetention1710000026000,
   M9Wave2UserDirectory1710000027000,
+  M9Wave4Notifications1710000028000,
 ];
 
 type StartedPgContainer = Awaited<ReturnType<PostgreSqlContainer['start']>>;

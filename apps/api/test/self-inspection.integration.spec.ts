@@ -10,6 +10,7 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -30,7 +31,7 @@ import {
 
 const user = (id: string, roles: string[]): CurrentUser => ({
   userId: id,
-  corpId: 'self-inspection-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: id,
   roles: ['all_authenticated', ...roles],
   avatar: null,
@@ -102,7 +103,7 @@ describe('船舶自查完整闭环', () => {
     ] as const) {
       await source.getRepository(WecomUserEntity).save({
         userId: id,
-        corpId: 'self-inspection-test',
+        corpId: appEnv.WECOM_CORP_ID,
         name: {
           issuer: '下发人员',
           executor: '执行船员',

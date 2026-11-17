@@ -1,0 +1,148 @@
+{
+  "date": "2026-11-17",
+  "baselineCommit": "678e2e1",
+  "apiUnit": {
+    "suitesPassed": 31,
+    "testsPassed": 171,
+    "log": "/tmp/sunan-fix-api-unit-final.log"
+  },
+  "web": {
+    "filesPassed": 60,
+    "testsPassed": 276
+  },
+  "wave4Integration": {
+    "suitesPassed": 2,
+    "testsPassed": 20,
+    "backends": "PostgreSQL 16 + Redis 7 testcontainers; WeCom HTTP mocked",
+    "includes": "16 PostgreSQL notification cases + 4 Redis/cache/lifecycle cases; included in the final full integration run"
+  },
+  "apiIntegration": {
+    "suitesPassed": 23,
+    "suitesFailed": 0,
+    "testsPassed": 145,
+    "testsFailed": 0,
+    "baselineSuitesPassed": 11,
+    "baselineTestsPassed": 85,
+    "baselineTestsFailed": 40,
+    "newFailureNames": [],
+    "baselineFailureNames": [
+      "CertificateController integration › exposes certificate reference data for create forms",
+      "CertificateController integration › rejects date-only certificate values and accepts ISO date-times",
+      "CertificateController integration › restricts reminder recipient identities to certificate managers",
+      "CertificateController integration › supports create/filter/grouped/update/delete and file bind",
+      "CertificateController integration › validates polymorphic owner",
+      "CertificateController integration › 换证附件无效时保留原证照和扫描件，不提交部分更新",
+      "EnterprisePolicyController integration › enforces department scope for manager update",
+      "EnterprisePolicyController integration › publishes versions without deprecating another department record",
+      "EnterprisePolicyController integration › supports create/list/detail/versions/publish/bind and blocks employee write",
+      "EnterpriseProfileController integration › blocks normal employee from create and allows manager CRUD with file bind/unbind",
+      "EnterpriseProfileController integration › enforces department scope for managers",
+      "FilesController integration › lets an authorized department manager unlink another uploader file while preserving shared references",
+      "Plan task integration › atomically claims one queued delivery when two workers run concurrently",
+      "Plan task integration › audits reschedule and cancellation and removes cancelled work from todo and completion denominator",
+      "Plan task integration › commits transfer, audit log and notification outbox atomically and permits safe replay after rollback",
+      "Plan task integration › persists generation runs and does not duplicate tasks under concurrent generation",
+      "Plan task integration › preserves transfer history, revokes the old executor and allows an effective delegate",
+      "Plan task integration › reconciles a task whose participant write was interrupted without duplicating the task",
+      "Plan task integration › records message failure, retries the same delivery and deduplicates successful reminders",
+      "Plan task integration › removes an already-completed participant from todo until the remaining participant finishes",
+      "Plan task integration › rolls back task creation atomically and records a failed occurrence when participant persistence fails",
+      "Plan task integration › runs the daily scheduler and deduplicates overdue escalation by Shanghai cycle",
+      "Plan task integration › uses the same task source for todo, participated, completed, overdue and plan completion rate",
+      "Procurement Wave4 integration › supports print export and wecom notifications for order/report workflows",
+      "ReminderController integration › allows acknowledge for self and same-department management users and rejects repeat acknowledge",
+      "ReminderController integration › limits shipping managers to reminders within their responsibility scope",
+      "ReminderController integration › 更新证照立即消除旧待办，并允许同一天为新的到期周期生成提醒",
+      "inspection and CAPA integration › keeps failed automatic transfer jobs and reconciles them after the constraint is repaired",
+      "inspection and CAPA integration › keeps the issued template snapshot, blocks premature multi-person summary, and deduplicates automatic nonconformity transfer",
+      "workbench business completion › assigns learning to actual members and isolates personal confirmation with idempotent completion",
+      "workbench business completion › closes completed non-approval learning and accepts duplicate personal confirmation",
+      "workbench business completion › uploads learning materials under the record lock and freezes them on publication",
+      "船舶自查完整闭环 › 下发必须有真实船舶、可用人员和独立审核人，名单仅管理人员可见",
+      "船舶自查完整闭环 › 合格检查被退回后重新检查；结构不完整的历史记录仍可明确作废",
+      "船舶自查完整闭环 › 打印包含中文业务数据、操作人、审核意见和真实嵌入照片，读取失败不会生成假成功",
+      "船舶自查完整闭环 › 执行人可找到任务，其他船员不能读取、上传或打印",
+      "船舶自查完整闭环 › 拒绝盗用照片、无效图片、重复引用和错误分类，事务失败不留下完成状态",
+      "船舶自查完整闭环 › 检查合格无需虚构整改照片，仍需独立审核后才能打印",
+      "船舶自查完整闭环 › 退回后必须重新整改并上传新证据，重复审核只提交一次",
+      "船舶自查完整闭环 › 阻止跳步骤、无证据关闭、执行人自审及通用动作绕过"
+    ],
+    "preRepairW4Run": {
+      "suitesPassed": 13,
+      "suitesFailed": 10,
+      "testsPassed": 103,
+      "testsFailed": 40,
+      "sameFailuresAsBaseline": true
+    },
+    "baselineSuitesFailed": 10,
+    "closedBaselineFailureCount": 40,
+    "remainingBaselineFailureNames": [],
+    "command": "pnpm test:integration --runInBand",
+    "exitCode": 0,
+    "normalExit": true,
+    "forceExit": false,
+    "log": "/tmp/sunan-fix-api-integration-final.log",
+    "durationSeconds": 94.855
+  },
+  "browser": {
+    "data": "synthetic API routes in isolated Playwright session, no real WeCom send",
+    "mobileViewport": 320,
+    "mobilePageScrollWidth": 320,
+    "desktopViewport": 1440,
+    "blankSecretOmitted": true,
+    "reloadVersionReused": 4,
+    "read503Recovery": true,
+    "screenshots": [
+      "m9-w4-mobile-320.png",
+      "m9-w4-config-read-error-320.png",
+      "m9-w4-desktop-1440.png"
+    ],
+    "console": "Expected synthetic 503; React Router future warnings and Ant Design static-message/circular-reference development warnings; no uncaught functional exception observed"
+  },
+  "notExecuted": [
+    "real WeCom delivery and main-app OAuth/contact/SDK/callback regression",
+    "iOS/Android/desktop WeCom device tests",
+    "production key backup/restore and multi-host rollout",
+    "production deployment"
+  ],
+  "finalChecks": {
+    "apiLint": true,
+    "apiBuild": true,
+    "webBuild": true,
+    "openapiSettings": true,
+    "openapiCertificateReminder": true,
+    "targetedWebFiles": 3,
+    "targetedWebTestsPassed": 24,
+    "docInventoryMarkdownCount": 284,
+    "docIndex": true,
+    "gitDiffCheck": true,
+    "apiUnit": true,
+    "apiIntegration": true,
+    "apiIntegrationNormalExit": true
+  },
+  "repairVerification": {
+    "date": "2026-11-17",
+    "closedIssue": "W4-F1",
+    "failedBefore": 40,
+    "failedAfter": 0,
+    "changes": [
+      "AuthModule explicitly imports WecomModule",
+      "Normal-member fixtures use current configured corporation",
+      "Plan/inspection fixtures include available directory and active personnel identities",
+      "Shipping manager fixture includes department ID 6",
+      "Managed Redis client disconnects on Nest application shutdown",
+      "Plan scheduler awaits its in-flight cycle and does not reschedule after stopping"
+    ],
+    "newRegressionTests": {
+      "redisLifecycle": 2,
+      "planSchedulerShutdown": 1
+    },
+    "schedulerRedGreen": {
+      "red": "/tmp/sunan-fix-scheduler-red.log",
+      "green": "/tmp/sunan-fix-scheduler-green.log"
+    },
+    "review": "Independent read-only review completed; the scheduler shutdown finding was fixed and re-reviewed; no remaining confirmed findings",
+    "originalAssertionsPreserved": true,
+    "permissionChecksRelaxed": false
+  }
+}

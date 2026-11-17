@@ -2148,6 +2148,7 @@ export class ProcurementService {
       `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.toDepartmentLabel(order.departmentCode)} · ${this.escapeHtml(order.title)}</div><div class="highlight">金额：¥${Number(order.amount).toFixed(2)}</div>`,
       `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
       '立即审批',
+      `procurement-order:${order.id}:pending:${approvalLevel}:cycle-${order.submittedAt?.getTime() ?? 0}`,
     );
   }
 
@@ -2167,6 +2168,7 @@ export class ProcurementService {
         `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.escapeHtml(order.title)}</div><div class="highlight">审批结果：已通过</div>`,
         `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
         '查看详情',
+        `procurement-order:${order.id}:result:${action}:${order.status}:cycle-${order.submittedAt?.getTime() ?? 0}`,
       );
       return;
     }
@@ -2179,6 +2181,7 @@ export class ProcurementService {
         `<div class="gray">单号：${order.orderNo}</div><div class="normal">${this.escapeHtml(order.title)}</div><div class="highlight">审批结果：${resultText}</div>`,
         `https://${appEnv.APP_DOMAIN}/procurement/orders/${order.id}`,
         '查看详情',
+        `procurement-order:${order.id}:result:${action}:${order.status}:cycle-${order.submittedAt?.getTime() ?? 0}`,
       );
     }
   }
@@ -2201,6 +2204,7 @@ export class ProcurementService {
       `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">请在系统中完成审批</div>`,
       `https://${appEnv.APP_DOMAIN}/procurement/report-approvals`,
       '查看报表',
+      `procurement-report:${report.id}:pending:${approvalLevel}:cycle-${report.submittedAt?.getTime() ?? 0}`,
     );
   }
 
@@ -2225,6 +2229,7 @@ export class ProcurementService {
         `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">审批结果：已通过</div>`,
         `https://${appEnv.APP_DOMAIN}/procurement/report-requests/${report.id}`,
         '查看详情',
+        `procurement-report:${report.id}:result:${action}:${report.status}:cycle-${report.submittedAt?.getTime() ?? 0}`,
       );
       return;
     }
@@ -2237,6 +2242,7 @@ export class ProcurementService {
         `<div class="gray">单号：${report.reportNo}</div><div class="normal">${this.getReportTitle(report)}</div><div class="highlight">审批结果：${resultText}</div>`,
         `https://${appEnv.APP_DOMAIN}/procurement/report-requests/${report.id}`,
         '查看详情',
+        `procurement-report:${report.id}:result:${action}:${report.status}:cycle-${report.submittedAt?.getTime() ?? 0}`,
       );
     }
   }
@@ -2280,7 +2286,7 @@ export class ProcurementService {
         const effective = this.effectiveAuthorization(row);
         return Boolean(
           effective &&
-          (effective.departmentCodes.includes(departmentCode) ||
+          (effective.roles.includes(DEPARTMENT_ROLE_MAP[departmentCode]) ||
             effective.roles.includes('system_admin')),
         );
       })
@@ -2331,12 +2337,34 @@ export class ProcurementService {
     };
   }
 
+  async canReceiveNotification(dedupeKey: string, recipientUserId: string): Promise<boolean> {
+    const member = await this.wecomUserRepository.findOne({ where: { userId: recipientUserId } });
+    if (!member || !this.authorizationService) return false;
+    let user: CurrentUser;
+    try { user = this.authorizationService.toCurrentUser(member); } catch { return false; }
+    const [kind, id, event, actionOrLevel, status] = dedupeKey.split(':');
+    if (kind === 'procurement-order') {
+      const order = await this.orderRepository.findOne({ where: { id, deletedAt: IsNull() } });
+      if (!order || !dedupeKey.includes(`:cycle-${order.submittedAt?.getTime() ?? 0}`)) return false;
+      if (event === 'pending') return this.resolveApprovalLevel(order, user) === actionOrLevel;
+      if (event === 'result') return order.createdBy === recipientUserId && order.status === status;
+    }
+    if (kind === 'procurement-report') {
+      const report = await this.reportRepository.findOne({ where: { id, deletedAt: IsNull() } });
+      if (!report || !dedupeKey.includes(`:cycle-${report.submittedAt?.getTime() ?? 0}`)) return false;
+      if (event === 'pending') return this.resolveReportApprovalLevel(report, user) === actionOrLevel;
+      if (event === 'result') return report.createdBy === recipientUserId && report.status === status;
+    }
+    return false;
+  }
+
   private async safeSendTextCard(
     userIds: string[],
     title: string,
     description: string,
     url: string,
     btnText = '查看详情',
+    dedupeKey = `procurement:${randomUUID()}`,
   ): Promise<void> {
     const uniqueUserIds = [
       ...new Set(userIds.map((item) => item.trim()).filter(Boolean)),
@@ -2348,13 +2376,17 @@ export class ProcurementService {
     const resolvedUsers = await this.wecomUserRepository.find({
       where: { userId: In(uniqueUserIds) },
     });
-    const resolvedUserIds = [
+    let resolvedUserIds = [
       ...new Set(
         resolvedUsers
           .filter((item) => this.effectiveAuthorization(item))
           .map((item) => item.userId),
       ),
     ];
+    if (this.authorizationService) {
+      const eligibility = await Promise.all(resolvedUserIds.map(async (userId) => ({ userId, eligible: await this.canReceiveNotification(dedupeKey, userId) })));
+      resolvedUserIds = eligibility.filter((entry) => entry.eligible).map((entry) => entry.userId);
+    }
     if (resolvedUserIds.length === 0) {
       return;
     }
@@ -2366,6 +2398,9 @@ export class ProcurementService {
         description,
         url,
         btnText,
+        sourceType: 'procurement',
+        sourceId: dedupeKey.split(':').slice(1, 2)[0] ?? 'unknown',
+        dedupeKey,
       });
 
       if (!result.success || result.invalidUser.length > 0) {

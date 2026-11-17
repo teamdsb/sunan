@@ -21,6 +21,8 @@ const baseEnvSchema = z.object({
   WECOM_CORP_ID: z.string().default('ww-test-corp'),
   WECOM_AGENT_ID: z.string().default('1000001'),
   WECOM_AGENT_SECRET: z.string().default('test-agent-secret'),
+  SYSTEM_SETTINGS_ENCRYPTION_KEY: z.preprocess((value) => typeof value === 'string' && !value.trim() ? undefined : value, z.string().trim().min(32).optional()),
+  SYSTEM_SETTINGS_ENCRYPTION_KEY_PREVIOUS: z.preprocess((value) => typeof value === 'string' && !value.trim() ? undefined : value, z.string().trim().min(32).optional()),
   WECOM_REDIRECT_URI: z.string().url().default('https://example.com/auth'),
   WEB_PUBLIC_URL: z.string().url().default('https://example.com'),
   API_PUBLIC_URL: z.string().url().default('https://api.example.com'),
@@ -84,6 +86,7 @@ const productionSecretMinimums = {
   REDIS_PASSWORD: 16,
   JWT_SECRET: 32,
   WECOM_AGENT_SECRET: 16,
+  SYSTEM_SETTINGS_ENCRYPTION_KEY: 32,
   WECOM_CALLBACK_TOKEN: 16,
   OSS_ACCESS_KEY_SECRET: 16,
 } as const;
@@ -93,6 +96,7 @@ const insecureProductionValues = new Set([
   '01234567890123456789012345678901',
   'ww-test-corp',
   'test-agent-secret',
+  'test-settings-encryption-key',
   'test-callback-token',
   'test-access-key-id',
   'test-access-key-secret',
@@ -102,6 +106,11 @@ const insecureProductionValues = new Set([
 ]);
 
 const envSchema = baseEnvSchema.superRefine((env, context) => {
+  for (const key of ['SYSTEM_SETTINGS_ENCRYPTION_KEY', 'SYSTEM_SETTINGS_ENCRYPTION_KEY_PREVIOUS'] as const) {
+    if (env[key] && (env[key] === env.JWT_SECRET || env[key] === env.WECOM_AGENT_SECRET)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: `${key} must be independent of JWT and WeCom credentials`, path: [key] });
+    }
+  }
   if (env.NODE_ENV !== 'production') {
     return;
   }

@@ -35,7 +35,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending, dispatching, sent, acknowledged, failed, resolved]
+            enum: [pending, dispatching, sent, acknowledged, failed, resolved, uncertain]
         - name: reminderType
           in: query
           schema:
@@ -241,7 +241,7 @@ components:
           enum: [upcoming, overdue]
         status:
           type: string
-          enum: [pending, dispatching, sent, acknowledged, failed, resolved]
+          enum: [pending, dispatching, sent, acknowledged, failed, resolved, uncertain]
         scheduledDate:
           type: string
           format: date

@@ -112,6 +112,10 @@ import { WecomUserDepartmentIds1710000022000 } from './migrations/1710000022000-
 import { WorkbenchVoyageSchemaV21710000023000 } from './migrations/1710000023000-workbench-voyage-schema-v2';
 import { CertificateReminderPreferences1710000024000 } from './migrations/1710000024000-certificate-reminder-preferences';
 import { M9Wave2UserDirectory1710000027000 } from './migrations/1710000027000-m9-wave2-user-directory';
+import { M9Wave4Notifications1710000028000 } from './migrations/1710000028000-m9-wave4-notifications';
+import { WecomNotificationConfigEntity } from './entities/wecom-notification-config.entity';
+import { WecomNotificationConfigAuditEntity } from './entities/wecom-notification-config-audit.entity';
+import { WecomMessageDeliveryEntity } from './entities/wecom-message-delivery.entity';
 
 export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -199,6 +203,9 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     WecomApprovalTemplateBindingEntity,
     WecomApprovalInstanceSyncEntity,
     WecomApprovalCallbackEventEntity,
+    WecomNotificationConfigEntity,
+    WecomNotificationConfigAuditEntity,
+    WecomMessageDeliveryEntity,
   ],
   migrations: [
     BootstrapAuth1710000000000,
@@ -229,6 +236,7 @@ export const buildTypeOrmOptions = (): TypeOrmModuleOptions => ({
     ReminderExpiryCycle1710000025000,
     FileOrphanRetention1710000026000,
     M9Wave2UserDirectory1710000027000,
+    M9Wave4Notifications1710000028000,
   ],
   synchronize: false,
 });

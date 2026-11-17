@@ -33,6 +33,8 @@ const reminderTypeLabelMap: Record<string, string> = {
 
 const reminderStatusLabelMap: Record<string, string> = {
   pending: '待处理',
+  dispatching: '发送中',
+  uncertain: '送达待核对',
   sent: '已发送',
   acknowledged: '已确认',
   resolved: '证照已更新或停用',

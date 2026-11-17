@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { appEnv } from 'src/config/env';
 
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
 
@@ -7,6 +8,7 @@ describe('WecomTokenService', () => {
     get: jest.fn(),
     set: jest.fn(),
     del: jest.fn(),
+    eval: jest.fn(),
   });
 
   const createGatewayMock = () => ({
@@ -42,7 +44,7 @@ describe('WecomTokenService', () => {
 
     await expect(service.getAccessToken()).resolves.toBe('fresh-token');
     expect(redis.set).toHaveBeenCalledWith(
-      'wecom:access_token',
+      `wecom:app:${appEnv.WECOM_CORP_ID}:${appEnv.WECOM_AGENT_ID}:v0:access_token`,
       'fresh-token',
       'EX',
       7000,
@@ -92,6 +94,31 @@ describe('WecomTokenService', () => {
     const service = new WecomTokenService(redis as never, gateway as never);
 
     await expect(service.getAccessToken()).resolves.toBe('retry-token');
-    expect(redis.del).toHaveBeenCalledWith('wecom:access_token');
+    expect(redis.del).toHaveBeenCalledWith(`wecom:app:${appEnv.WECOM_CORP_ID}:${appEnv.WECOM_AGENT_ID}:v0:access_token`);
+  });
+
+  it('isolates notification token and refresh locks by application and config version', async () => {
+    const redis = createRedisMock();
+    const gateway = createGatewayMock();
+    redis.get.mockResolvedValue(null);
+    redis.set.mockResolvedValue('OK');
+    gateway.getAccessToken
+      .mockResolvedValueOnce({ access_token: 'v7-token' })
+      .mockResolvedValueOnce({ access_token: 'v8-token' });
+    const service = new WecomTokenService(redis as never, gateway as never);
+
+    const base = { corpId: 'corp-x', agentId: 'agent-y', secret: 'never-in-key', source: 'admin_override' as const };
+    await expect(service.getAccessTokenForApp({ ...base, version: 7 })).resolves.toBe('v7-token');
+    await expect(service.getAccessTokenForApp({ ...base, version: 8 })).resolves.toBe('v8-token');
+
+    expect(redis.get).toHaveBeenNthCalledWith(1, 'wecom:app:corp-x:agent-y:v7:access_token');
+    expect(redis.get).toHaveBeenNthCalledWith(2, 'wecom:app:corp-x:agent-y:v8:access_token');
+    const setCalls = redis.set.mock.calls as unknown as Array<[string, string, ...unknown[]]>;
+    const lockKeys = setCalls.filter((call) => call[0].includes('refresh_lock')).map((call) => call[0]);
+    expect(lockKeys).toEqual([
+      'wecom:refresh_lock:app:corp-x:agent-y:v7:access_token',
+      'wecom:refresh_lock:app:corp-x:agent-y:v8:access_token',
+    ]);
+    expect(lockKeys.join('|')).not.toContain(base.secret);
   });
 });

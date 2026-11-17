@@ -179,7 +179,7 @@ export class SafetyTaskNotificationDeliveryEntity extends AuditedEntity {
   @Column({ name: 'message_type', type: 'varchar', length: 16 }) messageType!: string;
   @Column({ name: 'dedupe_key', type: 'varchar', length: 255 }) dedupeKey!: string;
   @Column({ name: 'payload_snapshot', type: 'jsonb', default: () => "'{}'::jsonb" }) payloadSnapshot!: Record<string, unknown>;
-  @Column({ type: 'varchar', length: 16, default: 'queued' }) status!: string;
+  @Column({ type: 'varchar', length: 16, default: 'queued' }) status!: 'queued' | 'dispatching' | 'sent' | 'failed' | 'skipped' | 'uncertain';
   @Column({ name: 'attempt_count', type: 'integer', default: 0 }) attemptCount!: number;
   @Column({ name: 'attempt_history', type: 'jsonb', default: () => "'[]'::jsonb" }) attemptHistory!: Array<Record<string, unknown>>;
   @Column({ name: 'wecom_errcode', type: 'integer', nullable: true }) wecomErrcode!: number | null;

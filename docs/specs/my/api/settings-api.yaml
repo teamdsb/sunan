@@ -1,18 +1,19 @@
 openapi: 3.0.3
 info:
   title: Settings API
-  version: 1.0.0
-  description: 用户设置模块 API 规格。
+  version: 1.1.0
+  description: 用户设置及M9 W4通知应用管理。所有notification接口仅env system_admin可用；连接验证不代表送达。
 servers:
-  - url: /api/v1
+- url: /api/v1
 tags:
-  - name: Settings
+- name: Settings
 security:
-  - bearerAuth: []
+- bearerAuth: []
 paths:
   /settings:
     get:
-      tags: [Settings]
+      tags:
+      - Settings
       summary: 获取当前用户设置
       responses:
         '200':
@@ -22,7 +23,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserSettingsResponse'
     patch:
-      tags: [Settings]
+      tags:
+      - Settings
       summary: 更新当前用户设置
       requestBody:
         required: true
@@ -37,6 +39,245 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserSettingsResponse'
+  /settings/notification:
+    get:
+      tags:
+      - Settings
+      summary: 读取当前通知配置
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationConfig'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+    patch:
+      tags:
+      - Settings
+      summary: 整组保存或明确清除覆盖
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationConfig'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+        '400':
+          description: 字段类型或白名单校验失败
+        '409':
+          description: 版本冲突或当前投递/业务状态不允许动作
+        '422':
+          description: 配置不完整、AgentID变更未重填Secret或缺少轮换密钥
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationConfigUpdate'
+  /settings/notification/connection-test:
+    post:
+      tags:
+      - Settings
+      summary: 验证草稿连接，不能代替送达
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationConnectionResult'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+        '400':
+          description: 字段类型或白名单校验失败
+        '409':
+          description: 版本冲突或当前投递/业务状态不允许动作
+        '422':
+          description: 配置不完整、AgentID变更未重填Secret或缺少轮换密钥
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationDraft'
+  /settings/notification/draft-test:
+    post:
+      tags:
+      - Settings
+      summary: 仅向指定有效成员发送草稿
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationSendResult'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+        '400':
+          description: 字段类型或白名单校验失败
+        '409':
+          description: 版本冲突或当前投递/业务状态不允许动作
+        '422':
+          description: 配置不完整、AgentID变更未重填Secret或缺少轮换密钥
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationDraftTest'
+  /settings/notification/encryption-key/rotate:
+    post:
+      tags:
+      - Settings
+      summary: 使用新旧env密钥重新加密
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationRotation'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+  /settings/notification/deliveries/{id}/reconcile:
+    post:
+      tags:
+      - Settings
+      summary: 人工核对不确定或超时投递
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationReconcileResult'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+        '400':
+          description: 字段类型或白名单校验失败
+        '409':
+          description: 版本冲突或当前投递/业务状态不允许动作
+        '422':
+          description: 配置不完整、AgentID变更未重填Secret或缺少轮换密钥
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationReconcile'
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /settings/notification/deliveries/{id}/retry:
+    post:
+      tags:
+      - Settings
+      summary: 重验业务资格并按原键重试
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationSendResult'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /settings/notification/deliveries:
+    get:
+      tags:
+      - Settings
+      summary: 最近100条失败、不确定或超时投递
+      description: 仅env system_admin；不返回Secret、密文、主密钥或token。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotificationDelivery'
+        '401':
+          description: 认证失败
+        '403':
+          description: 需要env管理员或测试成员无效
+        '503':
+          description: 配置读取或解密失败
 components:
   securitySchemes:
     bearerAuth:
@@ -54,18 +295,24 @@ components:
           type: string
         defaultModule:
           type: string
-          enum: [my]
+          enum:
+          - my
         reminderViewMode:
           type: string
-          enum: [dashboard, list]
+          enum:
+          - dashboard
+          - list
         certificateGroupBy:
           type: string
-          enum: [owner, type]
+          enum:
+          - owner
+          - type
         enablePushNotifications:
           type: boolean
         theme:
           type: string
-          enum: [light]
+          enum:
+          - light
         updatedAt:
           type: string
           format: date-time
@@ -74,10 +321,14 @@ components:
       properties:
         reminderViewMode:
           type: string
-          enum: [dashboard, list]
+          enum:
+          - dashboard
+          - list
         certificateGroupBy:
           type: string
-          enum: [owner, type]
+          enum:
+          - owner
+          - type
         enablePushNotifications:
           type: boolean
     UserSettingsResponse:
@@ -85,3 +336,228 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/UserSettings'
+    NotificationConfig:
+      type: object
+      required:
+      - corpId
+      - mainCorpId
+      - mainAgentId
+      - configured
+      - source
+      - agentId
+      - configVersion
+      - secretStored
+      - encryptionKeyAvailable
+      - configurationError
+      - encryptionKeyRotationAvailable
+      - updatedAt
+      properties:
+        corpId: &id001
+          type: string
+        mainCorpId: *id001
+        mainAgentId: *id001
+        configured:
+          type: boolean
+        source:
+          type: string
+          enum:
+          - env_main
+          - admin_override
+        agentId: *id001
+        configVersion:
+          type: integer
+          minimum: 0
+        secretStored:
+          type: boolean
+        encryptionKeyAvailable:
+          type: boolean
+        configurationError:
+          type: boolean
+        encryptionKeyRotationAvailable:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationConfigUpdate:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedConfigVersion
+      properties:
+        expectedConfigVersion:
+          type: integer
+          minimum: 0
+        agentId:
+          type: string
+          maxLength: 32
+          pattern: ^\s*\d+\s*$
+        secret:
+          type: string
+          format: password
+          writeOnly: true
+          maxLength: 2048
+          description: 留空保留已存Secret；AgentID变更必须重填。
+        clearOverride:
+          type: boolean
+          description: 显式清除覆盖，不和新凭据混用。
+    NotificationDraft:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          maxLength: 32
+          pattern: ^\s*\d*\s*$
+        secret:
+          type: string
+          format: password
+          writeOnly: true
+          maxLength: 2048
+        clearOverride:
+          type: boolean
+    NotificationDraftTest:
+      type: object
+      additionalProperties: false
+      required:
+      - testUserId
+      properties:
+        testUserId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        agentId:
+          type: string
+          maxLength: 32
+          pattern: ^\s*\d*\s*$
+        secret:
+          type: string
+          format: password
+          writeOnly: true
+          maxLength: 2048
+        clearOverride:
+          type: boolean
+        title: *id001
+        description: *id001
+        url: *id001
+    NotificationDelivery:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceType: *id001
+        sourceId: *id001
+        recipientUserId: *id001
+        agentId:
+          type: string
+          nullable: true
+        configSource:
+          type: string
+          enum:
+          - env_main
+          - admin_override
+          - test_draft
+          - unresolved
+        configVersion:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum:
+          - sending
+          - sent
+          - failed
+          - uncertain
+          - skipped
+        attemptCount:
+          type: integer
+        wecomErrcode:
+          type: integer
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+        attemptHistory:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        reconciledBy:
+          type: string
+          nullable: true
+        reconciledAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    NotificationSendResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        invalidUser:
+          type: array
+          items: *id001
+        errcode:
+          type: integer
+        failureReason: *id001
+        uncertain:
+          type: boolean
+        inFlight:
+          type: boolean
+        configSource:
+          type: string
+          enum:
+          - env_main
+          - admin_override
+          - test_draft
+        configVersion:
+          type: integer
+        agentId: *id001
+        testUserId: *id001
+        retriedBy: *id001
+    NotificationConnectionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        agentId: *id001
+        source:
+          type: string
+          enum:
+          - test_draft
+        configVersion:
+          type: integer
+    NotificationReconcile:
+      type: object
+      additionalProperties: false
+      required:
+      - delivered
+      properties:
+        delivered:
+          type: boolean
+    NotificationReconcileResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - sent
+          - failed
+        reconciledBy: *id001
+        reconciledAt:
+          type: string
+          format: date-time
+    NotificationRotation:
+      type: object
+      properties:
+        rotated:
+          type: boolean
+        configVersion:
+          type: integer

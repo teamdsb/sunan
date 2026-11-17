@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：283 个 Markdown 文件。
+总数：284 个 Markdown 文件。
 
 ## repository-root
 
@@ -373,6 +373,7 @@ replaced_by: []
 | [docs/acceptance/M9-wave-1.md](acceptance/M9-wave-1.md) | `current-source` | `planning` | M9 Wave 1 验收记录 |
 | [docs/acceptance/M9-wave-2.md](acceptance/M9-wave-2.md) | `current-source` | `planning` | M9 Wave 2 验收记录 |
 | [docs/acceptance/M9-wave-3.md](acceptance/M9-wave-3.md) | `current-source` | `planning` | M9 Wave 3 验收记录 |
+| [docs/acceptance/M9-wave-4.md](acceptance/M9-wave-4.md) | `current-source` | `planning` | M9 Wave 4 验收记录 |
 
 ## archive/acceptance/safety
 

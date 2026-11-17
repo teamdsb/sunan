@@ -42,7 +42,7 @@ replaced_by: []
 | 执行计划入口 | [execplans.md](execplans.md) |
 | M7 历史修复执行计划 | [archive/execplans/M7-execplans.md](archive/execplans/M7-execplans.md) |
 | M8 总验收与最终功能核查 | [archive/acceptance/safety/acceptance-m8-overall.md](archive/acceptance/safety/acceptance-m8-overall.md)、[archive/audits/M8-最终功能实现核查.md](archive/audits/M8-最终功能实现核查.md) |
-| M9 平台管理与配置升级（已规划、实施未开始） | [执行计划](plans/M9-execplans.md)、[Wave backlog](plans/M9-wave-backlog.md) |
+| M9 平台管理与配置升级（W2-W4 已实现、条件验收） | [执行计划](plans/M9-execplans.md)、[Wave backlog](plans/M9-wave-backlog.md)、[W4 验收](acceptance/M9-wave-4.md) |
 | M9 Wave 1 身份与配置基线 | [基线规格](specs/m9-wave1-identity-configuration-baseline.md)、[验收记录](acceptance/M9-wave-1.md) |
 | 当前计划与 Wave backlog | [plans/README.md](plans/README.md) |
 | Wave 实施提示词 | [prompts/README.md](prompts/README.md) |

@@ -31,7 +31,7 @@ export interface ReminderItem {
   ownerName: string;
   recipientUserId: string;
   reminderType: 'upcoming' | 'overdue';
-  status: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed' | 'resolved';
+  status: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed' | 'resolved' | 'uncertain';
   scheduledDate: string;
   daysBeforeExpiry: number;
   sentAt: string | null;

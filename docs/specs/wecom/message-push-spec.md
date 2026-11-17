@@ -1,7 +1,7 @@
 ---
 status: current-spec
 owner: wecom
-updated: 2026-07-11
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
@@ -29,7 +29,7 @@ POST https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={ACCESS_TOKEN
 1. `touser` 多成员使用 `|` 分隔。
 2. `agentid` 使用自建应用 AgentID。
 3. `safe=0`（非密级消息）。
-4. 发送失败要记录 `errcode/errmsg` 与失败对象。
+4. 发送失败记录错误码、脱敏原因与失败对象，不保存上游原始错误体。
 5. `42001` 触发 token 刷新后重试。
 
 ## 消息类型规格
@@ -125,12 +125,13 @@ POST https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={ACCESS_TOKEN
 
 | 错误 | 处理方式 |
 |---|---|
-| 接收人不存在（`invaliduser`） | 记录日志，不重试 |
-| `access_token` 失效（`42001`） | 强制刷新 token 并重试一次 |
-| 网络超时 | 最多重试 3 次，间隔 30 秒 |
-| 频率超限 | 记录告警并降速重试 |
+| 接收人不可见或不存在（`invaliduser`） | 逐人记确认失败；修复可见范围/资格后手动重试 |
+| `access_token` 失效（`42001`） | 只刷新同一配置应用 token，最多重试一次 |
+| 网络超时、断连、5xx、无法确认外部结果 | 记 `uncertain`，停止自动重发，进入人工核对 |
+| 确认拒绝、频率超限等业务错误 | 记录码和失败；任务按既有退避策略重试，采购等通过管理入口手动重试 |
+| 配置读取、解密、token获取失败 | 保存失败记录，不回退主应用；修复后重试 |
 
-M8 任务消息额外要求：每位接收人有持久化 `dedupe_key`，同键 `sent/skipped` 不再调用企业微信；失败记录保存发送次数、`errcode/errmsg`、失败对象和下次重试时间。`42001` 的 token 刷新后重试、网络最多三次和 `invaliduser` 不重试的规则仍然适用。管理员对账/重试必须复用原投递记录与去重键。
+统一发送记录按业务键加接收人去重，`sent` 不重推；`sending/uncertain` 未核对不重发。超时 15 分钟的 `sending` 可由管理员人工核对。企业微信接受消息不等于收件人真实看到消息。任务与证书保留原生业务投递/确认记录，统一发送结果不得覆盖证书 `acknowledged/resolved`。
 
 ## M3 约束声明
 
@@ -138,15 +139,23 @@ M8 任务消息额外要求：每位接收人有持久化 `dedupe_key`，同键 
 2. 本期不启用审批回调地址。
 3. 审批流消息仅作提醒，不作为审批状态唯一来源。
 
-## M9 Wave 1 配置边界（当前源码 / 目标变更）
+## M9 Wave 4 后台管理契约
 
-当前发送实现固定使用 env 主应用的 token 和 `WECOM_AGENT_ID`，`42001` 刷新后重试，网络超时最多重试三次；没有独立应用配置、配置版本、配置来源或持久化的统一发送尝试记录。证书、采购和任务的收件人也分别由业务模块计算。
+当前实现已接入证书、采购、报表与计划任务。[W4 验收](../../acceptance/M9-wave-4.md) 为条件验收，真实租户收发仍待现场执行。主应用 OAuth、通讯录、JS-SDK、回调及其他主应用 API 继续使用 env。
 
-Wave 1 冻结的目标规则：
+以下接口均要求 JWT + env `system_admin`，位于 `/api/v1/settings/notification`：
 
-- 主应用 env 是 OAuth、回调、通讯录、JS-SDK 及无覆盖消息的唯一来源；独立应用只用于发送消息。
-- 独立配置必须完整保存 AgentID + Secret。首次半配置拒绝；显式覆盖认证、解密或应用可见性失败时记录故障并停止发送，不能静默换主应用。
-- 一次外部发送使用同一配置快照；按企业、应用和配置版本隔离 token/锁/缓存；失效只刷新当前应用。
-- 发送前重新核验统一有效身份；每次尝试记录实际应用、配置来源/版本、接收人和脱敏错误。成功的业务去重键不得重发，结果不确定不得自动跨应用重试。
+| 方法/后缀 | 输入与结果 |
+|---|---|
+| `GET /` | 非敏感主应用标识、当前来源/AgentID/`configVersion`、`secretStored`、密钥可用/轮换标识、配置故障；不返回密文、Secret或主密钥 |
+| `PATCH /` | `expectedConfigVersion` + `agentId`/可选`secret`；或明确`clearOverride:true`。冲突409，半配置422，密钥缺失/解密失败503；不允许CorpID/env字段 |
+| `POST /connection-test` | 可选AgentID/Secret/清除草稿；直接验证该草稿凭据可取得token，不修改线上配置，不证明送达 |
+| `POST /draft-test` | 上述草稿 + 唯一`testUserId`，可选title/description/url；仅该有效成员，随机测试去重键和token缓存标识，不修改线上配置 |
+| `GET /deliveries` | 最近100条failed/uncertain或超时sending；返回来源、接收人、实际应用/版本、错误码、历史与人工核对审计，不返回消息负载或凭据 |
+| `POST /deliveries/:id/reconcile` | `delivered:boolean`；仅uncertain/超时sending允许；记录操作者/时间，已送达终止重发，未送达转failed |
+| `POST /deliveries/:id/retry` | 仅failed业务消息；重验有效账号和原业务当前资格，复用去重键，按当前配置重试；不重发草稿测试 |
+| `POST /encryption-key/rotate` | env新旧独立密钥同时存在时，认证解密后重新加密，递增配置版本和脱敏审计；已是当前密钥时幂等 |
 
-配置持久化、加密、消息尝试查询和业务接入由 Wave 4 实现，真实应用可见范围与送达证据由 Wave 5 验收。详见 [`docs/specs/m9-wave1-identity-configuration-baseline.md`](../m9-wave1-identity-configuration-baseline.md)。
+配置表为`notification_app_configs`，审计为`notification_app_config_audits`，统一投递为`notification_delivery_attempts`。无覆盖用完整env主应用；保存/清除/恢复/轮换均创建递增版本。原始业务键最长255字符，追加最长64字符收件人后通用键最长320字符。
+
+密钥轮换操作及回滚限制见 [token与密钥](token-cache-spec.md)。主应用env Secret不入库；错误覆盖不得静默改用主应用。API不返回可还原Secret，日志不输出token、凭据或上游原始错误体。

@@ -28,7 +28,16 @@ function createRepo<T>(rows: T[] = []): AnyRepo<T> {
       }
       return value as T;
     }),
-    update: jest.fn().mockResolvedValue({ affected: 1 }),
+    update: jest.fn(async (criteria: { id?: string }, values: Partial<T>) => {
+      let affected = 0;
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index] as Record<string, unknown>;
+        if (criteria.id && row.id !== criteria.id) continue;
+        rows[index] = { ...row, ...values } as T;
+        affected += 1;
+      }
+      return { affected };
+    }),
     upsert: jest.fn(async (value) => {
       const list = Array.isArray(value) ? value : [value];
       for (const item of list as T[]) {
@@ -243,8 +252,8 @@ describe('CertificateReminderEngineService', () => {
         url: expect.stringMatching(/^https:\/\/example\.com\/my\/reminders\/[a-f0-9-]+$/),
       }),
     );
-    expect(reminderRepo.save).toHaveBeenCalledTimes(2);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toHaveLength(2);
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         certificateId: certificate.id,
         recipientUserId: 'shipping-user',
@@ -255,7 +264,7 @@ describe('CertificateReminderEngineService', () => {
         certificateExpiryDate: certificate.expiryDate,
       }),
     );
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         certificateId: certificate.id,
         recipientUserId: 'office-user',
@@ -377,7 +386,7 @@ describe('CertificateReminderEngineService', () => {
     const result = await service.runScan({ jobId: 'job-3', source: 'manual' });
 
     expect(result.createdCount).toBe(2);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         reminderType: 'overdue',
         recipientUserId: 'logistics-user',
@@ -453,7 +462,7 @@ describe('CertificateReminderEngineService', () => {
       }),
       expect.arrayContaining(['certificateId', 'recipientUserId', 'scheduledDate', 'reminderType']),
     );
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         recipientUserId: 'logistics-user',
         status: 'failed',
@@ -694,7 +703,7 @@ describe('CertificateReminderEngineService', () => {
     expect(result.createdCount).toBe(0);
     expect(result.sentCount).toBe(1);
     expect(wecomMessageService.sendTextCard).toHaveBeenCalledTimes(1);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         id: existingReminder.id,
         status: 'sent',
@@ -788,7 +797,7 @@ describe('CertificateReminderEngineService', () => {
     expect(secondRun.sentCount).toBe(1);
     expect(sendTextCard).toHaveBeenCalledTimes(1);
     expect(reminderRepo.upsert).not.toHaveBeenCalled();
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         id: existingReminder.id,
         status: 'sent',
@@ -955,7 +964,7 @@ describe('CertificateReminderEngineService', () => {
     expect(result.createdCount).toBe(0);
     expect(result.sentCount).toBe(1);
     expect(sendTextCard).toHaveBeenCalledTimes(1);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({
         id: expect.any(String),
         status: 'sent',
@@ -1148,16 +1157,16 @@ describe('CertificateReminderEngineService', () => {
     const result = await service.runScan({ jobId: 'job-6', source: 'manual' });
 
     expect(result.createdCount).toBe(2);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({ recipientUserId: 'person-self' }),
     );
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({ recipientUserId: 'shipping-manager' }),
     );
-    expect(reminderRepo.save).not.toHaveBeenCalledWith(
+    expect(reminderRepo.rows).not.toContainEqual(
       expect.objectContaining({ recipientUserId: 'shipping-employee' }),
     );
-    expect(reminderRepo.save).not.toHaveBeenCalledWith(
+    expect(reminderRepo.rows).not.toContainEqual(
       expect.objectContaining({ recipientUserId: 'office-user' }),
     );
   });
@@ -1223,13 +1232,13 @@ describe('CertificateReminderEngineService', () => {
     const result = await service.runScan({ jobId: 'job-7', source: 'manual' });
 
     expect(result.createdCount).toBe(2);
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({ recipientUserId: 'person-self' }),
     );
-    expect(reminderRepo.save).toHaveBeenCalledWith(
+    expect(reminderRepo.rows).toContainEqual(
       expect.objectContaining({ recipientUserId: 'shipping-manager' }),
     );
-    expect(reminderRepo.save).not.toHaveBeenCalledWith(
+    expect(reminderRepo.rows).not.toContainEqual(
       expect.objectContaining({ recipientUserId: 'office-user' }),
     );
   });

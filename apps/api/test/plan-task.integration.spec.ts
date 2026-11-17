@@ -7,9 +7,11 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { PlanTaskModule } from 'src/modules/plan-task/plan-task.module';
 import { PlanTaskService } from 'src/modules/plan-task/plan-task.service';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 import {
   bootstrapPgTestDatabase,
@@ -30,7 +32,7 @@ type TestUser = {
 
 const makeUser = (userId: string, roles = ['all_authenticated']): TestUser => ({
   userId,
-  corpId: 'ww-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: userId,
   avatar: null,
   departments: ['船务部'],
@@ -113,6 +115,19 @@ describe('Plan task integration', () => {
         ('crew-agent','Crew Agent','shipping','active',true)
       ON CONFLICT (wecom_user_id) WHERE deleted_at IS NULL AND wecom_user_id IS NOT NULL DO UPDATE SET employment_status='active', deleted_at=NULL
     `);
+    // Active personnel must also resolve to an available directory identity.
+    await source.getRepository(WecomUserEntity).upsert(
+      ['plan-owner', 'crew-old', 'crew-peer', 'crew-new', 'crew-agent'].map((userId) => ({
+        userId,
+        corpId: appEnv.WECOM_CORP_ID,
+        name: userId,
+        sourceStatus: 'active' as const,
+        departmentIds: [userId === 'plan-owner' ? 6 : 8],
+        departmentNames: [userId === 'plan-owner' ? '船务部' : '船员'],
+        departmentCodes: ['shipping_dept'],
+      })),
+      ['userId'],
+    );
   });
 
   afterAll(async () => {

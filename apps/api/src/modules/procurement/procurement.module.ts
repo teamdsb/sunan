@@ -38,5 +38,6 @@ import { ProcurementService } from './procurement.service';
   ],
   controllers: [ProcurementController],
   providers: [ProcurementService],
+  exports: [ProcurementService],
 })
 export class ProcurementModule {}

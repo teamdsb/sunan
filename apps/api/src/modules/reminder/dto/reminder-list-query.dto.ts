@@ -16,8 +16,8 @@ export class ReminderListQueryDto {
   pageSize = 20;
 
   @IsOptional()
-  @IsEnum(['pending', 'dispatching', 'sent', 'acknowledged', 'failed', 'resolved'])
-  status?: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed' | 'resolved';
+  @IsEnum(['pending', 'dispatching', 'sent', 'acknowledged', 'failed', 'resolved', 'uncertain'])
+  status?: 'pending' | 'dispatching' | 'sent' | 'acknowledged' | 'failed' | 'resolved' | 'uncertain';
 
   @IsOptional()
   @IsEnum(['upcoming', 'overdue'])

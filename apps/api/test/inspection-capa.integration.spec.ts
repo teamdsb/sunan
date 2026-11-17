@@ -7,9 +7,11 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { InspectionCapaModule } from 'src/modules/inspection-capa/inspection-capa.module';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
+import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase } from 'test/pg-test-container';
 
 type TestUser = {
@@ -18,7 +20,7 @@ type TestUser = {
 };
 
 const makeUser = (userId: string, roles = ['all_authenticated', 'shipping']): TestUser => ({
-  userId, corpId: 'ww-test', name: userId, avatar: null, departments: ['shipping'],
+  userId, corpId: appEnv.WECOM_CORP_ID, name: userId, avatar: null, departments: ['shipping'],
   position: roles.includes('system_admin') ? '管理员' : '船员', roles, isAdmin: roles.includes('system_admin'),
 });
 
@@ -44,6 +46,19 @@ describe('inspection and CAPA integration', () => {
     currentUser = makeUser('plan-owner');
     await source.query(`TRUNCATE TABLE inspection_capa_action_logs, capa_verifications, capa_action_evidence, capa_actions, capa_root_causes, safety_capas, issue_transfer_jobs, issue_sources, safety_issues, inspection_result_evidence, inspection_results, inspections, inspection_plans, inspection_template_scopes, inspection_template_items, inspection_template_versions, inspection_templates, safety_task_notification_deliveries, safety_task_generation_entries, safety_task_generation_runs, safety_task_action_logs, safety_task_delegations, safety_task_transfers, safety_task_participants, safety_tasks, safety_plan_items, safety_plans, workbench_records, files RESTART IDENTITY CASCADE`);
     await source.query(`INSERT INTO personnel (wecom_user_id,name,department_code,employment_status,is_sync_from_wecom) VALUES ('plan-owner','Plan owner','shipping','active',true),('inspector-a','Inspector A','shipping','active',true),('inspector-b','Inspector B','shipping','active',true),('verifier','Verifier','shipping','active',true) ON CONFLICT (wecom_user_id) WHERE deleted_at IS NULL AND wecom_user_id IS NOT NULL DO UPDATE SET employment_status='active', deleted_at=NULL`);
+    // Inspection assignees need the same effective identity as plan assignees.
+    await source.getRepository(WecomUserEntity).upsert(
+      ['plan-owner', 'inspector-a', 'inspector-b', 'verifier'].map((userId) => ({
+        userId,
+        corpId: appEnv.WECOM_CORP_ID,
+        name: userId,
+        sourceStatus: 'active' as const,
+        departmentIds: [6],
+        departmentNames: ['船务部'],
+        departmentCodes: ['shipping_dept'],
+      })),
+      ['userId'],
+    );
   });
 
   afterAll(async () => { await app?.close(); await shutdownPgTestDatabase(); });

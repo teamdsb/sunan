@@ -10,6 +10,7 @@ const productionEnv = {
   WECOM_CORP_ID: 'ww-real-corp-id',
   WECOM_AGENT_ID: '1000001',
   WECOM_AGENT_SECRET: 'wecom-agent-secret-strong',
+  SYSTEM_SETTINGS_ENCRYPTION_KEY: 'settings-encryption-key-that-is-long-enough',
   WECOM_REDIRECT_URI: 'https://app.qzssncb.com/auth/callback',
   WEB_PUBLIC_URL: 'https://app.qzssncb.com',
   API_PUBLIC_URL: 'https://api.qzssncb.com',
@@ -51,5 +52,11 @@ describe('parseAppEnv', () => {
       DB_HOST: '127.0.0.1',
       WECOM_CORP_ID: 'ww-test-corp',
     });
+  });
+
+  it('allows env-main operation without an encryption key and validates a supplied key', () => {
+    const withoutKey = { ...productionEnv, SYSTEM_SETTINGS_ENCRYPTION_KEY: undefined };
+    expect(parseAppEnv(withoutKey).SYSTEM_SETTINGS_ENCRYPTION_KEY).toBeUndefined();
+    expect(() => parseAppEnv({ ...withoutKey, SYSTEM_SETTINGS_ENCRYPTION_KEY: 'short' })).toThrow(ZodError);
   });
 });

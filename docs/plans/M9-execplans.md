@@ -1,13 +1,13 @@
 ---
 status: current-source
 owner: planning
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # M9 执行计划：平台管理与配置升级
 
-> 状态：已重新规划；M9-W2 后端已实施并有条件验收，W3-W5 尚未完成。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本计划不代表生产上线。
+> 状态：M9-W2、W3、W4 已实施并有条件验收，W5 尚未完成。原专业安全 M9 已按用户要求删除，本计划使用同一编号重新立项；本计划不代表生产上线。
 
 需求与关键规则以 [M9 需求](../requirements/M9-平台管理与配置升级.md) 为准；任务拆分见 [backlog](M9-wave-backlog.md)，执行入口见 [提示词索引](../prompts/README.md)。
 
@@ -26,8 +26,8 @@ replaced_by: []
 |---|---|---|---|---|
 | 1 | 身份、配置契约与迁移基线冻结 | 以当前源码复核本需求 | 有条件通过（契约已冻结，功能未实施） | [W1](../prompts/m9/wave-1-identity-baseline.md) |
 | 2 | 全通讯录与用户授权后端 | W1 | 有条件通过 | [W2](../prompts/m9/wave-2-user-directory.md) · [验收](../acceptance/M9-wave-2.md) |
-| 3 | 管理页面与全业务权限整合 | W2 | 未开始 | [W3](../prompts/m9/wave-3-admin-console.md) |
-| 4 | 后台推送配置与消息整合 | W1；收件人整合依赖 W2/W3 | 未开始 | [W4](../prompts/m9/wave-4-message-settings.md) |
+| 3 | 管理页面与全业务权限整合 | W2 | 有条件通过 | [W3](../prompts/m9/wave-3-admin-console.md) · [验收](../acceptance/M9-wave-3.md) |
+| 4 | 后台推送配置与消息整合 | W1；收件人整合依赖 W2/W3 | 有条件通过 | [W4](../prompts/m9/wave-4-message-settings.md) · [验收](../acceptance/M9-wave-4.md) |
 | 5 | 迁移、回归、操作说明与验收 | W2-W4 | 未开始 | [W5](../prompts/m9/wave-5-release-acceptance.md) |
 
 W4 的配置持久化、加密与应用缓存隔离可在 W1 后并行。W2/W3 的授权计算服务必须先统一，再完成消息收件人联调。按依赖执行，不使用未确认的日期承诺代替前置验收。
@@ -119,7 +119,7 @@ W4 的配置持久化、加密与应用缓存隔离可在 W1 后并行。W2/W3 �
 
 实施阶段按受影响范围执行测试。最终集成至少运行仓库 API lint、API unit/integration、Web test、API/Web build；变更的 OpenAPI 逐个校验。命令以实施时 package scripts 和 [测试指南](../guides/testing-strategy.md) 为准，不绕过真实 PostgreSQL 并发验证。
 
-本轮仅文档重规划，验证为：
+2026-11-16 文档重规划时的验证为（W2-W4 实施验证以各 Wave 验收为准）：
 
 ```bash
 node scripts/generate-doc-inventory.mjs

@@ -2,6 +2,7 @@
 import { Logger } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
 import { WecomMessageService } from './wecom-message.service';
+import { appEnv } from 'src/config/env';
 
 describe('WecomMessageService', () => {
   const postMock = jest.fn();
@@ -20,9 +21,9 @@ describe('WecomMessageService', () => {
   let service: WecomMessageService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-    service = new WecomMessageService(httpServiceMock, tokenServiceMock as never);
+    service = new WecomMessageService(httpServiceMock, tokenServiceMock as never, { resolve: async () => ({ corpId: appEnv.WECOM_CORP_ID, agentId: appEnv.WECOM_AGENT_ID, secret: appEnv.WECOM_AGENT_SECRET, source: 'env_main', version: 0 }) } as never);
     jest.spyOn(global, 'setTimeout').mockImplementation(((fn: (...args: unknown[]) => void) => {
       fn();
       return 0 as unknown as NodeJS.Timeout;
@@ -54,13 +55,14 @@ describe('WecomMessageService', () => {
     expect(postMock).toHaveBeenCalledTimes(2);
   });
 
-  it('retries on timeout', async () => {
+  it('requires reconciliation after a timeout without automatically resending', async () => {
     postMock
       .mockReturnValueOnce(throwError(() => ({ code: 'ECONNABORTED' })))
       .mockReturnValueOnce(of({ data: { errcode: 0, errmsg: 'ok' } }));
 
-    await service.sendTextCard({ userIds: ['u1'], title: 't', description: 'd', url: 'https://example.com' });
-    expect(postMock).toHaveBeenCalledTimes(2);
+    const result = await service.sendTextCard({ userIds: ['u1'], title: 't', description: 'd', url: 'https://example.com' });
+    expect(result.uncertain).toBe(true);
+    expect(postMock).toHaveBeenCalledTimes(1);
   });
 
   it('returns invalid users for non-zero errcode without retrying', async () => {
@@ -68,20 +70,20 @@ describe('WecomMessageService', () => {
     const result = await service.sendTextCard({ userIds: ['u1', 'u2', 'u3'], title: 't', description: 'd', url: 'https://example.com' });
     expect(result.success).toBe(false);
     expect(result.invalidUser).toEqual(['u2', 'u3']);
-    expect(result.failureReason).toBe('WeCom API error 81013: invalid user');
+    expect(result.failureReason).toBe('WeCom API error 81013');
     expect(result.errcode).toBe(81013);
     expect(postMock).toHaveBeenCalledTimes(1);
   });
 
-  it('throws after timeout retries exhausted', async () => {
+  it('marks exhausted transport retries as uncertain for manual reconciliation', async () => {
     postMock
       .mockReturnValueOnce(throwError(() => ({ code: 'ECONNABORTED' })))
       .mockReturnValueOnce(throwError(() => ({ code: 'ECONNABORTED' })))
       .mockReturnValueOnce(throwError(() => ({ code: 'ECONNABORTED' })));
 
-    await expect(
-      service.sendTextCard({ userIds: ['u1'], title: 't', description: 'd', url: 'https://example.com' }),
-    ).rejects.toBeDefined();
-    expect(postMock).toHaveBeenCalledTimes(3);
+    const result = await service.sendTextCard({ userIds: ['u1'], title: 't', description: 'd', url: 'https://example.com' });
+    expect(result.uncertain).toBe(true);
+    expect(result.success).toBe(false);
+    expect(postMock).toHaveBeenCalledTimes(1);
   });
 });

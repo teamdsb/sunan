@@ -14,6 +14,7 @@ import {
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { EnterprisePolicyEntity } from 'src/database/entities/enterprise-policy.entity';
@@ -23,7 +24,7 @@ import { OssService } from 'src/modules/files/oss.service';
 
 let currentUser = {
   userId: 'manager-1',
-  corpId: 'ww-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: 'Manager',
   avatar: null,
   departments: ['业务部'],
@@ -76,7 +77,7 @@ describe('EnterprisePolicyController integration', () => {
     await wecomRepo.save([
       wecomRepo.create({
         userId: 'manager-1',
-        corpId: 'ww-test',
+        corpId: appEnv.WECOM_CORP_ID,
         name: 'Manager1',
         avatarUrl: null,
         departmentCodes: ['business_dept'],
@@ -87,7 +88,7 @@ describe('EnterprisePolicyController integration', () => {
       }),
       wecomRepo.create({
         userId: 'manager-2',
-        corpId: 'ww-test',
+        corpId: appEnv.WECOM_CORP_ID,
         name: 'Manager2',
         avatarUrl: null,
         departmentCodes: ['finance_dept'],
@@ -98,7 +99,7 @@ describe('EnterprisePolicyController integration', () => {
       }),
       wecomRepo.create({
         userId: 'employee-1',
-        corpId: 'ww-test',
+        corpId: appEnv.WECOM_CORP_ID,
         name: 'Employee',
         avatarUrl: null,
         departmentCodes: ['business_dept'],

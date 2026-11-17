@@ -153,7 +153,7 @@ export class WecomHttpGateway {
   ): Promise<T> {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get<T>(`https://qyapi.weixin.qq.com${url}`, { params }),
+        this.httpService.get<T>(`https://qyapi.weixin.qq.com${url}`, { params, timeout: 10_000 }),
       );
 
       this.assertSuccess(data);
@@ -211,11 +211,7 @@ export class WecomHttpGateway {
         throw new ServiceUnavailableException('WeCom API quota exceeded');
       }
 
-      throw new BadGatewayException(
-        typeof responseBody.errmsg === 'string'
-          ? responseBody.errmsg
-          : 'WeCom API error',
-      );
+      throw new BadGatewayException(`WeCom API error ${responseBody.errcode}`);
     }
   }
 }

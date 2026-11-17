@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import request from 'supertest';
 import * as XLSX from 'xlsx';
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { WorkbenchModule } from 'src/modules/workbench/workbench.module';
@@ -34,7 +35,7 @@ import {
 class TestModule {}
 const admin: CurrentUser = {
   userId: 'admin-business',
-  corpId: 'test-corp',
+  corpId: appEnv.WECOM_CORP_ID,
   name: '管理员',
   avatar: null,
   position: null,
@@ -79,7 +80,7 @@ describe('workbench business completion', () => {
     await db.getRepository(WecomUserEntity).save(
       ['learner-a', 'learner-b'].map((userId, index) => ({
         userId,
-        corpId: 'test-corp',
+        corpId: appEnv.WECOM_CORP_ID,
         name: `船员${index + 1}`,
         departmentCodes: [],
         departmentNames: [],

@@ -15,6 +15,7 @@ import { DataSource } from 'typeorm';
 import request from 'supertest';
 
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CertificateReminderEntity } from 'src/database/entities/certificate-reminder.entity';
 import { CertificateFileEntity } from 'src/database/entities/certificate-file.entity';
@@ -34,7 +35,7 @@ import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 
 let currentUser = {
   userId: 'shipping-employee',
-  corpId: 'ww-test',
+  corpId: appEnv.WECOM_CORP_ID,
   name: 'Shipping Employee',
   avatar: null,
   departments: ['Shipping Department'],
@@ -211,7 +212,7 @@ describe('ReminderController integration', () => {
       wecomUserRepo.create([
         {
           userId: 'shipping-employee',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Shipping Employee',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
@@ -222,9 +223,10 @@ describe('ReminderController integration', () => {
         },
         {
           userId: 'shipping-manager',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Shipping Manager',
           avatarUrl: null,
+          departmentIds: [6],
           departmentCodes: ['shipping_dept'],
           departmentNames: ['Shipping Department'],
           position: '\u7ECF\u7406',
@@ -233,7 +235,7 @@ describe('ReminderController integration', () => {
         },
         {
           userId: 'shipping-peer',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Shipping Peer',
           avatarUrl: null,
           departmentCodes: ['shipping_dept'],
@@ -244,7 +246,7 @@ describe('ReminderController integration', () => {
         },
         {
           userId: 'office-user',
-          corpId: 'ww-test',
+          corpId: appEnv.WECOM_CORP_ID,
           name: 'Office User',
           avatarUrl: null,
           departmentCodes: ['general_office'],

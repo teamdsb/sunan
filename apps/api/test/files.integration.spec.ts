@@ -26,6 +26,7 @@ import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { FilesService } from 'src/modules/files/files.service';
 
 import { configureApp } from 'src/app.bootstrap';
+import { appEnv } from 'src/config/env';
 import { FilesModule } from 'src/modules/files/files.module';
 import { OssService } from 'src/modules/files/oss.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -38,7 +39,7 @@ const authGuard: CanActivate = {
     const request = context.switchToHttp().getRequest<{ user?: unknown }>();
     request.user = {
       userId: 'tester',
-      corpId: 'ww-test',
+      corpId: appEnv.WECOM_CORP_ID,
       name: '娴嬭瘯鐢ㄦ埛',
       avatar: null,
       departments: ['General Office'],
@@ -456,7 +457,7 @@ describe('FilesController integration', () => {
 
   it('lets an authorized department manager unlink another uploader file while preserving shared references', async () => {
     const ds = app.get(DataSource);
-    await ds.getRepository(WecomUserEntity).save({ userId: 'dept-manager', corpId: 'test-corp', name: 'Manager', departmentCodes: ['finance_dept'] });
+    await ds.getRepository(WecomUserEntity).save({ userId: 'dept-manager', corpId: appEnv.WECOM_CORP_ID, name: 'Manager', departmentCodes: ['finance_dept'] });
     const user = { userId: 'dept-manager', roles: ['finance'] } as unknown as CurrentUser;
     const file = await createRecycleFile();
     const profiles = app.get(EnterpriseProfileService);

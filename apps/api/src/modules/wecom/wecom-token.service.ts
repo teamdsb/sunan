@@ -6,6 +6,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import Redis from 'ioredis';
+import { randomUUID } from 'crypto';
 
 import { appEnv } from 'src/config/env';
 import {
@@ -16,6 +17,7 @@ import {
   TOKEN_TTL_SECONDS,
 } from 'src/modules/wecom/wecom.constants';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
+import type { WecomAppConfig } from 'src/modules/wecom/wecom-notification-config.service';
 
 type TokenType = 'access_token' | 'corp_ticket' | 'agent_ticket';
 
@@ -29,10 +31,20 @@ export class WecomTokenService {
   ) {}
 
   async getAccessToken(): Promise<string> {
-    return this.getOrRefreshToken('wecom:access_token', 'access_token', async () => {
+    return this.getAccessTokenForApp({
+      corpId: appEnv.WECOM_CORP_ID,
+      agentId: appEnv.WECOM_AGENT_ID,
+      secret: appEnv.WECOM_AGENT_SECRET,
+      source: 'env_main',
+      version: 0,
+    });
+  }
+
+  async getAccessTokenForApp(config: WecomAppConfig): Promise<string> {
+    return this.getOrRefreshToken(this.accessTokenKey(config), this.lockKey(config), async () => {
       const response = await this.gateway.getAccessToken(
-        appEnv.WECOM_CORP_ID,
-        appEnv.WECOM_AGENT_SECRET,
+        config.corpId,
+        config.secret,
       );
       return response.access_token;
     });
@@ -64,7 +76,7 @@ export class WecomTokenService {
 
   async forceRefresh(tokenType: TokenType): Promise<void> {
     if (tokenType === 'access_token') {
-      await this.redis.del('wecom:access_token');
+      await this.redis.del(this.accessTokenKey({ corpId: appEnv.WECOM_CORP_ID, agentId: appEnv.WECOM_AGENT_ID, secret: appEnv.WECOM_AGENT_SECRET, source: 'env_main', version: 0 }));
       return;
     }
 
@@ -76,9 +88,13 @@ export class WecomTokenService {
     await this.redis.del(`wecom:agent_jsapi_ticket:${appEnv.WECOM_AGENT_ID}`);
   }
 
+  async forceRefreshForApp(config: WecomAppConfig): Promise<void> {
+    await this.redis.del(this.accessTokenKey(config));
+  }
+
   private async getOrRefreshToken(
     key: string,
-    lockSuffix: TokenType,
+    lockSuffix: string,
     refresh: () => Promise<string>,
   ): Promise<string> {
     try {
@@ -87,10 +103,11 @@ export class WecomTokenService {
         return cachedValue;
       }
 
-      const lockKey = `wecom:refresh_lock:${lockSuffix}`;
+      const lockKey = lockSuffix.startsWith('wecom:refresh_lock:') ? lockSuffix : `wecom:refresh_lock:${lockSuffix}`;
+      const lockToken = randomUUID();
       const lockAcquired = await this.redis.set(
         lockKey,
-        '1',
+        lockToken,
         'EX',
         REFRESH_LOCK_TTL_SECONDS,
         'NX',
@@ -102,7 +119,7 @@ export class WecomTokenService {
           await this.redis.set(key, refreshed, 'EX', TOKEN_TTL_SECONDS);
           return refreshed;
         } finally {
-          await this.redis.del(lockKey);
+          await this.redis.eval("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", 1, lockKey, lockToken);
         }
       }
 
@@ -132,5 +149,15 @@ export class WecomTokenService {
       this.logger.warn('Redis unavailable, entering degraded token mode');
       return refresh();
     }
+  }
+
+  private accessTokenKey(config: WecomAppConfig): string {
+    if (config.cacheKey) return `wecom:app:${config.corpId}:${config.agentId}:draft:${config.cacheKey}:access_token`;
+    return `wecom:app:${config.corpId}:${config.agentId}:v${config.version}:access_token`;
+  }
+
+  private lockKey(config: WecomAppConfig): string {
+    if (config.cacheKey) return `wecom:refresh_lock:app:${config.corpId}:${config.agentId}:draft:${config.cacheKey}:access_token`;
+    return `wecom:refresh_lock:app:${config.corpId}:${config.agentId}:v${config.version}:access_token`;
   }
 }

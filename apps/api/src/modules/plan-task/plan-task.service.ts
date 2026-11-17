@@ -804,6 +804,23 @@ export class PlanTaskService {
     return delivery;
   }
 
+  async canReceiveNotification(deliveryId: string, recipientUserId: string): Promise<boolean> {
+    const delivery = await this.deliveries.findOneBy({ id: deliveryId, recipientUserId, deletedAt: IsNull() });
+    if (!delivery) return false;
+    const task = await this.tasks.findOneBy({ id: delivery.taskId, deletedAt: IsNull() });
+    if (!task || TERMINAL_TASK_STATUSES.has(task.status)) return false;
+    if (await this.recipientUnavailableReason(recipientUserId)) return false;
+    const plan = await this.plans.findOneBy({ id: task.planId, deletedAt: IsNull() });
+    if (!plan) return false;
+    if (delivery.messageType === 'escalation' && plan.ownerUserId === recipientUserId) return true;
+    const participant = await this.participants.findOneBy({ taskId: task.id, userId: recipientUserId, status: 'active', deletedAt: IsNull() });
+    if (!participant || !EXECUTION_ROLES.has(participant.role) || participant.completedAt) return false;
+    if (participant.effectiveUntil && participant.effectiveUntil < new Date()) return false;
+    // 预生成任务的具名负责人可立即收到分派通知，不必等到任务执行时窗。
+    if (participant.role === 'delegate') return (await this.activeDelegation(task.id, recipientUserId)) !== null;
+    return true;
+  }
+
   private async dispatchDelivery(delivery: SafetyTaskNotificationDeliveryEntity, task: SafetyTaskEntity) {
     if (delivery.status === 'sent' || delivery.status === 'skipped') return delivery;
     const claim = await this.deliveries.createQueryBuilder()
@@ -815,7 +832,8 @@ export class PlanTaskService {
     delivery = await this.deliveries.findOneByOrFail({ id: delivery.id });
     const attemptedAt = new Date();
     delivery.wecomErrcode = null;
-    const unavailableReason = await this.recipientUnavailableReason(delivery.recipientUserId);
+    const unavailableReason = await this.recipientUnavailableReason(delivery.recipientUserId)
+      ?? (this.authorizationService && !await this.canReceiveNotification(delivery.id, delivery.recipientUserId) ? 'recipient unavailable: business eligibility changed' : null);
     if (unavailableReason) {
       delivery.status = 'skipped';
       delivery.failureReason = unavailableReason;
@@ -831,6 +849,9 @@ export class PlanTaskService {
       ];
       return this.deliveries.save(delivery);
     }
+    let applicationAgentId: string | undefined;
+    let configSource: string | undefined;
+    let configVersion: number | undefined;
     try {
       const result = await this.wecomMessageService.sendTextCard({
         userIds: [delivery.recipientUserId],
@@ -838,9 +859,20 @@ export class PlanTaskService {
         description: `<div class="gray">期限：${task.dueAt.toLocaleString('zh-CN')}</div><div class="normal">${task.title}</div>`,
         url: `${(process.env.WEB_PUBLIC_URL ?? '').replace(/\/$/, '')}/workbench/tasks/${task.id}?notificationId=${delivery.id}`,
         btnText: '查看任务',
+        sourceType: 'plan_task',
+        sourceId: delivery.id,
+        dedupeKey: delivery.dedupeKey,
       });
+      if (result.inFlight) return this.deliveries.findOneByOrFail({ id: delivery.id });
+      applicationAgentId = result.agentId;
+      configSource = result.configSource;
+      configVersion = result.configVersion;
       delivery.wecomErrcode = result.errcode ?? null;
-      if (result.invalidUser.includes(delivery.recipientUserId)) {
+      if (result.uncertain) {
+        delivery.status = 'uncertain';
+        delivery.failureReason = result.failureReason ?? '发送结果待人工核对';
+        delivery.nextRetryAt = null;
+      } else if (result.invalidUser.includes(delivery.recipientUserId)) {
         delivery.status = 'skipped';
         delivery.failureReason = 'invalid user';
         delivery.nextRetryAt = null;
@@ -866,6 +898,9 @@ export class PlanTaskService {
         attemptedAt: attemptedAt.toISOString(),
         status: delivery.status,
         wecomErrcode: delivery.wecomErrcode,
+        applicationAgentId,
+        configSource,
+        configVersion,
         failureReason: delivery.failureReason,
       },
     ];
