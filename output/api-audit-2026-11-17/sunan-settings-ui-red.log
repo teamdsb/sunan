@@ -1,0 +1,376 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > saves settings and shows feedback
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > keeps a blank Secret out of a save and preserves the optimistic version
+Warning: Warning: There may be circular references
+
+ ❯ src/features/settings/SettingsPage.test.tsx (8 tests | 2 failed) 2741ms
+   × SettingsPage > saves settings and shows feedback 1324ms
+     → expected "spy" to be called with arguments: [ { reminderViewMode: 'list' } ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
++     "certificateGroupBy": "owner",
++     "enablePushNotifications": true,
+      "reminderViewMode": "list",
+    },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"page-hero"[39m
+      [36m>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+        [36m>[39m
+          [0m设置[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+        [36m>[39m
+          [0m配置提醒视图、证照分组和消息推送偏好。[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-middle ant-space-gap-col-middle"[39m
+          [33mstyle[39m=[32m"width: 100%;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space-item"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card ant-card-bordered settings-card css-dev-only-do-not-override-mncuj7"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-body"[39m
+              [36m>[39m
+                [36m<form[39m
+                  [33mclass[39m=[32m"ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-has-success ant-form-item-vertical"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [36m<label[39m
+                          [33mclass[39m=[32m""[39m
+                          [33mfor[39m=[32m"reminderViewMode"[39m
+                          [33mtitle[39m=[32m"提醒视图"[39m
+                        [36m>[39m
+                          [0m提醒视图[0m
+                        [36m</label>[39m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"ant-form-item-control-input"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"ant-form-item-control-input-content"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mclass[39m=[32m"ant-select ant-select-outlined ant-select-in-form-item ant-select-status-success css-dev-only-do-not-override-mncuj7 ant-select-single ant-select-show-arrow"[39m
+                            [36m>[39m
+                              [36m<div[39m
+                                [33mclass[39m=[32m"ant-select-selector"[39m
+                              [36m>[39m
+                                [36m<span[39m
+                                  [33mclass[39m=[32m"ant-select-selection-wrap"[39m
+                                [36m>[39m
+                                  [36m<span[39m
+                                    [33mclass[39m=[32m"ant-select-selection-search"[39m
+                                  [36m>[39m
+                                    [36m<input[39m
+                                      [33maria-autocomplete[39m=[32m"list"[39m
+                                      [33maria-controls[39m=[32m"reminderViewMode_list"[39m
+                                      [33maria-expanded[39m=[32m"false"[39m
+                                      [33maria-haspopup[39m=[32m"listbox"[39m
+                                      [33maria-owns[39m=[32m"reminderViewMode_list"[39m
+                                      [33mautocomplete[39m=[32m"off"[39m
+                                      [33mclass[39m=[32m"ant-select-selection-search-input"[39m
+                                      [33mid[39m=[32m"reminderViewMode"[39m
+                                      [33mreadonly[39m=[32m""[39m
+                                      [33mrole[39m=[32m"combobox"[39m
+                                      [33mstyle[39m=[32m"opacity: 0;"[39m
+                                      [33mtype[39m=[32m"search"[39m
+                                      [33munselectable[39m=[32m"on"[39m
+                                      [33mvalue[39m=[32m""[39m
+                                    [36m/>[39m
+                                  [36m</span>[39m
+                                  [36m<span[39m
+                                    [33mclass[39m=[32m"ant-select-selection-item"[39m
+                                    [33mtitle[39m=[32m"列表"[39m
+                                  [36m>[39m
+                                    [0m列表[0m
+                                  [36m</span>[39m
+                                [36m</span>[39m
+                              [36m</div>[39m
+                              [36m<span[39m
+                                [33maria-hidden[39m=[32m"true"[39m
+                                [33mclass[39m=[32m"ant-select-arrow"[39m
+                                [33mstyle[39m=[32m"user-select: none;"[39m
+                                [33munselectable[39m=[32m"on"[39m
+                              [36m>[39m
+                                [36m<span[39m
+                                  [33maria-label[39m=[32m"down"[39m
+                                  [33mclass[39m=[32m"anticon anticon-down ant-select-suffix"[39m
+                                  [33mrole[39m=[32m"img"[39m
+                                [36m>[39m
+                                  [36m<svg[39m
+                                    [33maria-hidden[39m=[32m"true"[39m
+                                    [33mdata-icon[39m=[32m"down"[39m
+                                    [33mfill[39m=[32m"currentColor"[39m
+                                    [33mfocusable[39m=[32m"false"[39m
+                                    [33mheight[39m=[32m"1em"[39m
+                                    [33mviewBox[39m=[32m"64 64 896 896"[39m
+                                    [33mwidth[39m=[32m"1em"[39m
+                                  [36m>[39m
+                                    [36m<path[39m
+                                      [33md[39m=[32m"M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5....
+   ✓ SettingsPage > shows rollback error when save fails 138ms
+   × SettingsPage > does not offer a personal switch that cannot control mandatory business notifications 78ms
+     → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  aria-checked="true"
+  class="ant-switch css-dev-only-do-not-override-mncuj7 ant-switch-checked"
+  id="enablePushNotifications"
+  role="switch"
+  type="button"
+>
+  <div
+    class="ant-switch-handle"
+  />
+  <span
+    class="ant-switch-inner"
+  >
+    <span
+      class="ant-switch-inner-checked"
+    />
+    <span
+      class="ant-switch-inner-unchecked"
+    />
+  </span>
+</button> instead
+   ✓ SettingsPage > shows read-only main app details and an empty saved-secret field to administrators 220ms
+   ✓ SettingsPage > does not describe a failed configuration or delivery read as an empty env default 181ms
+   ✓ SettingsPage > keeps a blank Secret out of a save and preserves the optimistic version 228ms
+   ✓ SettingsPage > reloads the optimistic version even when the server returns the same configuration object 288ms
+   ✓ SettingsPage > keeps invalid draft input local without sending connection or message requests 283ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/SettingsPage.test.tsx > SettingsPage > saves settings and shows feedback
+AssertionError: expected "spy" to be called with arguments: [ { reminderViewMode: 'list' } ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
++     "certificateGroupBy": "owner",
++     "enablePushNotifications": true,
+      "reminderViewMode": "list",
+    },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"page-hero"[39m
+      [36m>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+        [36m>[39m
+          [0m设置[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+        [36m>[39m
+          [0m配置提醒视图、证照分组和消息推送偏好。[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-middle ant-space-gap-col-middle"[39m
+          [33mstyle[39m=[32m"width: 100%;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space-item"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card ant-card-bordered settings-card css-dev-only-do-not-override-mncuj7"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-body"[39m
+              [36m>[39m
+                [36m<form[39m
+                  [33mclass[39m=[32m"ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-has-success ant-form-item-vertical"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [36m<label[39m
+                          [33mclass[39m=[32m""[39m
+                          [33mfor[39m=[32m"reminderViewMode"[39m
+                          [33mtitle[39m=[32m"提醒视图"[39m
+                        [36m>[39m
+                          [0m提醒视图[0m
+                        [36m</label>[39m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"ant-form-item-control-input"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"ant-form-item-control-input-content"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mclass[39m=[32m"ant-select ant-select-outlined ant-select-in-form-item ant-select-status-success css-dev-only-do-not-override-mncuj7 ant-select-single ant-select-show-arrow"[39m
+                            [36m>[39m
+                              [36m<div[39m
+                                [33mclass[39m=[32m"ant-select-selector"[39m
+                              [36m>[39m
+                                [36m<span[39m
+                                  [33mclass[39m=[32m"ant-select-selection-wrap"[39m
+                                [36m>[39m
+                                  [36m<span[39m
+                                    [33mclass[39m=[32m"ant-select-selection-search"[39m
+                                  [36m>[39m
+                                    [36m<input[39m
+                                      [33maria-autocomplete[39m=[32m"list"[39m
+                                      [33maria-controls[39m=[32m"reminderViewMode_list"[39m
+                                      [33maria-expanded[39m=[32m"false"[39m
+                                      [33maria-haspopup[39m=[32m"listbox"[39m
+                                      [33maria-owns[39m=[32m"reminderViewMode_list"[39m
+                                      [33mautocomplete[39m=[32m"off"[39m
+                                      [33mclass[39m=[32m"ant-select-selection-search-input"[39m
+                                      [33mid[39m=[32m"reminderViewMode"[39m
+                                      [33mreadonly[39m=[32m""[39m
+                                      [33mrole[39m=[32m"combobox"[39m
+                                      [33mstyle[39m=[32m"opacity: 0;"[39m
+                                      [33mtype[39m=[32m"search"[39m
+                                      [33munselectable[39m=[32m"on"[39m
+                                      [33mvalue[39m=[32m""[39m
+                                    [36m/>[39m
+                                  [36m</span>[39m
+                                  [36m<span[39m
+                                    [33mclass[39m=[32m"ant-select-selection-item"[39m
+                                    [33mtitle[39m=[32m"列表"[39m
+                                  [36m>[39m
+                                    [0m列表[0m
+                                  [36m</span>[39m
+                                [36m</span>[39m
+                              [36m</div>[39m
+                              [36m<span[39m
+                                [33maria-hidden[39m=[32m"true"[39m
+                                [33mclass[39m=[32m"ant-select-arrow"[39m
+                                [33mstyle[39m=[32m"user-select: none;"[39m
+                                [33munselectable[39m=[32m"on"[39m
+                              [36m>[39m
+                                [36m<span[39m
+                                  [33maria-label[39m=[32m"down"[39m
+                                  [33mclass[39m=[32m"anticon anticon-down ant-select-suffix"[39m
+                                  [33mrole[39m=[32m"img"[39m
+                                [36m>[39m
+                                  [36m<svg[39m
+                                    [33maria-hidden[39m=[32m"true"[39m
+                                    [33mdata-icon[39m=[32m"down"[39m
+                                    [33mfill[39m=[32m"currentColor"[39m
+                                    [33mfocusable[39m=[32m"false"[39m
+                                    [33mheight[39m=[32m"1em"[39m
+                                    [33mviewBox[39m=[32m"64 64 896 896"[39m
+                                    [33mwidth[39m=[32m"1em"[39m
+                                  [36m>[39m
+                                    [36m<path[39m
+                                      [33md[39m=[32m"M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5....
+ ❯ src/features/settings/SettingsPage.test.tsx:71:44
+     69|     fireEvent.mouseDown(screen.getByLabelText('提醒视图'));
+     70|     fireEvent.click(await screen.findByText('列表'));
+     71|     await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith({ remi…
+       |                                            ^
+     72|   });
+     73| 
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/settings/SettingsPage.test.tsx > SettingsPage > does not offer a personal switch that cannot control mandatory business notifications
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  aria-checked="true"
+  class="ant-switch css-dev-only-do-not-override-mncuj7 ant-switch-checked"
+  id="enablePushNotifications"
+  role="switch"
+  type="button"
+>
+  <div
+    class="ant-switch-handle"
+  />
+  <span
+    class="ant-switch-inner"
+  >
+    <span
+      class="ant-switch-inner-checked"
+    />
+    <span
+      class="ant-switch-inner-unchecked"
+    />
+  </span>
+</button> instead
+ ❯ src/features/settings/SettingsPage.test.tsx:84:46
+     82|   it('does not offer a personal switch that cannot control mandatory b…
+     83|     renderPage();
+     84|     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+       |                                              ^
+     85|     expect(screen.getByText('证照、采购和任务通知由业务规则控制。')).toBeInTheDocument();
+     86|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  11:11:39
+   Duration  7.37s (transform 269ms, setup 225ms, collect 2.72s, tests 2.74s, environment 1.15s, prepare 142ms)
+
+undefined
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/features/settings/SettingsPage.test.tsx

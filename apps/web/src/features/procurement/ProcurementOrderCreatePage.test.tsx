@@ -81,4 +81,22 @@ describe('ProcurementOrderCreatePage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/procurement/orders/order-1');
   });
+
+  it('keeps the selected expense time valid and saves it as Shanghai time', async () => {
+    render(<ProcurementOrderCreatePage />);
+
+    fillRequiredFields();
+    const expenseDate = screen.getByLabelText('费用时间（可选）');
+    fireEvent.focus(expenseDate);
+    fireEvent.change(expenseDate, { target: { value: '2026-11-17 10:30' } });
+    fireEvent.keyDown(expenseDate, { key: 'Enter', code: 'Enter' });
+    fireEvent.click(screen.getByRole('button', { name: '保存草稿' }));
+
+    await waitFor(() => {
+      expect(mockCreateOrder).toHaveBeenCalledWith(
+        expect.objectContaining({ expenseDate: '2026-11-17T02:30:00.000Z' }),
+      );
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/procurement/orders/order-1');
+  });
 });

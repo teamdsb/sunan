@@ -1,0 +1,37 @@
+{
+  "backendControllers": 19,
+  "backendRoutes": 233,
+  "frontendCalls": 195,
+  "unmatchedFrontendCalls": 0,
+  "unresolvedFrontendCalls": 0,
+  "delegatedOrSignedUrlCalls": 5,
+  "duplicateRoutes": 0,
+  "routesWithoutFrontendCall": 42,
+  "observedRequests": 974,
+  "routesObserved": 212,
+  "routesWith2xx": 210,
+  "routesWithoutObservedHttp": 21
+}
+NO_HTTP DELETE /api/v1/certificates/:id/files/:fileId
+NO_HTTP GET /api/v1/inspection-templates
+NO_HTTP POST /api/v1/inspection-templates/:templateId/versions
+NO_HTTP GET /api/v1/inspection-plans
+NO_HTTP GET /api/v1/inspections/:inspectionId/files/:fileId/download-url
+NO_HTTP GET /api/v1/issues/statistics
+NO_HTTP GET /api/v1/capa-actions/:actionId/files/:fileId/download-url
+NO_HTTP GET /api/v1/plans
+NO_HTTP PATCH /api/v1/plans/:planId
+NO_HTTP GET /api/v1/plans/:planId/items
+NO_HTTP PATCH /api/v1/plans/:planId/items/:itemId
+NO_HTTP POST /api/v1/task-notification-deliveries/actions/process
+NO_HTTP POST /api/v1/plan-task-jobs/actions/run
+NO_HTTP GET /api/v1/procurement/admin/budgets
+NO_HTTP GET /api/v1/procurement/reports/dimension-details
+NO_HTTP GET /api/v1/workbench/export-jobs/:jobId
+NO_HTTP POST /api/v1/workbench/export-jobs/:jobId/retry
+NO_HTTP GET /api/v1/workbench/learning/people
+NO_HTTP GET /api/v1/workbench/statistics/learning/export
+NO_HTTP GET /api/v1/workbench/statistics/fuel/export
+NO_HTTP POST /api/v1/workbench/records/:recordId/signature-evidence
+NO_2XX GET /api/v1/workbench/export-jobs/:jobId/download-url {"403":1}
+NO_2XX POST /api/v1/workbench/records/:recordId/location-evidence {"409":1}

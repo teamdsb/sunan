@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -12,6 +12,8 @@ const mockCreate = vi.fn();
 const mockPublish = vi.fn();
 const mockDelete = vi.fn();
 const mockCurrentUser = vi.fn();
+const mockPolicyDetail = vi.fn();
+const mockUpdate = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
   useAppSelector: (
@@ -32,27 +34,12 @@ vi.mock('./enterpriseApi', () => ({
   useCreateEnterprisePolicyMutation: () => [mockCreate, { isLoading: false }],
   usePublishEnterprisePolicyMutation: () => [mockPublish],
   useDeleteEnterprisePolicyMutation: () => [mockDelete],
-  useGetEnterprisePolicyByIdQuery: () => ({
-    data: {
-      data: {
-        id: '1',
-        title: '制度A',
-        policyCode: 'P-1',
-        version: 'v1',
-        summary: '',
-        status: 'draft',
-        publishedAt: '2026-08-12T09:30:00.000+08:00',
-        files: [],
-        canManage: true,
-      },
-    },
-    isLoading: false,
-  }),
+  useGetEnterprisePolicyByIdQuery: () => mockPolicyDetail(),
   useGetEnterprisePolicyVersionsQuery: () => ({
     data: { data: [] },
     isLoading: false,
   }),
-  useUpdateEnterprisePolicyMutation: () => [vi.fn(), { isLoading: false }],
+  useUpdateEnterprisePolicyMutation: () => [mockUpdate, { isLoading: false }],
   useBindEnterprisePolicyFilesMutation: () => [vi.fn()],
   useUnbindEnterprisePolicyFileMutation: () => [vi.fn()],
   useLazyGetEnterprisePolicyFileDownloadUrlQuery: () => [vi.fn()],
@@ -71,6 +58,8 @@ function LocationDisplay() {
 describe('EnterprisePolicyPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPolicyDetail.mockReturnValue({ data: { data: { id: '1', title: '制度A', policyCode: 'P-1', version: 'v1', summary: '制度正文摘要', status: 'draft', publishedAt: null, files: [], canManage: true } }, isLoading: false });
+    mockUpdate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     mockList.mockReturnValue({
       data: {
         data: [
@@ -93,6 +82,44 @@ describe('EnterprisePolicyPage', () => {
       userId: 'manager-1',
       roles: ['all_authenticated', 'finance'],
     });
+  });
+
+  it('shows the title and summary to a reader without an edit form', () => {
+    const response = mockPolicyDetail();
+    mockPolicyDetail.mockReturnValue({ ...response, data: { data: { ...response.data.data, canManage: false } } });
+    render(<MemoryRouter initialEntries={['/my/enterprise-policy/1']}><Routes><Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} /></Routes></MemoryRouter>);
+
+    expect(screen.getByText('制度A')).toBeInTheDocument();
+    expect(screen.getByText('制度正文摘要')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'upload' })).not.toBeInTheDocument();
+  });
+
+  it.each(['published', 'deprecated'])('keeps a %s published version and its attachments read-only', (status) => {
+    const response = mockPolicyDetail();
+    mockPolicyDetail.mockReturnValue({ ...response, data: { data: { ...response.data.data, status, publishedAt: '2026-11-17T02:30:00.000Z', files: [{ id: 'f1', fileName: '发布版.pdf', mimeType: 'application/pdf', fileSize: 1024 }] } } });
+    render(<MemoryRouter initialEntries={['/my/enterprise-policy/1']}><Routes><Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} /></Routes></MemoryRouter>);
+
+    expect(screen.getByText('制度正文摘要')).toBeInTheDocument();
+    expect(screen.queryByLabelText('制度标题')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'upload' })).not.toBeInTheDocument();
+    const attachment = screen.getByText('发布版.pdf').closest('.ant-list-item') as HTMLElement;
+    expect(within(attachment).queryByRole('button', { name: /删\s*除/ })).not.toBeInTheDocument();
+  });
+
+  it('deprecates a published version without resubmitting its content', async () => {
+    const response = mockPolicyDetail();
+    mockPolicyDetail.mockReturnValue({ ...response, data: { data: { ...response.data.data, status: 'published', publishedAt: '2026-11-17T02:30:00.000Z' } } });
+    render(<MemoryRouter initialEntries={['/my/enterprise-policy/1']}><Routes><Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} /></Routes></MemoryRouter>);
+
+    fireEvent.click(screen.getByRole('button', { name: '废弃此版本' }));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith({ id: '1', data: { status: 'deprecated' } }));
+  });
+
+  it('saves an uploaded attachment in the same update as the draft content', async () => {
+    render(<MemoryRouter initialEntries={['/my/enterprise-policy/1']}><Routes><Route path="/my/enterprise-policy/:id" element={<EnterprisePolicyDetailPage />} /></Routes></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'upload' }));
+    fireEvent.click(screen.getByRole('button', { name: /保\s*存/ }));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith({ id: '1', data: expect.objectContaining({ fileIds: ['f3'] }) }));
   });
 
   it('keeps keyword drafting local until search is committed', async () => {
@@ -141,6 +168,8 @@ describe('EnterprisePolicyPage', () => {
   });
 
   it('returns from detail to the filtered policy list', () => {
+    const response = mockPolicyDetail();
+    mockPolicyDetail.mockReturnValue({ ...response, data: { data: { ...response.data.data, publishedAt: '2026-08-12T09:30:00.000+08:00' } } });
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}

@@ -1,0 +1,11 @@
+{
+  "head": "cce7d0ee202dea22d8493d437b5e4cd7b5e6ba03",
+  "existingModified": [
+    ".dockerignore",
+    ".gitignore",
+    "findings.md",
+    "progress.md",
+    "task_plan.md"
+  ],
+  "sensitiveBackupsExcluded": true
+}

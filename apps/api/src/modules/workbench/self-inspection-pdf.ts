@@ -1,5 +1,6 @@
 import fontkit from '@pdf-lib/fontkit';
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
+import { EXPORT_PDF_THEME } from 'src/common/export/export-theme';
 import { createChinesePdfFont } from 'src/common/pdf/chinese-pdf-font';
 
 export interface SelfInspectionPrintData {
@@ -65,8 +66,8 @@ export async function buildSelfInspectionPdf(
   const [width, height] = paper === 'A3' ? [842, 1191] : [595, 842];
   const margin = 44;
   const contentWidth = width - margin * 2;
-  const navy = rgb(0.1, 0.2, 0.3),
-    gray = rgb(0.38, 0.42, 0.46);
+  const navy = EXPORT_PDF_THEME.navy,
+    gray = EXPORT_PDF_THEME.muted;
   let page = doc.addPage([width, height]);
   let y = height - 105;
   const header = () => {

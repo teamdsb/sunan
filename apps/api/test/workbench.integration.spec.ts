@@ -1281,10 +1281,9 @@ describe('WorkbenchController integration', () => {
       .post('/api/v1/workbench/statistics/attendance/reconcile')
       .set('Authorization', 'Bearer token')
       .send({ month: '2026-04', compareSource: 'finance_template' });
-    expect(attendanceReconcile.status).toBe(202);
-    expect(
-      (attendanceReconcile.body as { data: { status: string } }).data.status,
-    ).toBe('queued');
+    // No financial reconciliation worker/result store exists. The retired
+    // placeholder must not acknowledge a job that can never execute.
+    expect(attendanceReconcile.status).toBe(404);
 
     currentUser = {
       ...currentUser,

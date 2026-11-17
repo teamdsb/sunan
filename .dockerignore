@@ -11,3 +11,6 @@ coverage
 **/.env.*.local
 apps/web/dist-review-no-mock
 deploy/.env
+
+# Local production backups (contains private configuration)
+backup/

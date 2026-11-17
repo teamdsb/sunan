@@ -38,9 +38,9 @@ export class FilesController {
   }
 
   @Get(':ossKey/download-url')
-  async getDownloadUrl(@Param('ossKey') ossKey: string) {
+  async getDownloadUrl(@Param('ossKey') ossKey: string, @CurrentUserDecorator() currentUser: CurrentUser) {
     return {
-      data: await this.filesService.getDownloadUrl(ossKey),
+      data: await this.filesService.getDownloadUrl(ossKey, currentUser),
     };
   }
 

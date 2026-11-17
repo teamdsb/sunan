@@ -1,0 +1,16 @@
+{
+  "backendControllers": 19,
+  "backendRoutes": 233,
+  "frontendCalls": 195,
+  "unmatchedFrontendCalls": 0,
+  "unresolvedFrontendCalls": 0,
+  "delegatedOrSignedUrlCalls": 5,
+  "duplicateRoutes": 0,
+  "routesWithoutFrontendCall": 42,
+  "observedRequests": 2995,
+  "routesObserved": 233,
+  "routesWith2xx": 233,
+  "routesWithoutObservedHttp": 0,
+  "finalRunRoutesObserved": 231,
+  "finalRunRoutesWith2xx": 231
+}

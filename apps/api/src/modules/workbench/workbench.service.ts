@@ -7,8 +7,12 @@ import { FuelActualDto, FuelMeasurementDto, LearningPublishDto } from './dto/wor
 import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createDecipheriv, createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { readFileSync } from 'fs';
+import fontkit from '@pdf-lib/fontkit';
+import { PDFDocument } from 'pdf-lib';
 import { appEnv } from 'src/config/env';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { EXPORT_PDF_THEME } from 'src/common/export/export-theme';
+import { createChinesePdfFont } from 'src/common/pdf/chinese-pdf-font';
 import { toBusinessDateTime } from 'src/common/date/business-date';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { EvidenceRecordEntity } from 'src/database/entities/evidence-record.entity';
@@ -27,6 +31,7 @@ import { WorkbenchRecordTransferEntity } from 'src/database/entities/workbench-r
 import { WorkbenchDelegationEntity } from 'src/database/entities/workbench-delegation.entity';
 import { WorkbenchTemplateEntity } from 'src/database/entities/workbench-template.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { assertAttachmentFilesBindable } from 'src/modules/files/file-retention';
 import { OssService } from 'src/modules/files/oss.service';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
@@ -38,7 +43,6 @@ import { WorkbenchApprovalLaunchDto } from './dto/workbench-approval-launch.dto'
 import { WorkbenchApprovalReconcileDto } from './dto/workbench-approval-reconcile.dto';
 import { WorkbenchApprovalRetryDto } from './dto/workbench-approval-retry.dto';
 import { WorkbenchAttendanceExportQueryDto } from './dto/workbench-attendance-export-query.dto';
-import { WorkbenchAttendanceReconcileDto } from './dto/workbench-attendance-reconcile.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
@@ -136,11 +140,12 @@ interface WorkbenchRecord {
   payload: Record<string, unknown>;
   steps: WorkbenchStep[];
   attachments: WorkbenchAttachment[];
+  signatureEvidence: WorkbenchAttachment[];
   actionLogs: WorkbenchActionLog[];
 }
 
 interface WecomApprovalLaunchConfig {
-  oaType: '10001';
+  oaType: '10001' | '10002';
   templateId: string;
   thirdNo: string;
   extData: {
@@ -1848,27 +1853,6 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private toExportJob(job: ExportJobEntity) { return { id: job.id, status: job.status, exportFormat: job.exportFormat, resultFileId: job.resultFileId, failureMessage: job.failureMessage, retryCount: job.retryCount, requestedAt: job.requestedAt.toISOString(), startedAt: job.startedAt?.toISOString() ?? null, finishedAt: job.finishedAt?.toISOString() ?? null }; }
 
-  async reconcileAttendanceStatistics(dto: WorkbenchAttendanceReconcileDto, user: CurrentUser) {
-    this.assertAttendanceAdmin(user);
-
-    const month = this.normalizeMonth(dto.month);
-    const compareSource = dto.compareSource ?? 'finance_template';
-    const reconcileJobId = `att-reconcile-${Date.now()}-${randomUUID().slice(0, 8)}`;
-    const stats = await this.getAttendanceStatistics(user, month);
-    const differenceCount = stats.summary.outRangeCount;
-
-    this.logger.log(
-      `attendance reconcile queued: month=${month}, source=${compareSource}, department=${dto.departmentCode ?? 'all'}, job=${reconcileJobId}`,
-    );
-
-    return {
-      reconcileJobId,
-      status: 'queued' as const,
-      month,
-      differenceCount,
-    };
-  }
-
   async listRecords(query: WorkbenchRecordListQueryDto, user: CurrentUser) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -2054,7 +2038,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       Object.assign(publicPayload, {participants:user.name,crewNames:user.name,learningAudience:user.name,learningProgressPercent:own?.progressPercent ?? 0,learningStatus:own?.completedAt ? 'completed' : 'in_progress',completedAt:own?.completedAt ?? null});
       hydrated.actionLogs = hydrated.actionLogs.filter(log => log.actionType !== 'confirm_learning' || log.operatorUserId === user.userId);
     }
-    return { ...this.toRecordDetail(hydrated), payload: publicPayload, learning: this.learning.view(record, user), canManageLearning: isLearningManager(user), canRecordFuel: record.moduleCode === FUEL_MODULE && record.status === 'approval_passed' && (isLearningManager(user) || record.ownerUserId === user.userId), ...(record.moduleCode === SELF_INSPECTION_MODULE ? await this.selfInspection.names(record) : {}), availableActions: await this.getAvailableActions(record, user) };
+    return { ...this.toRecordDetail(hydrated), payload: publicPayload, learning: this.learning.view(record, user), canManageLearning: isLearningManager(user), canLaunchApproval: user.roles.includes('system_admin') || [record.ownerUserId, record.applicantUserId].includes(user.userId) || (LEARNING_MODULES.includes(record.moduleCode) && isLearningManager(user)), canRecordFuel: record.moduleCode === FUEL_MODULE && record.status === 'approval_passed' && (isLearningManager(user) || record.ownerUserId === user.userId), ...(record.moduleCode === SELF_INSPECTION_MODULE ? await this.selfInspection.names(record) : {}), availableActions: await this.getAvailableActions(record, user) };
   }
 
   async listInspectionPeople(user: CurrentUser) { return this.selfInspection.people(user); }
@@ -2140,6 +2124,9 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         throw new NotFoundException('step not found');
       }
 
+      const currentStep = steps.find((item) => item.status === 'in_progress') ?? steps.find((item) => item.status === 'pending');
+      if (step !== currentStep) throw new ConflictException('Only the current step may be completed');
+
       if (isInspectionRectification) {
         const rectificationRequired = dto.payload?.rectificationRequired;
         if (typeof rectificationRequired === 'boolean') {
@@ -2167,20 +2154,28 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       } else {
         record.status = 'pending_review';
       }
-    } else if (dto.actionType === 'request_rework' && isInspectionRectification) {
-      const inProgressStep = steps.find((step) => step.status === 'in_progress');
-      if (inProgressStep) {
-        inProgressStep.rectificationRequired = true;
-        inProgressStep.rectificationStatus = 'rework_required';
+    } else if (dto.actionType === 'request_rework') {
+      const rectificationIndex = isInspectionRectification ? steps.findIndex((step) => step.stepCode === 'rectification') : Math.max(0, steps.length - 1);
+      if (isInspectionRectification && rectificationIndex < 0) throw new ConflictException('Rectification step is missing');
+      steps.slice(rectificationIndex).forEach((step, index) => {
+        step.status = index === 0 ? 'in_progress' : 'pending';
+        step.completedBy = null;
+        step.completedAt = null;
+      });
+      if (isInspectionRectification) {
+        steps[rectificationIndex]!.rectificationRequired = true;
+        steps[rectificationIndex]!.rectificationStatus = 'rework_required';
       }
       record.status = 'rework_required';
     } else if (dto.actionType === 'return_step') {
       const stepCode = this.toScalarString(dto.payload?.stepCode).trim();
       const step = steps.find((item) => item.stepCode === stepCode);
       if (!step) throw new NotFoundException('step not found');
-      step.status = 'in_progress';
-      step.completedBy = null;
-      step.completedAt = null;
+      steps.slice(steps.indexOf(step)).forEach((item, index) => {
+        item.status = index === 0 ? 'in_progress' : 'pending';
+        item.completedBy = null;
+        item.completedAt = null;
+      });
       record.status = 'in_progress';
     } else if (dto.actionType === 'terminate') {
       record.status = 'terminated';
@@ -2189,6 +2184,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     } else if (dto.actionType === 'reopen') {
       record.status = 'assigned';
       record.closedAt = null;
+      steps.forEach((step) => { step.status = 'pending'; step.completedBy = null; step.completedAt = null; });
     } else if (dto.actionType === 'delegate') {
       const delegateeUserId = this.toScalarString(dto.payload?.delegateeUserId).trim();
       const effectiveTo = this.toScalarString(dto.payload?.effectiveTo).trim();
@@ -2200,6 +2196,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       await this.transferRepository.save(this.transferRepository.create({ businessRecordId: record.id, fromUserId: record.assigneeUserId ?? record.ownerUserId, toUserId, reason: dto.comment ?? '', transferredBy: user.userId }));
       record.assigneeUserId = toUserId;
     } else {
+      if (['submit_review', 'close_record'].includes(dto.actionType) && steps.some((step) => step.status !== 'completed')) throw new ConflictException('All execution steps must be completed before review or closure');
       record.status = this.resolveNextStatus(fromStatus, dto.actionType);
     }
 
@@ -2244,10 +2241,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   async uploadAttachment(recordId: string, dto: WorkbenchRecordUploadAttachmentDto, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId);
-    if (!LEARNING_MODULES.includes(record.moduleCode)) return this.saveAttachment(recordId, dto, user);
+    if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.upload(recordId, dto, user);
     return this.recordRepository.manager.transaction(async manager => {
       const locked = await manager.findOne(WorkbenchRecordEntity, {where:{id:recordId},lock:{mode:'pessimistic_write'}});
-      if (!locked || !isLearningManager(user) || learningState(locked)) throw new ConflictException('学习下发后不可变更材料');
+      if (!locked) throw new NotFoundException('record not found');
+      if (LEARNING_MODULES.includes(locked.moduleCode) && (!isLearningManager(user) || learningState(locked))) throw new ConflictException('学习下发后不可变更材料');
       return this.saveAttachment(recordId, dto, user, manager);
     });
   }
@@ -2259,6 +2257,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.upload(recordId, dto, user);
     await this.assertRecordVisible(record, user);
     if (LEARNING_MODULES.includes(record.moduleCode) && (!isLearningManager(user) || learningState(record))) throw new ConflictException('已下发的学习内容不可变更，请创建新的学习记录');
+    if (!LEARNING_MODULES.includes(record.moduleCode)) await this.assertActionAuthorized(record, 'update_payload', undefined, user);
 
     let stepId: string | null = null;
     if (dto.stepCode?.trim()) {
@@ -2274,6 +2273,9 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       stepId = step.id;
     }
 
+    const retained = await attachments.find({ where: { businessRecordId: record.id } });
+    const available = await assertAttachmentFilesBindable(manager, [dto.fileId], user, retained.map((attachment) => attachment.fileId));
+    if (!available.has(dto.fileId)) throw new NotFoundException('file not found');
     const file = await manager.getRepository(FileEntity).findOne({ where: { id: dto.fileId } });
     if (!file) {
       throw new NotFoundException('file not found');
@@ -2326,10 +2328,11 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const attachment = await this.attachmentRepository.findOne({
       where: { businessRecordId: recordId, fileId },
     });
-    if (!attachment) throw new NotFoundException('attachment not found');
+    const signature = !attachment && await this.evidenceRepository.exists({ where: { businessType: 'workbench_record', businessId: recordId, fileId, evidenceType: 'signature', status: 'active' } });
+    if (!attachment && !signature) throw new NotFoundException('attachment not found');
     const file = await this.fileRepository.findOne({ where: { id: fileId } });
     if (!file) throw new NotFoundException('file not found');
-    return this.ossService.createDownloadSignature(record.moduleCode === SELF_INSPECTION_MODULE ? attachment.storagePath ?? file.ossKey : file.ossKey);
+    return this.ossService.createDownloadSignature(record.moduleCode === SELF_INSPECTION_MODULE ? attachment?.storagePath ?? file.ossKey : file.ossKey);
   }
 
   async getPrintSnapshot(recordId: string, user: CurrentUser, paperSize: PrintPaperSize = 'A4') {
@@ -2356,7 +2359,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       const view = this.learning.view(record,user);
       pdfBuffer = await learningPdf({title: record.title, summary: record.summary, recordNo: record.recordNo, learning: view, paperSize, generatedAt: renderedAt});
     } else {
-      pdfBuffer = this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
+      pdfBuffer = await this.buildWorkbenchPrintPdf(hydrated, snapshotData, renderedAt, paperSize);
     }
     const printFile = await this.persistWorkbenchPrintPdf({
       fileName: `workbench-${hydrated.id}-${paperSize}.pdf`,
@@ -2397,20 +2400,27 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   async createSignatureEvidence(recordId: string, signatureFileId: string, hash: string, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
     if (record.moduleCode === SELF_INSPECTION_MODULE) throw new ConflictException('自查证据请通过检查和整改照片入口提交');
+    await this.assertActionAuthorized(record, 'update_payload', undefined, user);
     if (!/^[a-f0-9]{64}$/.test(hash)) throw new BadRequestException('invalid summary hash');
-    if (!(await this.fileRepository.exist({ where: { id: signatureFileId } }))) throw new NotFoundException('signature file not found');
-    return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'signature', fileId: signatureFileId, summaryHash: hash, captureStatus: 'captured', capturedBy: user.userId, status: 'active', latitude: null, longitude: null, accuracyMeters: null, failureReason: null, addressText: null }));
+    return this.recordRepository.manager.transaction(async (manager) => {
+      const evidence = manager.getRepository(EvidenceRecordEntity);
+      const retained = await evidence.find({ where: { businessType: 'workbench_record', businessId: recordId, evidenceType: 'signature' } });
+      const available = await assertAttachmentFilesBindable(manager, [signatureFileId], user, retained.flatMap((row) => row.fileId ? [row.fileId] : []));
+      if (!available.has(signatureFileId)) throw new NotFoundException('signature file not found');
+      return evidence.save(evidence.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'signature', fileId: signatureFileId, summaryHash: hash, captureStatus: 'captured', capturedBy: user.userId, status: 'active', latitude: null, longitude: null, accuracyMeters: null, failureReason: null, addressText: null }));
+    });
   }
 
   async createLocationEvidence(recordId: string, body: { captureStatus: string; latitude?: number; longitude?: number; accuracyMeters?: number; failureReason?: string; addressText?: string }, user: CurrentUser) {
     const record = await this.mustGetRecord(recordId); await this.assertRecordVisible(record, user);
     if (record.moduleCode === SELF_INSPECTION_MODULE) throw new ConflictException('自查证据请通过检查和整改照片入口提交');
+    await this.assertActionAuthorized(record, 'update_payload', undefined, user);
     const captured = body.captureStatus === 'captured';
     if (!['captured', 'manual', 'denied', 'sdk_failed'].includes(body.captureStatus) || (captured && (body.latitude === undefined || body.longitude === undefined || body.accuracyMeters === undefined)) || (!captured && body.captureStatus !== 'manual' && !body.failureReason?.trim())) throw new BadRequestException('invalid location evidence');
     return this.evidenceRepository.save(this.evidenceRepository.create({ businessType: 'workbench_record', businessId: recordId, evidenceType: 'location', fileId: null, summaryHash: null, captureStatus: body.captureStatus, capturedBy: user.userId, status: 'active', latitude: captured ? body.latitude! : null, longitude: captured ? body.longitude! : null, accuracyMeters: captured ? body.accuracyMeters! : null, failureReason: captured ? null : body.failureReason?.trim() ?? null, addressText: body.addressText?.trim() || null }));
   }
 
-  private buildWorkbenchPrintPdf(record: WorkbenchRecord, snapshotData: Record<string, unknown>, renderedAt: Date, paperSize: PrintPaperSize): Buffer {
+  private async buildWorkbenchPrintPdf(record: WorkbenchRecord, snapshotData: Record<string, unknown>, renderedAt: Date, paperSize: PrintPaperSize): Promise<Buffer> {
     const payloadJson = JSON.stringify(snapshotData.payload ?? {}, null, 2);
     const lines = [
       `Record ID: ${record.id}`,
@@ -2446,6 +2456,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       title: 'Workbench Print Snapshot',
       lines,
       paperSize,
+      generatedAt: renderedAt,
     });
   }
 
@@ -2483,6 +2494,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     const record = await this.mustGetRecord(dto.businessRecordId);
     if (record.moduleCode === SELF_INSPECTION_MODULE) throw new BadRequestException('船舶自查由指定审核人在系统内审核');
     await this.assertRecordVisible(record, user);
+    if (!user.roles.includes('system_admin') && ![record.ownerUserId, record.applicantUserId].includes(user.userId) && !(LEARNING_MODULES.includes(record.moduleCode) && isLearningManager(user))) throw new ForbiddenException('Only the applicant may launch or resume this approval');
     if (LEARNING_MODULES.includes(record.moduleCode)) {
       const learning = learningState(record);
       if (!isLearningManager(user)) throw new ForbiddenException('仅管理人员可发起培训审批');
@@ -2498,7 +2510,25 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (record.externalProcessInstanceId) {
-      throw new BadRequestException('approval process already exists for this record');
+      const instance = await this.approvalSyncRepository.findOne({ where: { businessRecordId: record.id, processInstanceId: record.externalProcessInstanceId } });
+      if (!instance) throw new ConflictException('审批实例尚未核实，请保留原编号并联系管理员核对');
+      try {
+        const accessToken = await this.wecomTokenService.getAccessToken();
+        await this.refreshApprovalInstanceFromWecom(instance, accessToken, user, '申请人核对原审批状态', 'approval_launch_reconcile');
+      } catch (error) {
+        instance.approvalSyncStatus = 'pending_confirmation';
+        instance.syncErrorCode = 'wecom_launch_status_unconfirmed';
+        instance.syncErrorMessage = this.toErrorMessage(error);
+        await this.approvalSyncRepository.save(instance);
+        throw new ConflictException(`审批状态尚未核实，原编号 ${instance.processInstanceId} 已保留。请稍后重试核对，或联系管理员核对企业微信记录；系统不会重复发起审批`);
+      }
+      return {
+        processInstanceId: instance.processInstanceId, thirdNo: instance.processInstanceId,
+        wecomTemplateId: instance.wecomTemplateId, approvalChannel: 'wecom_native' as const,
+        launchStatus: 'started' as LaunchStatus, mirrorStatus: instance.internalMirrorStatus,
+        approvalSyncStatus: instance.approvalSyncStatus,
+        wecomLaunchConfig: { oaType: '10002' as const, templateId: instance.wecomTemplateId, thirdNo: instance.processInstanceId, extData: { fieldList: [] } },
+      };
     }
 
     const { schemaDefinition, templateCode } = await this.mustGetModuleTemplate(moduleItem);
@@ -2509,7 +2539,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       templateBinding.wecomTemplateId,
       processInstanceId,
       record,
-      dto,
+      { ...dto, applicantUserId: user.userId, title: record.title, summary: record.summary, payload: record.payload },
       schemaDefinition,
     );
     const now = new Date();
@@ -2540,6 +2570,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
           thirdNo: processInstanceId,
           templateId: templateBinding.wecomTemplateId,
           payload: dto.payload ?? {},
+          launchConfig,
         }),
       }),
     );
@@ -3714,74 +3745,68 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return '';
   }
 
-  private buildPdf(input: { title: string; lines: string[]; paperSize: PrintPaperSize }): Buffer {
+  private async buildPdf(input: { title: string; lines: string[]; paperSize: PrintPaperSize; generatedAt: Date }): Promise<Buffer> {
     const pageWidth = input.paperSize === 'A3' ? PDF_A3_PAGE_WIDTH : PDF_A4_PAGE_WIDTH;
     const pageHeight = input.paperSize === 'A3' ? PDF_A3_PAGE_HEIGHT : PDF_A4_PAGE_HEIGHT;
-    const maxLinesPerPage = input.paperSize === 'A3' ? Math.floor((pageHeight - PDF_MARGIN_TOP * 2) / PDF_LINE_HEIGHT) - 2 : PDF_MAX_LINES_PER_PAGE;
+    const documentFont = await createChinesePdfFont({ title: input.title, lines: input.lines });
+    const pdf = await PDFDocument.create();
+    pdf.registerFontkit(fontkit);
+    const font = await pdf.embedFont(documentFont);
+    const maxLinesPerPage = input.paperSize === 'A3'
+      ? Math.floor((pageHeight - PDF_MARGIN_TOP * 2) / PDF_LINE_HEIGHT) - 2
+      : PDF_MAX_LINES_PER_PAGE;
     const pages: string[][] = [];
     for (let index = 0; index < input.lines.length; index += maxLinesPerPage) {
       pages.push(input.lines.slice(index, index + maxLinesPerPage));
     }
 
-    const pageStreams = pages.map((pageLines, pageIndex) => {
-      const commands: string[] = ['BT', '/F1 12 Tf'];
-      const pageTitle = `${input.title}  Page ${pageIndex + 1}/${pages.length}`;
-      commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${(pageHeight - PDF_MARGIN_TOP).toFixed(2)} Tm (${this.escapePdfText(pageTitle)}) Tj`);
-
-      pageLines.forEach((line, lineIndex) => {
-        const y = pageHeight - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2);
-        commands.push(`1 0 0 1 ${PDF_MARGIN_LEFT.toFixed(2)} ${y.toFixed(2)} Tm (${this.escapePdfText(line)}) Tj`);
+    pages.forEach((pageLines, pageIndex) => {
+      const page = pdf.addPage([pageWidth, pageHeight]);
+      page.drawRectangle({
+        x: 0,
+        y: pageHeight - 74,
+        width: pageWidth,
+        height: 74,
+        color: EXPORT_PDF_THEME.pale,
       });
-
-      commands.push('ET');
-      return commands.join('\n');
+      page.drawText(input.title, {
+        x: PDF_MARGIN_LEFT,
+        y: pageHeight - 38,
+        size: 16,
+        font,
+        color: EXPORT_PDF_THEME.navy,
+      });
+      page.drawLine({
+        start: { x: PDF_MARGIN_LEFT, y: pageHeight - PDF_MARGIN_TOP - 8 },
+        end: { x: pageWidth - PDF_MARGIN_LEFT, y: pageHeight - PDF_MARGIN_TOP - 8 },
+        thickness: 0.8,
+        color: EXPORT_PDF_THEME.blue,
+      });
+      pageLines.forEach((line, lineIndex) => {
+        page.drawText(line, {
+          x: PDF_MARGIN_LEFT,
+          y: pageHeight - PDF_MARGIN_TOP - PDF_LINE_HEIGHT * (lineIndex + 2),
+          size: 10,
+          font,
+          color: EXPORT_PDF_THEME.navy,
+        });
+      });
+      page.drawLine({
+        start: { x: PDF_MARGIN_LEFT, y: 45 },
+        end: { x: pageWidth - PDF_MARGIN_LEFT, y: 45 },
+        thickness: 0.5,
+        color: EXPORT_PDF_THEME.line,
+      });
+      const footer = `业务数据快照 | 生成时间：${input.generatedAt.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })}（上海） | 第 ${pageIndex + 1}/${pages.length} 页`;
+      page.drawText(footer, {
+        x: PDF_MARGIN_LEFT,
+        y: 26,
+        size: 7.5,
+        font,
+        color: EXPORT_PDF_THEME.muted,
+      });
     });
-
-    return this.composePdf(pageStreams, pageWidth, pageHeight);
-  }
-
-  private composePdf(pageStreams: string[], pageWidth: number, pageHeight: number): Buffer {
-    const objects: string[] = [];
-    const pageObjectIds: number[] = [];
-
-    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
-    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
-
-    let nextObjectId = 4;
-    pageStreams.forEach((stream) => {
-      const pageObjectId = nextObjectId;
-      const contentObjectId = nextObjectId + 1;
-
-      pageObjectIds.push(pageObjectId);
-      objects[pageObjectId] =
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
-      objects[contentObjectId] = `<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream`;
-
-      nextObjectId += 2;
-    });
-
-    objects[2] = `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageObjectIds.length} >>`;
-
-    const maxObjectId = nextObjectId - 1;
-    let pdf = '%PDF-1.4\n';
-    const offsets: number[] = [0];
-
-    for (let id = 1; id <= maxObjectId; id += 1) {
-      const objectBody = objects[id] ?? '<< >>';
-      offsets[id] = Buffer.byteLength(pdf, 'utf8');
-      pdf += `${id} 0 obj\n${objectBody}\nendobj\n`;
-    }
-
-    const xrefOffset = Buffer.byteLength(pdf, 'utf8');
-    pdf += `xref\n0 ${maxObjectId + 1}\n`;
-    pdf += '0000000000 65535 f \n';
-
-    for (let id = 1; id <= maxObjectId; id += 1) {
-      pdf += `${String(offsets[id] ?? 0).padStart(10, '0')} 00000 n \n`;
-    }
-
-    pdf += `trailer\n<< /Size ${maxObjectId + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-    return Buffer.from(pdf, 'utf8');
+    return Buffer.from(await pdf.save());
   }
 
   private wrapPdfTextLines(text: string, maxUnitsPerLine: number): string[] {
@@ -3816,15 +3841,6 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return wrapped;
   }
 
-  private escapePdfText(text: string): string {
-    return text
-      .replace(/\\/g, '\\\\')
-      .replace(/\(/g, '\\(')
-      .replace(/\)/g, '\\)')
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '');
-  }
-
   private toRecordDetail(record: WorkbenchRecord) {
     return {
       ...this.toRecordSummary(record),
@@ -3837,6 +3853,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       externalStatus: record.externalStatus,
       steps: record.steps,
       attachments: record.attachments,
+      signatureEvidence: record.signatureEvidence,
       actionLogs: record.actionLogs,
       payload: record.payload,
     };
@@ -3878,37 +3895,42 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
 
   private async assertActionAuthorized(record: WorkbenchRecordEntity, actionType: WorkbenchRecordActionDto['actionType'], payload: Record<string, unknown> | undefined, user: CurrentUser) {
     await this.assertRecordVisible(record, user);
-    if (user.roles.includes('system_admin')) return;
-    if (!['start', 'complete_step', 'submit_review', 'request_rework', 'close_record'].includes(actionType)) return;
     const stepCode = typeof payload?.stepCode === 'string' ? payload.stepCode : undefined;
     const step = stepCode ? await this.stepRepository.findOne({ where: { businessRecordId: record.id, stepCode } }) : null;
+    if (!(await this.authorizedRecordActions(record, user, step?.id)).includes(actionType)) throw new ForbiddenException('forbidden');
+  }
+
+  private async authorizedRecordActions(record: WorkbenchRecordEntity, user: CurrentUser, stepId?: string) {
+    if (user.roles.includes('system_admin')) return ['submit', 'assign', 'start', 'complete_step', 'update_payload', 'submit_review', 'request_rework', 'close_record', 'archive', 'return_step', 'terminate', 'void', 'reopen', 'delegate', 'transfer'];
     const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, status: 'active', deletedAt: IsNull() } });
-    const isStepParticipant = participants.some((item) => item.userId === user.userId && (!step || item.stepId === null || item.stepId === step.id) && (item.role === 'executor' || item.role === 'collaborator' || item.role === 'reviewer'));
     const legacyOwner = participants.length === 0 && [record.ownerUserId, record.assigneeUserId, record.reviewerUserId].includes(user.userId);
-    if (!isStepParticipant && !legacyOwner) throw new ForbiddenException('forbidden');
+    const roles = new Set(participants.filter((item) => item.userId === user.userId && (!stepId || item.stepId === null || item.stepId === stepId)).map((item) => item.role));
+    const actions: string[] = [];
+    if (legacyOwner || roles.has('executor') || roles.has('collaborator')) actions.push('submit', 'start', 'complete_step', 'update_payload', 'delegate');
+    if (legacyOwner || roles.has('reviewer')) actions.push('assign', 'update_payload', 'submit_review', 'request_rework', 'close_record', 'archive', 'return_step', 'terminate', 'void', 'reopen', 'transfer');
+    return [...new Set(actions)];
   }
 
   private async getAvailableActions(record: WorkbenchRecordEntity, user: CurrentUser) {
     if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.availableActions(record, user);
     if ([FUEL_MODULE, FUEL_MEASUREMENT, ...LEARNING_MODULES].includes(record.moduleCode)) return [];
     if (!(await this.canReadRecord(record, user))) return [];
-    if (user.roles.includes('system_admin')) return ['start', 'complete_step', 'submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'void', 'reopen', 'delegate', 'transfer'];
-    const participants = await this.participantRepository.find({ where: { businessRecordId: record.id, userId: user.userId, status: 'active', deletedAt: IsNull() } });
-    const roles = new Set(participants.map((item) => item.role));
-    const legacyOwner = participants.length === 0 && [record.ownerUserId, record.assigneeUserId, record.reviewerUserId].includes(user.userId);
-    const actions: string[] = [];
-    if (legacyOwner || roles.has('executor') || roles.has('collaborator')) actions.push('start', 'complete_step', 'delegate');
-    if (legacyOwner || roles.has('reviewer')) actions.push('submit_review', 'request_rework', 'close_record', 'return_step', 'terminate', 'reopen', 'transfer');
-    return actions;
+    return (await this.authorizedRecordActions(record, user)).filter((action) => {
+      try { this.assertLegalTransition(record.status, action as WorkbenchRecordActionDto['actionType']); return true; } catch { return false; }
+    });
   }
 
   private assertLegalTransition(status: string, actionType: WorkbenchRecordActionDto['actionType']) {
-    if (actionType === 'close_record' && !['pending_review', 'rework_required'].includes(status)) {
-      throw new ConflictException('illegal state transition');
-    }
-    if (actionType === 'complete_step' && !['in_progress', 'assigned'].includes(status)) {
-      throw new ConflictException('illegal state transition');
-    }
+    const editable = ['draft', 'submitted', 'assigned', 'in_progress', 'pending_review', 'rework_required'];
+    const allowed: Record<WorkbenchRecordActionDto['actionType'], string[]> = {
+      submit: ['draft'], assign: ['submitted', 'assigned'], start: ['assigned'],
+      complete_step: ['in_progress', 'assigned', 'rework_required'], update_payload: editable,
+      submit_review: ['in_progress', 'pending_review', 'rework_required'], request_rework: ['pending_review'], close_record: ['pending_review'],
+      archive: ['closed'], return_step: ['in_progress', 'pending_review', 'rework_required'],
+      terminate: editable, void: editable, reopen: ['closed', 'terminated', 'voided'],
+      delegate: ['assigned', 'in_progress', 'rework_required'], transfer: ['assigned', 'in_progress', 'pending_review', 'rework_required'],
+    };
+    if (!allowed[actionType]?.includes(status)) throw new ConflictException('illegal state transition');
   }
 
   private toRecordSummary(record: WorkbenchRecord) {
@@ -3924,7 +3946,7 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  private toRecordModel(record: WorkbenchRecordEntity, steps: WorkbenchStep[] = [], attachments: WorkbenchAttachment[] = [], actionLogs: WorkbenchActionLog[] = []) {
+  private toRecordModel(record: WorkbenchRecordEntity, steps: WorkbenchStep[] = [], attachments: WorkbenchAttachment[] = [], actionLogs: WorkbenchActionLog[] = [], signatureEvidence: WorkbenchAttachment[] = []) {
     const moduleItem = WORKBENCH_MODULE_DEFAULTS.get(record.moduleCode);
     return {
       id: record.id,
@@ -3948,17 +3970,19 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       payload: record.payload ?? {},
       steps,
       attachments,
+      signatureEvidence,
       actionLogs,
     };
   }
 
   private async hydrateRecord(record: WorkbenchRecordEntity) {
-    const [steps, attachments, actionLogs] = await Promise.all([
+    const [steps, attachments, actionLogs, signatures] = await Promise.all([
       this.stepRepository.find({ where: { businessRecordId: record.id }, order: { sequenceNo: 'ASC', createdAt: 'ASC' } }),
       this.attachmentRepository.find({ where: { businessRecordId: record.id }, order: { uploadedAt: 'DESC', createdAt: 'DESC' } }),
       this.actionLogRepository.find({ where: { businessRecordId: record.id }, order: { createdAt: 'DESC' } }),
+      this.evidenceRepository.find({ where: { businessType: 'workbench_record', businessId: record.id, evidenceType: 'signature', status: 'active' }, order: { capturedAt: 'DESC' } }),
     ]);
-    const attachmentFileIds = attachments.map((item) => item.fileId);
+    const attachmentFileIds = [...attachments.map((item) => item.fileId), ...signatures.flatMap((item) => item.fileId ? [item.fileId] : [])];
     const attachmentFiles = attachmentFileIds.length
       ? await this.fileRepository.find({ where: { id: In(attachmentFileIds) } })
       : [];
@@ -3997,6 +4021,10 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
         comment: item.comment,
         createdAt: item.createdAt.toISOString(),
       })),
+      signatures.flatMap((item) => {
+        const file = item.fileId ? attachmentFileById.get(item.fileId) : null;
+        return file ? [{ id: item.id, category: 'signature', fileId: file.id, fileName: file.fileName, mimeType: file.mimeType, fileSize: file.fileSize, uploadedAt: item.capturedAt.toISOString() }] : [];
+      }),
     );
   }
 

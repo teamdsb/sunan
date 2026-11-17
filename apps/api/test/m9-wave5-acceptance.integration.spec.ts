@@ -1,9 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DataSource } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 
 import { appEnv } from 'src/config/env';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { WecomDepartmentEntity } from 'src/database/entities/wecom-department.entity';
 import { AuthorizationService } from 'src/modules/auth/authorization.service';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
 import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
@@ -72,14 +74,14 @@ describe('M9 Wave 5 authentication and notification acceptance', () => {
     // New service instances model all API/worker processes reloading env.
     appEnv.WECOM_SYSTEM_ADMIN_USER_IDS = 'w5-admin,w5-member';
     const promoted = new AuthorizationService(source.getRepository(WecomUserEntity), source, new RoleResolverService(), new WecomAdminService());
-    expect(promoted.toCurrentUser(member).isAdmin).toBe(true);
+    expect((await promoted.toCurrentUser(member)).isAdmin).toBe(true);
     expect(member.platformStatus).toBe('disabled');
     appEnv.WECOM_SYSTEM_ADMIN_USER_IDS = 'w5-admin';
     const revoked = new AuthorizationService(source.getRepository(WecomUserEntity), source, new RoleResolverService(), new WecomAdminService());
-    expect(() => revoked.toCurrentUser(member)).toThrow('停用');
+    await expect(revoked.toCurrentUser(member)).rejects.toThrow('停用');
     member.sourceStatus = 'inactive';
-    expect(() => promoted.toCurrentUser(member)).toThrow('企业微信成员不可用');
-    expect(() => authorization.toCurrentUser(member)).toThrow('企业微信成员不可用');
+    await expect(promoted.toCurrentUser(member)).rejects.toThrow('企业微信成员不可用');
+    await expect(authorization.toCurrentUser(member)).rejects.toThrow('企业微信成员不可用');
     rehearsal.controls.partial = false;
   });
 
@@ -91,5 +93,25 @@ describe('M9 Wave 5 authentication and notification acceptance', () => {
     expect((await get('/settings/notification')).body.data).toEqual(before.body.data);
     expect((await post('/settings/notification/draft-test').send({ testUserId: 'w5-member' })).status).toBe(403);
     expect(rehearsal.controls.sends).toHaveLength(1);
+  });
+
+  it('keeps manual department previews, old JWT requests and refresh aligned with the current enterprise dictionary', async () => {
+    const departments = source.getRepository(WecomDepartmentEntity);
+    const department = await departments.save({ corpId: appEnv.WECOM_CORP_ID, departmentId: 99, name: '财务部' });
+    await departments.save({ corpId: 'other-enterprise', departmentId: 99, name: '后勤部' });
+    const update = await request(server()).patch('/api/v1/admin/wecom-users/w5-shipping/authorization').set('Authorization', `Bearer ${adminToken}`).send({
+      expectedAuthorizationVersion: 1, reason: '合成部门字典回归', departmentMode: 'manual', manualDepartmentIds: [99], roleMode: 'auto',
+    });
+    expect(update.status).toBe(200);
+    expect(update.body.data.effective).toMatchObject({ departmentIds: [99], departments: ['财务部'], roles: ['all_authenticated', 'finance'] });
+    const token = await app.get(JwtService).signAsync({ sub: 'w5-shipping', corpId: appEnv.WECOM_CORP_ID, name: '合成船务成员' });
+    expect((await get('/auth/me', token)).body.data).toMatchObject({ department: ['财务部'], roles: ['all_authenticated', 'finance'] });
+    expect((await post('/auth/refresh', token)).body.data.user.roles).toEqual(['all_authenticated', 'finance']);
+    await departments.update(department.id, { name: '业务部' });
+    expect((await get('/auth/me', token)).body.data).toMatchObject({ department: ['业务部'], roles: ['all_authenticated', 'business'] });
+    const detail = await get('/admin/wecom-users/w5-shipping');
+    expect(detail.body.data.effective.roles).toEqual(['all_authenticated', 'business']);
+    const filtered = await get('/admin/wecom-users?role=finance');
+    expect(filtered.body.data.items).not.toEqual(expect.arrayContaining([expect.objectContaining({ userId: 'w5-shipping' })]));
   });
 });

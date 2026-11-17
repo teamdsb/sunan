@@ -1,0 +1,11 @@
+PASS test/file-authorization.integration.spec.ts (13.796 s)
+PASS test/inspection-capa.integration.spec.ts (5.276 s)
+[Nest] 98858  - 11/17/2026, 11:15:14 AM   ERROR [FilesService] OSS recycle failed for 946c5e75-8a74-461d-8faf-a40e372ae5fd; queued for retry
+PASS test/files.integration.spec.ts (6.575 s)
+PASS test/certificate.integration.spec.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       45 passed, 45 total
+Snapshots:   0 total
+Time:        29.972 s
+Ran all test suites matching /test\/file-authorization.integration.spec.ts|test\/files.integration.spec.ts|test\/certificate.integration.spec.ts|test\/inspection-capa.integration.spec.ts/i.

@@ -51,10 +51,13 @@ export class UserDirectoryService {
       order: { name: 'ASC', userId: 'ASC' },
     });
     const normalizedSearch = query.search?.trim().toLowerCase();
-    const filtered = users.filter((user) => {
-      const effective = this.authorizationService.getEffectiveAuthorization(user, {
+    const usersWithAuthorization = await Promise.all(users.map(async (user) => ({
+      user,
+      effective: await this.authorizationService.getEffectiveAuthorization(user, {
         ignoreAvailability: true,
-      });
+      }),
+    })));
+    const filtered = usersWithAuthorization.filter(({ user, effective }) => {
       const hasOverrides = user.departmentMode === 'manual' || user.roleMode === 'manual';
       if (
         normalizedSearch &&
@@ -88,9 +91,9 @@ export class UserDirectoryService {
     });
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
-    const items = filtered
+    const items = await Promise.all(filtered
       .slice((page - 1) * pageSize, page * pageSize)
-      .map((user) => this.serializeUser(user));
+      .map(({ user, effective }) => this.serializeUser(user, effective)));
     return {
       items,
       total: filtered.length,
@@ -163,7 +166,7 @@ export class UserDirectoryService {
       take: 20,
     });
     return {
-      ...this.serializeUser(user),
+      ...await this.serializeUser(user),
       audits: audits.map((audit) => this.serializeAudit(audit)),
     };
   }
@@ -452,8 +455,8 @@ export class UserDirectoryService {
     return this.authorizationService.normalizeBusinessRoles(roles);
   }
 
-  private serializeUser(user: WecomUserEntity) {
-    const effective = this.authorizationService.getEffectiveAuthorization(user, {
+  private async serializeUser(user: WecomUserEntity, authorization?: Awaited<ReturnType<AuthorizationService['getEffectiveAuthorization']>>) {
+    const effective = authorization ?? await this.authorizationService.getEffectiveAuthorization(user, {
       ignoreAvailability: true,
     });
     return {

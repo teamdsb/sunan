@@ -1,19 +1,27 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   InspectionDetailPage,
   InspectionListPage,
+  InspectionPlanPage,
   InspectionTemplatePage,
   IssueCenterPage,
   IssueDetailPage,
 } from './InspectionCapaPages';
 
+const getTemplates = vi.fn();
+const getVersions = vi.fn();
+const getPlans = vi.fn();
+const publish = vi.fn();
+const generate = vi.fn();
 const getInspections = vi.fn();
 const getInspection = vi.fn();
 const getIssues = vi.fn();
 const getIssue = vi.fn();
+const getInspectionDownloadUrl = vi.fn();
+const getCapaDownloadUrl = vi.fn();
 const mockCurrentUser = vi.fn();
 
 vi.mock('../../app/hooks', () => ({
@@ -26,14 +34,19 @@ vi.mock('../../app/hooks', () => ({
 
 vi.mock('../files/FileUploadField', () => ({ FileUploadField: () => <button type="button">上传文件</button> }));
 vi.mock('./inspectionCapaApi', () => ({
-  useGetInspectionTemplatesQuery: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+  useGetInspectionTemplatesQuery: () => getTemplates(),
+  useGetInspectionTemplateVersionsQuery: () => getVersions(),
+  usePublishInspectionTemplateVersionMutation: () => [publish, { isLoading: false }],
+  useGenerateInspectionPlanMutation: () => [generate, { isLoading: false }],
   useCreateInspectionTemplateMutation: () => [vi.fn(), { isLoading: false }],
-  useGetInspectionPlansQuery: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+  useGetInspectionPlansQuery: () => getPlans(),
   useCreateInspectionPlanMutation: () => [vi.fn(), { isLoading: false }],
   useGetInspectionsQuery: () => getInspections(),
   useGetInspectionQuery: () => getInspection(),
   useSaveInspectionResultMutation: () => [vi.fn(), { isLoading: false }],
   useSubmitInspectionMutation: () => [vi.fn(), { isLoading: false }],
+  useLazyGetInspectionFileDownloadUrlQuery: () => [getInspectionDownloadUrl],
+  useLazyGetCapaActionFileDownloadUrlQuery: () => [getCapaDownloadUrl],
   useSummarizeInspectionMutation: () => [vi.fn(), { isLoading: false }],
   useGetIssuesQuery: () => getIssues(),
   useGetIssueQuery: () => getIssue(),
@@ -49,13 +62,33 @@ vi.mock('./inspectionCapaApi', () => ({
 
 describe('InspectionCapaPages', () => {
   beforeEach(() => {
+    getTemplates.mockReturnValue({ data: { data: [] }, isLoading: false, isError: false });
+    getVersions.mockReturnValue({ data: { data: [] }, isLoading: false, isError: false });
+    getPlans.mockReturnValue({ data: { data: [] }, isLoading: false, isError: false });
+    publish.mockReset().mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    generate.mockReset().mockReturnValue({ unwrap: () => Promise.resolve({ data: { createdCount: 1, failedCount: 0 } }) });
     getInspections.mockReset(); getInspection.mockReset(); getIssues.mockReset(); getIssue.mockReset();
     getInspection.mockReturnValue({ data: undefined, isLoading: false, isError: true });
     getIssue.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    getInspectionDownloadUrl.mockReset().mockReturnValue({ unwrap: () => Promise.resolve({ data: { downloadUrl: 'https://storage.test/inspection-photo' } }) });
+    getCapaDownloadUrl.mockReset().mockReturnValue({ unwrap: () => Promise.resolve({ data: { downloadUrl: 'https://storage.test/capa-photo' } }) });
     mockCurrentUser.mockReturnValue({
       userId: 'shipping-1',
       roles: ['all_authenticated', 'shipping'],
     });
+  });
+
+  it('publishes a visible draft and offers inspection generation for the selected window', async () => {
+    getTemplates.mockReturnValue({ data: { data: [{ id: 'template', code: 'LSA', name: '救生检查', sourceType: 'company', currentVersionId: null }] } });
+    getVersions.mockReturnValue({ data: { data: [{ id: 'draft', versionNo: 1, status: 'draft' }] } });
+    const view = render(<MemoryRouter><InspectionTemplatePage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '发布版本 V1' }));
+    await waitFor(() => expect(publish).toHaveBeenCalledWith('draft'));
+    getPlans.mockReturnValue({ data: { data: [{ id: 'plan', planId: 'generic-plan', title: '本月救生检查' }] } });
+    view.rerender(<MemoryRouter><InspectionPlanPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '生成检查任务' }));
+    await waitFor(() => expect(generate).toHaveBeenCalledWith(expect.objectContaining({ id: 'plan', windowStart: expect.any(String), windowEnd: expect.any(String) })));
+    expect(screen.getByRole('link', { name: '进入现场检查' })).toHaveAttribute('href', '/workbench/inspections');
   });
 
   it('renders inspection loading, empty and source-backed issue drill-down states', () => {
@@ -211,5 +244,38 @@ describe('InspectionCapaPages', () => {
 
     expect(screen.queryByText('新建模板')).toBeNull();
     expect(screen.getByText('你没有管理检查模板的权限。')).toBeInTheDocument();
+  });
+
+  it('previews saved inspection evidence and signatures through the inspection download route', async () => {
+    getInspection.mockReturnValue({ data: { data: {
+      id: 'inspection-1', taskId: 'task-1', status: 'submitted', templateVersionId: 'version-1',
+      templateSnapshot: { items: [{ snapshotKey: 'item-1', title: '救生设备', resultRequired: true, evidenceRequiredOnFailure: true }] },
+      results: [{ id: 'result-1', inspectorUserId: 'crew-a', templateItemSnapshotKey: 'item-1', conclusion: 'nonconforming', status: 'submitted',
+        evidenceFiles: [{ id: 'photo-1', fileName: '现场证据.jpg', mimeType: 'image/jpeg', fileSize: 100 }],
+        signatureFile: { id: 'signature-1', fileName: '签认照片.jpg', mimeType: 'image/jpeg', fileSize: 100 } }],
+      availableActions: ['read'],
+    } }, isLoading: false, isError: false });
+    render(<MemoryRouter initialEntries={['/inspections/inspection-1']}><Routes><Route path="/inspections/:inspectionId" element={<InspectionDetailPage />} /></Routes></MemoryRouter>);
+    expect(screen.getByText('现场证据.jpg')).toBeInTheDocument();
+    expect(screen.getByText('签认照片.jpg')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: '预览' })[0]!);
+    await waitFor(() => expect(getInspectionDownloadUrl).toHaveBeenCalledWith({ inspectionId: 'inspection-1', fileId: 'photo-1' }));
+    expect(await screen.findByRole('img', { name: '现场证据.jpg' })).toHaveAttribute('src', 'https://storage.test/inspection-photo');
+  });
+
+  it('lets a verifier inspect submitted CAPA photos through the action download route', async () => {
+    getIssue.mockReturnValue({ data: { data: {
+      id: 'issue-1', title: '证据复核', issueType: 'inspection', severity: 'minor', status: 'pending_verification',
+      responsibleUserId: 'crew-a', dueAt: '2026-12-01T00:00:00.000Z', sources: [], availableActions: ['read', 'verify'],
+      capa: { id: 'capa-1', issueId: 'issue-1', status: 'pending_verification', verifierUserId: 'verifier', actions: [{
+        id: 'action-1', actionType: 'corrective', title: '更换设备', responsibleUserId: 'crew-a', dueAt: '2026-12-01T00:00:00.000Z', status: 'accepted',
+        evidenceFileIds: ['photo-1'], evidenceFiles: [{ id: 'photo-1', fileName: '整改证据.jpg', mimeType: 'image/jpeg', fileSize: 100 }], availableActions: [],
+      }] },
+    } }, isLoading: false, isError: false });
+    render(<MemoryRouter initialEntries={['/issues/issue-1']}><Routes><Route path="/issues/:issueId" element={<IssueDetailPage />} /></Routes></MemoryRouter>);
+    expect(screen.getByText('整改证据.jpg')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '预览' }));
+    await waitFor(() => expect(getCapaDownloadUrl).toHaveBeenCalledWith({ actionId: 'action-1', fileId: 'photo-1' }));
+    expect(await screen.findByRole('img', { name: '整改证据.jpg' })).toHaveAttribute('src', 'https://storage.test/capa-photo');
   });
 });

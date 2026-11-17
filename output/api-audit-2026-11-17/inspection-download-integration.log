@@ -1,0 +1,18 @@
+PASS test/inspection-capa.integration.spec.ts (60.166 s)
+  inspection and CAPA integration
+    ✓ repairs executable inspections through generic plan reconciliation and blocks generic task completion (976 ms)
+    ✓ allows a measure assignee to list and read the issue while denying unrelated readers (516 ms)
+    ✓ keeps the issued template snapshot, blocks premature multi-person summary, and deduplicates automatic nonconformity transfer (1034 ms)
+    ✓ keeps failed automatic transfer jobs and reconciles them after the constraint is repaired (983 ms)
+    ✓ enforces evidence, independent verification, rework and privileged major-issue closure (1595 ms)
+    ✓ rejects another uploader inspection evidence and signature without saving partial changes (1173 ms)
+    ✓ rejects another uploader CAPA evidence before changing the action (766 ms)
+    ✓ serves saved inspection evidence and signatures only through the readable inspection (615 ms)
+    ✓ lets the issue verifier read CAPA evidence while rejecting foreign files and unrelated users (445 ms)
+    ✓ links each existing inspection-rectification source in both directions (390 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        60.348 s
+Ran all test suites matching /test\/inspection-capa.integration.spec.ts/i.

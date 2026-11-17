@@ -1,0 +1,10 @@
+PASS src/modules/inspection-capa/inspection-capa-regression.spec.ts
+PASS src/modules/files/files.service.spec.ts
+PASS src/modules/files/file-retention.spec.ts
+PASS src/modules/inspection-capa/inspection-capa-domain.spec.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       42 passed, 42 total
+Snapshots:   0 total
+Time:        3.822 s
+Ran all test suites matching /src\/modules\/files\/files.service.spec.ts|src\/modules\/files\/file-retention.spec.ts|src\/modules\/inspection-capa\/inspection-capa-domain.spec.ts|src\/modules\/inspection-capa\/inspection-capa-regression.spec.ts/i.

@@ -1,0 +1,275 @@
+[
+  {
+    "file": "docs/specs/my/api/certificate-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/certificate-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.4,
+    "log": "output/api-audit-2026-11-17/openapi-final-certificate-api.log"
+  },
+  {
+    "file": "docs/specs/my/api/certificate-reminder-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/certificate-reminder-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.19,
+    "log": "output/api-audit-2026-11-17/openapi-final-certificate-reminder-api.log"
+  },
+  {
+    "file": "docs/specs/my/api/enterprise-policy-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/enterprise-policy-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.19,
+    "log": "output/api-audit-2026-11-17/openapi-final-enterprise-policy-api.log"
+  },
+  {
+    "file": "docs/specs/my/api/enterprise-profile-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/enterprise-profile-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.2,
+    "log": "output/api-audit-2026-11-17/openapi-final-enterprise-profile-api.log"
+  },
+  {
+    "file": "docs/specs/my/api/settings-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/settings-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.55,
+    "log": "output/api-audit-2026-11-17/openapi-final-settings-api.log"
+  },
+  {
+    "file": "docs/specs/my/api/ship-monitor-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/my/api/ship-monitor-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.3,
+    "log": "output/api-audit-2026-11-17/openapi-final-ship-monitor-api.log"
+  },
+  {
+    "file": "docs/specs/office/api/office-admin-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/office/api/office-admin-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.27,
+    "log": "output/api-audit-2026-11-17/openapi-final-office-admin-api.log"
+  },
+  {
+    "file": "docs/specs/office/api/office-entry-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/office/api/office-entry-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.3,
+    "log": "output/api-audit-2026-11-17/openapi-final-office-entry-api.log"
+  },
+  {
+    "file": "docs/specs/procurement/api/procurement-approval-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/procurement/api/procurement-approval-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.36,
+    "log": "output/api-audit-2026-11-17/openapi-final-procurement-approval-api.log"
+  },
+  {
+    "file": "docs/specs/procurement/api/procurement-budget-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/procurement/api/procurement-budget-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.26,
+    "log": "output/api-audit-2026-11-17/openapi-final-procurement-budget-api.log"
+  },
+  {
+    "file": "docs/specs/procurement/api/procurement-dictionary-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/procurement/api/procurement-dictionary-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.25,
+    "log": "output/api-audit-2026-11-17/openapi-final-procurement-dictionary-api.log"
+  },
+  {
+    "file": "docs/specs/procurement/api/procurement-order-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/procurement/api/procurement-order-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.32,
+    "log": "output/api-audit-2026-11-17/openapi-final-procurement-order-api.log"
+  },
+  {
+    "file": "docs/specs/procurement/api/procurement-report-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/procurement/api/procurement-report-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.28,
+    "log": "output/api-audit-2026-11-17/openapi-final-procurement-report-api.log"
+  },
+  {
+    "file": "docs/specs/safety/api/evidence-and-export-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/safety/api/evidence-and-export-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.22,
+    "log": "output/api-audit-2026-11-17/openapi-final-evidence-and-export-api.log"
+  },
+  {
+    "file": "docs/specs/safety/api/inspection-capa-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/safety/api/inspection-capa-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.23,
+    "log": "output/api-audit-2026-11-17/openapi-final-inspection-capa-api.log"
+  },
+  {
+    "file": "docs/specs/safety/api/master-data-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/safety/api/master-data-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.24,
+    "log": "output/api-audit-2026-11-17/openapi-final-master-data-api.log"
+  },
+  {
+    "file": "docs/specs/safety/api/plan-task-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/safety/api/plan-task-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.3,
+    "log": "output/api-audit-2026-11-17/openapi-final-plan-task-api.log"
+  },
+  {
+    "file": "docs/specs/safety/api/workflow-and-permission-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/safety/api/workflow-and-permission-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.61,
+    "log": "output/api-audit-2026-11-17/openapi-final-workflow-and-permission-api.log"
+  },
+  {
+    "file": "docs/specs/workbench/api/workbench-approval-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/workbench/api/workbench-approval-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.48,
+    "log": "output/api-audit-2026-11-17/openapi-final-workbench-approval-api.log"
+  },
+  {
+    "file": "docs/specs/workbench/api/workbench-platform-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/workbench/api/workbench-platform-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.54,
+    "log": "output/api-audit-2026-11-17/openapi-final-workbench-platform-api.log"
+  },
+  {
+    "file": "docs/specs/workbench/api/workbench-statistics-api.yaml",
+    "command": [
+      "pnpm",
+      "dlx",
+      "@apidevtools/swagger-cli",
+      "validate",
+      "docs/specs/workbench/api/workbench-statistics-api.yaml"
+    ],
+    "exitCode": 0,
+    "seconds": 0.31,
+    "log": "output/api-audit-2026-11-17/openapi-final-workbench-statistics-api.log"
+  }
+]

@@ -45,6 +45,34 @@ describe('WecomMessageService', () => {
     expect(result.errcode).toBe(0);
   });
 
+  it('uses the shared module presentation while keeping the text-card contract', async () => {
+    postMock.mockReturnValue(of({ data: { errcode: 0, errmsg: 'ok' } }));
+
+    await service.sendTextCard({
+      userIds: ['u1'],
+      title: '采购审批待处理',
+      description: '单号：PO-1\n请在系统中完成审批',
+      url: 'https://example.com/procurement/orders/1',
+      sourceType: 'procurement',
+      sourceId: '1',
+      dedupeKey: 'procurement:1:pending',
+    });
+
+    expect(postMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        msgtype: 'textcard',
+        textcard: {
+          title: '[采购管理] · 采购审批待处理',
+          description: '<div class="gray">单号：PO-1</div><div class="normal">请在系统中完成审批</div>',
+          url: 'https://example.com/procurement/orders/1',
+          btntxt: '查看详情',
+        },
+      }),
+      expect.any(Object),
+    );
+  });
+
   it('refreshes token on token-expired response', async () => {
     postMock
       .mockReturnValueOnce(of({ data: { errcode: 42001, errmsg: 'expired' } }))

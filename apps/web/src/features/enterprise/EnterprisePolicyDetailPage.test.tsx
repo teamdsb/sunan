@@ -40,7 +40,7 @@ describe('EnterprisePolicyDetailPage', () => {
           version: 'v1',
           status: 'draft',
           summary: '',
-          publishedAt: '2026-08-12T09:30:00.000+08:00',
+          publishedAt: null,
           files: [],
           canManage: true,
         },
@@ -55,6 +55,8 @@ describe('EnterprisePolicyDetailPage', () => {
   });
 
   it('shows publish time and returns to the preserved list state', () => {
+    const response = mockGetById();
+    mockGetById.mockReturnValue({ ...response, data: { data: { ...response.data.data, status: 'published', publishedAt: '2026-08-12T09:30:00.000+08:00', summary: '发布正文只读' } } });
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -73,13 +75,16 @@ describe('EnterprisePolicyDetailPage', () => {
     );
 
     expect(screen.getByText('2026-08-12 09:30')).toBeInTheDocument();
+    expect(screen.getByText('发布正文只读')).toBeInTheDocument();
+    expect(screen.queryByLabelText('制度标题')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'upload' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /返回制度列表/ }));
     expect(screen.getByTestId('location')).toHaveTextContent(
       '/my/enterprise-policy?page=3&pageSize=20&status=published&keyword=demo',
     );
   });
 
-  it('supports edit and file bind', async () => {
+  it('supports draft editing with attachments in the same update', async () => {
     const { container } = render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -101,8 +106,8 @@ describe('EnterprisePolicyDetailPage', () => {
       container.querySelector('button[type="submit"]') as HTMLButtonElement,
     );
 
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
-    await waitFor(() => expect(mockBind).toHaveBeenCalled());
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith({ id: '1', data: expect.objectContaining({ title: 'policy-a-updated', fileIds: ['f1'] }) }));
+    expect(mockBind).not.toHaveBeenCalled();
     expect(screen.getAllByText(/v1/).length).toBeGreaterThan(0);
   });
 });

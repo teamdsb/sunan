@@ -14,7 +14,7 @@ const mockDelete = vi.fn();
 vi.mock('./officeApi', () => ({
   useGetOfficeCategoriesQuery: () => mockCategories(),
   useGetOfficeAdminEntriesQuery: () => mockEntries(),
-  useGetOfficeAdminAuditsQuery: () => mockAudits(),
+  useGetOfficeAdminAuditsQuery: (params: unknown) => mockAudits(params),
   useCreateOfficeEntryMutation: () => [mockCreate, { isLoading: false }],
   useUpdateOfficeEntryMutation: () => [mockUpdate, { isLoading: false }],
   usePublishOfficeEntryMutation: () => [mockPublish, { isLoading: false }],
@@ -100,5 +100,15 @@ describe('OfficeAdminPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /停 用/ }));
     await waitFor(() => expect(mockPublish).toHaveBeenCalledWith('office-1'));
     await waitFor(() => expect(mockDisable).toHaveBeenCalledWith('office-1'));
+  });
+
+  it('can request the next page of audit history', async () => {
+    const response = mockAudits();
+    mockAudits.mockReturnValue({ ...response, data: { ...response.data, meta: { total: 21, page: 1, pageSize: 20, totalPages: 2 } } });
+    render(<OfficeAdminPage />);
+
+    fireEvent.click(screen.getByTitle('2'));
+
+    await waitFor(() => expect(mockAudits).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, pageSize: 20 })));
   });
 });

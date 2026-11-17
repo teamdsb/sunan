@@ -28,7 +28,7 @@ import {
 import { OssService } from 'src/modules/files/oss.service';
 import { WecomHttpGateway } from 'src/modules/wecom/wecom-http.gateway';
 import { WecomTokenService } from 'src/modules/wecom/wecom-token.service';
-import { FILE_RETENTION_MS, hasFileReferences } from './file-retention';
+import { assertTemporaryFileAccess, FILE_RETENTION_MS, hasFileReferences } from './file-retention';
 
 interface FileResponse {
   id: string;
@@ -198,7 +198,7 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
       where: { ossKey: dto.ossKey },
     });
     if (existing) {
-      return this.toFileResponse(existing);
+      return this.withTemporaryFileAccess(existing.id, currentUser, (file) => this.toFileResponse(file));
     }
     if (this.dataSource) {
       const recycled = await this.dataSource.getRepository(FileRecycleJobEntity).findOne({
@@ -223,13 +223,14 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
 
   async getDownloadUrl(
     ossKey: string,
+    currentUser?: CurrentUser,
   ): Promise<{ downloadUrl: string; expiresAt: string }> {
     const file = await this.fileRepository.findOne({ where: { ossKey } });
     if (!file) {
       throw new NotFoundException('文件不存在');
     }
 
-    return this.ossService.createDownloadSignature(file.ossKey);
+    return this.withTemporaryFileAccess(file.id, currentUser, (temporary) => this.ossService.createDownloadSignature(temporary.ossKey));
   }
 
   async saveFromWecom(
@@ -245,7 +246,7 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
       })
       .getOne();
     if (existing) {
-      return this.toFileResponse(existing);
+      return this.withTemporaryFileAccess(existing.id, currentUser, (file) => this.toFileResponse(file));
     }
     const accessToken = await this.wecomTokenService.getAccessToken();
     const media = await this.wecomHttpGateway.getMedia(
@@ -350,6 +351,16 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
     if (!prefixes.some((prefix) => ossKey.startsWith(`${prefix}/`))) {
       throw new BadRequestException('文件路径与分类不匹配');
     }
+  }
+
+  private async withTemporaryFileAccess<T>(id: string, user: CurrentUser | undefined, action: (file: FileEntity) => Promise<T> | T): Promise<T> {
+    if (!this.dataSource) throw new BadRequestException('文件访问服务未就绪');
+    return this.dataSource.transaction(async (manager) => {
+      const file = await manager.findOne(FileEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!file) throw new NotFoundException('文件不存在');
+      await assertTemporaryFileAccess(manager, file, user);
+      return action(file);
+    });
   }
 
   private async toFileResponse(file: FileEntity): Promise<FileResponse> {

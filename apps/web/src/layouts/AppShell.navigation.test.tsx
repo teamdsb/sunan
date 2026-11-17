@@ -5,6 +5,16 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redirectToOAuth = vi.hoisted(() => vi.fn());
+const mockCurrentUserResponse = vi.hoisted(() => ({
+  data: {
+    userId: 'u-navigation',
+    name: '导航测试用户',
+    avatar: 'https://avatar.example.com/navigation.png',
+    departmentIds: [1, 3],
+    department: ['公司成员', '总经办'],
+    roles: ['all_authenticated', 'system_admin'],
+  },
+}));
 
 vi.mock('../features/auth/oauth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../features/auth/oauth')>();
@@ -13,6 +23,10 @@ vi.mock('../features/auth/oauth', async (importOriginal) => {
     redirectToOAuth,
   };
 });
+
+vi.mock('../features/auth/authApi', () => ({
+  useGetCurrentUserQuery: () => ({ data: mockCurrentUserResponse }),
+}));
 
 async function createAuthenticatedStore() {
   const { createStore } = await import('../app/store');
@@ -74,6 +88,7 @@ describe('AppShell navigation', () => {
     );
 
     expect(screen.getByText('导航测试用户')).toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: '苏南船舶管理 Logo' }).length).toBeGreaterThan(0);
     expect(
       screen.getAllByRole('img', { name: '导航测试用户的头像' }).length,
     ).toBeGreaterThan(0);
@@ -99,6 +114,7 @@ describe('AppShell navigation', () => {
 
     expect(screen.getAllByRole('button', { name: /更多/ }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('heading', { name: '苏南船舶管理' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('img', { name: '苏南船舶管理 Logo' })[0]).toHaveAttribute('src', '/assets/sunan-logo.png');
     expect(screen.queryByRole('navigation', { name: '移动模块导航' })).toBeNull();
     expect(screen.getByRole('navigation', { name: '底部模块导航' })).toBeInTheDocument();
     expect(screen.queryByText('当前页面')).toBeNull();

@@ -68,6 +68,8 @@ describe('Master data integration', () => {
     currentUser = { ...currentUser, userId: 'outside-crew', roles: ['all_authenticated'], position: '船员' };
     const redacted = await request(app.getHttpServer()).get('/api/v1/master-data/personnel');
     expect(redacted.body.data.find((item: { id: string }) => item.id === personnelId)).toBeUndefined();
+    const hiddenDetail = await request(app.getHttpServer()).get(`/api/v1/master-data/personnel/${personnelId}`);
+    expect(hiddenDetail.status).toBe(403);
     currentUser = { ...currentUser, userId: 'safety-manager', roles: ['all_authenticated', 'shipping'], position: '经理' };
     const inactiveAssignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01T00:00:00.000Z' });
     expect(inactiveAssignment.status).toBe(422);

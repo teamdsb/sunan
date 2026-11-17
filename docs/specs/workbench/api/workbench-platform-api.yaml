@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Workbench Platform API
-  version: 2.1.0
+  version: 2.1.1
   description: >-
     工作平台平台级接口，覆盖模块入口、模块 schema、首页聚合、统一记录列表/详情/动作、
-    附件、证据、受控打印快照，以及真实考勤明细导出、个人学习进度、燃油月报与财务对账接口。
+    附件、证据、受控打印快照，以及真实考勤明细导出、个人学习进度与燃油月报。月度考勤财务对账尚未实现；原仅返回 queued 的占位接口已移除，不提供任务受理承诺。
 servers:
   - url: /api/v1
 paths:
@@ -344,23 +344,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AttendanceExportQueuedResponse'
-  /workbench/statistics/attendance/reconcile:
-    post:
-      summary: 发起月度考勤财务对账
-      tags: [Workbench Statistics]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AttendanceReconcileRequest'
-      responses:
-        '202':
-          description: Reconcile accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AttendanceReconcileResponse'
   /workbench/learning/people:
     get:
       summary: 获取可下发学习的真实成员
@@ -1119,40 +1102,6 @@ components:
             downloadFileId:
               type: string
               nullable: true
-    AttendanceReconcileRequest:
-      type: object
-      required: [month]
-      properties:
-        month:
-          type: string
-          example: 2026-04
-        departmentCode:
-          type: string
-        compareSource:
-          type: string
-          enum: [finance_template, exported_sheet, manual_snapshot]
-          default: finance_template
-        attachmentFileId:
-          type: string
-          nullable: true
-    AttendanceReconcileResponse:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          properties:
-            reconcileJobId:
-              type: string
-            status:
-              type: string
-              enum: [queued, running, succeeded, failed]
-            month:
-              type: string
-            differenceCount:
-              type: integer
-              nullable: true
-
     LearningPublishRequest:
       type: object
       required: [userIds, hours]

@@ -1,0 +1,25 @@
+PASS src/modules/files/files.service.spec.ts
+  FilesService
+    ✓ creates a presigned upload payload (3 ms)
+    ✓ uses domain storage prefixes for procurement and workbench attachments (1 ms)
+    ✓ normalizes supported business attachment 说明.txt to  (1 ms)
+    ✓ normalizes supported business attachment 清单.csv to application/octet-stream
+    ✓ normalizes supported business attachment 现场照片.heic to image/heic
+    ✓ normalizes supported business attachment 资料.zip to application/x-zip-compressed (1 ms)
+    ✓ normalizes supported business attachment 归档.rar to application/x-rar-compressed
+    ✓ normalizes supported business attachment 制度.wps to application/kswps
+    ✓ normalizes supported business attachment 台账.et to application/kset (1 ms)
+    ✓ normalizes supported business attachment 演示.dps to application/ksdps
+    ✓ exposes the effective upload policy for a category (1 ms)
+    ✓ rejects an explicit mime type that conflicts with the extension (8 ms)
+    ✓ keeps specialist categories restricted to their own formats (1 ms)
+    ✓ rejects unsupported categories (1 ms)
+    ✓ registers callback and returns download url (1 ms)
+    ✓ returns 404 for unknown oss key download (1 ms)
+    ✓ downloads media from wecom and uploads to oss
+
+Test Suites: 1 passed, 1 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        2.298 s
+Ran all test suites matching /src\/modules\/files\/files.service.spec.ts/i.

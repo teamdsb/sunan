@@ -2,6 +2,7 @@
   Alert,
   Button,
   Card,
+  Descriptions,
   Form,
   Input,
   Popconfirm,
@@ -64,7 +65,7 @@ export function EnterpriseProfileDetailPage() {
   const canManage = profile?.canManage ?? false;
 
   useEffect(() => {
-    if (profile) {
+    if (profile && canManage) {
       form.setFieldsValue({
         title: profile.title,
         category: profile.category,
@@ -72,7 +73,7 @@ export function EnterpriseProfileDetailPage() {
         status: profile.status,
       });
     }
-  }, [profile, form]);
+  }, [profile, form, canManage]);
 
   const currentUpload = useMemo(() => uploaded, [uploaded]);
 
@@ -137,7 +138,14 @@ export function EnterpriseProfileDetailPage() {
               <Button danger>删除</Button>
             </Popconfirm>
           </Space>
-        </Form> : <Alert type="info" showIcon message="你没有维护此企业资料的权限。" />}
+        </Form> : profile ? (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="标题">{profile.title}</Descriptions.Item>
+            <Descriptions.Item label="分类">{categoryOptions.find((item) => item.value === profile.category)?.label ?? profile.category}</Descriptions.Item>
+            <Descriptions.Item label="状态">{statusOptions.find((item) => item.value === profile.status)?.label ?? profile.status}</Descriptions.Item>
+            <Descriptions.Item label="描述"><span style={{ whiteSpace: 'pre-wrap' }}>{profile.description || '暂无描述'}</span></Descriptions.Item>
+          </Descriptions>
+        ) : null}
         {profile ? (
           <>
             <Typography.Title level={5} style={{ marginTop: 20 }}>

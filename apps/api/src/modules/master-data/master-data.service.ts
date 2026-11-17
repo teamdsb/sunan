@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'crypto';
-import { IsNull, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDate } from 'src/common/date/business-date';
 import { CertificateEntity } from 'src/database/entities/certificate.entity';
@@ -96,7 +96,7 @@ export class MasterDataService {
       this.references.find({ where: { objectType: 'vessel', objectId: id, deletedAt: IsNull() } }),
       this.certificates.find({ where: { ownerType: 'vessel', ownerId: id, deletedAt: IsNull() } }),
     ]);
-    return { data: { ...this.vesselDto(row), equipment: equipment.map((item) => this.equipmentDto(item)), assignments: assignments.map((item) => this.assignmentDto(item)), certificates: certificates.map((item) => this.certificateDto(item)), references: references.map((item) => this.referenceDto(item)) } };
+    return { data: { ...this.vesselDto(row), equipment: await this.equipmentDtos(equipment), assignments: assignments.map((item) => this.assignmentDto(item)), certificates: certificates.map((item) => this.certificateDto(item)), references: references.map((item) => this.referenceDto(item)) } };
   }
 
   async updateVessel(id: string, dto: VesselMasterDataDto, user: CurrentUser) {
@@ -129,7 +129,9 @@ export class MasterDataService {
   }
 
   async getPersonnel(id: string, user: CurrentUser) {
-    const row = await this.person(id); const [assignments, certificates] = await Promise.all([this.assignments.find({ where: { personnelId: id, deletedAt: IsNull() }, order: { effectiveFrom: 'DESC' } }), this.certificates.find({ where: { ownerType: 'personnel', ownerId: id, deletedAt: IsNull() } })]);
+    const row = await this.person(id);
+    if (!this.isManager(user) && row.wecomUserId !== user.userId) throw new ForbiddenException('forbidden');
+    const [assignments, certificates] = await Promise.all([this.assignments.find({ where: { personnelId: id, deletedAt: IsNull() }, order: { effectiveFrom: 'DESC' } }), this.certificates.find({ where: { ownerType: 'personnel', ownerId: id, deletedAt: IsNull() } })]);
     return { data: { ...this.personnelDto(row, user), assignments: assignments.map((item) => this.assignmentDto(item)), certificates: certificates.map((item) => this.certificateDto(item)) } };
   }
 
@@ -164,7 +166,7 @@ export class MasterDataService {
   async listEquipment(query: MasterDataListQueryDto, user: CurrentUser) {
     const keyword = query.keyword?.trim(); const rows = await this.equipment.find({ where: { deletedAt: IsNull() }, order: { code: 'ASC' } }); const vessels = new Map((await this.vessels.find({ where: { deletedAt: IsNull() } })).map((row) => [row.id, row]));
     const includeInactive = query.includeInactive === 'true' && this.isManager(user);
-    return { data: rows.filter((row) => (user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || (vessels.get(row.vesselId) && this.isVesselVisible(vessels.get(row.vesselId)!, user))) && (includeInactive || row.status === 'active') && (!keyword || `${row.code} ${row.name}`.includes(keyword))).map((row) => this.equipmentDto(row)) };
+    return { data: await this.equipmentDtos(rows.filter((row) => (user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || (vessels.get(row.vesselId) && this.isVesselVisible(vessels.get(row.vesselId)!, user))) && (includeInactive || row.status === 'active') && (!keyword || `${row.code} ${row.name}`.includes(keyword)))) };
   }
 
   async createEquipment(dto: EquipmentMasterDataDto, user: CurrentUser) {
@@ -173,14 +175,14 @@ export class MasterDataService {
     const vessel = await this.vessel(dto.vesselId); if (vessel.status !== 'active') throw new UnprocessableEntityException('inactive vessel cannot own new equipment');
     const category = await this.activeCategory(dto.categoryCode, user);
     const row = await this.equipment.save(this.equipment.create({ code: dto.code, name: dto.name, categoryId: category.id, vesselId: vessel.id, serialNo: dto.serialNo ?? null, status: dto.status ?? 'active', remarks: dto.remarks ?? null, createdBy: user.userId, updatedBy: user.userId }));
-    return { data: this.equipmentDto(row) };
+    return { data: (await this.equipmentDtos([row]))[0] };
   }
 
   async getEquipment(id: string, user: CurrentUser) {
     const row = await this.equipment.findOne({ where: { id, deletedAt: IsNull() } }); if (!row) throw new NotFoundException('equipment not found');
     const vessel = await this.vessel(row.vesselId); if (!this.isVesselVisible(vessel, user)) throw new ForbiddenException('forbidden');
     const certificates = await this.certificates.find({ where: { ownerType: 'equipment', ownerId: id, deletedAt: IsNull() } });
-    return { data: { ...this.equipmentDto(row), certificates: certificates.map((item) => this.certificateDto(item)) } };
+    return { data: { ...(await this.equipmentDtos([row]))[0], certificates: certificates.map((item) => this.certificateDto(item)) } };
   }
 
   async updateEquipment(id: string, dto: EquipmentMasterDataDto, user: CurrentUser) {
@@ -189,7 +191,7 @@ export class MasterDataService {
     const category = dto.categoryCode ? await this.activeCategory(dto.categoryCode, user) : null;
     if (dto.vesselId) { const vessel = await this.vessel(dto.vesselId); if (vessel.status !== 'active') throw new UnprocessableEntityException('inactive vessel cannot own new equipment'); }
     Object.assign(row, { code: dto.code ?? row.code, name: dto.name ?? row.name, categoryId: category?.id ?? row.categoryId, vesselId: dto.vesselId ?? row.vesselId, serialNo: dto.serialNo ?? row.serialNo, status: dto.status ?? row.status, remarks: dto.remarks ?? row.remarks, updatedBy: user.userId });
-    return { data: this.equipmentDto(await this.equipment.save(row)) };
+    return { data: (await this.equipmentDtos([await this.equipment.save(row)]))[0] };
   }
 
   async removeEquipment(id: string, user: CurrentUser): Promise<void> {
@@ -270,8 +272,12 @@ export class MasterDataService {
   private isVesselVisible(vessel: VesselEntity, user: CurrentUser) { return user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || user.departments.includes(`vessel:${vessel.id}`) || user.departments.includes(`vessel:${vessel.code}`); }
   private overlaps(from: string, to: string | null, existingFrom: string, existingTo: string | null) { return from <= (existingTo ?? '9999-12-31') && existingFrom <= (to ?? '9999-12-31'); }
   private vesselDto(row: VesselEntity) { return { id: row.id, code: row.code, name: row.name, category: row.category, status: row.status, mmsi: row.mmsi, remarks: row.remarks }; }
-  private personnelDto(row: PersonnelEntity, user: CurrentUser) { const sensitive = user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || row.wecomUserId === user.userId; return { id: row.id, name: row.name, departmentCode: row.departmentCode, position: row.position, employmentStatus: row.employmentStatus, ...(sensitive ? { mobile: row.mobile, wecomUserId: row.wecomUserId } : {}) }; }
-  private equipmentDto(row: SafetyEquipmentEntity) { return { id: row.id, code: row.code, name: row.name, categoryId: row.categoryId, vesselId: row.vesselId, serialNo: row.serialNo, status: row.status, remarks: row.remarks }; }
+  private personnelDto(row: PersonnelEntity, user: CurrentUser) { const sensitive = user.isAdmin || user.roles.some((role) => MANAGER_ROLES.has(role)) || row.wecomUserId === user.userId; return { id: row.id, name: row.name, departmentCode: row.departmentCode, position: row.position, employmentStatus: row.employmentStatus, ...(sensitive ? { mobile: row.mobile, wecomUserId: row.wecomUserId, remarks: row.remarks } : {}) }; }
+  private async equipmentDtos(rows: SafetyEquipmentEntity[]) {
+    const categories = rows.length ? await this.categories.find({ where: { id: In([...new Set(rows.map((row) => row.categoryId))]) }, withDeleted: true }) : [];
+    const categoryCodes = new Map(categories.map((category) => [category.id, category.code]));
+    return rows.map((row) => ({ id: row.id, code: row.code, name: row.name, categoryId: row.categoryId, categoryCode: categoryCodes.get(row.categoryId), vesselId: row.vesselId, serialNo: row.serialNo, status: row.status, remarks: row.remarks }));
+  }
   private vehicleDto(row: VehicleEntity) { return { id: row.id, name: row.plateNumber, code: row.plateNumber, plateNumber: row.plateNumber, vehicleType: row.vehicleType, status: row.status, remarks: row.remarks }; }
   private assignmentDto(row: VesselPersonnelAssignmentEntity) { return { id: row.id, vesselId: row.vesselId, personnelId: row.personnelId, roleCode: row.roleCode, effectiveFrom: row.effectiveFrom, effectiveTo: row.effectiveTo, status: row.status, vesselName: row.vesselNameSnapshot, personnelName: row.personnelNameSnapshot }; }
   private referenceDto(row: WorkbenchMasterDataReferenceEntity) { return { id: row.id, sourceRecordId: row.sourceRecordId, fieldKey: row.fieldKey, objectType: row.objectType, rawValue: row.rawValue, objectId: row.objectId, displaySnapshot: row.displaySnapshot, mappingStatus: row.mappingStatus }; }

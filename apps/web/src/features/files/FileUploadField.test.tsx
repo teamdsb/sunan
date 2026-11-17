@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FileUploadField } from './FileUploadField';
+import type { FileRecord } from './types';
 
 const uploadFile = vi.fn();
 const uploadFromWecom = vi.fn();
@@ -20,7 +21,7 @@ const filePolicy = {
 type MockUploadState = {
   status: 'idle' | 'uploading' | 'success' | 'error';
   progress: number;
-  file: null;
+  file: FileRecord | null;
   error: string | null;
 };
 let uploadState: MockUploadState = {
@@ -182,6 +183,20 @@ describe('FileUploadField', () => {
         '证书.pdf',
       );
     });
+  });
+
+  it('clears a controlled upload after the business record has bound the file', () => {
+    const uploaded: FileRecord = {
+      id: 'bound-file', ossKey: 'certificates/bound.pdf', fileName: '已绑定.pdf',
+      mimeType: 'application/pdf', fileSize: 3, category: 'certificates',
+      downloadUrl: '', createdAt: '2026-11-17T00:00:00.000Z',
+    };
+    uploadState = { ...uploadState, file: uploaded, status: 'success' };
+    const { rerender } = render(<FileUploadField category="certificates" value={uploaded} />);
+    expect(screen.getByRole('button', { name: /下载文件/ })).toBeInTheDocument();
+    rerender(<FileUploadField category="certificates" value={null} />);
+    expect(screen.queryByRole('button', { name: /下载文件/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('已绑定.pdf')).not.toBeInTheDocument();
   });
 
   it('keeps a retry path after native upload fails', async () => {

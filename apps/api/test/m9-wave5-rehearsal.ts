@@ -1,10 +1,11 @@
 // Isolated local rehearsal only: real Nest controllers + PostgreSQL migrations,
 // synthetic WeCom transport. No production database or upstream sends.
 import { HttpService } from '@nestjs/axios';
-import { Module } from '@nestjs/common';
+import { Module, type ModuleMetadata } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { of } from 'rxjs';
+import type Redis from 'ioredis';
 import { DataSource } from 'typeorm';
 
 import { configureApp } from 'src/app.bootstrap';
@@ -23,7 +24,10 @@ import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase 
 @Module({ imports: [TypeOrmModule.forRootAsync({ useFactory: async () => { await bootstrapPgTestDatabase(); return buildPgTypeOrmOptions(); } }), SettingsModule, UserDirectoryModule] })
 class RehearsalModule {}
 
-export async function createM9Wave5Rehearsal() {
+export async function createM9Wave5Rehearsal(
+  additionalImports: NonNullable<ModuleMetadata['imports']> = [],
+  options: { redis?: Redis; reminderJobService?: CertificateReminderJobService } = {},
+) {
   if (appEnv.NODE_ENV !== 'test') throw new Error('M9 rehearsal requires NODE_ENV=test');
   appEnv.WECOM_SYSTEM_ADMIN_USER_IDS = 'w5-admin';
   appEnv.SYSTEM_SETTINGS_ENCRYPTION_KEY = 'synthetic-w5-settings-key-000000000000000';
@@ -56,15 +60,15 @@ export async function createM9Wave5Rehearsal() {
     getCorpJsapiTicket: () => 'synthetic-corp-ticket',
     getAgentJsapiTicket: () => 'synthetic-agent-ticket',
   };
-  const moduleRef = await Test.createTestingModule({ imports: [RehearsalModule] })
-    .overrideProvider(REDIS_CLIENT).useValue({ get: () => null, set: () => 'OK', del: () => 0 })
+  const moduleRef = await Test.createTestingModule({ imports: [RehearsalModule, ...additionalImports] })
+    .overrideProvider(REDIS_CLIENT).useValue(options.redis ?? { get: () => null, set: () => 'OK', del: () => 0, ping: () => 'PONG' })
     .overrideProvider(WecomHttpGateway).useValue(gateway)
     .overrideProvider(WecomTokenService).useValue(tokens)
     .overrideProvider(HttpService).useValue({ post: (_url: string, payload: { agentid: number; touser: string }) => {
       controls.sends.push({ agentid: payload.agentid, touser: payload.touser });
       return of({ data: { errcode: 0, errmsg: 'synthetic-ok' } });
     } })
-    .overrideProvider(CertificateReminderJobService).useValue({})
+    .overrideProvider(CertificateReminderJobService).useValue(options.reminderJobService ?? {})
     .overrideProvider(ReminderSchedulerService).useValue({})
     .overrideProvider(PlanTaskSchedulerService).useValue({})
     .compile();

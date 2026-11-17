@@ -1,4 +1,6 @@
 import type { EntityManager } from 'typeorm';
+import { ForbiddenException } from '@nestjs/common';
+import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { FileEntity } from 'src/database/entities/file.entity';
 import { EvidenceAuditEntity } from 'src/database/entities/evidence-audit.entity';
 
@@ -24,6 +26,27 @@ export async function lockAttachmentFiles(manager: EntityManager, fileIds: strin
     if (file) found.add(id);
   }
   return found;
+}
+
+export async function assertTemporaryFileAccess(manager: EntityManager, file: FileEntity, user?: CurrentUser): Promise<void> {
+  if (!user || file.uploadedBy !== user.userId || await hasFileReferences(manager, file.id)) {
+    throw new ForbiddenException('请通过有权限的业务记录访问文件');
+  }
+}
+
+// Call in the same transaction that inserts the business references. Existing target
+// attachments can be retained, but knowing a file ID does not authorize a new link.
+export async function assertAttachmentFilesBindable(
+  manager: EntityManager, fileIds: string[], user: CurrentUser, retainedFileIds: string[] = [],
+): Promise<Set<string>> {
+  const available = await lockAttachmentFiles(manager, [...fileIds, ...retainedFileIds]);
+  const retained = new Set(retainedFileIds);
+  for (const id of new Set(fileIds)) {
+    if (!available.has(id) || retained.has(id) || user.roles.includes('system_admin')) continue;
+    const file = await manager.findOneByOrFail(FileEntity, { id });
+    await assertTemporaryFileAccess(manager, file, user);
+  }
+  return available;
 }
 
 export async function hasFileReferences(manager: EntityManager, id: string): Promise<boolean> {

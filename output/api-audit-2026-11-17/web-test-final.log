@@ -1,0 +1,791 @@
+
+> web@0.0.8 test /Users/yuan/项目/sunan/sunan/apps/web
+> vitest run --maxWorkers=1
+
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/workbench/InspectionCapaPages.test.tsx (10 tests) 1837ms
+   ✓ InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window  1209ms
+ ✓ src/features/certificate/CertificateDetailPage.test.tsx (2 tests) 2391ms
+   ✓ CertificateDetailPage > relies on the global navigation instead of a return button  1725ms
+   ✓ CertificateDetailPage > renders detail, edit and bind file  664ms
+ ✓ src/features/procurement/ProcurementApprovalPage.test.tsx (5 tests) 891ms
+   ✓ ProcurementApprovalPage > does not submit 通过 after the comment prompt is canceled  503ms
+ ✓ src/features/workbench/WorkbenchHomePage.test.tsx (19 tests) 4585ms
+   ✓ WorkbenchHomePage > anchors direct module entries to the module record list  505ms
+   ✓ WorkbenchHomePage > uses selectable vessel and date-time controls for voyage approval records  803ms
+   ✓ WorkbenchHomePage > submits numeric schema fields as numbers  790ms
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > clears the current session and redirects when reauthorizing
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile more menu that exposes navigation links on small screens
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > navigates when tapping a mobile drawer button body
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > navigates when tapping a mobile drawer button body
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile back button on secondary pages and returns to the module home
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile back button on secondary pages and returns to the module home
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > returns to the module home even when a backTo query preserves a list state
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > returns to the module home even when a backTo query preserves a list state
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders drawer navigation as lightweight text items without the default button fill class
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders drawer navigation as lightweight text items without the default button fill class
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+ ✓ src/layouts/AppShell.navigation.test.tsx (8 tests) 5331ms
+   ✓ AppShell navigation > clears the current session and redirects when reauthorizing  2336ms
+   ✓ AppShell navigation > shows a mobile more menu that exposes navigation links on small screens  353ms
+   ✓ AppShell navigation > renders drawer navigation as lightweight text items without the default button fill class  1338ms
+   ✓ AppShell navigation > renders collapsible desktop sidebar navigation  410ms
+ ✓ src/features/office/OfficeAdminPage.test.tsx (3 tests) 717ms
+   ✓ OfficeAdminPage > renders manageable entries and opens the create drawer  523ms
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ ✓ src/features/settings/UserManagementPage.test.tsx (1 test) 2207ms
+   ✓ stops polling a completed directory batch while retaining its result on screen  2206ms
+ ✓ src/features/monitor/MonitorPage.test.tsx (15 tests) 2059ms
+   ✓ MonitorPage > creates using a selected vessel UUID and supports intranet monitoring URLs  431ms
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-profile
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/certificates
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/reminders
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/monitors
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/settings
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office/search
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/orders/new
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/orders/order-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/reports
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/report-approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/report-approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/dictionaries
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/master-data
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/tasks/task-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/tasks/task-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/plans
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/modules/shipping_chart_update
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/modules/shipping_chart_update
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/records/record-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/statistics/attendance
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/reminders
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/enterprise-profile
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/certificates
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/monitors
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+ ✓ src/router/AppRoutes.test.tsx (38 tests) 1853ms
+   ✓ AppRoutes > renders the my home page at /my  489ms
+stderr | src/features/enterprise/EnterprisePolicyPage.test.tsx > EnterprisePolicyPage > shows the title and summary to a reader without an edit form
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/enterprise/EnterprisePolicyPage.test.tsx (8 tests) 782ms
+ ✓ src/features/reminder/ReminderDashboardPage.test.tsx (12 tests) 953ms
+ ✓ src/features/procurement/ProcurementReportPage.test.tsx (2 tests) 792ms
+   ✓ ProcurementReportPage > creates a monthly report request and jumps to detail  553ms
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > saves settings and shows feedback
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > keeps a blank Secret out of a save and preserves the optimistic version
+Warning: Warning: There may be circular references
+
+ ✓ src/features/settings/SettingsPage.test.tsx (8 tests) 2358ms
+   ✓ SettingsPage > saves settings and shows feedback  416ms
+   ✓ SettingsPage > shows read-only main app details and an empty saved-secret field to administrators  312ms
+   ✓ SettingsPage > reloads the optimistic version even when the server returns the same configuration object  438ms
+   ✓ SettingsPage > keeps invalid draft input local without sending connection or message requests  436ms
+ ✓ src/features/procurement/ProcurementOrderDetailPage.test.tsx (7 tests) 1821ms
+   ✓ ProcurementOrderDetailPage > previews an order PDF inside the application without window.open  558ms
+ ✓ src/features/procurement/ProcurementReportRequestDetailPage.test.tsx (7 tests) 743ms
+ ✓ src/features/procurement/ProcurementReportApprovalPage.test.tsx (6 tests) 414ms
+ ✓ src/features/workbench/MasterDataPage.test.tsx (2 tests) 512ms
+   ✓ MasterDataPage > does not carry an edited category into another equipment form  322ms
+ ✓ src/layouts/AppShell.auth.test.tsx (1 test) 390ms
+   ✓ AppShell auth recovery > restores the current user from /auth/me when a stored token exists  389ms
+ ✓ src/features/certificate/CertificateListPage.test.tsx (6 tests) 672ms
+ ✓ src/features/workbench/EvidencePanel.test.tsx (3 tests) 518ms
+ ✓ src/features/procurement/ProcurementOrderCreatePage.test.tsx (4 tests) 2637ms
+   ✓ ProcurementOrderCreatePage > creates a draft order and navigates to the detail page  1042ms
+   ✓ ProcurementOrderCreatePage > can return to procurement home from a direct entry  402ms
+   ✓ ProcurementOrderCreatePage > creates and submits an order in one action  533ms
+   ✓ ProcurementOrderCreatePage > keeps the selected expense time valid and saves it as Shanghai time  658ms
+stderr | src/features/reminder/ReminderDetailPage.test.tsx > ReminderDetailPage > uses a server denial even for a shipping management role
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/reminder/ReminderDetailPage.test.tsx (7 tests) 511ms
+ ✓ src/features/enterprise/EnterprisePolicyDetailPage.test.tsx (2 tests) 426ms
+ ✓ src/features/procurement/ProcurementDictionaryAdminPage.test.tsx (3 tests) 633ms
+   ✓ ProcurementDictionaryAdminPage > allows privileged users to edit dimension metadata  356ms
+ ✓ src/features/procurement/ProcurementOrderListPage.test.tsx (5 tests) 509ms
+ ✓ src/features/workbench/MasterDataPage.save.test.tsx (2 tests) 525ms
+   ✓ master data save results > reports success after a successfully created vessel  373ms
+stderr | src/features/enterprise/EnterpriseProfileDetailPage.test.tsx > EnterpriseProfileDetailPage > shows profile text to readers without maintenance permission
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/enterprise/EnterpriseProfileDetailPage.test.tsx (3 tests) 442ms
+ ✓ src/features/office/OfficeHomePage.test.tsx (7 tests) 285ms
+ ✓ src/features/procurement/ProcurementBudgetAdminPage.test.tsx (2 tests) 411ms
+   ✓ ProcurementBudgetAdminPage > creates a department budget with a required change reason  350ms
+ ✓ src/features/enterprise/EnterpriseProfilePage.test.tsx (3 tests) 446ms
+   ✓ EnterpriseProfilePage > syncs the list query to the URL and preserves it in detail links  311ms
+stderr | src/features/ui/MyHomePage.test.tsx > MyHomePage > shows overdue-only pending reminders as active warnings
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/ui/MyHomePage.test.tsx (11 tests) 441ms
+ ✓ src/features/files/FileUploadField.test.tsx (7 tests) 329ms
+stderr | src/features/workbench/BusinessPanels.test.tsx > business report and learning panels > submits the displayed attendance scope and shows missing hours distinctly
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/workbench/BusinessPanels.test.tsx (4 tests) 362ms
+ ✓ src/features/files/FilePreviewModal.test.tsx (7 tests) 301ms
+ ✓ src/features/files/FileAttachmentList.test.tsx (5 tests) 321ms
+ ✓ src/features/workbench/TaskDetailPage.test.tsx (1 test) 326ms
+   ✓ TaskDetailPage > submits transfer parameters and exposes failed message retry  326ms
+ ✓ src/features/workbench/SelfInspectionPanel.test.tsx (3 tests) 914ms
+   ✓ 自查操作区 > 审核说明必填，并把审核动作及说明发送给后端  536ms
+   ✓ 自查操作区 > 执行人看到检查操作，不显示审核按钮  308ms
+ ✓ src/router/RequireAuth.auth.test.tsx (2 tests) 854ms
+   ✓ RequireAuth auth mode > keeps the direct-entry path, query, and hash when starting oauth  677ms
+ ✓ src/features/workbench/TaskCenterPage.test.tsx (1 test) 512ms
+   ✓ TaskCenterPage > uses the selected view and the same real task source for list and calendar  511ms
+ ✓ src/features/office/OfficeSearchPage.test.tsx (2 tests) 299ms
+ ✓ src/components/ResponsiveTable.test.tsx (2 tests) 130ms
+ ✓ src/features/auth/AuthCallbackPage.test.tsx (4 tests) 147ms
+ ✓ src/hooks/useWecomJsSdk.test.tsx (2 tests) 121ms
+ ✓ src/features/auth/UserAvatar.test.tsx (4 tests) 69ms
+ ✓ src/features/files/useFileUpload.test.tsx (5 tests) 22ms
+ ✓ src/app/baseApi.test.ts (7 tests) 7ms
+ ✓ src/features/auth/oauth.test.ts (7 tests) 4ms
+ ✓ src/features/auth/userPresentation.test.ts (6 tests) 3ms
+ ✓ src/features/auth/authSlice.test.ts (4 tests) 5ms
+ ✓ src/features/auth/bootstrap.test.ts (2 tests) 8ms
+ ✓ src/app/buildCompatibility.test.ts (2 tests) 2ms
+ ✓ src/features/procurement/procurementReportPresentation.test.ts (7 tests) 2ms
+ ✓ src/features/office/launchOfficeEntry.test.ts (2 tests) 2ms
+ ✓ src/router/moduleNav.test.ts (2 tests) 1ms
+ ✓ src/features/auth/permissions.test.ts (4 tests) 2ms
+ ✓ src/features/enterprise/enterpriseSlice.test.ts (2 tests) 2ms
+ ✓ src/features/reminder/reminderApi.test.ts (1 test) 2ms
+ ✓ src/features/monitor/monitorSlice.test.ts (2 tests) 77ms
+ ✓ src/router/AppRoutes.lazy.test.ts (1 test) 5ms
+ ✓ src/features/settings/settingsSlice.test.ts (1 test) 2ms
+ ✓ src/features/certificate/certificateSlice.test.ts (1 test) 2ms
+
+ Test Files  61 passed (61)
+      Tests  312 passed (312)
+   Start at  20:02:38
+   Duration  154.95s (transform 3.86s, setup 3.68s, collect 67.18s, tests 43.93s, environment 25.39s, prepare 4.58s)
+

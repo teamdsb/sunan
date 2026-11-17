@@ -1,0 +1,11 @@
+PASS test/full-system-admin.integration.spec.ts (13.782 s)
+  Full-system master data and administration HTTP roundtrips
+    ✓ persists editable master-data fields, returns them in detail/list and soft-deletes all four object types (300 ms)
+    ✓ keeps canonical and compatibility admin routes effective with versioned edits, restoration and audit history (138 ms)
+    ✓ verifies signed callback echoes and records a connection probe without sending a message (23 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        13.845 s
+Ran all test suites matching /test\/full-system-admin.integration.spec.ts/i.

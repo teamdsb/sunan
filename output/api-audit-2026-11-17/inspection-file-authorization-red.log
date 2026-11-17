@@ -1,0 +1,59 @@
+FAIL test/inspection-capa.integration.spec.ts (7.298 s)
+  inspection and CAPA integration
+    ✕ rejects another uploader inspection evidence and signature without saving partial changes (316 ms)
+    ✕ rejects another uploader CAPA evidence before changing the action (185 ms)
+    ○ skipped keeps the issued template snapshot, blocks premature multi-person summary, and deduplicates automatic nonconformity transfer
+    ○ skipped keeps failed automatic transfer jobs and reconciles them after the constraint is repaired
+    ○ skipped enforces evidence, independent verification, rework and privileged major-issue closure
+    ○ skipped links each existing inspection-rectification source in both directions
+
+  ● inspection and CAPA integration › rejects another uploader inspection evidence and signature without saving partial changes
+
+    expected 403 "Forbidden", got 200 "OK"
+
+      159 |     const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey;
+      160 |     currentUser = makeUser('inspector-a');
+    > 161 |     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('foreign-evidence')).send({ templateItemSnapshotKey: itemKey, conclusion: 'nonconforming', evidenceFileIds: [fileId] }).expect(403);
+          |                                                                                                                                                                                                                                                ^
+      162 |     expect(await source.query('SELECT id FROM inspection_results WHERE inspection_id=$1', [inspection.id])).toHaveLength(0);
+      163 |     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('own-result')).send({ templateItemSnapshotKey: itemKey, conclusion: 'conforming' }).expect(200);
+      164 |     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('foreign-signature')).send({ signatureFileId: fileId }).expect(403);
+
+      at Object.<anonymous> (test/inspection-capa.integration.spec.ts:161:240)
+      ----
+      at Test._assertStatus (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at ../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● inspection and CAPA integration › rejects another uploader CAPA evidence before changing the action
+
+    expected 403 "Forbidden", got 200 "OK"
+
+      172 |     const action = await request(app.getHttpServer()).post(`/api/v1/capas/${capa.body.data.id}/actions`).set('Idempotency-Key', key('foreign-capa-action')).send({ actionType: 'corrective', title: 'Evidence authorization', responsibleUserId: 'inspector-a', dueAt: '2026-07-20T00:00:00.000Z' }).expect(201);
+      173 |     currentUser = makeUser('inspector-a');
+    > 174 |     await request(app.getHttpServer()).post(`/api/v1/capa-actions/${action.body.data.id}/submit`).set('Idempotency-Key', key('foreign-capa-submit')).send({ completionStatement: 'Done', evidenceFileIds: [fileId] }).expect(403);
+          |                                                                                                                                                                                                                       ^
+      175 |     expect(await source.query('SELECT id FROM capa_action_evidence WHERE capa_action_id=$1', [action.body.data.id])).toHaveLength(0);
+      176 |     expect(await source.query('SELECT status FROM capa_actions WHERE id=$1', [action.body.data.id])).toEqual([expect.objectContaining({ status: 'assigned' })]);
+      177 |   });
+
+      at Object.<anonymous> (test/inspection-capa.integration.spec.ts:174:215)
+      ----
+      at Test._assertStatus (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at ../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 4 skipped, 6 total
+Snapshots:   0 total
+Time:        7.35 s
+Ran all test suites matching /test\/inspection-capa.integration.spec.ts/i with tests matching "another uploader".
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/inspection-capa.integration.spec.ts --testNamePattern=another uploader

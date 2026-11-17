@@ -61,17 +61,15 @@ export class WorkbenchLearningService {
     const rows = await this.source
       .getRepository(WecomUserEntity)
       .find({ where: { corpId: user.corpId }, order: { name: 'ASC' } });
-    return rows
-      .filter((row) => {
-        if (!this.authorizationService) return ![2, 4, 5].includes(Number(row.rawProfile?.status));
-        try {
-          this.authorizationService.getEffectiveAuthorization(row);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .map((row) => ({ userId: row.userId, name: row.name }));
+    const visible = [];
+    for (const row of rows) {
+      if (!this.authorizationService) {
+        if (![2, 4, 5].includes(Number(row.rawProfile?.status))) visible.push(row);
+        continue;
+      }
+      try { await this.authorizationService.getEffectiveAuthorization(row); visible.push(row); } catch { /* Unavailable directory members cannot be assigned. */ }
+    }
+    return visible.map((row) => ({ userId: row.userId, name: row.name }));
   }
   private async locked(
     manager: EntityManager,

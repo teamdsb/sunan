@@ -130,7 +130,7 @@ export class CertificateReminderEngineService {
         continue;
       }
 
-      const recipients = this.resolveRecipients({
+      const recipients = await this.resolveRecipients({
         certificate,
         type,
         users,
@@ -318,7 +318,7 @@ export class CertificateReminderEngineService {
     const [users, personnel] = await Promise.all([
       this.wecomUserRepository.find(), this.personnelRepository.find({ where: { deletedAt: IsNull() } }),
     ]);
-    return this.resolveRecipients({ certificate, type: undefined, users, personnelById: new Map(personnel.map((row) => [row.id, row])), equipmentById: new Map(), vesselById: new Map(), vehicleById: new Map() }).includes(recipientUserId);
+    return (await this.resolveRecipients({ certificate, type: undefined, users, personnelById: new Map(personnel.map((row) => [row.id, row])), equipmentById: new Map(), vesselById: new Map(), vehicleById: new Map() })).includes(recipientUserId);
   }
 
   private async persistDeliveryResult(reminder: CertificateReminderEntity) {
@@ -340,7 +340,7 @@ export class CertificateReminderEngineService {
     return null;
   }
 
-  private resolveRecipients(params: {
+  private async resolveRecipients(params: {
     certificate: CertificateEntity;
     type: CertificateTypeEntity | undefined;
     users: WecomUserEntity[];
@@ -348,27 +348,27 @@ export class CertificateReminderEngineService {
     equipmentById: Map<string, SafetyEquipmentEntity>;
     vesselById: Map<string, VesselEntity>;
     vehicleById: Map<string, VehicleEntity>;
-  }): string[] {
+  }): Promise<string[]> {
     const recipients = new Set<string>();
     const configuredRecipient = params.certificate.reminderRecipientUserId?.trim();
     if (configuredRecipient) {
       const user = params.users.find((candidate) => candidate.userId === configuredRecipient);
-      return user && this.effectiveAuthorization(user) ? [configuredRecipient] : [];
+      return user && await this.effectiveAuthorization(user) ? [configuredRecipient] : [];
     }
     const ownerType = params.certificate.ownerType;
 
     if (ownerType === 'vessel') {
-      this.collectByRoles(recipients, params.users, ['shipping', 'general_office']);
+      await this.collectByRoles(recipients, params.users, ['shipping', 'general_office']);
       return [...recipients];
     }
 
     if (ownerType === 'vehicle') {
-      this.collectByRoles(recipients, params.users, ['logistics', 'general_office']);
+      await this.collectByRoles(recipients, params.users, ['logistics', 'general_office']);
       return [...recipients];
     }
 
     if (ownerType === 'equipment') {
-      this.collectByRoles(recipients, params.users, ['shipping', 'general_office']);
+      await this.collectByRoles(recipients, params.users, ['shipping', 'general_office']);
       return [...recipients];
     }
 
@@ -379,13 +379,13 @@ export class CertificateReminderEngineService {
 
     if (personnel.wecomUserId) {
       const owner = params.users.find((user) => user.userId === personnel.wecomUserId);
-      if (owner && this.effectiveAuthorization(owner)) {
+      if (owner && await this.effectiveAuthorization(owner)) {
         recipients.add(personnel.wecomUserId);
       }
     }
 
     for (const user of params.users) {
-      const effective = this.effectiveAuthorization(user);
+      const effective = await this.effectiveAuthorization(user);
       if (!effective || !effective.departmentCodes.includes(personnel.departmentCode)) {
         continue;
       }
@@ -398,16 +398,16 @@ export class CertificateReminderEngineService {
     return [...recipients];
   }
 
-  private collectByRoles(target: Set<string>, users: WecomUserEntity[], roleNames: string[]): void {
+  private async collectByRoles(target: Set<string>, users: WecomUserEntity[], roleNames: string[]): Promise<void> {
     for (const user of users) {
-      const effective = this.effectiveAuthorization(user);
+      const effective = await this.effectiveAuthorization(user);
       if (effective?.roles.some((role) => roleNames.includes(role))) {
         target.add(user.userId);
       }
     }
   }
 
-  private effectiveAuthorization(user: WecomUserEntity) {
+  private async effectiveAuthorization(user: WecomUserEntity) {
     if (!this.authorizationService) {
       if (user.sourceStatus === 'inactive') return null;
       if (!user.isSystemAdmin && user.platformStatus === 'disabled') return null;
@@ -417,7 +417,7 @@ export class CertificateReminderEngineService {
       };
     }
     try {
-      return this.authorizationService.getEffectiveAuthorization(user);
+      return await this.authorizationService.getEffectiveAuthorization(user);
     } catch {
       return null;
     }
@@ -426,7 +426,7 @@ export class CertificateReminderEngineService {
   private async recipientUnavailableReason(recipientUserId: string): Promise<string | null> {
     const user = await this.wecomUserRepository.findOne({ where: { userId: recipientUserId } });
     if (!user) return 'recipient unavailable: user not found';
-    if (this.effectiveAuthorization(user)) return null;
+    if (await this.effectiveAuthorization(user)) return null;
     return 'recipient unavailable: authorization rejected';
   }
 

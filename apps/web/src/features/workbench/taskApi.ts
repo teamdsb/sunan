@@ -12,6 +12,7 @@ export type Task = {
   scheduledAt: string;
   dueAt: string;
   isOverdue: boolean;
+  inspectionId?: string | null;
   availableActions?: TaskActionType[];
 };
 

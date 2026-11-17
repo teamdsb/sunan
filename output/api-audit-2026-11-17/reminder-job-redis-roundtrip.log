@@ -1,0 +1,9 @@
+PASS test/reminder-job-http.integration.spec.ts (11.95 s)
+  Reminder scan HTTP job roundtrip with real Redis
+    ✓ returns the persisted queued job and an absent result without inventing success (56 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        12.025 s
+Ran all test suites matching /test\/reminder-job-http.integration.spec.ts/i.

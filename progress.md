@@ -1,11 +1,31 @@
 ---
 status: operations
 owner: planning
-updated: 2026-11-16
+updated: 2026-11-17
 replaces: []
 replaced_by: []
 ---
 # 进度日志
+
+## 2026-11-17：开始品牌、导出和通知视觉统一
+- 用户确认采用 A「深海企业」方案；Logo 只显示在导航栏品牌旁。
+- 设计文档已写入 `docs/superpowers/specs/2026-11-17-brand-export-notification-unification-design.md`，按用户要求不保留提交，当前阶段进入实现。
+- 已定位导航、共享工作台 PDF/XLSX、独立采购/自查/工作台打印 PDF 及企业微信 textcard 统一发送入口。
+- 已复制用户指定 PNG 到 `apps/web/public/assets/sunan-logo.png`，桌面导航和普通移动导航使用同一资源；船舶自查移动标题不显示该 Logo，避免脱离“苏南船舶管理”品牌旁的约束。
+- 新增 `apps/api/src/common/export/export-theme.ts` 统一深海蓝、青蓝、浅蓝灰、警示色、字体和 PDF 颜色操作符；工作台 PDF/XLSX、采购报表/采购单 PDF、船舶自查 PDF 和工作台打印快照均已接入主题。工作台打印快照同时改用嵌入中文子集字体，不再生成 Helvetica 文本。
+- 新增 `wecom-notification-presentation.ts` 并在 `WecomMessageService.sendTextCard` 总入口统一模块前缀、HTML 描述行和默认“查看详情”按钮；收件人、URL、dedupe/source、配置版本、快照、重试和人工核对逻辑未改。
+- 新鲜验证：API lint/build、导出/通知定向单测 3 套件 15 项、Web 导航 8 项、Web build、文档 inventory/index 均通过；受影响集成测试因本机 Docker socket 不存在而无法启动 Testcontainers，未将其记为代码通过。
+- 集成复跑命令为 `pnpm --filter api exec jest --config ./jest.integration.config.ts --runInBand test/certificate-reminder.integration.spec.ts test/plan-task.integration.spec.ts test/procurement.integration.spec.ts test/settings.integration.spec.ts test/workbench-business.integration.spec.ts`；5 套件在 `bootstrapPgTestDatabase` 前均因 `Could not find a working container runtime strategy` 失败，`docker info` 同时确认 `/Users/yuan/.docker/run/docker.sock` 不存在。
+
+## 2026-11-17：开始全系统接口与功能审计
+- 读取仓库规范、既有规划/发现/进度和当前脚本；使用文件规划、系统化调试、完成前验证及独立代码复核流程。
+- 当前按前端调用与真实Controller建立清单，安排三个只读复核范围；不触碰真实备份、env、生产及用户正在进行的备份工作。
+- 最终清单：19 Controllers / 233 backend routes / 195 frontend calls；无未匹配、未解析或重复路由。42 条无直接前端调用接口已分类为健康探针、回调、管理兼容、worker/补偿或有效业务 API，未按静态“无调用”误删。
+- 修复授权字典、详情越权、文件引用/业务下载、采购/办事/资料制度/提醒、工作台动作、检查快照与取消任务终态等确认缺陷；移除无 worker/结果存储的考勤 reconcile 假接口及无消费者个人推送开关。
+- 最终门禁：API lint 0、unit 35 套件/206 项、integration 30 套件/200 项、Web 61 文件/312 项、API/Web build 0、21 份 OpenAPI 和实际 Nest Swagger 233 路由校验通过；首轮 integration 单项 401 的原始日志、隔离 16/16 与干净全量复跑均保留。
+- 浏览器合成环境完成采购日期/金额持久化重读、人工空角色保存后 OAuth 重新认证、工作台数值字段保存重读；截图和控制台告警/现场未执行项已归档到审计报告。
+- 阶段 40 已完成；不生产部署、不提交推送。真实企业微信全目录/送达、iOS/Android/桌面、生产恢复和审批 thirdNo 外部语义仍需现场或外部契约证据。
+- 多文件规划补丁首轮因progress标题不符而原子拒绝；读取实际标题后修正，无部分写入。
 
 ## 2026-09-09：附件回收收尾
 - 恢复已同意的方案和现有变更，保留所有历史工作区改动；继续使用隔离 Docker 数据库与模拟 OSS。
@@ -766,3 +786,14 @@ replaced_by: []
 - 本地Chromium完成用户人工覆盖→同步→重新OAuth/旧JWT→320px恢复默认，以及通知草稿→保存v1→空Secret保留v2→刷新不回显→明确清除v3；320px/1440px无页面横向溢出，已检查代表截图。全部企业微信调用为合成transport。
 - W5验收、迁移发布/兼容恢复操作包、Markdown手册/截图任务、env示例与企微矩阵已写入；生产全量目录、真实收发、三端、生产恢复、兼容镜像签核和M9 Word/PPT实拍保持未执行。
 - 286份Markdown清单生成/索引及git diff --check通过。临时浏览器m9w5关闭，4173/4319停止，Testcontainers容器全部销毁；保留用户原有5173服务，清除本轮Playwright会话临时目录。阶段39本地交付完成，现场条件未关闭；没有提交、推送或生产部署。
+
+
+## 2026-11-17：开始下载线上备份
+- 已取得用户下载授权，创建日期目录和分类；读取生产运维规范，校验两端磁盘空间。
+- 正在准备串行、资源受限的备份脚本和校验清单；不停止服务。
+
+- 线上备份批次 20261117104609 已生成：96 个源端文件，1,210,144,644 字节。PostgreSQL 归档、Redis RDB、39 个 S3 对象校验通过，7 个镜像及两组历史备份已归档；下载正在进行。
+
+- 已先行验证 01–05 当前部署/数据/配置/日志文件 SHA256，全部匹配，镜像归档含 7 个正确标签。初次预检误包含仍在历史文件之后排队的元数据日志，按实际分类收窄范围后通过；完整 96 文件校验仍待全部下载后执行。
+
+- 2026-11-17 下载完成：backup/2026-11-17，96 个源端文件共 1,210,144,644 字节；27 个压缩包全部可读，7 个部署镜像标签完整，39 个附件原文 SHA256/大小/数据库引用全部匹配。线上所有运行容器的镜像和启动时间保持一致，readiness 及 Web 200 正常。恢复说明、最新和历史数据已分类，最终清单生成。

@@ -1,0 +1,23 @@
+PASS test/file-authorization.integration.spec.ts (19.145 s)
+  File access and attachment authorization integration
+    ✓ keeps uploader access to an unbound temporary file, including encoded slash keys and callback retries (53 ms)
+    ✓ denies global download and callback signatures for temporary files without temporary uploader access (10 ms)
+    ✓ denies global download and callback signatures for bound files without temporary uploader access (14 ms)
+    ✓ denies global download and callback signatures for bound-admin files without temporary uploader access (13 ms)
+    ✓ denies WeCom media replay signatures for other-uploader files (8 ms)
+    ✓ denies WeCom media replay signatures for bound files (9 ms)
+    ✓ does not launder known other-temporary file IDs through a readable procurement draft (9 ms)
+    ✓ does not launder known own-bound file IDs through a readable procurement draft (10 ms)
+    ✓ does not launder known other-bound file IDs through a readable procurement draft (12 ms)
+    ✓ binds an uploader temporary file and preserves an existing attachment from another uploader idempotently (23 ms)
+    ✓ authorizes new certificate attachments while preserving historical target attachments (54 ms)
+    ✓ authorizes new profile attachments while preserving historical target attachments (42 ms)
+    ✓ authorizes new policy attachments while preserving historical target attachments (36 ms)
+    ✓ blocks known unauthorized workbench attachment files and keeps authorized target retention (75 ms)
+    ✓ blocks known unauthorized workbench signature files and keeps authorized target retention (36 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        19.223 s
+Ran all test suites matching /test\/file-authorization.integration.spec.ts/i.

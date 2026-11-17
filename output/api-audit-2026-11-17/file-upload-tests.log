@@ -1,0 +1,18 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+ ✓ src/features/files/useFileUpload.test.tsx (5 tests) 51ms
+ ✓ src/features/files/FileUploadField.test.tsx (7 tests) 1231ms
+   ✓ FileUploadField > previews the current file  356ms
+ ✓ src/features/procurement/ProcurementOrderDetailPage.test.tsx (7 tests) 3206ms
+   ✓ ProcurementOrderDetailPage > previews an order PDF inside the application without window.open  915ms
+   ✓ ProcurementOrderDetailPage > downloads a generated order PDF from the export action  381ms
+   ✓ ProcurementOrderDetailPage > uploads and binds procurement attachments without manual fileId input  435ms
+   ✓ ProcurementOrderDetailPage > clears the temporary upload controls once the attachment is bound  589ms
+   ✓ ProcurementOrderDetailPage > opens bound attachments through procurement-scoped download URLs  360ms
+
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  11:15:42
+   Duration  7.06s (transform 525ms, setup 621ms, collect 6.23s, tests 4.49s, environment 3.16s, prepare 344ms)
+

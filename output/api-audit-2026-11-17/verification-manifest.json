@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-17",
+  "nodePath": "/opt/homebrew/opt/node@20/bin",
+  "source": {
+    "controllers": 19,
+    "backendRoutes": 233,
+    "frontendCalls": 195,
+    "unmatchedFrontendCalls": 0,
+    "unresolvedFrontendCalls": 0,
+    "duplicateRoutes": 0,
+    "routesWithoutDirectFrontendCall": 42
+  },
+  "qualityGates": [
+    { "command": "pnpm --filter api lint", "exitCode": 0, "log": "api-lint-final.log" },
+    { "command": "pnpm --filter api test:unit --runInBand", "exitCode": 0, "suites": 35, "tests": 206, "log": "api-unit-final.log" },
+    { "command": "pnpm --filter api test:integration --runInBand", "exitCode": 0, "suites": 30, "tests": 200, "log": "api-integration-final-rerun.log", "firstRun": { "suites": 29, "tests": 199, "failedTests": 1, "log": "api-integration-final.log" } },
+    { "command": "pnpm --filter web test --maxWorkers=1", "exitCode": 0, "files": 61, "tests": 312, "log": "web-test-final.log" },
+    { "command": "pnpm --filter api build", "exitCode": 0, "log": "api-build-final.log" },
+    { "command": "pnpm --filter web build", "exitCode": 0, "log": "web-build-final.log" },
+    { "command": "swagger-cli validate docs/specs/**/*.yaml", "exitCode": 0, "files": 21, "log": "openapi-final-verification.json" },
+    { "command": "GET /api/docs-json + swagger-cli validate", "exitCode": 0, "routes": 233, "log": "live-openapi-validation-final.log" },
+    { "command": "node scripts/check-doc-index.mjs", "exitCode": 0, "markdownFiles": 288, "log": "doc-index-final.log" },
+    { "command": "git diff --check", "exitCode": 0, "log": "diff-check-final.log" }
+  ],
+  "httpEvidence": {
+    "observedRequests": 2995,
+    "routesObserved": 233,
+    "routesWith2xx": 233,
+    "finalRunRoutesObserved": 231,
+    "finalRunRoutesWith2xx": 231,
+    "routeCoverage": "route-coverage.json",
+    "traceLoader": "trace-api-http.cjs"
+  },
+  "externalValidationNotRun": [
+    "production deployment or restore",
+    "full enterprise WeCom directory completeness",
+    "real WeCom delivery and independent application delivery",
+    "iOS Android desktop WeCom device matrix",
+    "external thirdNo not-found semantics"
+  ],
+  "followUpVerification": {
+    "archiveVisibilityRegression": {
+      "command": "pnpm --filter api test:integration --runInBand test/enterprise-profile.integration.spec.ts",
+      "exitCode": 0,
+      "suites": 1,
+      "tests": 3,
+      "record": "archive-visibility-regression.md"
+    },
+    "apiIntegrationFinalRerun": {
+      "command": "pnpm --filter api test:integration --runInBand",
+      "exitCode": 0,
+      "suites": 30,
+      "tests": 201,
+      "record": "archive-visibility-regression.md"
+    },
+    "apiUnit": { "exitCode": 0, "suites": 35, "tests": 206 },
+    "apiLint": { "exitCode": 0 },
+    "apiBuild": { "exitCode": 0 },
+    "webTests": { "exitCode": 0, "files": 61, "tests": 312 },
+    "webBuild": { "exitCode": 0 },
+    "openapiYaml": { "exitCode": 0, "files": 21 },
+    "sourceContractInventory": {
+      "exitCode": 0,
+      "backendRoutes": 233,
+      "frontendCalls": 195,
+      "unmatchedFrontendCalls": 0,
+      "unresolvedFrontendCalls": 0,
+      "duplicateRoutes": 0
+    }
+  }
+}

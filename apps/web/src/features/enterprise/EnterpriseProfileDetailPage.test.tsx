@@ -95,4 +95,15 @@ describe('EnterpriseProfileDetailPage', () => {
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
     await waitFor(() => expect(mockBind).toHaveBeenCalled());
   });
+
+  it('shows profile text to readers without maintenance permission', () => {
+    const response = mockGetById();
+    mockGetById.mockReturnValue({ ...response, data: { data: { ...response.data.data, title: '普通员工可读资料', description: '完整企业资料说明', canManage: false } } });
+    render(<MemoryRouter initialEntries={['/my/enterprise-profile/1']}><Routes><Route path="/my/enterprise-profile/:id" element={<EnterpriseProfileDetailPage />} /></Routes></MemoryRouter>);
+
+    expect(screen.getByText('普通员工可读资料')).toBeInTheDocument();
+    expect(screen.getByText('完整企业资料说明')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'upload' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /保\s*存/ })).not.toBeInTheDocument();
+  });
 });

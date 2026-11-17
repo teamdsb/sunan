@@ -98,6 +98,7 @@ docker buildx build --builder sunan-release --platform linux/amd64 --load \
   -t "sunan-api:release-$RELEASE" -f apps/api/Dockerfile .
 docker buildx build --builder sunan-release --platform linux/amd64 --load \
   --label org.opencontainers.image.version="$VERSION" --label com.sunan.release="$RELEASE" \
+  --build-arg SUNAN_WEB_BUILD_TARGET=production \
   --build-arg VITE_API_BASE_URL=https://api.qzssncb.com/api/v1 \
   --build-arg VITE_WECOM_CORP_ID="$WECOM_CORP_ID" --build-arg VITE_WECOM_AGENT_ID="$WECOM_AGENT_ID" \
   --build-arg VITE_WECOM_REDIRECT_URI=https://app.qzssncb.com/auth/callback \

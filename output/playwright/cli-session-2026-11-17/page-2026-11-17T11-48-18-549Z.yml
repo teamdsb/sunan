@@ -1,0 +1,366 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e7]:
+    - banner [ref=f1e8]:
+      - heading "苏南船舶管理" [level=1] [ref=f1e15]
+      - generic [ref=f1e16]:
+        - generic [ref=f1e18]:
+          - generic [ref=f1e19]: 合
+          - generic [ref=f1e23]:
+            - strong [ref=f1e25]: 合成管理员
+            - generic [ref=f1e26]: 总经办 / 系统管理员
+        - button "reload 重新认证" [ref=f1e28] [cursor=pointer]:
+          - img "reload" [ref=f1e30]
+          - generic [ref=f1e33]: 重新认证
+    - generic [ref=f1e34]:
+      - complementary "桌面模块导航" [ref=f1e35]:
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]: 模块导航
+          - button "收起左侧导航" [ref=f1e38] [cursor=pointer]:
+            - img "double-left" [ref=f1e40]
+        - navigation [ref=f1e43]:
+          - button "我的" [ref=f1e45] [cursor=pointer]
+          - button "办事中心" [ref=f1e54] [cursor=pointer]
+          - generic [ref=f1e62]:
+            - button "采购管理" [expanded] [ref=f1e63] [cursor=pointer]
+            - generic [ref=f1e71]:
+              - button "采购单列表" [ref=f1e72] [cursor=pointer]
+              - button "新建采购单" [ref=f1e75] [cursor=pointer]
+              - button "采购审批" [ref=f1e78] [cursor=pointer]
+              - button "采购报表" [ref=f1e81] [cursor=pointer]
+              - button "报表审批" [ref=f1e84] [cursor=pointer]
+              - button "字典治理" [ref=f1e87] [cursor=pointer]
+              - button "年度预算" [ref=f1e90] [cursor=pointer]
+          - button "工作平台" [ref=f1e94] [cursor=pointer]
+      - main [ref=f1e102]:
+        - generic [ref=f1e187]:
+          - heading "采购单详情" [level=2] [ref=f1e188]
+          - generic [ref=f1e189]: 查看采购单、审批进度和执行信息，并按需导出 PDF。
+          - generic [ref=f1e190]:
+            - button "返回采购首页" [ref=f1e192] [cursor=pointer]
+            - button "进入审批页" [ref=f1e195] [cursor=pointer]
+            - button "预览 PDF" [ref=f1e198] [cursor=pointer]
+            - button "导出 PDF" [ref=f1e201] [cursor=pointer]
+        - generic [ref=f1e206]:
+          - generic [ref=f1e207]: 接口回归采购草稿
+          - table [ref=f1e210]:
+            - rowgroup [ref=f1e211]:
+              - row [ref=f1e212]:
+                - rowheader "状态" [ref=f1e213]
+                - cell "草稿" [ref=f1e214]
+              - row [ref=f1e217]:
+                - rowheader "单号" [ref=f1e218]
+                - cell "CG202611173558" [ref=f1e219]
+              - row [ref=f1e220]:
+                - rowheader "部门" [ref=f1e221]
+                - cell "总经办" [ref=f1e222]
+              - row [ref=f1e223]:
+                - rowheader "细分" [ref=f1e224]
+                - cell "-" [ref=f1e225]
+              - row [ref=f1e226]:
+                - rowheader "金额" [ref=f1e227]
+                - cell "¥128.50" [ref=f1e228]
+              - row [ref=f1e230]:
+                - rowheader "摘要" [ref=f1e231]
+                - cell "真实浏览器通过API保存并重新读取" [ref=f1e232]
+              - row [ref=f1e233]:
+                - rowheader "提交时间" [ref=f1e234]
+                - cell "-" [ref=f1e235]
+              - row [ref=f1e236]:
+                - rowheader "外部流程状态" [ref=f1e237]
+                - cell "-" [ref=f1e238]
+        - generic [ref=f1e240]:
+          - generic [ref=f1e241]: 草稿编辑
+          - generic [ref=f1e245]:
+            - generic [ref=f1e247]:
+              - generic "标题" [ref=f1e249]: "* 标题"
+              - textbox "* 标题" [ref=f1e253]: 接口回归采购草稿
+            - generic [ref=f1e255]:
+              - generic "摘要/事由" [ref=f1e257]: "* 摘要/事由"
+              - textbox "* 摘要/事由" [ref=f1e261]: 真实浏览器通过API保存并重新读取
+            - generic [ref=f1e263]:
+              - generic "金额" [ref=f1e265]: "* 金额"
+              - generic [ref=f1e269]:
+                - generic:
+                  - button "Increase Value" [ref=f1e270] [cursor=pointer]:
+                    - img "up" [ref=f1e271]
+                  - button "Decrease Value" [ref=f1e274] [cursor=pointer]:
+                    - img "down" [ref=f1e275]
+                - spinbutton "* 金额" [ref=f1e279]: "128.50"
+            - generic [ref=f1e281]:
+              - generic "费用时间（可选）" [ref=f1e283]
+              - generic [ref=f1e288]:
+                - textbox "费用时间（可选）" [active] [invalid] [ref=f1e289]:
+                  - /placeholder: 请选择日期
+                - generic:
+                  - img "calendar"
+            - generic [ref=f1e290]:
+              - button "保存草稿" [ref=f1e292] [cursor=pointer]
+              - button "提交审批" [ref=f1e295] [cursor=pointer]
+        - generic [ref=f1e298]:
+          - generic [ref=f1e299]: 附件上传
+          - generic [ref=f1e303]:
+            - alert [ref=f1e344]:
+              - img "info-circle" [ref=f1e345]
+              - generic [ref=f1e348]:
+                - generic [ref=f1e349]: 上传前请确认
+                - generic [ref=f1e351]:
+                  - generic [ref=f1e352]: 支持格式：PDF、JPG、JPEG、PNG、DOC、DOCX、XLS、XLSX、TXT、CSV、HEIC、ZIP、RAR、WPS、ET、DPS
+                  - generic [ref=f1e354]: 单个文件不超过 20MB
+            - button "上传文件" [ref=f1e356] [cursor=pointer]
+        - generic [ref=f1e309]:
+          - generic [ref=f1e310]: 已绑定附件
+          - generic [ref=f1e313]: 暂无附件
+        - generic [ref=f1e319]:
+          - generic [ref=f1e320]: 审批轨迹
+          - table [ref=f1e330]:
+            - rowgroup [ref=f1e331]:
+              - row [ref=f1e332]:
+                - cell "暂无数据 暂无数据" [ref=f1e333]:
+                  - generic [ref=f1e334]:
+                    - img "暂无数据" [ref=f1e336]
+                    - generic [ref=f1e342]: 暂无数据
+  - generic [ref=f1e360]:
+    - generic [ref=f1e362]:
+      - generic [ref=f1e363]:
+        - generic [ref=f1e364]:
+          - button "上一年 (Control键加左方向键)" [ref=f1e365] [cursor=pointer]
+          - button "上个月 (翻页上键)" [ref=f1e367] [cursor=pointer]
+          - generic [ref=f1e369]:
+            - button "选择年份" [ref=f1e370] [cursor=pointer]: 2026年
+            - button "选择月份" [ref=f1e371] [cursor=pointer]: Nov
+          - button "下个月 (翻页下键)" [ref=f1e372] [cursor=pointer]
+          - button "下一年 (Control键加右方向键)" [ref=f1e374] [cursor=pointer]
+        - table [ref=f1e377]:
+          - rowgroup [ref=f1e378]:
+            - row [ref=f1e379]:
+              - columnheader "Su" [ref=f1e380]
+              - columnheader "Mo" [ref=f1e381]
+              - columnheader "Tu" [ref=f1e382]
+              - columnheader "We" [ref=f1e383]
+              - columnheader "Th" [ref=f1e384]
+              - columnheader "Fr" [ref=f1e385]
+              - columnheader "Sa" [ref=f1e386]
+          - rowgroup [ref=f1e387]:
+            - row [ref=f1e388]:
+              - cell "1" [ref=f1e389] [cursor=pointer]
+              - cell "2" [ref=f1e391] [cursor=pointer]
+              - cell "3" [ref=f1e393] [cursor=pointer]
+              - cell "4" [ref=f1e395] [cursor=pointer]
+              - cell "5" [ref=f1e397] [cursor=pointer]
+              - cell "6" [ref=f1e399] [cursor=pointer]
+              - cell "7" [ref=f1e401] [cursor=pointer]
+            - row [ref=f1e403]:
+              - cell "8" [ref=f1e404] [cursor=pointer]
+              - cell "9" [ref=f1e406] [cursor=pointer]
+              - cell "10" [ref=f1e408] [cursor=pointer]
+              - cell "11" [ref=f1e410] [cursor=pointer]
+              - cell "12" [ref=f1e412] [cursor=pointer]
+              - cell "13" [ref=f1e414] [cursor=pointer]
+              - cell "14" [ref=f1e416] [cursor=pointer]
+            - row [ref=f1e418]:
+              - cell "15" [ref=f1e419] [cursor=pointer]
+              - cell "16" [ref=f1e421] [cursor=pointer]
+              - cell "17" [ref=f1e423] [cursor=pointer]
+              - cell "18" [ref=f1e425] [cursor=pointer]
+              - cell "19" [ref=f1e427] [cursor=pointer]
+              - cell "20" [ref=f1e429] [cursor=pointer]
+              - cell "21" [ref=f1e431] [cursor=pointer]
+            - row [ref=f1e433]:
+              - cell "22" [ref=f1e434] [cursor=pointer]
+              - cell "23" [ref=f1e436] [cursor=pointer]
+              - cell "24" [ref=f1e438] [cursor=pointer]
+              - cell "25" [ref=f1e440] [cursor=pointer]
+              - cell "26" [ref=f1e442] [cursor=pointer]
+              - cell "27" [ref=f1e444] [cursor=pointer]
+              - cell "28" [ref=f1e446] [cursor=pointer]
+            - row [ref=f1e448]:
+              - cell "29" [ref=f1e449] [cursor=pointer]
+              - cell "30" [ref=f1e451] [cursor=pointer]
+              - cell "1" [ref=f1e453] [cursor=pointer]
+              - cell "2" [ref=f1e455] [cursor=pointer]
+              - cell "3" [ref=f1e457] [cursor=pointer]
+              - cell "4" [ref=f1e459] [cursor=pointer]
+              - cell "5" [ref=f1e461] [cursor=pointer]
+            - row [ref=f1e463]:
+              - cell "6" [ref=f1e464] [cursor=pointer]
+              - cell "7" [ref=f1e466] [cursor=pointer]
+              - cell "8" [ref=f1e468] [cursor=pointer]
+              - cell "9" [ref=f1e470] [cursor=pointer]
+              - cell "10" [ref=f1e472] [cursor=pointer]
+              - cell "11" [ref=f1e474] [cursor=pointer]
+              - cell "12" [ref=f1e476] [cursor=pointer]
+      - generic [ref=f1e481]:
+        - list [ref=f1e482]:
+          - listitem [ref=f1e483]:
+            - generic [ref=f1e484] [cursor=pointer]: "00"
+          - listitem [ref=f1e485]:
+            - generic [ref=f1e486] [cursor=pointer]: "01"
+          - listitem [ref=f1e487]:
+            - generic [ref=f1e488] [cursor=pointer]: "02"
+          - listitem [ref=f1e489]:
+            - generic [ref=f1e490] [cursor=pointer]: "03"
+          - listitem [ref=f1e491]:
+            - generic [ref=f1e492] [cursor=pointer]: "04"
+          - listitem [ref=f1e493]:
+            - generic [ref=f1e494] [cursor=pointer]: "05"
+          - listitem [ref=f1e495]:
+            - generic [ref=f1e496] [cursor=pointer]: "06"
+          - listitem [ref=f1e497]:
+            - generic [ref=f1e498] [cursor=pointer]: "07"
+          - listitem [ref=f1e499]:
+            - generic [ref=f1e500] [cursor=pointer]: "08"
+          - listitem [ref=f1e501]:
+            - generic [ref=f1e502] [cursor=pointer]: "09"
+          - listitem [ref=f1e503]:
+            - generic [ref=f1e504] [cursor=pointer]: "10"
+          - listitem [ref=f1e505]:
+            - generic [ref=f1e506] [cursor=pointer]: "11"
+          - listitem [ref=f1e507]:
+            - generic [ref=f1e508] [cursor=pointer]: "12"
+          - listitem [ref=f1e509]:
+            - generic [ref=f1e510] [cursor=pointer]: "13"
+          - listitem [ref=f1e511]:
+            - generic [ref=f1e512] [cursor=pointer]: "14"
+          - listitem [ref=f1e513]:
+            - generic [ref=f1e514] [cursor=pointer]: "15"
+          - listitem [ref=f1e515]:
+            - generic [ref=f1e516] [cursor=pointer]: "16"
+          - listitem [ref=f1e517]:
+            - generic [ref=f1e518] [cursor=pointer]: "17"
+          - listitem [ref=f1e519]:
+            - generic [ref=f1e520] [cursor=pointer]: "18"
+          - listitem [ref=f1e521]:
+            - generic [ref=f1e522] [cursor=pointer]: "19"
+          - listitem [ref=f1e523]:
+            - generic [ref=f1e524] [cursor=pointer]: "20"
+          - listitem [ref=f1e525]:
+            - generic [ref=f1e526] [cursor=pointer]: "21"
+          - listitem [ref=f1e527]:
+            - generic [ref=f1e528] [cursor=pointer]: "22"
+          - listitem [ref=f1e529]:
+            - generic [ref=f1e530] [cursor=pointer]: "23"
+        - list [ref=f1e531]:
+          - listitem [ref=f1e532]:
+            - generic [ref=f1e533] [cursor=pointer]: "00"
+          - listitem [ref=f1e534]:
+            - generic [ref=f1e535] [cursor=pointer]: "01"
+          - listitem [ref=f1e536]:
+            - generic [ref=f1e537] [cursor=pointer]: "02"
+          - listitem [ref=f1e538]:
+            - generic [ref=f1e539] [cursor=pointer]: "03"
+          - listitem [ref=f1e540]:
+            - generic [ref=f1e541] [cursor=pointer]: "04"
+          - listitem [ref=f1e542]:
+            - generic [ref=f1e543] [cursor=pointer]: "05"
+          - listitem [ref=f1e544]:
+            - generic [ref=f1e545] [cursor=pointer]: "06"
+          - listitem [ref=f1e546]:
+            - generic [ref=f1e547] [cursor=pointer]: "07"
+          - listitem [ref=f1e548]:
+            - generic [ref=f1e549] [cursor=pointer]: "08"
+          - listitem [ref=f1e550]:
+            - generic [ref=f1e551] [cursor=pointer]: "09"
+          - listitem [ref=f1e552]:
+            - generic [ref=f1e553] [cursor=pointer]: "10"
+          - listitem [ref=f1e554]:
+            - generic [ref=f1e555] [cursor=pointer]: "11"
+          - listitem [ref=f1e556]:
+            - generic [ref=f1e557] [cursor=pointer]: "12"
+          - listitem [ref=f1e558]:
+            - generic [ref=f1e559] [cursor=pointer]: "13"
+          - listitem [ref=f1e560]:
+            - generic [ref=f1e561] [cursor=pointer]: "14"
+          - listitem [ref=f1e562]:
+            - generic [ref=f1e563] [cursor=pointer]: "15"
+          - listitem [ref=f1e564]:
+            - generic [ref=f1e565] [cursor=pointer]: "16"
+          - listitem [ref=f1e566]:
+            - generic [ref=f1e567] [cursor=pointer]: "17"
+          - listitem [ref=f1e568]:
+            - generic [ref=f1e569] [cursor=pointer]: "18"
+          - listitem [ref=f1e570]:
+            - generic [ref=f1e571] [cursor=pointer]: "19"
+          - listitem [ref=f1e572]:
+            - generic [ref=f1e573] [cursor=pointer]: "20"
+          - listitem [ref=f1e574]:
+            - generic [ref=f1e575] [cursor=pointer]: "21"
+          - listitem [ref=f1e576]:
+            - generic [ref=f1e577] [cursor=pointer]: "22"
+          - listitem [ref=f1e578]:
+            - generic [ref=f1e579] [cursor=pointer]: "23"
+          - listitem [ref=f1e580]:
+            - generic [ref=f1e581] [cursor=pointer]: "24"
+          - listitem [ref=f1e582]:
+            - generic [ref=f1e583] [cursor=pointer]: "25"
+          - listitem [ref=f1e584]:
+            - generic [ref=f1e585] [cursor=pointer]: "26"
+          - listitem [ref=f1e586]:
+            - generic [ref=f1e587] [cursor=pointer]: "27"
+          - listitem [ref=f1e588]:
+            - generic [ref=f1e589] [cursor=pointer]: "28"
+          - listitem [ref=f1e590]:
+            - generic [ref=f1e591] [cursor=pointer]: "29"
+          - listitem [ref=f1e592]:
+            - generic [ref=f1e593] [cursor=pointer]: "30"
+          - listitem [ref=f1e594]:
+            - generic [ref=f1e595] [cursor=pointer]: "31"
+          - listitem [ref=f1e596]:
+            - generic [ref=f1e597] [cursor=pointer]: "32"
+          - listitem [ref=f1e598]:
+            - generic [ref=f1e599] [cursor=pointer]: "33"
+          - listitem [ref=f1e600]:
+            - generic [ref=f1e601] [cursor=pointer]: "34"
+          - listitem [ref=f1e602]:
+            - generic [ref=f1e603] [cursor=pointer]: "35"
+          - listitem [ref=f1e604]:
+            - generic [ref=f1e605] [cursor=pointer]: "36"
+          - listitem [ref=f1e606]:
+            - generic [ref=f1e607] [cursor=pointer]: "37"
+          - listitem [ref=f1e608]:
+            - generic [ref=f1e609] [cursor=pointer]: "38"
+          - listitem [ref=f1e610]:
+            - generic [ref=f1e611] [cursor=pointer]: "39"
+          - listitem [ref=f1e612]:
+            - generic [ref=f1e613] [cursor=pointer]: "40"
+          - listitem [ref=f1e614]:
+            - generic [ref=f1e615] [cursor=pointer]: "41"
+          - listitem [ref=f1e616]:
+            - generic [ref=f1e617] [cursor=pointer]: "42"
+          - listitem [ref=f1e618]:
+            - generic [ref=f1e619] [cursor=pointer]: "43"
+          - listitem [ref=f1e620]:
+            - generic [ref=f1e621] [cursor=pointer]: "44"
+          - listitem [ref=f1e622]:
+            - generic [ref=f1e623] [cursor=pointer]: "45"
+          - listitem [ref=f1e624]:
+            - generic [ref=f1e625] [cursor=pointer]: "46"
+          - listitem [ref=f1e626]:
+            - generic [ref=f1e627] [cursor=pointer]: "47"
+          - listitem [ref=f1e628]:
+            - generic [ref=f1e629] [cursor=pointer]: "48"
+          - listitem [ref=f1e630]:
+            - generic [ref=f1e631] [cursor=pointer]: "49"
+          - listitem [ref=f1e632]:
+            - generic [ref=f1e633] [cursor=pointer]: "50"
+          - listitem [ref=f1e634]:
+            - generic [ref=f1e635] [cursor=pointer]: "51"
+          - listitem [ref=f1e636]:
+            - generic [ref=f1e637] [cursor=pointer]: "52"
+          - listitem [ref=f1e638]:
+            - generic [ref=f1e639] [cursor=pointer]: "53"
+          - listitem [ref=f1e640]:
+            - generic [ref=f1e641] [cursor=pointer]: "54"
+          - listitem [ref=f1e642]:
+            - generic [ref=f1e643] [cursor=pointer]: "55"
+          - listitem [ref=f1e644]:
+            - generic [ref=f1e645] [cursor=pointer]: "56"
+          - listitem [ref=f1e646]:
+            - generic [ref=f1e647] [cursor=pointer]: "57"
+          - listitem [ref=f1e648]:
+            - generic [ref=f1e649] [cursor=pointer]: "58"
+          - listitem [ref=f1e650]:
+            - generic [ref=f1e651] [cursor=pointer]: "59"
+    - list [ref=f1e653]:
+      - listitem [ref=f1e654]: 此刻
+      - listitem [ref=f1e655]:
+        - button "确定" [disabled] [ref=f1e656]

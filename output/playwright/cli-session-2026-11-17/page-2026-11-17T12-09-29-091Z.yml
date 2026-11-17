@@ -1,0 +1,122 @@
+- generic [ref=f3e7]:
+  - banner [ref=f3e8]:
+    - heading "苏南船舶管理" [level=1] [ref=f3e15]
+    - generic [ref=f3e16]:
+      - generic [ref=f3e18]:
+        - generic [ref=f3e19]: 合
+        - generic [ref=f3e23]:
+          - strong [ref=f3e25]: 合成管理员
+          - generic [ref=f3e26]: 总经办 / 系统管理员
+      - button "reload 重新认证" [ref=f3e28] [cursor=pointer]:
+        - img "reload" [ref=f3e30]
+        - generic [ref=f3e33]: 重新认证
+  - generic [ref=f3e34]:
+    - complementary "桌面模块导航" [ref=f3e35]:
+      - generic [ref=f3e36]:
+        - generic [ref=f3e37]: 模块导航
+        - button "收起左侧导航" [ref=f3e38] [cursor=pointer]:
+          - img "double-left" [ref=f3e40]
+      - navigation [ref=f3e43]:
+        - button "我的" [ref=f3e45] [cursor=pointer]
+        - button "办事中心" [ref=f3e54] [cursor=pointer]
+        - button "采购管理" [ref=f3e63] [cursor=pointer]
+        - generic [ref=f3e71]:
+          - button "工作平台" [expanded] [ref=f3e72] [cursor=pointer]
+          - generic [ref=f3e80]:
+            - button "工作平台首页" [ref=f3e81] [cursor=pointer]
+            - button "海图更新" [ref=f3e84] [cursor=pointer]
+            - button "签到台" [ref=f3e87] [cursor=pointer]
+            - button "燃油加注审批" [ref=f3e90] [cursor=pointer]
+            - button "考勤统计" [ref=f3e93] [cursor=pointer]
+            - button "审批看板" [ref=f3e96] [cursor=pointer]
+    - main [ref=f3e99]:
+      - generic [ref=f3e217]:
+        - generic [ref=f3e218]:
+          - heading "模块工作台" [level=2] [ref=f3e219]
+          - generic [ref=f3e220]: 按模块查看记录、详情、打印能力与审批动作。
+        - generic [ref=f3e221]:
+          - button "返回工作台首页" [ref=f3e223] [cursor=pointer]
+          - button "考勤统计" [ref=f3e226] [cursor=pointer]
+          - button "审批看板" [ref=f3e229] [cursor=pointer]
+      - generic [ref=f3e231]:
+        - article [ref=f3e232]:
+          - generic [ref=f3e233]:
+            - generic [ref=f3e234]: 当前待办
+            - generic [ref=f3e235]: "0"
+          - generic [ref=f3e237]: 暂无进行中记录
+        - article [ref=f3e238]:
+          - generic [ref=f3e239]:
+            - generic [ref=f3e240]: 待审批
+            - generic [ref=f3e241]: "0"
+          - generic [ref=f3e243]: 当前无待审批
+        - article [ref=f3e244]:
+          - generic [ref=f3e245]:
+            - generic [ref=f3e246]: 活跃模块
+            - generic [ref=f3e247]: "40"
+          - generic [ref=f3e249]: 实时模块入口
+        - article [ref=f3e250]:
+          - generic [ref=f3e251]:
+            - generic [ref=f3e252]: 本页记录
+            - generic [ref=f3e253]: "0"
+          - generic [ref=f3e255]: 暂无记录
+      - generic [ref=f3e256]:
+        - generic [ref=f3e257]:
+          - generic [ref=f3e258]:
+            - generic [ref=f3e259]:
+              - heading "任务看板" [level=2] [ref=f3e260]
+              - generic [ref=f3e261]: 40 个模块
+            - button "展开任务看板" [ref=f3e262] [cursor=pointer]:
+              - img "down" [ref=f3e264]
+            - generic [ref=f3e267]: 按流程阶段拖拽管理
+          - generic [ref=f3e268]:
+            - article [ref=f3e269]:
+              - generic [ref=f3e270]:
+                - heading "船舶检验" [level=4] [ref=f3e271]
+                - generic [ref=f3e272]: 航运部 · 待办 0
+              - generic [ref=f3e273]:
+                - generic [ref=f3e274]: 检查整改
+                - generic [ref=f3e276]: 企业微信审批
+              - button "已选中" [ref=f3e278] [cursor=pointer]
+            - article [ref=f3e280]:
+              - generic [ref=f3e281]:
+                - heading "总经办培训管理" [level=4] [ref=f3e282]
+                - generic [ref=f3e283]: 总经办 · 待办 0
+              - generic [ref=f3e284]:
+                - generic [ref=f3e285]: 台账表单
+                - generic [ref=f3e287]: 企业微信审批
+              - button "查看记录" [ref=f3e289] [cursor=pointer]
+            - article [ref=f3e291]:
+              - generic [ref=f3e292]:
+                - heading "总经办会议管理" [level=4] [ref=f3e293]
+                - generic [ref=f3e294]: 总经办 · 待办 0
+              - generic [ref=f3e295]: 台账表单
+              - button "查看记录" [ref=f3e298] [cursor=pointer]
+            - article [ref=f3e300]:
+              - generic [ref=f3e301]:
+                - heading "总经办安全月活动" [level=4] [ref=f3e302]
+                - generic [ref=f3e303]: 总经办 · 待办 0
+              - generic [ref=f3e304]: 台账表单
+              - button "查看记录" [ref=f3e307] [cursor=pointer]
+        - complementary [ref=f3e309]:
+          - region "最近记录" [ref=f3e310]:
+            - generic [ref=f3e311]:
+              - heading "最近记录" [level=2] [ref=f3e312]
+              - generic [ref=f3e313]: 0 项
+            - generic [ref=f3e315]:
+              - img "暂无数据" [ref=f3e317]
+              - generic [ref=f3e323]: 暂无最近记录
+          - region "待优先处理" [ref=f3e324]:
+            - generic [ref=f3e325]:
+              - heading "待优先处理" [level=2] [ref=f3e326]
+              - generic [ref=f3e327]: 0 项
+            - generic [ref=f3e329]:
+              - img "暂无数据" [ref=f3e331]
+              - generic [ref=f3e337]: 暂无待优先处理项
+      - generic [ref=f3e341]:
+        - generic [ref=f3e343]:
+          - heading "模块记录：船舶检验" [level=4] [ref=f3e345]
+          - button "新建检查整改记录" [ref=f3e347] [cursor=pointer]
+        - table [ref=f3e356]:
+          - rowgroup [ref=f3e357]:
+            - row [ref=f3e358]:
+              - cell "暂无记录" [ref=f3e359]

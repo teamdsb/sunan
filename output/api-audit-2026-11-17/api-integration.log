@@ -1,0 +1,891 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runInBand
+
+PASS test/plan-task.integration.spec.ts (9.258 s)
+PASS test/file-authorization.integration.spec.ts (12.03 s)
+(node:193) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS test/self-inspection.integration.spec.ts (11.033 s)
+PASS test/m9-wave5-acceptance.integration.spec.ts (7.435 s)
+PASS test/certificate-reminder.integration.spec.ts (9.114 s)
+PASS test/enterprise-policy.integration.spec.ts (12.922 s)
+PASS test/m9-wave5-migration.integration.spec.ts (10.934 s)
+PASS test/m9-wave4-notifications.integration.spec.ts (7.247 s)
+PASS test/user-directory.integration.spec.ts
+PASS test/procurement-wave4.integration.spec.ts
+[Nest] 193  - 11/17/2026, 11:17:43 AM   ERROR [FilesService] OSS recycle failed for db562736-9214-461f-b820-6db485d1aaef; queued for retry
+PASS test/files.integration.spec.ts
+PASS test/inspection-capa.integration.spec.ts (5.598 s)
+PASS test/workbench.integration.spec.ts (7.305 s)
+PASS test/settings.integration.spec.ts
+PASS test/workbench-business.integration.spec.ts
+PASS test/wave7-migration.integration.spec.ts
+PASS test/certificate.integration.spec.ts (12.636 s)
+FAIL test/procurement.integration.spec.ts (600.525 s)
+  ● ProcurementController integration › supports draft -> submit -> dept approve -> final approve flow
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › supports return to draft and resubmit flow
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › binds attachments in draft and exposes pending approvals
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › unlinks only an authorized draft attachment and retains the global file metadata
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › prints procurement order PDF with readable Chinese text and A4 export path
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › enforces last-three-years window for procurement order list submitted range
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › 并发部门审批只推进一次并留下单条审批记录，其他部门不能审批
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+
+ReferenceError: You are trying to `import` a file after the Jest environment has been torn down. From test/procurement.integration.spec.ts.
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:164:22)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+FAIL test/master-data.integration.spec.ts (8.136 s)
+
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+PASS test/procurement-budget.integration.spec.ts (5.004 s)
+PASS test/enterprise-profile.integration.spec.ts
+PASS test/office.integration.spec.ts (8.31 s)
+PASS test/procurement-report.integration.spec.ts (5.403 s)
+FAIL test/m9-wave4-token.integration.spec.ts (1009.048 s)
+  ● M9 Wave 4 shared Redis token isolation › refreshes once across instances and isolates corp, app, version and unsaved drafts
+
+    thrown: "Exceeded timeout of 120000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      29 |   });
+      30 |
+    > 31 |   it('refreshes once across instances and isolates corp, app, version and unsaved drafts', async () => {
+         |   ^
+      32 |     const gateway = { getAccessToken: jest.fn(async (corpId: string, secret: string) => {
+      33 |       await new Promise((resolve) => setTimeout(resolve, 50));
+      34 |       return { access_token: `${corpId}:${secret}` };
+
+      at test/m9-wave4-token.integration.spec.ts:31:3
+      at Object.<anonymous> (test/m9-wave4-token.integration.spec.ts:12:1)
+
+FAIL test/auth.integration.spec.ts (988.66 s)
+  ● AuthController integration › returns health payload and request id header
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › exchanges code for jwt and current user info
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns 401 when code is expired
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns 403 for non-directory user
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › refreshes an expired jwt
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › rejects a JWT issued for another enterprise
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns current user profile for authenticated request
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns corp and agent signatures
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+FAIL test/ship-monitor.integration.spec.ts (966.029 s)
+  ● ShipMonitorController integration › supports create, edit, ordered lists, disable/re-enable and soft deletion
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps shipping read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps general_office read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps crew read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › reports conflicts for create/update, including concurrent creation
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › validates vessel references but allows disabling/deleting obsolete entries
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › returns 400 for malformed IDs/query parameters rather than database errors
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › allows only system administrators to manage monitors
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+Summary of all failing tests
+FAIL test/procurement.integration.spec.ts (600.525 s)
+  ● ProcurementController integration › supports draft -> submit -> dept approve -> final approve flow
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › supports return to draft and resubmit flow
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › binds attachments in draft and exposes pending approvals
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › unlinks only an authorized draft attachment and retains the global file metadata
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › prints procurement order PDF with readable Chinese text and A4 export path
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › enforces last-three-years window for procurement order list submitted range
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+  ● ProcurementController integration › 并发部门审批只推进一次并留下单条审批记录，其他部门不能审批
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   let ossService: OssService;
+      55 |
+    > 56 |   beforeAll(async () => {
+         |   ^
+      57 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      58 |       .overrideGuard(JwtAuthGuard)
+      59 |       .useValue(authGuard)
+
+      at test/procurement.integration.spec.ts:56:3
+      at Object.<anonymous> (test/procurement.integration.spec.ts:51:1)
+
+FAIL test/master-data.integration.spec.ts (8.136 s)
+
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+  ● Test suite failed to run
+
+    TypeError: Right-hand side of 'instanceof' is not callable
+
+      at HttpDuplex.Readable (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_readable.js:169:23)
+      at HttpDuplex.Duplex (../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_duplex.js:51:12)
+      at new HttpDuplex (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/http_duplex.js:13:17)
+      at Modem.Object.<anonymous>.Modem.buildPayload (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:401:16)
+      at ClientRequest.<anonymous> (../../node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:330:14)
+
+FAIL test/m9-wave4-token.integration.spec.ts (1009.048 s)
+  ● M9 Wave 4 shared Redis token isolation › refreshes once across instances and isolates corp, app, version and unsaved drafts
+
+    thrown: "Exceeded timeout of 120000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      29 |   });
+      30 |
+    > 31 |   it('refreshes once across instances and isolates corp, app, version and unsaved drafts', async () => {
+         |   ^
+      32 |     const gateway = { getAccessToken: jest.fn(async (corpId: string, secret: string) => {
+      33 |       await new Promise((resolve) => setTimeout(resolve, 50));
+      34 |       return { access_token: `${corpId}:${secret}` };
+
+      at test/m9-wave4-token.integration.spec.ts:31:3
+      at Object.<anonymous> (test/m9-wave4-token.integration.spec.ts:12:1)
+
+FAIL test/auth.integration.spec.ts (988.66 s)
+  ● AuthController integration › returns health payload and request id header
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › exchanges code for jwt and current user info
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns 401 when code is expired
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns 403 for non-directory user
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › refreshes an expired jwt
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › rejects a JWT issued for another enterprise
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns current user profile for authenticated request
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+  ● AuthController integration › returns corp and agent signatures
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      92 |   };
+      93 |
+    > 94 |   beforeAll(async () => {
+         |   ^
+      95 |     process.env.NODE_ENV = 'test';
+      96 |     process.env.JWT_SECRET = '01234567890123456789012345678901';
+      97 |     process.env.JWT_EXPIRES_IN = '7200s';
+
+      at test/auth.integration.spec.ts:94:3
+      at Object.<anonymous> (test/auth.integration.spec.ts:49:1)
+
+FAIL test/ship-monitor.integration.spec.ts (966.029 s)
+  ● ShipMonitorController integration › supports create, edit, ordered lists, disable/re-enable and soft deletion
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps shipping read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps general_office read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › keeps crew read-only and hides disabled monitor details
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › reports conflicts for create/update, including concurrent creation
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › validates vessel references but allows disabling/deleting obsolete entries
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › returns 400 for malformed IDs/query parameters rather than database errors
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+  ● ShipMonitorController integration › allows only system administrators to manage monitors
+
+    thrown: "Exceeded timeout of 120000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      58 |   let vessels: Repository<VesselEntity>;
+      59 |
+    > 60 |   beforeAll(async () => {
+         |   ^
+      61 |     const moduleRef = await Test.createTestingModule({ imports: [TestModule] })
+      62 |       .overrideGuard(JwtAuthGuard)
+      63 |       .useValue(authGuard)
+
+      at test/ship-monitor.integration.spec.ts:60:3
+      at Object.<anonymous> (test/ship-monitor.integration.spec.ts:54:1)
+
+
+Test Suites: 5 failed, 21 passed, 26 total
+Tests:       24 failed, 149 passed, 173 total
+Snapshots:   0 total
+Time:        3729.701 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.8 test:integration: `jest --config ./jest.integration.config.ts --runInBand`
+Command failed with signal "SIGTERM"

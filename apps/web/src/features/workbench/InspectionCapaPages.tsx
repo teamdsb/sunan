@@ -7,6 +7,7 @@ import { useAppSelector } from '../../app/hooks';
 import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
 import { canManageSafety } from '../auth/permissions';
 import { FileUploadField } from '../files/FileUploadField';
+import { FileAttachmentList } from '../files/FileAttachmentList';
 import type { FileRecord } from '../files/types';
 import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
 import {
@@ -14,11 +15,20 @@ import {
   useCreateInspectionTemplateMutation, useGetInspectionPlansQuery, useGetInspectionQuery, useGetInspectionTemplatesQuery, useGetInspectionsQuery,
   useGetIssueQuery, useGetIssuesQuery, useRequestVerificationMutation, useSaveInspectionResultMutation, useSaveRootCauseMutation, useSubmitCapaActionMutation,
   useSubmitInspectionMutation, useSummarizeInspectionMutation, useVerifyCapaMutation,
+  useGetInspectionTemplateVersionsQuery, usePublishInspectionTemplateVersionMutation, useGenerateInspectionPlanMutation,
+  useLazyGetInspectionFileDownloadUrlQuery, useLazyGetCapaActionFileDownloadUrlQuery,
 } from './inspectionCapaApi';
 
 function failureText(error: unknown, fallback: string) {
   const value = error as { data?: { message?: string } };
   return value?.data?.message ?? fallback;
+}
+
+function TemplateVersions({ templateId }: { templateId: string }) {
+  const versions = useGetInspectionTemplateVersionsQuery(templateId);
+  const [publish, state] = usePublishInspectionTemplateVersionMutation();
+  if (versions.isError) return <Typography.Text type="danger">版本加载失败，请重试</Typography.Text>;
+  return <Space wrap>{versions.data?.data.map((version) => <Space key={version.id}><Tag>{`V${version.versionNo} · ${version.status === 'published' ? '已发布' : '草稿'}`}</Tag>{version.status === 'draft' ? <Button size="small" loading={state.isLoading} onClick={() => void publish(version.id).unwrap().then(() => message.success('模板版本已发布')).catch((error) => message.error(failureText(error, '版本发布失败')))}>发布版本 V{version.versionNo}</Button> : null}</Space>)}</Space>;
 }
 
 export function InspectionTemplatePage() {
@@ -32,7 +42,7 @@ export function InspectionTemplatePage() {
   const submit = async (values: { code: string; name: string; sourceType: string; itemCode: string; itemTitle: string }) => {
     try { await createTemplate({ code: values.code, name: values.name, sourceType: values.sourceType, items: [{ itemCode: values.itemCode, title: values.itemTitle, resultRequired: true, evidenceRequiredOnFailure: true, sequenceNo: 1 }] }).unwrap(); message.success('检查模板草稿已创建，请发布版本后用于计划'); form.resetFields(); } catch (error) { message.error(failureText(error, '模板创建失败')); }
   };
-  return <section className="workbench-page" data-testid="inspection-template-page"><Typography.Title level={2}>检查模板</Typography.Title><Typography.Paragraph type="secondary">已发布版本不可修改；计划任务只会使用发出时的版本快照。</Typography.Paragraph>{canManage ? <Space direction="vertical" style={{ width: '100%' }} size="middle"><Card title="新建模板" size="small"><Form form={form} layout="vertical" onFinish={submit}><Form.Item name="code" label="模板编码" rules={[{ required: true }]}><Input maxLength={64} /></Form.Item><Form.Item name="name" label="模板名称" rules={[{ required: true }]}><Input maxLength={200} /></Form.Item><Form.Item name="sourceType" label="来源" initialValue="company" rules={[{ required: true }]}><Select options={[{ value: 'regulation', label: '法规' }, { value: 'company', label: '公司' }, { value: 'vessel', label: '船舶' }]} /></Form.Item><Form.Item name="itemCode" label="首个检查项编码" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="itemTitle" label="首个检查项" rules={[{ required: true }]}><Input /></Form.Item><Button htmlType="submit" type="primary" loading={state.isLoading}>创建草稿</Button></Form></Card><Card title="可见模板" loading={templates.isLoading}>{templates.isError ? <Alert type="error" showIcon message="模板加载失败，请重试" /> : templates.data?.data.length ? <List dataSource={templates.data.data} renderItem={(item) => <List.Item><List.Item.Meta title={item.name} description={`${item.code} · ${item.sourceType}`} /><Tag>{item.currentVersionId ? '已有当前版本' : '未发布'}</Tag></List.Item>} /> : <Empty description="暂无可见检查模板" />}</Card></Space> : <Alert type="info" showIcon message="你没有管理检查模板的权限。" />}</section>;
+  return <section className="workbench-page" data-testid="inspection-template-page"><Typography.Title level={2}>检查模板</Typography.Title><Typography.Paragraph type="secondary">已发布版本不可修改；计划任务只会使用发出时的版本快照。</Typography.Paragraph>{canManage ? <Space direction="vertical" style={{ width: '100%' }} size="middle"><Card title="新建模板" size="small"><Form form={form} layout="vertical" onFinish={submit}><Form.Item name="code" label="模板编码" rules={[{ required: true }]}><Input maxLength={64} /></Form.Item><Form.Item name="name" label="模板名称" rules={[{ required: true }]}><Input maxLength={200} /></Form.Item><Form.Item name="sourceType" label="来源" initialValue="company" rules={[{ required: true }]}><Select options={[{ value: 'regulation', label: '法规' }, { value: 'company', label: '公司' }, { value: 'vessel', label: '船舶' }]} /></Form.Item><Form.Item name="itemCode" label="首个检查项编码" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="itemTitle" label="首个检查项" rules={[{ required: true }]}><Input /></Form.Item><Button htmlType="submit" type="primary" loading={state.isLoading}>创建草稿</Button></Form></Card><Card title="可见模板" loading={templates.isLoading}>{templates.isError ? <Alert type="error" showIcon message="模板加载失败，请重试" /> : templates.data?.data.length ? <List dataSource={templates.data.data} renderItem={(item) => <List.Item><List.Item.Meta title={item.name} description={`${item.code} · ${item.sourceType}`} /><Space direction="vertical"><Tag>{item.currentVersionId ? '已有已发布版本' : '未发布'}</Tag><TemplateVersions templateId={item.id} /></Space></List.Item>} /> : <Empty description="暂无可见检查模板" />}</Card></Space> : <Alert type="info" showIcon message="你没有管理检查模板的权限。" />}</section>;
 }
 
 export function InspectionPlanPage() {
@@ -43,12 +53,21 @@ export function InspectionPlanPage() {
   });
   const plans = useGetInspectionPlansQuery(undefined, { skip: !canManage });
   const [createPlan, state] = useCreateInspectionPlanMutation();
+  const [generatePlan, generationState] = useGenerateInspectionPlanMutation();
+  const [generationRange, setGenerationRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([dayjs().startOf('day'), dayjs().startOf('day').add(30, 'day')]);
+  const generate = async (id: string) => {
+    try {
+      const result = await generatePlan({ id, windowStart: generationRange[0].toISOString(), windowEnd: generationRange[1].toISOString() }).unwrap();
+      if (result.data.failedCount) message.warning(`生成完成，${result.data.failedCount} 项失败，请核对后重试`);
+      else message.success('检查任务已生成，可进入现场检查');
+    } catch (error) { message.error(failureText(error, '检查任务生成失败')); }
+  };
   const [form] = Form.useForm();
   const submit = async (values: { title: string; templateVersionId: string; responsibleUserId: string; participants?: string; startAt: string }) => {
     try { await createPlan({ title: values.title, templateVersionId: values.templateVersionId, responsibleUserId: values.responsibleUserId, participantUserIds: values.participants?.split(',').map((value) => value.trim()).filter(Boolean), completionRule: 'all', recurrence: { kind: 'one_time', startAt: toShanghaiIso(values.startAt) ?? values.startAt }, dueOffsetMinutes: 60 }).unwrap(); message.success('检查计划已创建，可生成任务'); form.resetFields(); } catch (error) { message.error(failureText(error, '检查计划创建失败')); }
   };
   const templateOptions = (templates.data?.data ?? []).filter((item) => item.currentVersionId).map((item) => ({ value: item.currentVersionId!, label: `${item.name}（当前版本）` }));
-  return <section className="workbench-page"><Typography.Title level={2}>检查计划</Typography.Title>{canManage ? <Space direction="vertical" style={{ width: '100%' }} size="middle"><Card title="新建检查计划" size="small"><Form form={form} layout="vertical" onFinish={submit}><Form.Item name="title" label="计划名称" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="templateVersionId" label="已发布模板版本" rules={[{ required: true }]}><Select options={templateOptions} placeholder="选择模板" /></Form.Item><Form.Item name="responsibleUserId" label="检查负责人" rules={[{ required: true }]}><Input placeholder="企业微信成员标识" /></Form.Item><Form.Item name="participants" label="协作检查人"><Input placeholder="多个成员以逗号分隔" /></Form.Item><Form.Item name="startAt" label="首次检查时间" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} /></Form.Item><Button htmlType="submit" type="primary" loading={state.isLoading}>创建计划</Button></Form></Card><Card title="检查计划" loading={plans.isLoading}>{plans.isError ? <Alert type="error" showIcon message="计划加载失败" /> : plans.data?.data.length ? <List dataSource={plans.data.data} renderItem={(item) => <List.Item><List.Item.Meta title={item.title} description={`计划任务：${item.planId}`} /><Link to={workbenchRouteConfig.tasks.path}>进入任务中心</Link></List.Item>} /> : <Empty description="暂无检查计划" />}</Card></Space> : <Alert type="info" showIcon message="你没有管理检查计划的权限。" />}</section>;
+  return <section className="workbench-page"><Typography.Title level={2}>检查计划</Typography.Title>{canManage ? <Space direction="vertical" style={{ width: '100%' }} size="middle"><Card title="新建检查计划" size="small"><Form form={form} layout="vertical" onFinish={submit}><Form.Item name="title" label="计划名称" rules={[{ required: true }]}><Input /></Form.Item><Form.Item name="templateVersionId" label="已发布模板版本" rules={[{ required: true }]}><Select options={templateOptions} placeholder="选择模板" /></Form.Item><Form.Item name="responsibleUserId" label="检查负责人" rules={[{ required: true }]}><Input placeholder="企业微信成员标识" /></Form.Item><Form.Item name="participants" label="协作检查人"><Input placeholder="多个成员以逗号分隔" /></Form.Item><Form.Item name="startAt" label="首次检查时间" rules={[{ required: true }]} getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}><DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} /></Form.Item><Button htmlType="submit" type="primary" loading={state.isLoading}>创建计划</Button></Form></Card><Card title="检查计划" loading={plans.isLoading}><Space direction="vertical" style={{ width: '100%' }}><Typography.Text>生成时间范围</Typography.Text><DatePicker.RangePicker showTime allowClear={false} value={generationRange} onChange={(range) => { if (range?.[0] && range[1]) setGenerationRange([range[0], range[1]]); }} /><Link to={workbenchRouteConfig.inspections.path}>进入现场检查</Link></Space>{plans.isError ? <Alert type="error" showIcon message="计划加载失败" /> : plans.data?.data.length ? <List dataSource={plans.data.data} renderItem={(item) => <List.Item><List.Item.Meta title={item.title} description={`计划任务：${item.planId}`} /><Space><Button loading={generationState.isLoading} onClick={() => void generate(item.id)}>生成检查任务</Button><Link to={workbenchRouteConfig.tasks.path}>进入任务中心</Link></Space></List.Item>} /> : <Empty description="暂无检查计划" />}</Card></Space> : <Alert type="info" showIcon message="你没有管理检查计划的权限。" />}</section>;
 }
 
 export function InspectionListPage() {
@@ -57,13 +76,58 @@ export function InspectionListPage() {
 }
 
 export function InspectionDetailPage() {
-  const { inspectionId = '' } = useParams(); const inspection = useGetInspectionQuery(inspectionId); const [saveResult, saveState] = useSaveInspectionResultMutation(); const [submit, submitState] = useSubmitInspectionMutation(); const [summarize, summaryState] = useSummarizeInspectionMutation(); const [evidence, setEvidence] = useState<FileRecord | null>(null); const [signature, setSignature] = useState<FileRecord | null>(null);
-  const save = async (item: { snapshotKey: string; evidenceRequiredOnFailure: boolean }, values: { conclusion: string; remark?: string }) => { try { await saveResult({ inspectionId, templateItemSnapshotKey: item.snapshotKey, conclusion: values.conclusion, remark: values.remark, evidenceFileIds: evidence ? [evidence.id] : undefined }).unwrap(); message.success('检查项已保存'); } catch (error) { message.error(failureText(error, '检查项保存失败')); } };
+  const { inspectionId = '' } = useParams();
+  const currentUserId = useAppSelector((state) => state.auth.currentUser?.userId);
+  const inspection = useGetInspectionQuery(inspectionId);
+  const [saveResult, saveState] = useSaveInspectionResultMutation();
+  const [submit, submitState] = useSubmitInspectionMutation();
+  const [summarize, summaryState] = useSummarizeInspectionMutation();
+  const [getDownloadUrl] = useLazyGetInspectionFileDownloadUrlQuery();
+  const [evidence, setEvidence] = useState<Record<string, FileRecord | null>>({});
+  const [signature, setSignature] = useState<FileRecord | null>(null);
+  const save = async (item: { snapshotKey: string; evidenceRequiredOnFailure: boolean }, values: { conclusion: string; remark?: string }) => {
+    const existing = inspection.data?.data.results.find((result) => result.templateItemSnapshotKey === item.snapshotKey && result.inspectorUserId === currentUserId);
+    const pending = evidence[item.snapshotKey];
+    const fileIds = [...new Set([...(existing?.evidenceFiles ?? []).map((file) => file.id), ...(pending ? [pending.id] : [])])];
+    try {
+      await saveResult({ inspectionId, templateItemSnapshotKey: item.snapshotKey, conclusion: values.conclusion, remark: values.remark, evidenceFileIds: fileIds.length ? fileIds : undefined }).unwrap();
+      setEvidence((previous) => ({ ...previous, [item.snapshotKey]: null }));
+      message.success('检查项已保存');
+    } catch (error) { message.error(failureText(error, '检查项保存失败')); }
+  };
+  const downloadUrl = async (fileId: string) => (await getDownloadUrl({ inspectionId, fileId }).unwrap()).data.downloadUrl;
   if (inspection.isLoading) return <Typography.Text>检查加载中...</Typography.Text>; if (inspection.isError || !inspection.data) return <Empty description="无权访问或检查不存在" />; const data = inspection.data.data;
   const canSave = data.availableActions.includes('save_result');
   const canSubmit = data.availableActions.includes('submit');
   const canSummarize = data.availableActions.includes('summarize');
-  return <section className="workbench-page"><Typography.Title level={2}>检查执行</Typography.Title><Typography.Paragraph type="secondary">模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。</Typography.Paragraph><Space direction="vertical" style={{ width: '100%' }}><Tag>{data.status}</Tag>{data.templateSnapshot.items.map((item) => <Card key={item.snapshotKey} title={item.title} size="small">{canSave ? <Form layout="vertical" onFinish={(values) => void save(item, values)} initialValues={{ conclusion: 'conforming' }}><Form.Item name="conclusion" label="结论" rules={[{ required: true }]}><Select options={[{ value: 'conforming', label: '符合' }, { value: 'nonconforming', label: '不符合' }, { value: 'not_applicable', label: '不适用' }]} /></Form.Item><Form.Item name="remark" label="说明"><Input.TextArea /></Form.Item>{item.evidenceRequiredOnFailure ? <FileUploadField category="inspection-photos" value={evidence} onChange={setEvidence} enableWecomCapture wecomReady={Boolean(window.wx)} /> : null}<Button htmlType="submit" loading={saveState.isLoading}>保存本人结果</Button></Form> : null}</Card>)}{canSubmit || canSummarize ? <Card title="个人签认" size="small">{canSubmit ? <FileUploadField category="inspection-photos" value={signature} onChange={setSignature} enableWecomCapture wecomReady={Boolean(window.wx)} /> : null}<Space style={{ marginTop: 12 }} wrap>{canSubmit ? <Button type="primary" disabled={!signature} loading={submitState.isLoading} onClick={() => signature && void submit({ inspectionId, signatureFileId: signature.id }).unwrap().then(() => message.success('已签认提交')).catch((error) => message.error(failureText(error, '签认失败')))}>提交本人检查</Button> : null}{canSummarize ? <Button loading={summaryState.isLoading} onClick={() => void summarize(inspectionId).unwrap().then(() => message.success('检查已汇总')).catch((error) => message.error(failureText(error, '尚未满足多人完成门槛')))}>汇总检查</Button> : null}</Space></Card> : null}</Space></section>;
+  return <section className="workbench-page">
+    <Typography.Title level={2}>检查执行</Typography.Title>
+    <Typography.Paragraph type="secondary">模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。</Typography.Paragraph>
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Tag>{data.status}</Tag>
+      {data.templateSnapshot.items.map((item) => <Card key={item.snapshotKey} title={item.title} size="small">
+        {data.results.filter((result) => result.templateItemSnapshotKey === item.snapshotKey).map((result) => <div key={result.id}>
+          <Typography.Paragraph>检查人：{result.inspectorUserId} · {({ conforming: '符合', nonconforming: '不符合', not_applicable: '不适用' } as Record<string, string>)[result.conclusion] ?? result.conclusion}</Typography.Paragraph>
+          {result.remark ? <Typography.Paragraph>{result.remark}</Typography.Paragraph> : null}
+          {result.evidenceFiles?.length ? <FileAttachmentList files={result.evidenceFiles} getUrl={(file) => downloadUrl(file.id)} /> : null}
+          {result.signatureFile ? <><Typography.Text type="secondary">个人签认</Typography.Text><FileAttachmentList files={[result.signatureFile]} getUrl={(file) => downloadUrl(file.id)} /></> : null}
+        </div>)}
+        {canSave ? <Form layout="vertical" onFinish={(values) => void save(item, values)} initialValues={{ conclusion: 'conforming' }}>
+          <Form.Item name="conclusion" label="结论" rules={[{ required: true }]}><Select options={[{ value: 'conforming', label: '符合' }, { value: 'nonconforming', label: '不符合' }, { value: 'not_applicable', label: '不适用' }]} /></Form.Item>
+          <Form.Item name="remark" label="说明"><Input.TextArea /></Form.Item>
+          {item.evidenceRequiredOnFailure ? <FileUploadField category="inspection-photos" value={evidence[item.snapshotKey] ?? null} onChange={(file) => setEvidence((previous) => ({ ...previous, [item.snapshotKey]: file }))} enableWecomCapture wecomReady={Boolean(window.wx)} /> : null}
+          <Button htmlType="submit" loading={saveState.isLoading}>保存本人结果</Button>
+        </Form> : null}
+      </Card>)}
+      {canSubmit || canSummarize ? <Card title="个人签认" size="small">
+        {canSubmit ? <FileUploadField category="inspection-photos" value={signature} onChange={setSignature} enableWecomCapture wecomReady={Boolean(window.wx)} /> : null}
+        <Space style={{ marginTop: 12 }} wrap>
+          {canSubmit ? <Button type="primary" disabled={!signature} loading={submitState.isLoading} onClick={() => signature && void submit({ inspectionId, signatureFileId: signature.id }).unwrap().then(() => { setSignature(null); message.success('已签认提交'); }).catch((error) => message.error(failureText(error, '签认失败')))}>提交本人检查</Button> : null}
+          {canSummarize ? <Button loading={summaryState.isLoading} onClick={() => void summarize(inspectionId).unwrap().then(() => message.success('检查已汇总')).catch((error) => message.error(failureText(error, '尚未满足多人完成门槛')))}>汇总检查</Button> : null}
+        </Space>
+      </Card> : null}
+    </Space>
+  </section>;
 }
 
 export function IssueCenterPage() {
@@ -73,8 +137,13 @@ export function IssueCenterPage() {
 
 function ActionEvidencePanel({ action }: { action: CapaAction }) {
   const [file, setFile] = useState<FileRecord | null>(null); const [statement, setStatement] = useState(''); const [submitAction, state] = useSubmitCapaActionMutation();
+  const [getDownloadUrl] = useLazyGetCapaActionFileDownloadUrlQuery();
   const canSubmit = action.availableActions.includes('submit');
-  return <Card size="small" title={`${action.actionType === 'corrective' ? '纠正' : '预防'}：${action.title}`}><Typography.Paragraph>责任人：{action.responsibleUserId} · 状态：{action.status}</Typography.Paragraph>{canSubmit ? <><FileUploadField category="inspection-photos" value={file} onChange={setFile} enableWecomCapture wecomReady={Boolean(window.wx)} /><Input.TextArea value={statement} onChange={(event) => setStatement(event.target.value)} placeholder="完成说明" style={{ marginTop: 8 }} /><Button disabled={!file || !statement.trim()} loading={state.isLoading} style={{ marginTop: 8 }} onClick={() => void submitAction({ actionId: action.id, completionStatement: statement, evidenceFileIds: file ? [file.id] : [] }).unwrap().then(() => message.success('措施已提交')).catch((error) => message.error(failureText(error, '措施提交失败')))}>提交完成证据</Button></> : null}</Card>;
+  return <Card size="small" title={`${action.actionType === 'corrective' ? '纠正' : '预防'}：${action.title}`}>
+    <Typography.Paragraph>责任人：{action.responsibleUserId} · 状态：{action.status}</Typography.Paragraph>
+    {action.evidenceFiles?.length ? <FileAttachmentList files={action.evidenceFiles} getUrl={async (saved) => (await getDownloadUrl({ actionId: action.id, fileId: saved.id }).unwrap()).data.downloadUrl} /> : null}
+    {canSubmit ? <><FileUploadField category="inspection-photos" value={file} onChange={setFile} enableWecomCapture wecomReady={Boolean(window.wx)} /><Input.TextArea value={statement} onChange={(event) => setStatement(event.target.value)} placeholder="完成说明" style={{ marginTop: 8 }} /><Button disabled={!file || !statement.trim()} loading={state.isLoading} style={{ marginTop: 8 }} onClick={() => void submitAction({ actionId: action.id, completionStatement: statement, evidenceFileIds: file ? [file.id] : [] }).unwrap().then(() => { setFile(null); message.success('措施已提交'); }).catch((error) => message.error(failureText(error, '措施提交失败')))}>提交完成证据</Button></> : null}
+  </Card>;
 }
 
 export function IssueDetailPage() {

@@ -1,6 +1,6 @@
 import { baseApi } from '../../app/baseApi';
 
-export interface MasterDataItem { id: string; code?: string; name: string; plateNumber?: string; vehicleType?: string | null; status?: string; employmentStatus?: string; vesselId?: string; category?: string; departmentCode?: string; }
+export interface MasterDataItem { id: string; code?: string; name: string; plateNumber?: string; vehicleType?: string | null; status?: string; employmentStatus?: string; vesselId?: string; category?: string; categoryId?: string; categoryCode?: string; departmentCode?: string; remarks?: string | null; }
 interface Envelope<T> { data: T; }
 export interface MasterDataListOptions { includeInactive?: boolean; }
 export interface MasterDataInput { code?: string; name?: string; category?: string; status?: string; mmsi?: string; remarks?: string; departmentCode?: string; wecomUserId?: string; position?: string; mobile?: string; employmentStatus?: string; categoryCode?: string; vesselId?: string; serialNo?: string; plateNumber?: string; vehicleType?: string; }

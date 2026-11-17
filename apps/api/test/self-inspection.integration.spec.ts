@@ -343,6 +343,24 @@ describe('船舶自查完整闭环', () => {
     ).toBe(1);
   });
 
+  it('拒绝把本人已用于其他记录的照片绑定到新自查，仍允许本人本轮新照片', async () => {
+    const first = await create();
+    const second = await create();
+    currentUser = user('executor', ['crew']);
+    await action(first, 'start').expect(201);
+    await action(second, 'start').expect(201);
+    const existing = await photo(first, 'before_rectification');
+    expect(existing.response.status).toBe(201);
+    const storageReads = oss.readBuffer.mock.calls.length;
+    await api()
+      .post(`/api/v1/workbench/records/${second}/attachments`)
+      .send({ fileId: existing.fileId, category: 'before_rectification' })
+      .expect(403);
+    expect(oss.readBuffer.mock.calls.length).toBe(storageReads);
+    expect(await source.getRepository(WorkbenchRecordAttachmentEntity).countBy({ businessRecordId: second })).toBe(0);
+    expect((await photo(second, 'before_rectification')).response.status).toBe(201);
+  });
+
   it('检查合格无需虚构整改照片，仍需独立审核后才能打印', async () => {
     const id = await create();
     currentUser = user('executor', ['crew']);

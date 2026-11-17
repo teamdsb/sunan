@@ -2,13 +2,12 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 const root = process.cwd();
-const files = execSync("rg --files -g '*.md'", { encoding: 'utf8' })
-  .trim()
-  .split(/\n/)
-  .filter(Boolean)
+const files = [...new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { encoding: 'utf8' })
+  .split('\0'))]
+  .filter((file) => file.endsWith('.md') && fs.existsSync(file))
   .filter((file) => !file.startsWith('.agents/'))
   .sort();
 

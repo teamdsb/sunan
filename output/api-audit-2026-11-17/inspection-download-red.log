@@ -1,0 +1,63 @@
+FAIL test/inspection-capa.integration.spec.ts (11.952 s)
+  inspection and CAPA integration
+    ✕ serves saved inspection evidence and signatures only through the readable inspection (866 ms)
+    ✕ lets the issue verifier read CAPA evidence while rejecting foreign files and unrelated users (744 ms)
+    ○ skipped repairs executable inspections through generic plan reconciliation and blocks generic task completion
+    ○ skipped allows a measure assignee to list and read the issue while denying unrelated readers
+    ○ skipped keeps the issued template snapshot, blocks premature multi-person summary, and deduplicates automatic nonconformity transfer
+    ○ skipped keeps failed automatic transfer jobs and reconciles them after the constraint is repaired
+    ○ skipped enforces evidence, independent verification, rework and privileged major-issue closure
+    ○ skipped rejects another uploader inspection evidence and signature without saving partial changes
+    ○ skipped rejects another uploader CAPA evidence before changing the action
+    ○ skipped links each existing inspection-rectification source in both directions
+
+  ● inspection and CAPA integration › serves saved inspection evidence and signatures only through the readable inspection
+
+    expected 200 "OK", got 404 "Not Found"
+
+      221 |     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('download-submit')).send({ signatureFileId: signatureId }).expect(200);
+      222 |     currentUser = makeUser('inspector-b', ['all_authenticated', 'crew']);
+    > 223 |     const download = await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${evidenceId}/download-url`).expect(200);
+          |                                                                                                                                      ^
+      224 |     expect(download.body.data.downloadUrl).toBe('https://storage.test/inspection-evidence');
+      225 |     expect(oss.createDownloadSignature).toHaveBeenLastCalledWith(`tests/${evidenceId}.jpg`);
+      226 |     await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${signatureId}/download-url`).expect(200);
+
+      at Object.<anonymous> (test/inspection-capa.integration.spec.ts:223:134)
+      ----
+      at Test._assertStatus (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at ../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● inspection and CAPA integration › lets the issue verifier read CAPA evidence while rejecting foreign files and unrelated users
+
+    expected 200 "OK", got 404 "Not Found"
+
+      246 |     await request(app.getHttpServer()).post(`/api/v1/capa-actions/${action.body.data.id}/submit`).set('Idempotency-Key', key('download-capa-submit')).send({ completionStatement: 'Done', evidenceFileIds: [fileId] }).expect(200);
+      247 |     currentUser = makeUser('verifier', ['all_authenticated', 'crew']);
+    > 248 |     await request(app.getHttpServer()).get(`/api/v1/capa-actions/${action.body.data.id}/files/${fileId}/download-url`).expect(200);
+          |                                                                                                                        ^
+      249 |     const detail = await request(app.getHttpServer()).get(`/api/v1/issues/${issue.body.data.id}`).expect(200);
+      250 |     expect(detail.body.data.capa.actions[0].evidenceFiles).toEqual([expect.objectContaining({ id: fileId, fileName: 'evidence.jpg', mimeType: 'image/jpeg', fileSize: 100 })]);
+      251 |     expect(JSON.stringify(detail.body.data.capa.actions)).not.toMatch(/ossKey|storagePath|downloadUrl/);
+
+      at Object.<anonymous> (test/inspection-capa.integration.spec.ts:248:120)
+      ----
+      at Test._assertStatus (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at ../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 8 skipped, 10 total
+Snapshots:   0 total
+Time:        12.027 s
+Ran all test suites matching /test\/inspection-capa.integration.spec.ts/i with tests matching "saved inspection evidence|issue verifier read CAPA evidence".
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/inspection-capa.integration.spec.ts --testNamePattern=saved inspection evidence|issue verifier read CAPA evidence

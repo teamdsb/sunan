@@ -86,7 +86,7 @@ function formatShortcutDescription(
     '/my/enterprise-profile': `企业资料 ${formatCount(values.profileTotal)} 项`,
     '/my/enterprise-policy': `制度文档 ${formatCount(values.policyTotal)} 份`,
     '/my/certificates': `有效证照 ${formatCount(values.certificateTotal)} 张`,
-    '/my/reminders': `${formatCount(values.warningTotal)} 项即将到期`,
+    '/my/reminders': `${formatCount(values.warningTotal)} 项证照提醒`,
     '/my/monitors': `${formatCount(values.monitoredVesselCount)} 艘已配置监控`,
     '/my/settings': '账号与系统设置',
   };
@@ -114,13 +114,11 @@ export function MyHomePage() {
   const reminderListQuery = useGetReminderListQuery({
     page: 1,
     pageSize: 5,
-    status: 'pending',
   });
   const overdueReminderListQuery = useGetReminderListQuery({
     page: 1,
     pageSize: 5,
     reminderType: 'overdue',
-    status: 'pending',
   });
   const workbenchDashboardQuery = useGetWorkbenchDashboardQuery();
 
@@ -129,7 +127,7 @@ export function MyHomePage() {
   const reminderDashboard = reminderDashboardQuery.data?.data;
   const pendingReminders = reminderListQuery.data?.data ?? [];
   const overdueReminders = (overdueReminderListQuery.data?.data ?? []).filter(
-    (reminder) => reminder.status === 'pending',
+    (reminder) => !['acknowledged', 'resolved'].includes(reminder.status),
   );
   const workbenchDashboard = workbenchDashboardQuery.data?.data;
   const activeMonitors = monitors.filter((item) => item.isActive);
@@ -138,9 +136,11 @@ export function MyHomePage() {
     : undefined;
   const pendingTotal =
     reminderDashboard && workbenchDashboard
-      ? reminderDashboard.totalPending + workbenchDashboard.pendingTotal
+      ? reminderDashboard.totalPending + reminderDashboard.totalOverdue + workbenchDashboard.pendingTotal
       : undefined;
-  const warningTotal = reminderDashboard?.totalPending;
+  const warningTotal = reminderDashboard
+    ? reminderDashboard.totalPending + reminderDashboard.totalOverdue
+    : undefined;
   const hasCertificateWarnings = warningTotal !== undefined && warningTotal > 0;
   const certificateTotal = certificateQuery.data
     ? (certificateQuery.data.meta?.total ?? certificates.length)

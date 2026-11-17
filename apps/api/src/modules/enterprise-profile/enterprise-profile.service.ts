@@ -14,7 +14,7 @@ import { EnterpriseProfileCreateDto } from './dto/enterprise-profile-create.dto'
 import { EnterpriseProfileListQueryDto } from './dto/enterprise-profile-list-query.dto';
 import { EnterpriseProfileUpdateDto } from './dto/enterprise-profile-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
-import { auditAttachmentRemoval, lockAttachmentFiles, scheduleFileRecycle } from 'src/modules/files/file-retention';
+import { assertAttachmentFilesBindable, auditAttachmentRemoval, scheduleFileRecycle } from 'src/modules/files/file-retention';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -55,6 +55,7 @@ export class EnterpriseProfileService {
 
   async getById(id: string, user: CurrentUser) {
     const entity = await this.findOneOrThrow(id);
+    this.ensureReadable(entity, user);
     return this.toDetail(entity, user);
   }
 
@@ -101,7 +102,9 @@ export class EnterpriseProfileService {
     }
     await manager.save(entity);
     });
-    return this.getById(id, user);
+    // The mutation response is still returned to the authorized manager; subsequent reads enforce archive visibility.
+    const updated = await this.findOneOrThrow(id);
+    return this.toDetail(updated, user);
   }
 
   async remove(id: string, user: CurrentUser): Promise<void> {
@@ -128,7 +131,8 @@ export class EnterpriseProfileService {
       await this.ensureDepartmentAccess(entity, user);
       await this.saveFileRelations(manager, id, dto.fileIds, user);
     });
-    return this.getById(id, user);
+    const entity = await this.findOneOrThrow(id);
+    return this.toDetail(entity, user);
   }
 
   async unbindFile(id: string, fileId: string, user: CurrentUser): Promise<void> {
@@ -145,8 +149,9 @@ export class EnterpriseProfileService {
     });
   }
 
-  async getFileDownloadUrl(id: string, fileId: string) {
-    await this.findOneOrThrow(id);
+  async getFileDownloadUrl(id: string, fileId: string, user: CurrentUser) {
+    const entity = await this.findOneOrThrow(id);
+    this.ensureReadable(entity, user);
     const relation = await this.fileRelRepository.findOne({
       where: { enterpriseProfileId: id, fileId },
     });
@@ -160,7 +165,7 @@ export class EnterpriseProfileService {
     const ids = [...new Set(fileIds)];
     const existing = await manager.find(EnterpriseProfileFileEntity, { where: { enterpriseProfileId: id } });
     const removed = replace ? existing.filter((row) => !ids.includes(row.fileId)) : [];
-    const available = await lockAttachmentFiles(manager, [...ids, ...removed.map((row) => row.fileId)]);
+    const available = await assertAttachmentFilesBindable(manager, ids, user, existing.map((row) => row.fileId));
     if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
     if (removed.length) await manager.delete(EnterpriseProfileFileEntity, { id: In(removed.map((row) => row.id)) });
     const linked = new Set(existing.map((row) => row.fileId));
@@ -177,6 +182,12 @@ export class EnterpriseProfileService {
     if (user.roles.includes('system_admin')) return;
     if (!user.roles.some((role) => MANAGER_ROLES.has(role))) {
       throw new ForbiddenException('forbidden');
+    }
+  }
+
+  private ensureReadable(entity: EnterpriseProfileEntity, user: CurrentUser) {
+    if (entity.status === 'archived' && !user.roles.includes('system_admin')) {
+      throw new NotFoundException('enterprise profile not found');
     }
   }
 
@@ -199,7 +210,7 @@ export class EnterpriseProfileService {
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
     if (user && this.authorizationService) {
       try {
-        return this.authorizationService.getEffectiveAuthorization(user).departmentCodes;
+        return (await this.authorizationService.getEffectiveAuthorization(user)).departmentCodes;
       } catch {
         return [];
       }

@@ -1,0 +1,11 @@
+PASS test/m9-wave4-token.integration.spec.ts (8.52 s)
+PASS test/auth.integration.spec.ts (10.191 s)
+PASS test/ship-monitor.integration.spec.ts
+PASS test/procurement.integration.spec.ts
+PASS test/master-data.integration.spec.ts
+
+Test Suites: 5 passed, 5 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        31.218 s, estimated 3573 s
+Ran all test suites matching /test\/procurement.integration.spec.ts|test\/master-data.integration.spec.ts|test\/m9-wave4-token.integration.spec.ts|test\/auth.integration.spec.ts|test\/ship-monitor.integration.spec.ts/i.

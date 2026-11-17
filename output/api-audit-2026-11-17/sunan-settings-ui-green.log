@@ -1,0 +1,18 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > saves settings and shows feedback
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > keeps a blank Secret out of a save and preserves the optimistic version
+Warning: Warning: There may be circular references
+
+ ✓ src/features/settings/SettingsPage.test.tsx (8 tests) 1207ms
+   ✓ SettingsPage > keeps invalid draft input local without sending connection or message requests  482ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  11:14:43
+   Duration  3.20s (transform 138ms, setup 65ms, collect 1.45s, tests 1.21s, environment 292ms, prepare 47ms)
+

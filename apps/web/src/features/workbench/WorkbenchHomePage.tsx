@@ -28,6 +28,7 @@ import {
   Empty,
   Form,
   Input,
+  InputNumber,
   List,
   Select,
   Space,
@@ -231,12 +232,9 @@ function renderDynamicField(field: WorkbenchModuleSchemaField) {
     return <DatePicker showTime format={['YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm']} placeholder={field.placeholder ?? '选择日期时间'} style={{ width: '100%' }} />;
   }
 
-  return (
-    <Input
-      type={field.inputType === 'number' ? 'number' : 'text'}
-      placeholder={field.placeholder}
-    />
-  );
+  return field.inputType === 'number'
+    ? <InputNumber placeholder={field.placeholder} style={{ width: '100%' }} />
+    : <Input placeholder={field.placeholder} />;
 }
 
 function getCurrentStep(record: WorkbenchRecordDetail) {
@@ -651,7 +649,7 @@ export function WorkbenchHomePage({
       return true;
     } catch (error) {
       messageApi.error(
-        error instanceof Error ? error.message : '企业微信审批页打开失败',
+        `审批页打开未确认，原审批编号已保留。请点击“核对企业微信审批”核实后继续，或联系管理员处理。${error instanceof Error ? error.message : ''}`,
       );
       return false;
     }
@@ -781,7 +779,7 @@ export function WorkbenchHomePage({
 
       const opened = await openWecomApprovalPage(result.data.wecomLaunchConfig);
       if (opened) {
-        messageApi.success(`企业微信审批页已打开：${result.data.thirdNo}`);
+        messageApi.success(`${result.data.wecomLaunchConfig.oaType === '10002' ? '已核对并打开原审批' : '企业微信审批页已打开'}：${result.data.thirdNo}`);
       }
     } catch (error) {
       messageApi.error(businessError(error));
@@ -1580,19 +1578,19 @@ export function WorkbenchHomePage({
               ) : null}
               {detailModule?.requiresApproval &&
               (!LEARNING_MODULES.includes(detailResponse.data.moduleCode) || (detailResponse.data.canManageLearning && detailResponse.data.learning?.completionRate === 100)) &&
-              !detailResponse.data.externalProcessInstanceId ? (
+              detailResponse.data.canLaunchApproval !== false ? (
                 <Button
                   type="primary"
                   style={{ marginTop: 12 }}
                   loading={launchingApproval}
                   onClick={() => void triggerLaunchApproval()}
                 >
-                  发起企业微信审批
+                  {detailResponse.data.externalProcessInstanceId ? '核对企业微信审批' : '发起企业微信审批'}
                 </Button>
               ) : null}
               {detailResponse.data.externalProcessInstanceId ? (
                 <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
-                  审批实例：{detailResponse.data.externalProcessInstanceId}
+                  审批实例：{detailResponse.data.externalProcessInstanceId}。如审批页打开失败或已取消，请点击“核对企业微信审批”；状态未核实时请联系管理员处理，系统保留原编号。
                 </Typography.Paragraph>
               ) : null}
               {issueLinksResponse?.data.length ? (
@@ -1792,7 +1790,7 @@ export function WorkbenchHomePage({
             </div>
 
             {detailResponse.data.moduleCode !== 'shipping_self_inspection' && (!LEARNING_MODULES.includes(detailResponse.data.moduleCode) || (detailResponse.data.canManageLearning && !detailResponse.data.learning)) && (
-            <EvidencePanel recordId={detailResponse.data.id} summary={detailResponse.data.summary} attachments={detailResponse.data.attachments}
+            <EvidencePanel key={detailResponse.data.id} recordId={detailResponse.data.id} summary={detailResponse.data.summary} attachments={detailResponse.data.attachments} signatureEvidence={detailResponse.data.signatureEvidence}
               onUpload={async (file) => { await uploadWorkbenchRecordAttachment({ recordId: detailResponse.data.id, data: { category: 'evidence', fileId: file.id } }).unwrap(); }}
               onSignature={async (signatureFileId, businessSummaryHash) => { await createSignatureEvidence({ recordId: detailResponse.data.id, signatureFileId, businessSummaryHash }).unwrap(); messageApi.success('签名证据已保存'); }}
               onLocation={async (body) => { await createLocationEvidence({ recordId: detailResponse.data.id, ...body }).unwrap(); messageApi.success(body.captureStatus === 'captured' ? '定位证据已保存' : '定位异常说明已保存'); }} />

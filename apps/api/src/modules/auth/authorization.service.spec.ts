@@ -40,7 +40,7 @@ function makeUser(overrides: Partial<WecomUserEntity> = {}): WecomUserEntity {
 
 describe('AuthorizationService', () => {
   const repository = { manager: { transaction: jest.fn() } };
-  const dataSource = { query: jest.fn() };
+  const dataSource = { query: jest.fn(), getRepository: jest.fn().mockReturnValue({ find: jest.fn().mockResolvedValue([]) }) };
   const adminService = { isSystemAdmin: jest.fn((userId: string) => userId === 'admin-1') };
 
   beforeEach(() => jest.clearAllMocks());
@@ -54,7 +54,7 @@ describe('AuthorizationService', () => {
     );
   }
 
-  it('lets manual roles replace automatic department and position roles, including an explicit empty list', () => {
+  it('lets manual roles replace automatic department and position roles, including an explicit empty list', async () => {
     const service = createService();
     const user = makeUser({
       departmentMode: 'manual',
@@ -64,7 +64,7 @@ describe('AuthorizationService', () => {
       position: '船长',
     });
 
-    expect(service.getEffectiveAuthorization(user)).toMatchObject({
+    expect(await service.getEffectiveAuthorization(user)).toMatchObject({
       departmentIds: [1],
       departmentCodes: [],
       roles: ['all_authenticated'],
@@ -72,7 +72,7 @@ describe('AuthorizationService', () => {
     });
   });
 
-  it('resolves effective department codes from manually selected departments', () => {
+  it('resolves effective department codes from manually selected departments', async () => {
     const service = createService();
     const user = makeUser({
       departmentIds: [6],
@@ -84,30 +84,47 @@ describe('AuthorizationService', () => {
       manualRoles: ['shipping'],
     });
 
-    expect(service.getEffectiveAuthorization(user)).toMatchObject({
+    expect(await service.getEffectiveAuthorization(user)).toMatchObject({
       departmentIds: [4, 6],
       departmentCodes: ['finance_dept', 'shipping_dept'],
       roles: ['all_authenticated', 'shipping'],
     });
   });
 
-  it('allows an env administrator to bypass platform disabled but not an unavailable source account', () => {
+  it('uses the current enterprise department dictionary for manual department roles on every request', async () => {
+    const departments = { find: jest.fn().mockResolvedValue([{ departmentId: 99, name: '财务部' }]) };
+    const source = { getRepository: jest.fn().mockReturnValue(departments) };
+    const service = new AuthorizationService(repository as never, source as never, new RoleResolverService(), adminService as never);
+    const user = makeUser({ departmentMode: 'manual', manualDepartmentIds: [99], roleMode: 'auto' });
+
+    expect(await service.getEffectiveAuthorization(user)).toMatchObject({
+      departmentIds: [99], departments: ['财务部'], departmentCodes: ['finance_dept'],
+      roles: ['all_authenticated', 'finance'],
+    });
+    expect(departments.find).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ corpId: user.corpId }) }));
+
+    departments.find.mockResolvedValue([{ departmentId: 99, name: '业务部' }]);
+    expect(await service.toCurrentUser(user)).toMatchObject({ departments: ['业务部'], roles: ['all_authenticated', 'business'] });
+    expect(await service.toAuthenticatedUser(user)).toMatchObject({ department: ['业务部'], roles: ['all_authenticated', 'business'] });
+  });
+
+  it('allows an env administrator to bypass platform disabled but not an unavailable source account', async () => {
     const service = createService();
     const disabledAdmin = makeUser({ userId: 'admin-1', platformStatus: 'disabled' });
-    expect(service.getEffectiveAuthorization(disabledAdmin).roles).toEqual(
+    expect((await service.getEffectiveAuthorization(disabledAdmin)).roles).toEqual(
       expect.arrayContaining(['system_admin']),
     );
 
-    expect(() =>
+    await expect(
       service.getEffectiveAuthorization({ ...disabledAdmin, sourceStatus: 'inactive' }),
-    ).toThrow(ForbiddenException);
+    ).rejects.toThrow(ForbiddenException);
   });
 
-  it('rejects users from another enterprise before calculating roles', () => {
+  it('rejects users from another enterprise before calculating roles', async () => {
     const service = createService();
-    expect(() =>
+    await expect(
       service.getEffectiveAuthorization(makeUser({ corpId: 'other-corp' })),
-    ).toThrow(UnauthorizedException);
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('ignores an older source revision without touching the existing user', async () => {

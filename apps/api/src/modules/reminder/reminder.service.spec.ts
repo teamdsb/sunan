@@ -2,6 +2,33 @@ import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 
 import { ReminderService } from './reminder.service';
 
+describe('ReminderService acknowledge capability', () => {
+  it.each([
+    ['vessel', 'shipping', 'other-user', false],
+    ['vessel', 'all_authenticated', 'viewer', true],
+    ['personnel', 'all_authenticated', 'other-user', true],
+  ])('matches the existing acknowledge rule for %s/%s/%s', async (ownerType, role, recipientUserId, allowed) => {
+    const reminder = { id: 'r1', certificateId: 'c1', certificateExpiryDate: '2026-12-17', ownerType, ownerId: 'owner1', recipientUserId, reminderType: 'upcoming', status: 'pending', sentAt: null, acknowledgedAt: null, acknowledgedBy: null };
+    const certificate = { id: 'c1', expiryDate: '2026-12-17', status: 'active', reminderEnabled: true };
+    const viewer = { userId: 'viewer', departmentIds: [6], departmentNames: ['船务部'], departmentCodes: ['shipping_dept'], position: '部门经理' };
+    const service = new ReminderService(
+      { findOne: jest.fn().mockResolvedValue(reminder), save: jest.fn() } as never,
+      { findOne: jest.fn().mockResolvedValue(certificate) } as never,
+      { find: jest.fn().mockResolvedValue([]) } as never, {} as never,
+      { findOne: jest.fn().mockResolvedValue({ departmentCode: 'shipping_dept' }) } as never,
+      { findOne: jest.fn().mockResolvedValue(viewer) } as never,
+      { now: () => new Date('2026-11-17T00:00:00.000Z') } as never,
+    );
+    const user: CurrentUser = { userId: 'viewer', corpId: 'corp', name: '用户', avatar: null, departments: ['船务部'], position: '部门经理', roles: [role], isAdmin: false };
+
+    const detail = await service.detail('r1', user);
+
+    expect(detail).toMatchObject({ canAcknowledge: allowed });
+    if (allowed) await expect(service.acknowledge('r1', {}, user)).resolves.toMatchObject({ status: 'acknowledged', canAcknowledge: false });
+    else await expect(service.acknowledge('r1', {}, user)).rejects.toMatchObject({ status: 403 });
+  });
+});
+
 describe('ReminderService administrator source', () => {
   it('does not restore administrator access from a stale database flag', async () => {
     const reminderRepository = {

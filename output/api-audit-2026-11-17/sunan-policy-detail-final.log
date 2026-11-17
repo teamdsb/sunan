@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+ ✓ src/features/enterprise/EnterprisePolicyDetailPage.test.tsx (2 tests) 453ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:54:46
+   Duration  4.01s (transform 207ms, setup 144ms, collect 2.48s, tests 453ms, environment 485ms, prepare 118ms)
+

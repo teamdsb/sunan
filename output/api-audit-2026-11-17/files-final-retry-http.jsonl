@@ -1,0 +1,14 @@
+{"method":"POST","pathname":"/api/v1/files/presign","registeredRoute":"/api/v1/files/presign","status":201}
+{"method":"POST","pathname":"/api/v1/files/callback","registeredRoute":"/api/v1/files/callback","status":201}
+{"method":"POST","pathname":"/api/v1/files/presign","registeredRoute":"/api/v1/files/presign","status":400}
+{"method":"POST","pathname":"/api/v1/files/presign","registeredRoute":"/api/v1/files/presign","status":201}
+{"method":"POST","pathname":"/api/v1/files/presign","registeredRoute":"/api/v1/files/presign","status":201}
+{"method":"GET","pathname":"/api/v1/files/policies/procurement-attachments","registeredRoute":"/api/v1/files/policies/:category","status":200}
+{"method":"POST","pathname":"/api/v1/files/presign","registeredRoute":"/api/v1/files/presign","status":201}
+{"method":"POST","pathname":"/api/v1/files/callback","registeredRoute":"/api/v1/files/callback","status":201}
+{"method":"GET","pathname":"/api/v1/files/certificates%2F2026%2F03%2Ffile-1.pdf/download-url","registeredRoute":"/api/v1/files/:ossKey/download-url","status":200}
+{"method":"GET","pathname":"/api/v1/files/certificates%2F2026%2F03%2Fmissing.pdf/download-url","registeredRoute":"/api/v1/files/:ossKey/download-url","status":404}
+{"method":"POST","pathname":"/api/v1/files/from-wecom","registeredRoute":"/api/v1/files/from-wecom","status":201}
+{"method":"DELETE","pathname":"/api/v1/files/9d70afe3-56df-4b05-80de-97b967bdc1cf","registeredRoute":"/api/v1/files/:id","status":204}
+{"method":"DELETE","pathname":"/api/v1/files/c7988a9a-2c34-4afd-928d-67102d930446","registeredRoute":"/api/v1/files/:id","status":204}
+{"method":"DELETE","pathname":"/api/v1/files/c7988a9a-2c34-4afd-928d-67102d930446","registeredRoute":"/api/v1/files/:id","status":400}

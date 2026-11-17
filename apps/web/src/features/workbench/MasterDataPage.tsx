@@ -71,7 +71,8 @@ export function MasterDataPage() {
   };
   const openEdit = (item: MasterDataItem) => {
     setEditing(item);
-    form.setFieldsValue({ ...item, vehicleType: item.vehicleType ?? undefined, type, employmentStatus: item.employmentStatus ?? item.status });
+    form.resetFields();
+    form.setFieldsValue({ ...item, vehicleType: item.vehicleType ?? undefined, remarks: item.remarks ?? undefined, type, employmentStatus: item.employmentStatus ?? item.status });
     setDrawerOpen(true);
   };
 

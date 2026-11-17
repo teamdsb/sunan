@@ -1,0 +1,438 @@
+{
+  "counts": {
+    "health": 2,
+    "api-business": 14,
+    "worker-operations": 4,
+    "master-data-maintenance": 4,
+    "admin-compatibility": 11,
+    "external-callback": 3,
+    "approval-operations": 4
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "controller": "HealthController",
+      "handler": "getHealth",
+      "file": "apps/api/src/health/health.controller.ts",
+      "line": 29,
+      "category": "health",
+      "purpose": "部署存活/依赖就绪检查，由探针或运维调用。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/ready",
+      "controller": "HealthController",
+      "handler": "getReadiness",
+      "file": "apps/api/src/health/health.controller.ts",
+      "line": 34,
+      "category": "health",
+      "purpose": "部署存活/依赖就绪检查，由探针或运维调用。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/inspection-templates/:templateId/versions",
+      "controller": "InspectionCapaController",
+      "handler": "createVersion",
+      "file": "apps/api/src/modules/inspection-capa/inspection-capa.controller.ts",
+      "line": 19,
+      "category": "api-business",
+      "purpose": "创建模板新版本，保存独立版本和条目，发布后方可生成任务；当前UI只提供建模板/发布流程。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/issues/statistics",
+      "controller": "InspectionCapaController",
+      "handler": "statistics",
+      "file": "apps/api/src/modules/inspection-capa/inspection-capa.controller.ts",
+      "line": 33,
+      "category": "api-business",
+      "purpose": "问题创建或按当前权限汇总统计，实际入库/查询。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/issue-transfer-jobs/actions/reconcile",
+      "controller": "InspectionCapaController",
+      "handler": "reconcileTransfers",
+      "file": "apps/api/src/modules/inspection-capa/inspection-capa.controller.ts",
+      "line": 34,
+      "category": "worker-operations",
+      "purpose": "调度、失败投递及问题转移的管理/worker补偿接口，有实际执行与持久化结果。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/issues",
+      "controller": "InspectionCapaController",
+      "handler": "createIssue",
+      "file": "apps/api/src/modules/inspection-capa/inspection-capa.controller.ts",
+      "line": 36,
+      "category": "api-business",
+      "purpose": "问题创建或按当前权限汇总统计，实际入库/查询。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/master-data/vessels/:id",
+      "controller": "MasterDataController",
+      "handler": "vessel",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 15,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/master-data/vehicles/:id",
+      "controller": "MasterDataController",
+      "handler": "vehicle",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 20,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/master-data/personnel/:id",
+      "controller": "MasterDataController",
+      "handler": "personnel",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 25,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/master-data/assignments",
+      "controller": "MasterDataController",
+      "handler": "createAssignment",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 28,
+      "category": "master-data-maintenance",
+      "purpose": "主数据导入批次、历史引用规范化或人员任职维护，真实写库且提供校验/结果。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/master-data/equipment/:id",
+      "controller": "MasterDataController",
+      "handler": "equipment",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 31,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/master-data/imports",
+      "controller": "MasterDataController",
+      "handler": "import",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 35,
+      "category": "master-data-maintenance",
+      "purpose": "主数据导入批次、历史引用规范化或人员任职维护，真实写库且提供校验/结果。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/master-data/imports/:id",
+      "controller": "MasterDataController",
+      "handler": "importReport",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 36,
+      "category": "master-data-maintenance",
+      "purpose": "主数据导入批次、历史引用规范化或人员任职维护，真实写库且提供校验/结果。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/master-data/references/normalize",
+      "controller": "MasterDataController",
+      "handler": "normalize",
+      "file": "apps/api/src/modules/master-data/master-data.controller.ts",
+      "line": 37,
+      "category": "master-data-maintenance",
+      "purpose": "主数据导入批次、历史引用规范化或人员任职维护，真实写库且提供校验/结果。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/office/entries/:id",
+      "controller": "OfficeController",
+      "handler": "getEntry",
+      "file": "apps/api/src/modules/office/office.controller.ts",
+      "line": 27,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/plans/:planId",
+      "controller": "PlanTaskController",
+      "handler": "updatePlan",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 52,
+      "category": "api-business",
+      "purpose": "计划/条目读取或修改，提供真实校验与持久化；当前UI只覆盖部分维护入口。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/plans/:planId/items",
+      "controller": "PlanTaskController",
+      "handler": "listItems",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 71,
+      "category": "api-business",
+      "purpose": "计划/条目读取或修改，提供真实校验与持久化；当前UI只覆盖部分维护入口。"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/plans/:planId/items/:itemId",
+      "controller": "PlanTaskController",
+      "handler": "updateItem",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 85,
+      "category": "api-business",
+      "purpose": "计划/条目读取或修改，提供真实校验与持久化；当前UI只覆盖部分维护入口。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tasks/:taskId/notification-deliveries",
+      "controller": "PlanTaskController",
+      "handler": "deliveries",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 140,
+      "category": "worker-operations",
+      "purpose": "调度、失败投递及问题转移的管理/worker补偿接口，有实际执行与持久化结果。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/task-notification-deliveries/actions/process",
+      "controller": "PlanTaskController",
+      "handler": "processDeliveryQueue",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 163,
+      "category": "worker-operations",
+      "purpose": "调度、失败投递及问题转移的管理/worker补偿接口，有实际执行与持久化结果。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/plan-task-jobs/actions/run",
+      "controller": "PlanTaskController",
+      "handler": "runScheduledCycle",
+      "file": "apps/api/src/modules/plan-task/plan-task.controller.ts",
+      "line": 169,
+      "category": "worker-operations",
+      "purpose": "调度、失败投递及问题转移的管理/worker补偿接口，有实际执行与持久化结果。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ship-monitors/:id",
+      "controller": "ShipMonitorController",
+      "handler": "getById",
+      "file": "apps/api/src/modules/ship-monitor/ship-monitor.controller.ts",
+      "line": 43,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "controller": "UserDirectoryController",
+      "handler": "list",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 33,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/departments",
+      "controller": "UserDirectoryController",
+      "handler": "departments",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 38,
+      "category": "api-business",
+      "purpose": "对象详情接口，提供单记录读取和数据范围校验；前端当前主要使用列表或编辑回填数据。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users/:userId",
+      "controller": "UserDirectoryController",
+      "handler": "get",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 43,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/wecom-users/:userId/audits",
+      "controller": "UserDirectoryController",
+      "handler": "audits",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 48,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users/:userId/audits",
+      "controller": "UserDirectoryController",
+      "handler": "audits",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 48,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/admin/users/:userId",
+      "controller": "UserDirectoryController",
+      "handler": "update",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 53,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/wecom-users/:userId/restore-departments",
+      "controller": "UserDirectoryController",
+      "handler": "restoreDepartments",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 62,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/users/:userId/restore-departments",
+      "controller": "UserDirectoryController",
+      "handler": "restoreDepartments",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 62,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/wecom-users/:userId/restore-roles",
+      "controller": "UserDirectoryController",
+      "handler": "restoreRoles",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 77,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/users/:userId/restore-roles",
+      "controller": "UserDirectoryController",
+      "handler": "restoreRoles",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 77,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/users/sync",
+      "controller": "UserDirectoryController",
+      "handler": "sync",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 92,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users/sync/:batchId",
+      "controller": "UserDirectoryController",
+      "handler": "getSync",
+      "file": "apps/api/src/modules/user-directory/user-directory.controller.ts",
+      "line": 99,
+      "category": "admin-compatibility",
+      "purpose": "管理员用户目录及独立恢复操作的兼容路由；与规范入口共享鉴权和实现。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/wecom/callback",
+      "controller": "WecomCallbackController",
+      "handler": "verifyUrl",
+      "file": "apps/api/src/modules/wecom/wecom-callback.controller.ts",
+      "line": 10,
+      "category": "external-callback",
+      "purpose": "企业微信签名握手/事件入口，由企业微信服务端调用。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/wecom/approval/callback",
+      "controller": "WorkbenchApprovalController",
+      "handler": "handleCallback",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 28,
+      "category": "external-callback",
+      "purpose": "企业微信签名握手/事件入口，由企业微信服务端调用。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/wecom/approval/callback",
+      "controller": "WorkbenchApprovalController",
+      "handler": "verifyCallbackUrl",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 51,
+      "category": "external-callback",
+      "purpose": "企业微信签名握手/事件入口，由企业微信服务端调用。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/wecom/approval/instances",
+      "controller": "WorkbenchApprovalController",
+      "handler": "listInstances",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 70,
+      "category": "approval-operations",
+      "purpose": "审批实例查询、对账与人工重试的管理接口，持久化同步状态。"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/wecom/approval/instances/:processInstanceId",
+      "controller": "WorkbenchApprovalController",
+      "handler": "getInstance",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 76,
+      "category": "approval-operations",
+      "purpose": "审批实例查询、对账与人工重试的管理接口，持久化同步状态。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/wecom/approval/reconcile",
+      "controller": "WorkbenchApprovalController",
+      "handler": "reconcile",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 82,
+      "category": "approval-operations",
+      "purpose": "审批实例查询、对账与人工重试的管理接口，持久化同步状态。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/wecom/approval/retry",
+      "controller": "WorkbenchApprovalController",
+      "handler": "retryApproval",
+      "file": "apps/api/src/modules/workbench/workbench-approval.controller.ts",
+      "line": 89,
+      "category": "approval-operations",
+      "purpose": "审批实例查询、对账与人工重试的管理接口，持久化同步状态。"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workbench/records/:recordId/participants",
+      "controller": "WorkbenchController",
+      "handler": "assignParticipant",
+      "file": "apps/api/src/modules/workbench/workbench.controller.ts",
+      "line": 104,
+      "category": "api-business",
+      "purpose": "工作记录参与人维护，受业务管理权限控制，实际保存参与关系。"
+    }
+  ],
+  "removed": {
+    "method": "POST",
+    "path": "/api/v1/workbench/statistics/attendance/reconcile",
+    "reason": "返回随机queued编号但无执行worker或可查询结果、无前端调用，已删除controller/service/DTO/OpenAPI；不把财务模板对账列为已实现。"
+  }
+}

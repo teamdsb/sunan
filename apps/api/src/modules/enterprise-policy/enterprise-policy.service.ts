@@ -14,7 +14,7 @@ import { EnterprisePolicyCreateDto } from './dto/enterprise-policy-create.dto';
 import { EnterprisePolicyListQueryDto } from './dto/enterprise-policy-list-query.dto';
 import { EnterprisePolicyUpdateDto } from './dto/enterprise-policy-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
-import { auditAttachmentRemoval, lockAttachmentFiles, scheduleFileRecycle } from 'src/modules/files/file-retention';
+import { assertAttachmentFilesBindable, auditAttachmentRemoval, scheduleFileRecycle } from 'src/modules/files/file-retention';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
 
@@ -57,26 +57,24 @@ export class EnterprisePolicyService {
 
   async create(dto: EnterprisePolicyCreateDto, user: CurrentUser) {
     this.ensureManager(user);
+    const publishOnCreate = dto.status === 'published';
     const departmentCode = await this.getPrimaryDepartmentCode(user.userId);
     const entity = this.repository.create({
       title: dto.title,
       policyCode: dto.policyCode,
       version: dto.version,
       summary: dto.summary ?? null,
-      status: dto.status ?? 'draft',
+      status: publishOnCreate ? 'draft' : dto.status ?? 'draft',
       effectiveDate: toBusinessDate(dto.effectiveDate),
-      publishedAt: dto.status === 'published' ? new Date() : null,
+      publishedAt: null,
       departmentCode,
       createdBy: user.userId,
       updatedBy: user.userId,
     });
 
-    if (entity.status === 'published') {
-      await this.deprecatePublishedVersions(entity);
-    }
-
     const saved = await this.repository.save(entity);
     if (dto.fileIds?.length) await this.bindFiles(saved.id, { fileIds: dto.fileIds }, user);
+    if (publishOnCreate) return this.publish(saved.id, user);
     return this.getById(saved.id, user);
   }
 
@@ -87,7 +85,13 @@ export class EnterprisePolicyService {
     if (!entity) throw new NotFoundException('record not found');
     await this.ensureDepartmentAccess(entity, user);
 
-    if (entity.status === 'published' && dto.status !== 'deprecated') {
+    const changesContent = (dto.title !== undefined && dto.title !== entity.title)
+      || (dto.policyCode !== undefined && dto.policyCode !== entity.policyCode)
+      || (dto.version !== undefined && dto.version !== entity.version)
+      || (dto.summary !== undefined && dto.summary !== entity.summary)
+      || (dto.effectiveDate !== undefined && toBusinessDate(dto.effectiveDate) !== entity.effectiveDate)
+      || dto.fileIds !== undefined;
+    if (this.isPublishedVersion(entity) && (dto.status !== 'deprecated' || changesContent)) {
       throw new ForbiddenException('published policy is readonly');
     }
 
@@ -163,6 +167,7 @@ export class EnterprisePolicyService {
       const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!entity) throw new NotFoundException('record not found');
       await this.ensureDepartmentAccess(entity, user);
+      this.assertContentEditable(entity);
       await this.saveFileRelations(manager, id, dto.fileIds, user);
     });
     return this.getById(id, user);
@@ -185,6 +190,7 @@ export class EnterprisePolicyService {
       const entity = await manager.findOne(EnterprisePolicyEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!entity) throw new NotFoundException('record not found');
       await this.ensureDepartmentAccess(entity, user);
+      this.assertContentEditable(entity);
       const result = await manager.delete(EnterprisePolicyFileEntity, { enterprisePolicyId: id, fileId });
       if (result.affected) {
         await auditAttachmentRemoval(manager, 'enterprise_policy', id, [fileId], user.userId, '删除附件');
@@ -197,7 +203,7 @@ export class EnterprisePolicyService {
     const ids = [...new Set(fileIds)];
     const existing = await manager.find(EnterprisePolicyFileEntity, { where: { enterprisePolicyId: id } });
     const removed = replace ? existing.filter((row) => !ids.includes(row.fileId)) : [];
-    const available = await lockAttachmentFiles(manager, [...ids, ...removed.map((row) => row.fileId)]);
+    const available = await assertAttachmentFilesBindable(manager, ids, user, existing.map((row) => row.fileId));
     if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
     if (removed.length) await manager.delete(EnterprisePolicyFileEntity, { id: In(removed.map((row) => row.id)) });
     const linked = new Set(existing.map((row) => row.fileId));
@@ -207,6 +213,14 @@ export class EnterprisePolicyService {
     const removedIds = removed.map((row) => row.fileId);
     await auditAttachmentRemoval(manager, 'enterprise_policy', id, removedIds, user.userId, '替换附件');
     await scheduleFileRecycle(manager, removedIds);
+  }
+
+  private isPublishedVersion(entity: EnterprisePolicyEntity) {
+    return entity.status === 'published' || Boolean(entity.publishedAt);
+  }
+
+  private assertContentEditable(entity: EnterprisePolicyEntity) {
+    if (this.isPublishedVersion(entity)) throw new ForbiddenException('published policy is readonly');
   }
 
 
@@ -231,7 +245,7 @@ export class EnterprisePolicyService {
     const user = await this.wecomUserRepository.findOne({ where: { userId } });
     if (user && this.authorizationService) {
       try {
-        return this.authorizationService.getEffectiveAuthorization(user).departmentCodes;
+        return (await this.authorizationService.getEffectiveAuthorization(user)).departmentCodes;
       } catch {
         return [];
       }

@@ -1,0 +1,8 @@
+PASS src/modules/auth/authorization.service.spec.ts
+PASS src/modules/user-directory/user-directory.service.spec.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        4.347 s
+Ran all test suites matching /src\/modules\/auth\/authorization.service.spec.ts|src\/modules\/user-directory\/user-directory.service.spec.ts/i.

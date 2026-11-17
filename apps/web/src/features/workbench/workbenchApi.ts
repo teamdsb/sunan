@@ -80,11 +80,13 @@ export interface WorkbenchRecordDetail extends WorkbenchRecordSummary {
   summary: string;
   learning?: Learning | null;
   canManageLearning?: boolean;
+  canLaunchApproval?: boolean;
   canRecordFuel?: boolean;
   externalProcessInstanceId: string | null;
   externalStatus: string | null;
   steps: WorkbenchStep[];
   attachments: WorkbenchAttachment[];
+  signatureEvidence?: WorkbenchAttachment[];
   actionLogs: WorkbenchActionLog[];
   payload: Record<string, unknown>;
   availableActions?: string[];
@@ -176,7 +178,7 @@ export interface WorkbenchApprovalLaunchPayload {
 }
 
 export interface WorkbenchApprovalLaunchConfig {
-  oaType: '10001';
+  oaType: '10001' | '10002';
   templateId: string;
   thirdNo: string;
   extData: {

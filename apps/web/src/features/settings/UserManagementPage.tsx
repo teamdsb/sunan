@@ -297,7 +297,7 @@ export function UserManagementPage() {
           </Space>
         </Card>
 
-        <Card bodyStyle={{ padding: 0 }}>
+        <Card styles={{ body: { padding: 0 } }}>
           {usersQuery.isLoading ? <div style={{ padding: 48, textAlign: 'center' }}><Spin /></div> : null}
           {!usersQuery.isLoading && usersQuery.data?.data.items.length === 0 ? <Empty description="没有符合条件的用户" style={{ padding: 48 }} /> : null}
           {!usersQuery.isLoading && usersQuery.data?.data.items.length ? (
@@ -371,7 +371,7 @@ export function UserManagementPage() {
         confirmLoading={updateState.isLoading}
         onCancel={() => setEditOpen(false)}
         onOk={() => editForm.submit()}
-        destroyOnClose={false}
+        destroyOnHidden={false}
       >
         {conflictText ? <Alert type="warning" showIcon message={conflictText} style={{ marginBottom: 16 }} /> : null}
         <Form

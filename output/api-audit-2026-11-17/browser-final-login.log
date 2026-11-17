@@ -1,0 +1,10 @@
+### Ran Playwright code
+```js
+await (async (page) => { const login=await page.request.get("http://127.0.0.1:4320/api/v1/auth/wecom/callback?code=admin"); if(login.status()!==200)throw new Error("synthetic admin login failed"); const d=(await login.json()).data; await page.addInitScript((data)=>{localStorage.setItem("sunan_token",data.accessToken);localStorage.setItem("sunan_token_expires_at",String(Date.now()+data.expiresIn*1000));localStorage.setItem("sunan_oauth_permission_version","snsapi_privateinfo-v1");},d); await page.goto("http://127.0.0.1:5174/workbench/modules/business_water_supply"); })(page);
+```
+### Page
+- Page URL: http://127.0.0.1:5174/workbench/modules/business_water_supply
+- Page Title: 苏南船舶管理系统
+- Console: 1 errors, 2 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-11-17T12-12-58-869Z.log#L1-L4

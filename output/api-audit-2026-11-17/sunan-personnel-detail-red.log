@@ -1,0 +1,67 @@
+FAIL test/master-data.integration.spec.ts (8.568 s)
+  Master data integration
+    ✓ enforces unique master data, excludes inactive options, and preserves historical display snapshots (90 ms)
+    ✕ checks identity and effective assignment periods and only permits active references (35 ms)
+    ✕ replays an import without duplicating data and returns reconciliation errors (12 ms)
+    ✕ allows a manual override to link unmatched legacy text without changing the source payload (8 ms)
+    ✓ reverses and reapplies the Wave 4 schema without touching source workbench records (142 ms)
+
+  ● Master data integration › checks identity and effective assignment periods and only permits active references
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      70 |     expect(redacted.body.data.find((item: { id: string }) => item.id === personnelId)).toBeUndefined();
+      71 |     const hiddenDetail = await request(app.getHttpServer()).get(`/api/v1/master-data/personnel/${personnelId}`);
+    > 72 |     expect(hiddenDetail.status).toBe(403);
+         |                                 ^
+      73 |     currentUser = { ...currentUser, userId: 'safety-manager', roles: ['all_authenticated', 'shipping'], position: '经理' };
+      74 |     const inactiveAssignment = await request(app.getHttpServer()).post('/api/v1/master-data/assignments').send({ personnelId, vesselId, roleCode: 'captain', effectiveFrom: '2026-07-01T00:00:00.000Z' });
+      75 |     expect(inactiveAssignment.status).toBe(422);
+
+      at Object.<anonymous> (test/master-data.integration.spec.ts:72:33)
+
+  ● Master data integration › replays an import without duplicating data and returns reconciliation errors
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 403
+
+      85 |     const content = JSON.stringify([{ code: 'EQ-001', name: '主机', categoryCode: 'engine', vesselCode: 'MD-SN012' }, { code: '', name: '无编码', categoryCode: 'engine', vesselCode: 'MD-SN012' }]);
+      86 |     const first = await request(app.getHttpServer()).post('/api/v1/master-data/imports').send({ importType: 'equipment', content });
+    > 87 |     expect(first.status).toBe(201);
+         |                          ^
+      88 |     expect(first.body.data.summary).toEqual(expect.objectContaining({ failed: 1 }));
+      89 |     const replay = await request(app.getHttpServer()).post('/api/v1/master-data/imports').send({ importType: 'equipment', content });
+      90 |     expect(replay.status).toBe(200);
+
+      at Object.<anonymous> (test/master-data.integration.spec.ts:87:26)
+
+  ● Master data integration › allows a manual override to link unmatched legacy text without changing the source payload
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: ObjectContaining {"mappingStatus": "manual_override", "objectId": "1ac74840-33ed-4da8-be6f-a07ffaeb5589", "rawValue": "苏南零一二"}
+    Received: undefined
+
+       99 |     const record = await source.getRepository(WorkbenchRecordEntity).save({ moduleCode: 'shipping_equipment_maintenance', templateCode: 'v1', recordNo: 'MD-REF-002', recordSource: 'manual', status: 'draft', approvalChannel: 'internal', title: '人工映射', summary: '保留错别字', departmentCode: 'shipping', vesselId: null, ownerUserId: 'safety-manager', applicantUserId: 'safety-manager', assigneeUserId: null, reviewerUserId: null, occurredAt: new Date(), payload: { vesselName: '苏南零一二' } });
+      100 |     const mapped = await request(app.getHttpServer()).post('/api/v1/master-data/references/normalize').send({ sourceRecordId: record.id, fieldKey: 'vesselName', objectType: 'vessel', objectId: vesselId });
+    > 101 |     expect(mapped.body.data).toEqual(expect.objectContaining({ objectId: vesselId, mappingStatus: 'manual_override', rawValue: '苏南零一二' }));
+          |                              ^
+      102 |     expect((await source.getRepository(WorkbenchRecordEntity).findOneByOrFail({ id: record.id })).payload).toEqual({ vesselName: '苏南零一二' });
+      103 |   });
+      104 |
+
+      at Object.<anonymous> (test/master-data.integration.spec.ts:101:30)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 2 passed, 5 total
+Snapshots:   0 total
+Time:        8.621 s
+Ran all test suites matching /test\/master-data.integration.spec.ts/i.
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/master-data.integration.spec.ts

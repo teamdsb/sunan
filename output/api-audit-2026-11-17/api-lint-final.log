@@ -1,0 +1,4 @@
+
+> api@0.0.8 lint /Users/yuan/项目/sunan/sunan/apps/api
+> eslint "{src,test}/**/*.ts"
+

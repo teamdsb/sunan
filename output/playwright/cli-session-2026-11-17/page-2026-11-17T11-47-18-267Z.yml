@@ -1,0 +1,115 @@
+- generic [ref=f1e7]:
+  - banner [ref=f1e8]:
+    - heading "苏南船舶管理" [level=1] [ref=f1e15]
+    - generic [ref=f1e16]:
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]: 合
+        - generic [ref=f1e23]:
+          - strong [ref=f1e25]: 合成管理员
+          - generic [ref=f1e26]: 总经办 / 系统管理员
+      - button "reload 重新认证" [ref=f1e28] [cursor=pointer]:
+        - img "reload" [ref=f1e30]
+        - generic [ref=f1e33]: 重新认证
+  - generic [ref=f1e34]:
+    - complementary "桌面模块导航" [ref=f1e35]:
+      - generic [ref=f1e36]:
+        - generic [ref=f1e37]: 模块导航
+        - button "收起左侧导航" [ref=f1e38] [cursor=pointer]:
+          - img "double-left" [ref=f1e40]
+      - navigation [ref=f1e43]:
+        - button "我的" [ref=f1e45] [cursor=pointer]
+        - button "办事中心" [ref=f1e54] [cursor=pointer]
+        - generic [ref=f1e62]:
+          - button "采购管理" [expanded] [ref=f1e63] [cursor=pointer]
+          - generic [ref=f1e71]:
+            - button "采购单列表" [ref=f1e72] [cursor=pointer]
+            - button "新建采购单" [ref=f1e75] [cursor=pointer]
+            - button "采购审批" [ref=f1e78] [cursor=pointer]
+            - button "采购报表" [ref=f1e81] [cursor=pointer]
+            - button "报表审批" [ref=f1e84] [cursor=pointer]
+            - button "字典治理" [ref=f1e87] [cursor=pointer]
+            - button "年度预算" [ref=f1e90] [cursor=pointer]
+        - button "工作平台" [ref=f1e94] [cursor=pointer]
+    - main [ref=f1e102]:
+      - generic [ref=f1e187]:
+        - heading "采购单详情" [level=2] [ref=f1e188]
+        - generic [ref=f1e189]: 查看采购单、审批进度和执行信息，并按需导出 PDF。
+        - generic [ref=f1e190]:
+          - button "返回采购首页" [ref=f1e192] [cursor=pointer]
+          - button "进入审批页" [ref=f1e195] [cursor=pointer]
+          - button "预览 PDF" [ref=f1e198] [cursor=pointer]
+          - button "导出 PDF" [ref=f1e201] [cursor=pointer]
+      - generic [ref=f1e206]:
+        - generic [ref=f1e207]: 接口回归采购草稿
+        - table [ref=f1e210]:
+          - rowgroup [ref=f1e211]:
+            - row [ref=f1e212]:
+              - rowheader "状态" [ref=f1e213]
+              - cell "草稿" [ref=f1e214]
+            - row [ref=f1e217]:
+              - rowheader "单号" [ref=f1e218]
+              - cell "CG202611173558" [ref=f1e219]
+            - row [ref=f1e220]:
+              - rowheader "部门" [ref=f1e221]
+              - cell "总经办" [ref=f1e222]
+            - row [ref=f1e223]:
+              - rowheader "细分" [ref=f1e224]
+              - cell "-" [ref=f1e225]
+            - row [ref=f1e226]:
+              - rowheader "金额" [ref=f1e227]
+              - cell "¥128.50" [ref=f1e228]
+            - row [ref=f1e230]:
+              - rowheader "摘要" [ref=f1e231]
+              - cell "真实浏览器通过API保存并重新读取" [ref=f1e232]
+            - row [ref=f1e233]:
+              - rowheader "提交时间" [ref=f1e234]
+              - cell "-" [ref=f1e235]
+            - row [ref=f1e236]:
+              - rowheader "外部流程状态" [ref=f1e237]
+              - cell "-" [ref=f1e238]
+      - generic [ref=f1e240]:
+        - generic [ref=f1e241]: 草稿编辑
+        - generic [ref=f1e245]:
+          - generic [ref=f1e247]:
+            - generic "标题" [ref=f1e249]: "* 标题"
+            - textbox "* 标题" [ref=f1e253]: 接口回归采购草稿
+          - generic [ref=f1e255]:
+            - generic "摘要/事由" [ref=f1e257]: "* 摘要/事由"
+            - textbox "* 摘要/事由" [ref=f1e261]: 真实浏览器通过API保存并重新读取
+          - generic [ref=f1e263]:
+            - generic "金额" [ref=f1e265]: "* 金额"
+            - generic [ref=f1e269]:
+              - generic:
+                - button "Increase Value" [ref=f1e270] [cursor=pointer]:
+                  - img "up" [ref=f1e271]
+                - button "Decrease Value" [ref=f1e274] [cursor=pointer]:
+                  - img "down" [ref=f1e275]
+              - spinbutton "* 金额" [ref=f1e279]: "128.50"
+          - generic [ref=f1e281]:
+            - generic "费用时间（可选）" [ref=f1e283]
+            - generic [ref=f1e288]:
+              - textbox "费用时间（可选）" [ref=f1e289]:
+                - /placeholder: 请选择日期
+              - generic:
+                - img "calendar"
+          - generic [ref=f1e290]:
+            - button "保存草稿" [ref=f1e292] [cursor=pointer]
+            - button "提交审批" [ref=f1e295] [cursor=pointer]
+      - generic [ref=f1e298]:
+        - generic [ref=f1e299]: 附件上传
+        - button "loading 上传文件" [disabled] [ref=f1e307]:
+          - generic:
+            - img "loading"
+          - generic: 上传文件
+      - generic [ref=f1e309]:
+        - generic [ref=f1e310]: 已绑定附件
+        - generic [ref=f1e313]: 暂无附件
+      - generic [ref=f1e319]:
+        - generic [ref=f1e320]: 审批轨迹
+        - table [ref=f1e330]:
+          - rowgroup [ref=f1e331]:
+            - row [ref=f1e332]:
+              - cell "暂无数据 暂无数据" [ref=f1e333]:
+                - generic [ref=f1e334]:
+                  - img "暂无数据" [ref=f1e336]
+                  - generic [ref=f1e342]: 暂无数据

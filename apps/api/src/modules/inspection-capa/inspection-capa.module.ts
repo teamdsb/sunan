@@ -10,11 +10,12 @@ import {
 import { SafetyPlanItemEntity, SafetyTaskEntity, SafetyTaskParticipantEntity } from 'src/database/entities/safety-plan-task.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { PlanTaskModule } from 'src/modules/plan-task/plan-task.module';
+import { FilesModule } from 'src/modules/files/files.module';
 import { InspectionCapaController } from './inspection-capa.controller';
 import { InspectionCapaService } from './inspection-capa.service';
 
 @Module({
-  imports: [PlanTaskModule, TypeOrmModule.forFeature([
+  imports: [PlanTaskModule, FilesModule, TypeOrmModule.forFeature([
     InspectionTemplateEntity, InspectionTemplateVersionEntity, InspectionTemplateItemEntity, InspectionTemplateScopeEntity, InspectionPlanEntity, InspectionEntity,
     InspectionResultEntity, InspectionResultEvidenceEntity, SafetyIssueEntity, IssueSourceEntity, IssueTransferJobEntity, SafetyCapaEntity, CapaRootCauseEntity,
     CapaActionEntity, CapaActionEvidenceEntity, CapaVerificationEntity, InspectionCapaActionLogEntity, SafetyPlanItemEntity, SafetyTaskEntity, SafetyTaskParticipantEntity,

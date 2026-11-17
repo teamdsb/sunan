@@ -1,5 +1,6 @@
 import fontkit from '@pdf-lib/fontkit';
-import { PDFDocument, PDFPage, rgb } from 'pdf-lib';
+import { PDFDocument, PDFPage } from 'pdf-lib';
+import { EXPORT_PDF_THEME } from 'src/common/export/export-theme';
 import { createChinesePdfFont } from 'src/common/pdf/chinese-pdf-font';
 
 export interface ReportPdfColumn {
@@ -23,14 +24,14 @@ export interface ReportPdfInput {
   }>;
 }
 const colors = {
-  navy: rgb(0.055, 0.149, 0.247),
-  blue: rgb(0.086, 0.376, 0.843),
-  muted: rgb(0.36, 0.43, 0.53),
-  line: rgb(0.84, 0.88, 0.94),
-  pale: rgb(0.94, 0.97, 1),
-  stripe: rgb(0.975, 0.98, 0.99),
-  white: rgb(1, 1, 1),
-  warning: rgb(0.57, 0.34, 0),
+  navy: EXPORT_PDF_THEME.navy,
+  blue: EXPORT_PDF_THEME.blue,
+  muted: EXPORT_PDF_THEME.muted,
+  line: EXPORT_PDF_THEME.line,
+  pale: EXPORT_PDF_THEME.pale,
+  stripe: EXPORT_PDF_THEME.stripe,
+  white: EXPORT_PDF_THEME.white,
+  warning: EXPORT_PDF_THEME.warningText,
 };
 const brand = '苏南船舶管理平台 · 工作平台报表';
 export async function businessReportPdf(input: ReportPdfInput) {

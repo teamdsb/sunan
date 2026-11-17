@@ -17,6 +17,21 @@ import {
   OAUTH_PERMISSION_VERSION_STORAGE_KEY,
 } from '../features/auth/oauth';
 
+const mockCurrentUserResponse = vi.hoisted(() => ({
+  data: {
+    userId: 'u1',
+    name: '张三',
+    department: ['总经办'],
+    roles: ['all_authenticated'],
+  },
+}));
+
+vi.mock('../features/auth/authApi', () => ({
+  useGetCurrentUserQuery: () => ({
+    data: mockCurrentUserResponse,
+  }),
+}));
+
 vi.mock('../features/ui/MyHomePage', () => ({
   MyHomePage: () => <div>MY_HOME</div>,
 }));

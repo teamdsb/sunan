@@ -145,6 +145,7 @@ services:
       labels:
         org.opencontainers.image.version: ${SUNAN_VERSION:-0.0.8}
       args:
+        SUNAN_WEB_BUILD_TARGET: production
         VITE_API_BASE_URL: https://api.qzssncb.com/api/v1
         VITE_WECOM_CORP_ID: ${WECOM_CORP_ID}
         VITE_WECOM_AGENT_ID: ${WECOM_AGENT_ID}

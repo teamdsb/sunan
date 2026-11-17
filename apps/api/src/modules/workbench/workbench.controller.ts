@@ -4,7 +4,6 @@ import { CurrentUserDecorator } from 'src/common/decorators/current-user.decorat
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { WorkbenchAttendanceExportQueryDto } from './dto/workbench-attendance-export-query.dto';
-import { WorkbenchAttendanceReconcileDto } from './dto/workbench-attendance-reconcile.dto';
 import { WorkbenchRecordActionDto } from './dto/workbench-record-action.dto';
 import { WorkbenchRecordCreateDto } from './dto/workbench-record-create.dto';
 import { WorkbenchRecordListQueryDto } from './dto/workbench-record-list-query.dto';
@@ -61,12 +60,6 @@ export class WorkbenchController {
   @Get('export-jobs/:jobId/download-url')
   async getExportDownloadUrl(@Param('jobId') jobId: string, @CurrentUserDecorator() user: CurrentUser) {
     return { data: await this.service.getExportDownloadUrl(jobId, user) };
-  }
-
-  @Post('statistics/attendance/reconcile')
-  @HttpCode(202)
-  async reconcileAttendance(@Body() dto: WorkbenchAttendanceReconcileDto, @CurrentUserDecorator() user: CurrentUser) {
-    return { data: await this.service.reconcileAttendanceStatistics(dto, user) };
   }
 
   @Get('learning/people')

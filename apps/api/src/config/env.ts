@@ -95,6 +95,7 @@ const insecureProductionValues = new Set([
   'postgres',
   '01234567890123456789012345678901',
   'ww-test-corp',
+  'ww1234567890',
   'test-agent-secret',
   'test-settings-encryption-key',
   'test-callback-token',

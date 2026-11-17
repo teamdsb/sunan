@@ -1,0 +1,1010 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx (10 tests | 2 failed) 510ms
+   ✓ InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window  330ms
+   ✓ InspectionCapaPages > renders inspection loading, empty and source-backed issue drill-down states 49ms
+   ✓ InspectionCapaPages > shows a safe error state without inspection data 6ms
+   ✓ InspectionCapaPages > does not render a fake source link when the backend has no source URL 10ms
+   ✓ InspectionCapaPages > keeps a read-only inspection free of result and signing controls 9ms
+   ✓ InspectionCapaPages > shows only verifier actions on a CAPA awaiting verification 33ms
+   ✓ InspectionCapaPages > shows action submission only to the responsible member 29ms
+   ✓ InspectionCapaPages > does not render safety template creation to a member without safety management permission 7ms
+   × InspectionCapaPages > previews saved inspection evidence and signatures through the inspection download route 17ms
+     → Unable to find an element with the text: 现场证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m检查执行[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"ant-tag css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [0msubmitted[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m救生设备[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   × InspectionCapaPages > lets a verifier inspect submitted CAPA photos through the action download route 20ms
+     → Unable to find an element with the text: 整改证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m证据复核[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-descriptions css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-descriptions-view"[39m
+        [36m>[39m
+          [36m<table>[39m
+            [36m<tbody>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m类型[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0minspection[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m等级[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"ant-tag ant-tag-orange css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [0mminor[0m
+                      [36m</span>[39m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m状态[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0mpending_verification[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m来源[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m/>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+            [36m</tbody>[39m
+          [36m</table>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0mCAPA · pending_verification[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [0m验证人：[0m
+                [0mverifier[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+            [33mstyle[39m=[32m"width: 100%;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-space-item"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-card-head-title"[39m
+                    [36m>[39m
+                      [0m纠正：更换设备[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+                  [36m>[39m
+                    [0m责任人：[0m
+                    [0mcrew-a[0m
+                    [0m · 状态：[0m
+                    [0maccepted[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m验证与关闭[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small"[39m
+                [33mstyle[39m=[32m"flex-wrap: wrap;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m验证通过[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-dangerous ant-btn-color-dangerous ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m退回返工[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > previews saved inspection evidence and signatures through the inspection download route
+TestingLibraryElementError: Unable to find an element with the text: 现场证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m检查执行[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"ant-tag css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [0msubmitted[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m救生设备[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx:259:19
+    257|     } }, isLoading: false, isError: false });
+    258|     render(<MemoryRouter initialEntries={['/inspections/inspection-1']…
+    259|     expect(screen.getByText('现场证据.jpg')).toBeInTheDocument();
+       |                   ^
+    260|     expect(screen.getByText('签认照片.jpg')).toBeInTheDocument();
+    261|     fireEvent.click(screen.getAllByRole('button', { name: '预览' })[0]!);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > lets a verifier inspect submitted CAPA photos through the action download route
+TestingLibraryElementError: Unable to find an element with the text: 整改证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m证据复核[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-descriptions css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-descriptions-view"[39m
+        [36m>[39m
+          [36m<table>[39m
+            [36m<tbody>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m类型[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0minspection[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m等级[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"ant-tag ant-tag-orange css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [0mminor[0m
+                      [36m</span>[39m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m状态[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0mpending_verification[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m来源[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m/>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+            [36m</tbody>[39m
+          [36m</table>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0mCAPA · pending_verification[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [0m验证人：[0m
+                [0mverifier[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+            [33mstyle[39m=[32m"width: 100%;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-space-item"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-card-head-title"[39m
+                    [36m>[39m
+                      [0m纠正：更换设备[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+                  [36m>[39m
+                    [0m责任人：[0m
+                    [0mcrew-a[0m
+                    [0m · 状态：[0m
+                    [0maccepted[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m验证与关闭[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small"[39m
+                [33mstyle[39m=[32m"flex-wrap: wrap;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m验证通过[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-dangerous ant-btn-color-dangerous ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m退回返工[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx:276:19
+    274|     } }, isLoading: false, isError: false });
+    275|     render(<MemoryRouter initialEntries={['/issues/issue-1']}><Routes>…
+    276|     expect(screen.getByText('整改证据.jpg')).toBeInTheDocument();
+       |                   ^
+    277|     fireEvent.click(screen.getByRole('button', { name: '预览' }));
+    278|     await waitFor(() => expect(getCapaDownloadUrl).toHaveBeenCalledWit…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  19:49:07
+   Duration  2.20s (transform 109ms, setup 68ms, collect 1.03s, tests 510ms, environment 403ms, prepare 44ms)
+
+undefined
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/features/workbench/InspectionCapaPages.test.tsx

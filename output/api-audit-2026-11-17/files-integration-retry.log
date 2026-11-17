@@ -1,0 +1,25 @@
+[Nest] 25823  - 11/17/2026, 8:36:06 PM   ERROR [FilesService] OSS recycle failed for 9d70afe3-56df-4b05-80de-97b967bdc1cf; queued for retry
+PASS test/files.integration.spec.ts (8.012 s)
+  FilesController integration
+    ✓ completes presign -> callback flow (64 ms)
+    ✓ rejects oversize files (3 ms)
+    ✓ presigns procurement and workbench attachment categories (4 ms)
+    ✓ returns upload limits before selection and normalizes an empty mime type (8 ms)
+    ✓ returns download url for saved file (15 ms)
+    ✓ returns 404 for unknown oss key (3 ms)
+    ✓ uploads image via wecom media relay (4 ms)
+    ✓ retains files for 24 hours and retries failed OSS cleanup from the durable queue (46 ms)
+    ✓ rejects an old callback waiting for a recycling transaction to commit (21 ms)
+    ✓ protects shared and audit references, including rebinding during retention (29 ms)
+    ✓ does not let a full failed batch starve an untouched recycle job (308 ms)
+    ✓ does not permit a reference to be inserted after physical cleanup has begun (10 ms)
+    ✓ lets an authorized department manager unlink another uploader file while preserving shared references (48 ms)
+    ✓ replaces and removes profile attachments transactionally (34 ms)
+    ✓ replaces and removes policy attachments transactionally (39 ms)
+    ✓ allows simultaneous cross-record attachment swaps (27 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        8.063 s
+Ran all test suites matching /test\/files.integration.spec.ts/i.

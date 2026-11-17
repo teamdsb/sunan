@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, IsNull, Repository } from 'typeorm';
+import { Brackets, FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { OfficeCategoryEntity } from 'src/database/entities/office-category.entity';
 import { OfficeEntryAuditEntity } from 'src/database/entities/office-entry-audit.entity';
@@ -100,13 +100,18 @@ export class OfficeService {
     const pageSize = query.pageSize ?? 20;
     const skip = (page - 1) * pageSize;
 
-    const where: {
-      entryId?: string;
-      action?: 'create' | 'update' | 'publish' | 'disable' | 'delete' | 'open';
-      operatorUserId?: string;
-    } = {};
+    const isSystemAdmin = user.roles.includes('system_admin');
+    const entries = await this.entryRepository.find({
+      where: {
+        ...(query.entryId ? { id: query.entryId } : {}),
+        ...(!isSystemAdmin ? { categoryCode: In(this.getManageableCategoryCodes(user)) } : {}),
+      },
+      withDeleted: true,
+    });
+    const where: FindOptionsWhere<OfficeEntryAuditEntity> = {
+      entryId: In(entries.map((entry) => entry.id)),
+    };
 
-    if (query.entryId) where.entryId = query.entryId;
     if (query.action) where.action = query.action;
     if (query.operatorUserId) where.operatorUserId = query.operatorUserId;
 
@@ -118,15 +123,7 @@ export class OfficeService {
     });
 
     const manageable = new Set(this.getManageableCategoryCodes(user));
-    const entryIds = [...new Set(audits.map((audit) => audit.entryId))];
-    const entries = entryIds.length
-      ? await this.entryRepository.find({
-          where: { id: In(entryIds), deletedAt: IsNull() },
-        })
-      : [];
-
     const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
-    const isSystemAdmin = user.roles.includes('system_admin');
     const filtered = audits.filter((audit) => {
       const entry = entryMap.get(audit.entryId);
       if (!entry) return false;

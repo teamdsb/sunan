@@ -1,0 +1,23 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+stderr | src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/workbench/InspectionCapaPages.test.tsx (10 tests) 3525ms
+   ✓ InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window  1779ms
+   ✓ InspectionCapaPages > previews saved inspection evidence and signatures through the inspection download route  346ms
+   ✓ InspectionCapaPages > lets a verifier inspect submitted CAPA photos through the action download route  621ms
+ ✓ src/features/files/FileUploadField.test.tsx (7 tests) 2969ms
+   ✓ FileUploadField > invokes uploadFile when a file is selected  896ms
+   ✓ FileUploadField > invokes wecom upload when capture is enabled  371ms
+   ✓ FileUploadField > previews the current file  417ms
+   ✓ FileUploadField > downloads the current file through the existing signed URL  330ms
+   ✓ FileUploadField > keeps a retry path after native upload fails  568ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  19:51:45
+   Duration  10.71s (transform 742ms, setup 715ms, collect 8.83s, tests 6.49s, environment 3.19s, prepare 308ms)
+

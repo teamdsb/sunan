@@ -1,0 +1,202 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e7]:
+    - banner [ref=f2e8]:
+      - heading "苏南船舶管理" [level=1] [ref=f2e15]
+      - generic [ref=f2e16]:
+        - generic [ref=f2e18]:
+          - generic [ref=f2e19]: 合
+          - generic [ref=f2e23]:
+            - strong [ref=f2e25]: 合成管理员
+            - generic [ref=f2e26]: 总经办 / 系统管理员
+        - button "reload 重新认证" [ref=f2e28] [cursor=pointer]:
+          - img "reload" [ref=f2e30]
+          - generic [ref=f2e33]: 重新认证
+    - generic [ref=f2e34]:
+      - complementary "桌面模块导航" [ref=f2e35]:
+        - generic [ref=f2e36]:
+          - generic [ref=f2e37]: 模块导航
+          - button "收起左侧导航" [ref=f2e38] [cursor=pointer]:
+            - img "double-left" [ref=f2e40]
+        - navigation [ref=f2e43]:
+          - generic [ref=f2e44]:
+            - button "我的" [expanded] [ref=f2e45] [cursor=pointer]
+            - generic [ref=f2e53]:
+              - button "我的首页" [ref=f2e54] [cursor=pointer]
+              - button "企业资料" [ref=f2e57] [cursor=pointer]
+              - button "企业制度" [ref=f2e60] [cursor=pointer]
+              - button "电子证照" [ref=f2e63] [cursor=pointer]
+              - button "证书提醒" [ref=f2e66] [cursor=pointer]
+              - button "证书对象" [ref=f2e69] [cursor=pointer]
+              - button "船舶监控" [ref=f2e72] [cursor=pointer]
+              - button "设置" [ref=f2e75] [cursor=pointer]
+          - button "办事中心" [ref=f2e79] [cursor=pointer]
+          - button "采购管理" [ref=f2e88] [cursor=pointer]
+          - button "工作平台" [ref=f2e97] [cursor=pointer]
+      - main [ref=f2e105]:
+        - generic [ref=f2e107]:
+          - generic [ref=f2e109]:
+            - generic [ref=f2e110]:
+              - heading "用户管理" [level=2] [ref=f2e111]
+              - generic [ref=f2e112]: 管理企业微信成员的平台部门、业务角色和平台状态。管理员资格仍由 env 提供。
+            - generic [ref=f2e114]:
+              - button "reload 刷新" [ref=f2e116] [cursor=pointer]:
+                - img "reload" [ref=f2e118]
+                - generic [ref=f2e121]: 刷新
+              - button "sync 同步通讯录" [ref=f2e123] [cursor=pointer]:
+                - img "sync" [ref=f2e239]
+                - generic [ref=f2e128]: 同步通讯录
+          - alert [ref=f2e130]:
+            - img "exclamation-circle" [ref=f2e131]
+            - generic [ref=f2e134]:
+              - generic [ref=f2e135]: 当前覆盖范围未验证
+              - generic [ref=f2e136]: 用户范围受主应用企业微信可见范围限制，完整性未验证
+          - alert [ref=f2e338]:
+            - img "sync" [ref=f2e339]
+            - generic [ref=f2e342]:
+              - generic [ref=f2e343]: 同步正常
+              - generic [ref=f2e344]: 读取 3，新增 2，更新 1，失败 0。当前仅覆盖主应用可见范围，完整性未验证；名单缺失不视为离职
+          - generic [ref=f2e140]:
+            - generic [ref=f2e142]:
+              - generic [ref=f2e144]:
+                - img "search" [ref=f2e146]
+                - textbox "搜索姓名或 UserID" [ref=f2e149]
+              - generic [ref=f2e154] [cursor=pointer]:
+                - combobox [ref=f2e156]
+                - generic: 有效部门
+              - generic [ref=f2e160] [cursor=pointer]:
+                - combobox [ref=f2e162]
+                - generic: 业务角色
+              - generic [ref=f2e166] [cursor=pointer]:
+                - combobox [ref=f2e168]
+                - generic: 平台状态
+              - generic [ref=f2e172] [cursor=pointer]:
+                - combobox [ref=f2e174]
+                - generic: 登录状态
+            - generic [ref=f2e176]:
+              - switch [ref=f2e178] [cursor=pointer]
+              - generic [ref=f2e181]: 仅看 env 管理员
+              - switch [ref=f2e183] [cursor=pointer]
+              - generic [ref=f2e186]: 仅看人工覆盖
+          - generic [ref=f2e189]:
+            - list [ref=f2e193]:
+              - listitem [ref=f2e242]:
+                - generic [ref=f2e243]:
+                  - img "user" [ref=f2e246]
+                  - generic [ref=f2e249]:
+                    - heading [level=4] [ref=f2e250]:
+                      - strong [ref=f2e254]: 合成未登录船员
+                    - generic [ref=f2e256]:
+                      - generic [ref=f2e257]: w5-member
+                      - generic [ref=f2e258]: 来源：船员
+                      - generic [ref=f2e260]: 生效：船员
+                      - generic [ref=f2e262]: all_authenticated、船员
+                      - generic [ref=f2e263]: 已启用
+                      - generic [ref=f2e265]: 未登录或未知
+                - list [ref=f2e267]:
+                  - listitem [ref=f2e268]:
+                    - button "查看详情" [ref=f2e269] [cursor=pointer]
+              - listitem [ref=f2e271]:
+                - generic [ref=f2e272]:
+                  - img "user" [ref=f2e275]
+                  - generic [ref=f2e278]:
+                    - heading "合成管理员 env 管理员" [level=4] [ref=f2e279]:
+                      - generic [ref=f2e280]:
+                        - strong [ref=f2e283]: 合成管理员
+                        - generic [ref=f2e284]: env 管理员
+                    - generic [ref=f2e287]:
+                      - generic [ref=f2e288]: w5-admin
+                      - generic [ref=f2e289]: 来源：总经办
+                      - generic [ref=f2e291]: 生效：总经办
+                      - generic [ref=f2e293]: all_authenticated、总经办、系统管理员
+                      - generic [ref=f2e294]: 已启用
+                      - generic [ref=f2e296]: 已登录
+                - list [ref=f2e298]:
+                  - listitem [ref=f2e299]:
+                    - button "查看详情" [ref=f2e300] [cursor=pointer]
+              - listitem [ref=f2e302]:
+                - generic [ref=f2e303]:
+                  - img "user" [ref=f2e306]
+                  - generic [ref=f2e309]:
+                    - heading [level=4] [ref=f2e310]:
+                      - strong [ref=f2e314]: 合成船务成员
+                    - generic [ref=f2e316]:
+                      - generic [ref=f2e317]: w5-shipping
+                      - generic [ref=f2e318]: 来源：船务部
+                      - generic [ref=f2e320]: 生效：船务部
+                      - generic [ref=f2e322]: all_authenticated、船务
+                      - generic [ref=f2e323]: 已启用
+                      - generic [ref=f2e325]: 未登录或未知
+                - list [ref=f2e327]:
+                  - listitem [ref=f2e328]:
+                    - button "查看详情" [ref=f2e329] [cursor=pointer]
+            - list [ref=f2e225]:
+              - listitem "上一页" [ref=f2e226]:
+                - button [disabled] [ref=f2e227]:
+                  - img "left" [ref=f2e228]
+              - listitem "1" [ref=f2e231] [cursor=pointer]
+              - listitem "下一页" [ref=f2e233]:
+                - button [disabled] [ref=f2e234]:
+                  - img "right" [ref=f2e235]
+  - dialog "合成未登录船员 · 用户详情" [ref=f2e346]:
+    - generic [ref=f2e347]:
+      - generic [ref=f2e348]:
+        - button "关闭" [ref=f2e349] [cursor=pointer]:
+          - img "close" [ref=f2e350]
+        - generic [ref=f2e353]: 合成未登录船员 · 用户详情
+      - button "setting 编辑授权" [ref=f2e355] [cursor=pointer]:
+        - img "setting" [ref=f2e357]
+        - generic [ref=f2e360]: 编辑授权
+    - generic [ref=f2e362]:
+      - table [ref=f2e366]:
+        - rowgroup [ref=f2e367]:
+          - row [ref=f2e368]:
+            - rowheader "UserID" [ref=f2e369]
+            - cell "w5-member" [ref=f2e370]
+          - row [ref=f2e371]:
+            - rowheader "来源状态" [ref=f2e372]
+            - cell "正常" [ref=f2e373]
+          - row [ref=f2e376]:
+            - rowheader "来源部门" [ref=f2e377]
+            - cell "船员" [ref=f2e378]
+          - row [ref=f2e379]:
+            - rowheader "来源职位" [ref=f2e380]
+            - cell "船长" [ref=f2e381]
+          - row [ref=f2e382]:
+            - rowheader "上次登录" [ref=f2e383]
+            - cell "未知" [ref=f2e384]
+          - row [ref=f2e385]:
+            - rowheader "上次同步" [ref=f2e386]
+            - cell "2026/11/17 19:52:29" [ref=f2e387]
+      - generic [ref=f2e389]:
+        - generic [ref=f2e390]: 平台设置
+        - table [ref=f2e396]:
+          - rowgroup [ref=f2e397]:
+            - row [ref=f2e398]:
+              - 'cell "部门模式 : 跟随企业微信" [ref=f2e399]':
+                - generic [ref=f2e400]:
+                  - generic [ref=f2e401]: "部门模式 :"
+                  - generic [ref=f2e402]: 跟随企业微信
+            - row [ref=f2e403]:
+              - 'cell "角色模式 : 自动计算" [ref=f2e404]':
+                - generic [ref=f2e405]:
+                  - generic [ref=f2e406]: "角色模式 :"
+                  - generic [ref=f2e407]: 自动计算
+            - row [ref=f2e408]:
+              - 'cell "平台状态 : 已启用" [ref=f2e409]':
+                - generic [ref=f2e410]:
+                  - generic [ref=f2e411]: "平台状态 :"
+                  - generic [ref=f2e412]: 已启用
+            - row [ref=f2e413]:
+              - 'cell "授权版本 : 1" [ref=f2e414]':
+                - generic [ref=f2e415]:
+                  - generic [ref=f2e416]: "授权版本 :"
+                  - generic [ref=f2e417]: "1"
+      - generic [ref=f2e419]:
+        - generic [ref=f2e420]: 当前生效
+        - generic [ref=f2e424]:
+          - generic [ref=f2e425]: 部门：船员
+          - generic [ref=f2e427]: 角色：all_authenticated、船员
+          - generic [ref=f2e429]: 可用：是
+      - generic [ref=f2e432]:
+        - generic [ref=f2e433]: 变更历史
+        - generic [ref=f2e436]: 暂无变更记录

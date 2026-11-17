@@ -108,7 +108,7 @@ export class AuthService {
       } satisfies JwtPayload),
       expiresIn: 7200,
       privateInfoAuthorized: sensitiveDetail !== null,
-      user: this.authorizationService.toAuthenticatedUser(savedUser),
+      user: await this.authorizationService.toAuthenticatedUser(savedUser),
     };
   }
 
@@ -138,7 +138,7 @@ export class AuthService {
     if (payload.corpId !== appEnv.WECOM_CORP_ID) {
       throw new UnauthorizedException('用户不属于当前企业');
     }
-    const currentUser = this.authorizationService.toAuthenticatedUser(user);
+    const currentUser = await this.authorizationService.toAuthenticatedUser(user);
 
     return {
       accessToken: await this.jwtService.signAsync({
@@ -163,7 +163,7 @@ export class AuthService {
     return this.authorizationService.toCurrentUser(user);
   }
 
-  toAuthenticatedUser(user: WecomUserEntity): AuthenticatedUserResponse {
+  toAuthenticatedUser(user: WecomUserEntity): Promise<AuthenticatedUserResponse> {
     return this.authorizationService.toAuthenticatedUser(user);
   }
 

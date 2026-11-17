@@ -36,6 +36,10 @@ describe('business export formats', () => {
     const detail = book.getWorksheet('考勤明细')!;
     expect(detail.getCell('A1').value).toContain('2026-09');
     expect(detail.getCell('A5').font.bold).toBe(true);
+    expect(detail.getCell('A5').fill).toMatchObject({
+      fgColor: { argb: '0E263F' },
+    });
+    expect(detail.getCell('A5').font.name).toBe('微软雅黑');
     expect(detail.views[0]).toMatchObject({
       state: 'frozen',
       ySplit: 5,

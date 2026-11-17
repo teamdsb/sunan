@@ -17,7 +17,6 @@ import Typography from 'antd/es/typography';
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { refetchCurrentUserOnce } from '../app/baseApi';
 import { useGetCurrentUserQuery } from '../features/auth/authApi';
 import { logout, setCurrentUser } from '../features/auth/authSlice';
 import { redirectToOAuth } from '../features/auth/oauth';
@@ -58,7 +57,7 @@ export function AppShell() {
     skip: !token,
     refetchOnFocus: true,
     refetchOnReconnect: true,
-    refetchOnMountOrArgChange: true,
+    refetchOnMountOrArgChange: 300,
   });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -86,22 +85,6 @@ export function AppShell() {
       dispatch(setCurrentUser(currentUserQuery.data.data));
     }
   }, [currentUserQuery.data, dispatch]);
-
-  useEffect(() => {
-    if (!token) return undefined;
-    const refreshIdentity = () => {
-      if (document.visibilityState === 'visible' && typeof currentUserQuery.refetch === 'function') {
-        void refetchCurrentUserOnce(currentUserQuery.refetch);
-      }
-    };
-    refreshIdentity();
-    window.addEventListener('focus', refreshIdentity);
-    document.addEventListener('visibilitychange', refreshIdentity);
-    return () => {
-      window.removeEventListener('focus', refreshIdentity);
-      document.removeEventListener('visibilitychange', refreshIdentity);
-    };
-  }, [currentUserQuery.refetch, location.pathname, token]);
 
   const reauthorize = () => {
     dispatch(logout());
@@ -164,9 +147,11 @@ export function AppShell() {
               />
             ) : null}
             <div className="shell-mobile-brand">
-              <span className="shell-brand-mark" aria-hidden="true">
-                <ProjectOutlined />
-              </span>
+              {!isSelfInspection ? (
+                <span className="shell-brand-mark">
+                  <img className="shell-brand-logo" src="/assets/sunan-logo.png" alt="苏南船舶管理 Logo" />
+                </span>
+              ) : null}
               <div>
                 <Typography.Title level={3} className="shell-mobile-page-title">
                   {isSelfInspection ? '船舶自查' : '苏南船舶管理'}
@@ -195,8 +180,8 @@ export function AppShell() {
             </Button>
           </div>
           <div className="shell-brand">
-            <span className="shell-brand-mark" aria-hidden="true">
-              <ProjectOutlined />
+            <span className="shell-brand-mark">
+              <img className="shell-brand-logo" src="/assets/sunan-logo.png" alt="苏南船舶管理 Logo" />
             </span>
             <div>
               <Typography.Title level={1} className="shell-title">

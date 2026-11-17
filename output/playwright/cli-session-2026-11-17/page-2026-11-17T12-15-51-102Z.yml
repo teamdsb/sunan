@@ -1,0 +1,170 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e7]:
+    - banner [ref=f1e8]:
+      - heading "苏南船舶管理" [level=1] [ref=f1e15]
+      - generic [ref=f1e16]:
+        - generic [ref=f1e18]:
+          - generic [ref=f1e19]: 合
+          - generic [ref=f1e23]:
+            - strong [ref=f1e25]: 合成管理员
+            - generic [ref=f1e26]: 总经办 / 系统管理员
+        - button "reload 重新认证" [ref=f1e28] [cursor=pointer]:
+          - img "reload" [ref=f1e30]
+          - generic [ref=f1e33]: 重新认证
+    - generic [ref=f1e34]:
+      - complementary "桌面模块导航" [ref=f1e35]:
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]: 模块导航
+          - button "收起左侧导航" [ref=f1e38] [cursor=pointer]:
+            - img "double-left" [ref=f1e40]
+        - navigation [ref=f1e43]:
+          - button "我的" [ref=f1e45] [cursor=pointer]
+          - button "办事中心" [ref=f1e54] [cursor=pointer]
+          - button "采购管理" [ref=f1e63] [cursor=pointer]
+          - generic [ref=f1e71]:
+            - button "工作平台" [expanded] [ref=f1e72] [cursor=pointer]
+            - generic [ref=f1e80]:
+              - button "工作平台首页" [ref=f1e81] [cursor=pointer]
+              - button "海图更新" [ref=f1e84] [cursor=pointer]
+              - button "签到台" [ref=f1e87] [cursor=pointer]
+              - button "燃油加注审批" [ref=f1e90] [cursor=pointer]
+              - button "考勤统计" [ref=f1e93] [cursor=pointer]
+              - button "审批看板" [ref=f1e96] [cursor=pointer]
+      - main [ref=f1e99]:
+        - generic [ref=f1e100]:
+          - generic [ref=f1e101]:
+            - heading "模块工作台" [level=2] [ref=f1e102]
+            - generic [ref=f1e103]: 按模块查看记录、详情、打印能力与审批动作。
+          - generic [ref=f1e104]:
+            - button "返回工作台首页" [ref=f1e106] [cursor=pointer]
+            - button "考勤统计" [ref=f1e109] [cursor=pointer]
+            - button "审批看板" [ref=f1e112] [cursor=pointer]
+        - generic [ref=f1e114]:
+          - article [ref=f1e115]:
+            - generic [ref=f1e116]:
+              - generic [ref=f1e117]: 当前待办
+              - generic [ref=f1e118]: "0"
+            - generic [ref=f1e120]: 暂无进行中记录
+          - article [ref=f1e121]:
+            - generic [ref=f1e122]:
+              - generic [ref=f1e123]: 待审批
+              - generic [ref=f1e124]: "0"
+            - generic [ref=f1e126]: 当前无待审批
+          - article [ref=f1e127]:
+            - generic [ref=f1e128]:
+              - generic [ref=f1e129]: 活跃模块
+              - generic [ref=f1e130]: "40"
+            - generic [ref=f1e132]: 实时模块入口
+          - article [ref=f1e133]:
+            - generic [ref=f1e134]:
+              - generic [ref=f1e135]: 本页记录
+              - generic [ref=f1e136]: "0"
+            - generic [ref=f1e138]: 暂无记录
+        - generic [ref=f1e139]:
+          - generic [ref=f1e140]:
+            - generic [ref=f1e141]:
+              - generic [ref=f1e142]:
+                - heading "任务看板" [level=2] [ref=f1e143]
+                - generic [ref=f1e144]: 40 个模块
+              - button "展开任务看板" [ref=f1e145] [cursor=pointer]:
+                - img "down" [ref=f1e147]
+              - generic [ref=f1e150]: 按流程阶段拖拽管理
+            - generic [ref=f1e151]:
+              - article [ref=f1e152]:
+                - generic [ref=f1e153]:
+                  - heading "后勤部食堂管理" [level=4] [ref=f1e154]
+                  - generic [ref=f1e155]: 后勤部 · 待办 0
+                - generic [ref=f1e156]: 资产服务
+                - button "已选中" [ref=f1e159] [cursor=pointer]
+              - article [ref=f1e161]:
+                - generic [ref=f1e162]:
+                  - heading "总经办培训管理" [level=4] [ref=f1e163]
+                  - generic [ref=f1e164]: 总经办 · 待办 0
+                - generic [ref=f1e165]:
+                  - generic [ref=f1e166]: 台账表单
+                  - generic [ref=f1e168]: 企业微信审批
+                - button "查看记录" [ref=f1e170] [cursor=pointer]
+              - article [ref=f1e172]:
+                - generic [ref=f1e173]:
+                  - heading "总经办会议管理" [level=4] [ref=f1e174]
+                  - generic [ref=f1e175]: 总经办 · 待办 0
+                - generic [ref=f1e176]: 台账表单
+                - button "查看记录" [ref=f1e179] [cursor=pointer]
+              - article [ref=f1e181]:
+                - generic [ref=f1e182]:
+                  - heading "总经办安全月活动" [level=4] [ref=f1e183]
+                  - generic [ref=f1e184]: 总经办 · 待办 0
+                - generic [ref=f1e185]: 台账表单
+                - button "查看记录" [ref=f1e188] [cursor=pointer]
+          - complementary [ref=f1e190]:
+            - region "最近记录" [ref=f1e191]:
+              - generic [ref=f1e192]:
+                - heading "最近记录" [level=2] [ref=f1e193]
+                - generic [ref=f1e194]: 0 项
+              - generic [ref=f1e196]:
+                - img "暂无数据" [ref=f1e198]
+                - generic [ref=f1e204]: 暂无最近记录
+            - region "待优先处理" [ref=f1e205]:
+              - generic [ref=f1e206]:
+                - heading "待优先处理" [level=2] [ref=f1e207]
+                - generic [ref=f1e208]: 0 项
+              - generic [ref=f1e210]:
+                - img "暂无数据" [ref=f1e212]
+                - generic [ref=f1e218]: 暂无待优先处理项
+        - generic [ref=f1e222]:
+          - generic [ref=f1e224]:
+            - heading "模块记录：后勤部食堂管理" [level=4] [ref=f1e226]
+            - button "新建资产服务记录" [ref=f1e228] [cursor=pointer]
+          - table [ref=f1e237]:
+            - rowgroup [ref=f1e238]:
+              - row [ref=f1e239]:
+                - cell "暂无记录" [ref=f1e240]
+  - dialog "新建资产服务记录 - 后勤部食堂管理" [ref=f1e242]:
+    - generic [ref=f1e243]:
+      - generic [ref=f1e244]:
+        - button "关闭" [ref=f1e245] [cursor=pointer]:
+          - img "close" [ref=f1e246]
+        - generic [ref=f1e249]: 新建资产服务记录 - 后勤部食堂管理
+      - button "提交" [ref=f1e251] [cursor=pointer]
+    - generic [ref=f1e254]:
+      - generic [ref=f1e256]:
+        - generic "记录标题" [ref=f1e258]: "* 记录标题"
+        - textbox "* 记录标题" [ref=f1e262]:
+          - /placeholder: 输入记录标题
+      - generic [ref=f1e264]:
+        - generic "摘要" [ref=f1e266]: "* 摘要"
+        - textbox "* 摘要" [ref=f1e270]:
+          - /placeholder: 输入摘要说明
+      - generic [ref=f1e272]:
+        - generic "发生时间（可选）" [ref=f1e274]
+        - generic [ref=f1e279]:
+          - textbox "发生时间（可选）" [ref=f1e280]:
+            - /placeholder: 请选择日期
+          - generic:
+            - img "calendar"
+      - generic [ref=f1e282]:
+        - generic "船舶（可选）" [ref=f1e284]
+        - generic [ref=f1e290]:
+          - combobox "船舶（可选）" [ref=f1e292]
+          - generic: 选择船舶
+      - generic [ref=f1e294]:
+        - heading "食堂管理记录" [level=5] [ref=f1e295]
+        - generic [ref=f1e297]:
+          - generic "餐次" [ref=f1e299]: "* 餐次"
+          - textbox "* 餐次" [ref=f1e303]:
+            - /placeholder: 早餐/午餐/晚餐
+        - generic [ref=f1e305]:
+          - generic "就餐人数" [ref=f1e307]: "* 就餐人数"
+          - generic [ref=f1e311]:
+            - generic:
+              - button "Increase Value" [ref=f1e312] [cursor=pointer]:
+                - img "up" [ref=f1e313]
+              - button "Decrease Value" [ref=f1e316] [cursor=pointer]:
+                - img "down" [ref=f1e317]
+            - spinbutton "* 就餐人数" [ref=f1e321]
+        - generic [ref=f1e323]:
+          - generic "食品安全检查" [ref=f1e325]: "* 食品安全检查"
+          - textbox "* 食品安全检查" [ref=f1e329]
+        - generic [ref=f1e331]:
+          - generic "异常说明" [ref=f1e333]
+          - textbox "异常说明" [ref=f1e337]

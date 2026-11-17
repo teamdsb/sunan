@@ -1,0 +1,13 @@
+PASS test/my-office-procurement-contract.integration.spec.ts (37.083 s)
+  My, office and procurement HTTP contracts with real JWT and PostgreSQL
+    ✓ preserves deleted office audit history and paginates inside category scope (2116 ms)
+    ✓ returns profile content to ordinary readers and persists a valid manager update (1438 ms)
+    ✓ allows draft policy edits and file removal, then freezes the published history (2412 ms)
+    ✓ returns actual order and report pending tasks and persisted approval history (2195 ms)
+    ✓ returns the category and remarks needed when reopening master-data editors (365 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        37.301 s
+Ran all test suites matching /test\/my-office-procurement-contract.integration.spec.ts/i.

@@ -54,7 +54,8 @@ export class EnterpriseProfileController {
   async getFileDownloadUrl(
     @Param('id') id: string,
     @Param('fileId') fileId: string,
+    @CurrentUserDecorator() user: CurrentUser,
   ) {
-    return { data: await this.service.getFileDownloadUrl(id, fileId) };
+    return { data: await this.service.getFileDownloadUrl(id, fileId, user) };
   }
 }

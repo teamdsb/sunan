@@ -32,7 +32,6 @@ import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { canManageCompanyContent } from '../auth/permissions';
 import {
   type EnterprisePolicy,
-  useBindEnterprisePolicyFilesMutation,
   useCreateEnterprisePolicyMutation,
   useDeleteEnterprisePolicyMutation,
   useGetEnterprisePoliciesQuery,
@@ -274,7 +273,6 @@ export function EnterprisePolicyDetailPage() {
   const [updatePolicy, { isLoading: saving }] =
     useUpdateEnterprisePolicyMutation();
   const [deletePolicy] = useDeleteEnterprisePolicyMutation();
-  const [bindFiles] = useBindEnterprisePolicyFilesMutation();
   const [getFileDownloadUrl] = useLazyGetEnterprisePolicyFileDownloadUrlQuery();
   const [unbindFile] = useUnbindEnterprisePolicyFileMutation();
   const [uploaded, setUploaded] = useState<FileRecord | null>(null);
@@ -286,16 +284,17 @@ export function EnterprisePolicyDetailPage() {
   }>();
   const policy = data?.data;
   const canManage = policy?.canManage ?? false;
+  const canEditContent = canManage && policy?.status !== 'published' && !policy?.publishedAt;
 
   useEffect(() => {
-    if (policy) {
+    if (policy && canEditContent) {
       form.setFieldsValue({
         title: policy.title,
         summary: policy.summary ?? undefined,
         status: policy.status,
       });
     }
-  }, [policy, form]);
+  }, [policy, form, canEditContent]);
 
   return (
     <section className="page-hero">
@@ -336,6 +335,7 @@ export function EnterprisePolicyDetailPage() {
             column={{ xs: 1, sm: 3 }}
             style={{ marginBottom: 20 }}
           >
+            {!canEditContent ? <Descriptions.Item label="制度标题" span={3}>{policy.title}</Descriptions.Item> : null}
             <Descriptions.Item label="制度编号">
               {policy.policyCode}
             </Descriptions.Item>
@@ -347,20 +347,19 @@ export function EnterprisePolicyDetailPage() {
                 ? formatShanghaiDateTime(policy.publishedAt)
                 : '尚未发布'}
             </Descriptions.Item>
+            {!canEditContent ? <Descriptions.Item label="状态" span={3}>{formatPolicyStatus(policy.status)}</Descriptions.Item> : null}
+            {!canEditContent ? <Descriptions.Item label="摘要" span={3}><span style={{ whiteSpace: 'pre-wrap' }}>{policy.summary || '暂无摘要'}</span></Descriptions.Item> : null}
           </Descriptions>
         ) : null}
-        {canManage ? <Form
+        {canEditContent ? <Form
           form={form}
           layout="vertical"
           onFinish={async (values) => {
             if (!id) return;
             setSaveError(null);
             try {
-              await updatePolicy({ id, data: values }).unwrap();
-              if (uploaded?.id) {
-                await bindFiles({ id, fileIds: [uploaded.id] }).unwrap();
-                setUploaded(null);
-              }
+              await updatePolicy({ id, data: { ...values, ...(uploaded?.id ? { fileIds: [...(policy?.files ?? []).map((file) => file.id), uploaded.id] } : {}) } }).unwrap();
+              setUploaded(null);
             } catch (error) {
               setSaveError(
                 error instanceof Error ? error.message : '保存失败，请稍后重试',
@@ -398,7 +397,16 @@ export function EnterprisePolicyDetailPage() {
               <Button danger>删除</Button>
             </Popconfirm>
           </Space>
-        </Form> : <Alert type="info" showIcon message="你没有维护此企业制度的权限。" />}
+        </Form> : canManage ? <Space wrap className="detail-action-bar">
+          {policy?.status === 'published' ? <Button loading={saving} onClick={async () => {
+            setSaveError(null);
+            try { await updatePolicy({ id, data: { status: 'deprecated' } }).unwrap(); }
+            catch (error) { setSaveError(error instanceof Error ? error.message : '废弃失败，请稍后重试'); }
+          }}>废弃此版本</Button> : null}
+          <Popconfirm title="确定删除此企业制度吗？" description="删除后将从制度列表中移除。" okText="删除" cancelText="取消" onConfirm={async () => { try { await deletePolicy(id).unwrap(); navigate(resolveBackHref(myRouteConfig.enterprisePolicy.path, location.search)); } catch (error) { setSaveError(error instanceof Error ? error.message : '删除失败'); } }}>
+            <Button danger>删除</Button>
+          </Popconfirm>
+        </Space> : null}
 
         {policy ? (
           <>
@@ -407,7 +415,7 @@ export function EnterprisePolicyDetailPage() {
             </Typography.Title>
             <FileAttachmentList
               files={policy.files}
-              allowDelete={canManage}
+              allowDelete={canEditContent}
               onDelete={async (file) => {
                 await unbindFile({ id, fileId: file.id }).unwrap();
               }}

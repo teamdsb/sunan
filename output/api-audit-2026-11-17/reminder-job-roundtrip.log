@@ -1,0 +1,36 @@
+FAIL test/certificate-reminder.integration.spec.ts (9.62 s)
+  ReminderController integration
+    ✓ scopes dashboard, list, and detail to the recipient for non-manager users (74 ms)
+    ✓ limits shipping managers to reminders within their responsibility scope (160 ms)
+    ✓ allows general office users to view reminders they legitimately receive (62 ms)
+    ✓ allows acknowledge for self and same-department management users and rejects repeat acknowledge (66 ms)
+    ✕ restricts manual scan requests to reminder managers (15 ms)
+    ✓ 更新证照立即消除旧待办，并允许同一天为新的到期周期生成提醒 (185 ms)
+    ✓ 扫描期间换证不会被旧快照覆盖，也不会投递旧周期提醒 (14 ms)
+
+  ● ReminderController integration › restricts manual scan requests to reminder managers
+
+    expect(received).toMatchObject(expected)
+
+    Matcher error: received value must be a non-null object
+
+    Received has value: null
+
+      560 |     const status = await request(app.getHttpServer() as Parameters<typeof request>[0])
+      561 |       .get(`/api/v1/certificate-reminders/actions/scan/${jobId}`).set('Authorization', 'Bearer token').expect(200);
+    > 562 |     expect(status.body.data).toMatchObject({ jobId, status: 'queued', source: 'manual' });
+          |                              ^
+      563 |   });
+      564 |   it('更新证照立即消除旧待办，并允许同一天为新的到期周期生成提醒', async () => {
+      565 |     const clock = app.get(ReminderClockService);
+
+      at Object.<anonymous> (test/certificate-reminder.integration.spec.ts:562:30)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 6 passed, 7 total
+Snapshots:   0 total
+Time:        9.663 s, estimated 10 s
+Ran all test suites matching /test\/certificate-reminder.integration.spec.ts/i.
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/certificate-reminder.integration.spec.ts

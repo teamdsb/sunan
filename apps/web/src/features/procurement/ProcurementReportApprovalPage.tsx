@@ -81,8 +81,8 @@ export function ProcurementReportApprovalPage() {
       task: ProcurementPendingTask,
       action: 'approve' | 'reject' | 'return',
     ) => {
-      const comment =
-        window.prompt(`请输入审批意见（${actionLabelMap[action]}）`) ?? '';
+      const comment = window.prompt(`请输入审批意见（${actionLabelMap[action]}）`);
+      if (comment === null) return;
       if (action !== 'approve' && !comment.trim()) {
         messageApi.warning('退回和驳回需要审批意见');
         return;

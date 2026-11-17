@@ -29,7 +29,7 @@ export class AuthController {
     data: {
       accessToken: string;
       expiresIn: number;
-      user: ReturnType<AuthService['toAuthenticatedUser']>;
+      user: Awaited<ReturnType<AuthService['toAuthenticatedUser']>>;
     };
   }> {
     const result = await this.authService.exchangeCode(query.code);
@@ -42,7 +42,7 @@ export class AuthController {
     data: {
       accessToken: string;
       expiresIn: number;
-      user: ReturnType<AuthService['toAuthenticatedUser']>;
+      user: Awaited<ReturnType<AuthService['toAuthenticatedUser']>>;
     };
   }> {
     const token = authorization?.replace(/^Bearer\s+/i, '').trim();
@@ -58,7 +58,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getMe(
     @CurrentUserDecorator() currentUser: CurrentUser,
-  ): Promise<{ data: ReturnType<AuthService['toAuthenticatedUser']> }> {
+  ): Promise<{ data: Awaited<ReturnType<AuthService['toAuthenticatedUser']>> }> {
     const result = await this.authService.getCurrentUser(currentUser.userId);
     return {
       data: {

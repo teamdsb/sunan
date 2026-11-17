@@ -41,6 +41,7 @@ describe('ReminderDetailPage', () => {
           recipientUserId: 'shipping-employee',
           reminderType: 'overdue',
           status: 'pending',
+          canAcknowledge: true,
           scheduledDate: '2026-03-28',
           daysBeforeExpiry: -1,
           sentAt: '2026-03-28T01:00:00+08:00',
@@ -113,6 +114,8 @@ describe('ReminderDetailPage', () => {
       userId: 'external-user',
       roles: ['all_authenticated'],
     });
+    const state = mockDetail();
+    mockDetail.mockReturnValue({ ...state, data: { data: { ...state.data.data, canAcknowledge: false } } });
 
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/my/reminders/r1']}>
@@ -123,6 +126,22 @@ describe('ReminderDetailPage', () => {
     );
 
     expect(screen.queryByRole('button', { name: /确认提醒/ })).toBeNull();
+  });
+
+  it('uses a server denial even for a shipping management role', () => {
+    mockCurrentUser.mockReturnValue({ userId: 'shipping-manager', roles: ['all_authenticated', 'shipping'] });
+    const state = mockDetail();
+    mockDetail.mockReturnValue({ ...state, data: { data: { ...state.data.data, canAcknowledge: false } } });
+    render(<MemoryRouter initialEntries={['/my/reminders/r1']}><Routes><Route path="/my/reminders/:id" element={<ReminderDetailPage />} /></Routes></MemoryRouter>);
+    expect(screen.queryByRole('button', { name: /确认提醒/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the action for a personnel department manager allowed by the server', () => {
+    mockCurrentUser.mockReturnValue({ userId: 'personnel-manager', roles: ['all_authenticated'] });
+    const state = mockDetail();
+    mockDetail.mockReturnValue({ ...state, data: { data: { ...state.data.data, ownerType: 'personnel', canAcknowledge: true } } });
+    render(<MemoryRouter initialEntries={['/my/reminders/r1']}><Routes><Route path="/my/reminders/:id" element={<ReminderDetailPage />} /></Routes></MemoryRouter>);
+    expect(screen.getByRole('button', { name: /确认提醒/ })).toBeInTheDocument();
   });
 
   it('shows the server state after a 409 conflict', async () => {

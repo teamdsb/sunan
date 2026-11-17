@@ -184,7 +184,7 @@ describe('MyHomePage', () => {
     );
   });
 
-  it('does not count overdue pending reminders twice', () => {
+  it('counts the separate upcoming and overdue dashboard buckets once each', () => {
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -193,15 +193,26 @@ describe('MyHomePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('4 条需复核')).toBeInTheDocument();
-    expect(screen.queryByText('5 条需复核')).toBeNull();
+    expect(screen.getByText('5 条需复核')).toBeInTheDocument();
     expect(screen.getByText('当前待办')).toBeInTheDocument();
     expect(mockReminderList).toHaveBeenCalledWith({
       page: 1,
       pageSize: 5,
       reminderType: 'overdue',
-      status: 'pending',
     });
+  });
+
+  it.each(['pending', 'sent', 'failed', 'dispatching', 'uncertain'])('shows overdue-only %s reminders as active warnings', (status) => {
+    const dashboard = mockReminderDashboard();
+    mockReminderDashboard.mockReturnValue({ ...dashboard, data: { data: { ...dashboard.data.data, totalPending: 0, totalOverdue: 1 } } });
+    const reminder = { id: 'overdue-active', certificateTitle: '逾期待复核证书', reminderType: 'overdue', status, scheduledDate: '2026-11-16', daysBeforeExpiry: -1 };
+    mockReminderList.mockImplementation((params: { status?: string }) => ({ data: { data: !params.status || params.status === status ? [reminder] : [] }, isLoading: false, isError: false }));
+
+    render(<MemoryRouter><MyHomePage /></MemoryRouter>);
+
+    expect(screen.getByText('1 条需复核')).toBeInTheDocument();
+    expect(screen.getByText('逾期待复核证书')).toBeInTheDocument();
+    expect(mockReminderList).toHaveBeenCalledWith({ page: 1, pageSize: 5 });
   });
 
   it('does not display acknowledged overdue reminders as active warnings', () => {

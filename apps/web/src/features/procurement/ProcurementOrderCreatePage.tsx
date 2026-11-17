@@ -9,6 +9,7 @@ import {
   Typography,
   message,
 } from 'antd';
+import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toShanghaiIso } from '../../utils/dateTime';
@@ -239,7 +240,7 @@ export function ProcurementOrderCreatePage() {
               <InputNumber min={0} precision={2} />
             </Form.Item>
 
-            <Form.Item name="expenseDate" label="费用时间（可选）" getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
+            <Form.Item name="expenseDate" label="费用时间（可选）" getValueProps={(value?: string) => ({ value: value ? dayjs(value) : undefined })} getValueFromEvent={(value) => value?.format('YYYY-MM-DD HH:mm')}>
               <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
             </Form.Item>
 

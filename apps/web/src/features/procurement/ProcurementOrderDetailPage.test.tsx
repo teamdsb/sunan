@@ -36,8 +36,8 @@ vi.mock('../../app/hooks', () => ({
 }));
 
 vi.mock('../files/FileUploadField', () => ({
-  FileUploadField: ({ onChange }: { onChange?: (file: unknown) => void }) => (
-    <button
+  FileUploadField: ({ onChange, value }: { onChange?: (file: unknown) => void; value?: { id: string } | null }) => (
+    <><output data-testid="pending-upload">{value?.id ?? ''}</output><button
       type="button"
       onClick={() =>
         onChange?.({
@@ -53,7 +53,7 @@ vi.mock('../files/FileUploadField', () => ({
       }
     >
       模拟上传附件
-    </button>
+    </button></>
   ),
 }));
 
@@ -225,6 +225,16 @@ describe('ProcurementOrderDetailPage', () => {
         fileIds: ['file-1'],
       });
     });
+  });
+
+  it('clears the temporary upload controls once the attachment is bound', async () => {
+    let finishBinding!: () => void;
+    mockBindAttachments.mockReturnValue({ unwrap: () => new Promise<void>((resolve) => { finishBinding = resolve; }) });
+    render(<ProcurementOrderDetailPage />);
+    fireEvent.click(screen.getByRole('button', { name: '模拟上传附件' }));
+    expect(screen.getByTestId('pending-upload')).toHaveTextContent('file-1');
+    finishBinding();
+    await waitFor(() => expect(screen.getByTestId('pending-upload')).toBeEmptyDOMElement());
   });
 
   it('opens bound attachments through procurement-scoped download URLs', async () => {

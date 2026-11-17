@@ -9,6 +9,7 @@ import {
 import { PDFDocument } from 'pdf-lib';
 import { isISO8601, isUUID } from 'class-validator';
 import { OssService } from 'src/modules/files/oss.service';
+import { assertTemporaryFileAccess, lockAttachmentFiles } from 'src/modules/files/file-retention';
 import {
   buildSelfInspectionPdf,
   SelfInspectionPrintData,
@@ -139,11 +140,11 @@ export class SelfInspectionService {
     const members = await this.source
       .getRepository(WecomUserEntity)
       .find({ where: { corpId: user.corpId }, order: { name: 'ASC' } });
-    return members
-      .filter((member) => this.active(member))
-      .map((member) => {
-        const roles = this.memberRoles(member);
-        return {
+    const eligible = [];
+    for (const member of members) {
+      if (await this.active(member)) {
+        const roles = await this.memberRoles(member);
+        eligible.push({
           userId: member.userId,
           name: member.name,
           canExecute: roles.some((role) =>
@@ -154,9 +155,10 @@ export class SelfInspectionService {
           canReview: roles.some((role) =>
             ['shipping', 'general_office', 'system_admin'].includes(role),
           ),
-        };
-      })
-      .filter((member) => member.canExecute || member.canReview);
+        });
+      }
+    }
+    return eligible.filter((member) => member.canExecute || member.canReview);
   }
 
   async names(record: WorkbenchRecordEntity) {
@@ -175,10 +177,10 @@ export class SelfInspectionService {
     };
   }
 
-  private active(member: WecomUserEntity) {
+  private async active(member: WecomUserEntity) {
     if (this.authorizationService) {
       try {
-        this.authorizationService.getEffectiveAuthorization(member);
+        await this.authorizationService.getEffectiveAuthorization(member);
         return true;
       } catch {
         return false;
@@ -189,10 +191,10 @@ export class SelfInspectionService {
     );
   }
 
-  private memberRoles(member: WecomUserEntity) {
+  private async memberRoles(member: WecomUserEntity) {
     if (this.authorizationService) {
       try {
-        return this.authorizationService.getEffectiveAuthorization(member).roles;
+        return (await this.authorizationService.getEffectiveAuthorization(member)).roles;
       } catch {
         return [];
       }
@@ -224,21 +226,21 @@ export class SelfInspectionService {
       where: { userId: In([assignee, reviewer]), corpId: user.corpId },
     });
     const executor = members.find(
-      (member) => member.userId === assignee && this.active(member),
+      (member) => member.userId === assignee,
     );
     const checker = members.find(
-      (member) => member.userId === reviewer && this.active(member),
+      (member) => member.userId === reviewer,
     );
     if (
-      !executor ||
-      !this.memberRoles(executor).some((role) =>
+      !executor || !(await this.active(executor)) ||
+      !(await this.memberRoles(executor)).some((role) =>
         ['crew', 'shipping', 'general_office', 'system_admin'].includes(role),
       )
     )
       throw new BadRequestException('执行人不是可用的船员或管理人员');
     if (
-      !checker ||
-      !this.memberRoles(checker).some((role) =>
+      !checker || !(await this.active(checker)) ||
+      !(await this.memberRoles(checker)).some((role) =>
         ['shipping', 'general_office', 'system_admin'].includes(role),
       )
     )
@@ -620,6 +622,7 @@ export class SelfInspectionService {
         (dto.stepCode && dto.stepCode !== step.stepCode)
       )
         throw new ConflictException('照片分类必须与当前检查或整改步骤一致');
+      await lockAttachmentFiles(manager, [dto.fileId]);
       const file = await manager.findOneBy(FileEntity, { id: dto.fileId });
       if (!file || file.uploadedBy !== user.userId)
         throw new ForbiddenException('只能关联本人上传的照片');
@@ -645,6 +648,7 @@ export class SelfInspectionService {
         })
       )
         throw new ConflictException('该照片已经用于本记录，请上传本轮新照片');
+      await assertTemporaryFileAccess(manager, file, user);
       let bytes: Buffer;
       try {
         bytes = await this.oss.readBuffer(file.ossKey);

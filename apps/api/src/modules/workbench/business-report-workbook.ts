@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { EXPORT_THEME } from 'src/common/export/export-theme';
 
 export interface ReportSheet {
   name: string;
@@ -19,16 +20,9 @@ export interface WorkbookOptions {
   scope: string;
   generatedAt?: Date;
 }
-const palette = {
-  navy: '0E263F',
-  blue: '1660D7',
-  pale: 'EFF7FF',
-  stripe: 'F8FAFC',
-  line: 'D6E0EE',
-  muted: '5C6E87',
-  warning: 'FFF4DC',
-  warningText: '925600',
-};
+const palette = Object.fromEntries(
+  Object.entries(EXPORT_THEME).map(([key, value]) => [key, value.replace('#', '')]),
+) as Record<keyof typeof EXPORT_THEME, string>;
 const display = (value: unknown): string | number =>
   typeof value === 'number' && Number.isFinite(value)
     ? value
@@ -122,7 +116,7 @@ export async function workbook(
       const cell = ws.getCell(row, 1);
       cell.value = value;
       cell.font = {
-        name: '微软雅黑',
+        name: EXPORT_THEME.font,
         size,
         color: { argb: color },
         bold: row === 1,
@@ -168,7 +162,7 @@ export async function workbook(
           const cell = ws.getCell(row, i + 1);
           cell.value = header;
           cell.font = {
-            name: '微软雅黑',
+            name: EXPORT_THEME.font,
             size: 10,
             bold: true,
             color: { argb: 'FFFFFF' },
@@ -237,7 +231,7 @@ export async function workbook(
                 (header === '低余量' && value === '是')
               : /未登记/.test(header) && value > 0;
           cell.font = {
-            name: '微软雅黑',
+            name: EXPORT_THEME.font,
             size: 10,
             color: { argb: warn ? palette.warningText : palette.navy },
           };

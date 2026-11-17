@@ -1,0 +1,40 @@
+apps/api/src/modules/user-directory/user-directory.service.ts:55:      const effective = this.authorizationService.getEffectiveAuthorization(user, {
+apps/api/src/modules/user-directory/user-directory.service.ts:456:    const effective = this.authorizationService.getEffectiveAuthorization(user, {
+apps/api/src/modules/workbench/workbench-learning.service.ts:68:          this.authorizationService.getEffectiveAuthorization(row);
+apps/api/src/modules/user-directory/user-directory.service.spec.ts:46:      getEffectiveAuthorization: jest.fn().mockReturnValue({
+apps/api/src/modules/enterprise-profile/enterprise-profile.service.ts:202:        return this.authorizationService.getEffectiveAuthorization(user).departmentCodes;
+apps/api/test/m9-wave5-migration.integration.spec.ts:77:      expect(authorization.toCurrentUser(user).roles.sort()).toEqual(['all_authenticated', ...row.roles].sort());
+apps/api/test/m9-wave5-migration.integration.spec.ts:163:      expect(() => restoredAuthorization.toCurrentUser(user)).toThrow('平台账号已停用');
+apps/api/test/m9-wave5-migration.integration.spec.ts:164:      expect(restoredAuthorization.getEffectiveAuthorization(user, { ignoreAvailability: true }).roles).toEqual(['all_authenticated']);
+apps/api/src/modules/reminder/certificate-reminder-engine.service.ts:420:      return this.authorizationService.getEffectiveAuthorization(user);
+apps/api/test/m9-wave5-acceptance.integration.spec.ts:75:    expect(promoted.toCurrentUser(member).isAdmin).toBe(true);
+apps/api/test/m9-wave5-acceptance.integration.spec.ts:79:    expect(() => revoked.toCurrentUser(member)).toThrow('停用');
+apps/api/test/m9-wave5-acceptance.integration.spec.ts:81:    expect(() => promoted.toCurrentUser(member)).toThrow('企业微信成员不可用');
+apps/api/test/m9-wave5-acceptance.integration.spec.ts:82:    expect(() => authorization.toCurrentUser(member)).toThrow('企业微信成员不可用');
+apps/api/src/modules/workbench/self-inspection.service.ts:181:        this.authorizationService.getEffectiveAuthorization(member);
+apps/api/src/modules/workbench/self-inspection.service.ts:195:        return this.authorizationService.getEffectiveAuthorization(member).roles;
+apps/api/src/modules/certificate/certificate.service.ts:147:          this.authorizationService.getEffectiveAuthorization(row);
+apps/api/src/modules/reminder/reminder.service.ts:172:      const effective = this.authorizationService.getEffectiveAuthorization(viewer);
+apps/api/src/modules/reminder/reminder.service.ts:325:      const effective = this.authorizationService.getEffectiveAuthorization(currentUser);
+apps/api/src/modules/procurement/procurement.service.ts:2325:        return this.authorizationService.getEffectiveAuthorization(user);
+apps/api/src/modules/procurement/procurement.service.ts:2344:    try { user = this.authorizationService.toCurrentUser(member); } catch { return false; }
+apps/api/src/modules/settings/settings.service.ts:88:    this.authorizationService.getEffectiveAuthorization(user);
+apps/api/src/modules/settings/settings.service.ts:172:    this.authorizationService.getEffectiveAuthorization(user);
+apps/api/src/modules/plan-task/plan-task.service.ts:921:        this.authorizationService.getEffectiveAuthorization(user);
+apps/api/src/modules/plan-task/plan-task.service.ts:1090:        this.authorizationService.getEffectiveAuthorization(member);
+apps/api/src/modules/enterprise-policy/enterprise-policy.service.ts:234:        return this.authorizationService.getEffectiveAuthorization(user).departmentCodes;
+apps/api/src/modules/auth/authorization.service.ts:160:  getEffectiveAuthorization(
+apps/api/src/modules/auth/authorization.service.ts:230:  toCurrentUser(user: WecomUserEntity): CurrentUser {
+apps/api/src/modules/auth/authorization.service.ts:231:    const effective = this.getEffectiveAuthorization(user);
+apps/api/src/modules/auth/authorization.service.ts:245:  toAuthenticatedUser(user: WecomUserEntity): AuthenticatedUserResponse {
+apps/api/src/modules/auth/authorization.service.ts:246:    const effective = this.getEffectiveAuthorization(user);
+apps/api/src/modules/auth/auth.service.ts:111:      user: this.authorizationService.toAuthenticatedUser(savedUser),
+apps/api/src/modules/auth/auth.service.ts:141:    const currentUser = this.authorizationService.toAuthenticatedUser(user);
+apps/api/src/modules/auth/auth.service.ts:163:    return this.authorizationService.toCurrentUser(user);
+apps/api/src/modules/auth/auth.service.ts:166:  toAuthenticatedUser(user: WecomUserEntity): AuthenticatedUserResponse {
+apps/api/src/modules/auth/auth.service.ts:167:    return this.authorizationService.toAuthenticatedUser(user);
+apps/api/src/modules/auth/authorization.service.spec.ts:67:    expect(service.getEffectiveAuthorization(user)).toMatchObject({
+apps/api/src/modules/auth/authorization.service.spec.ts:87:    expect(service.getEffectiveAuthorization(user)).toMatchObject({
+apps/api/src/modules/auth/authorization.service.spec.ts:97:    expect(service.getEffectiveAuthorization(disabledAdmin).roles).toEqual(
+apps/api/src/modules/auth/authorization.service.spec.ts:102:      service.getEffectiveAuthorization({ ...disabledAdmin, sourceStatus: 'inactive' }),
+apps/api/src/modules/auth/authorization.service.spec.ts:109:      service.getEffectiveAuthorization(makeUser({ corpId: 'other-corp' })),

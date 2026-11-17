@@ -309,6 +309,8 @@ components:
           - type
         enablePushNotifications:
           type: boolean
+          deprecated: true
+          description: 历史兼容偏好；当前不控制证照、采购或任务投递，前端不显示开关。
         theme:
           type: string
           enum:
@@ -331,6 +333,8 @@ components:
           - type
         enablePushNotifications:
           type: boolean
+          deprecated: true
+          description: 历史兼容字段；保存不改变当前业务通知规则。
     UserSettingsResponse:
       type: object
       properties:

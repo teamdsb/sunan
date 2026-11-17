@@ -79,6 +79,13 @@ paths:
       parameters: [{$ref: '#/components/parameters/InspectionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SaveInspectionResultRequest'}}}}
       responses: {'200': {$ref: '#/components/responses/InspectionResult'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /inspections/{inspectionId}/files/{fileId}/download-url:
+    get:
+      tags: [Inspections]
+      summary: Sign a saved inspection evidence or participant signature for an authorized reader
+      description: Requires read access to the inspection and an undeleted result evidence or signature relationship in that inspection. The uploader need not be the reader; unrelated file IDs are rejected. Bound files cannot use the generic file download route.
+      parameters: [{$ref: '#/components/parameters/InspectionId'}, {$ref: '#/components/parameters/FileId'}]
+      responses: {'200': {$ref: '#/components/responses/FileDownloadUrl'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
   /inspections/{inspectionId}/submit:
     post:
       tags: [Inspections]
@@ -142,6 +149,13 @@ paths:
       parameters: [{$ref: '#/components/parameters/ActionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SubmitCapaActionRequest'}}}}
       responses: {'200': {$ref: '#/components/responses/CapaAction'}, '403': {$ref: '#/components/responses/Forbidden'}, '409': {$ref: '#/components/responses/Conflict'}, '422': {$ref: '#/components/responses/Unprocessable'}}
+  /capa-actions/{actionId}/files/{fileId}/download-url:
+    get:
+      tags: [CAPA]
+      summary: Sign active CAPA action evidence for an authorized issue reader
+      description: Requires read access to the action's issue and an active, undeleted evidence relationship in that action. Unrelated or withdrawn evidence is rejected. Bound files cannot use the generic file download route.
+      parameters: [{$ref: '#/components/parameters/ActionId'}, {$ref: '#/components/parameters/FileId'}]
+      responses: {'200': {$ref: '#/components/responses/FileDownloadUrl'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
   /capa-actions/{actionId}/accept:
     post:
       tags: [CAPA]
@@ -195,6 +209,7 @@ components:
     IssueId: {in: path, name: issueId, required: true, schema: {type: string, format: uuid}}
     CapaId: {in: path, name: capaId, required: true, schema: {type: string, format: uuid}}
     ActionId: {in: path, name: actionId, required: true, schema: {type: string, format: uuid}}
+    FileId: {in: path, name: fileId, required: true, schema: {type: string, format: uuid}}
     RecordId: {in: path, name: recordId, required: true, schema: {type: string, format: uuid}}
     IdempotencyKey: {in: header, name: Idempotency-Key, required: true, schema: {type: string, minLength: 1, maxLength: 128}}
   responses:
@@ -212,6 +227,7 @@ components:
     IssueList: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IssueListResponse'}}}}
     Capa: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/CapaResponse'}}}}
     CapaAction: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/CapaActionResponse'}}}}
+    FileDownloadUrl: {description: Short-lived authorized download URL, content: {application/json: {schema: {$ref: '#/components/schemas/FileDownloadUrlResponse'}}}}
     Verification: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/VerificationResponse'}}}}
     IssueStatistics: {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IssueStatisticsResponse'}}}}
     TransferReconcile: {description: Accepted, content: {application/json: {schema: {$ref: '#/components/schemas/TransferReconcileResponse'}}}}
@@ -351,8 +367,20 @@ components:
       properties: {id: {type: string, format: uuid}, status: {type: string, enum: [queued, running, succeeded, failed]}, createdCount: {type: integer}, skippedCount: {type: integer}, failedCount: {type: integer}}
     InspectionResult:
       type: object
-      required: [id, inspectorUserId, templateItemSnapshotKey, conclusion, status]
-      properties: {id: {type: string, format: uuid}, inspectorUserId: {type: string}, templateItemSnapshotKey: {type: string}, conclusion: {type: string}, remark: {type: string, nullable: true}, status: {type: string, enum: [draft, submitted]}, signedAt: {type: string, format: date-time, nullable: true}}
+      required: [id, inspectorUserId, templateItemSnapshotKey, conclusion, status, evidenceFiles, signatureFile]
+      properties:
+        id: {type: string, format: uuid}
+        inspectorUserId: {type: string}
+        templateItemSnapshotKey: {type: string}
+        conclusion: {type: string}
+        remark: {type: string, nullable: true}
+        status: {type: string, enum: [draft, submitted]}
+        signedAt: {type: string, format: date-time, nullable: true}
+        evidenceFiles: {type: array, items: {$ref: '#/components/schemas/EvidenceFile'}}
+        signatureFile:
+          type: object
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/EvidenceFile'}]
     Inspection:
       type: object
       required: [id, taskId, status, templateVersionId, templateSnapshot, results, availableActions]
@@ -367,8 +395,24 @@ components:
       properties: {id: {type: string, format: uuid}, title: {type: string}, issueType: {type: string}, severity: {type: string}, status: {type: string}, vesselId: {type: string, format: uuid, nullable: true}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, sources: {type: array, items: {$ref: '#/components/schemas/IssueSource'}}, capa: {$ref: '#/components/schemas/Capa'}, availableActions: {type: array, items: {type: string, enum: [read, create_capa, save_root_cause, create_action, request_verification, verify, close]}}}
     CapaAction:
       type: object
-      required: [id, actionType, title, responsibleUserId, dueAt, status, evidenceFileIds, availableActions]
-      properties: {id: {type: string, format: uuid}, actionType: {type: string}, title: {type: string}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, status: {type: string}, evidenceFileIds: {type: array, items: {type: string, format: uuid}}, availableActions: {type: array, items: {type: string, enum: [submit, accept]}}}
+      required: [id, actionType, title, responsibleUserId, dueAt, status, evidenceFileIds, evidenceFiles, availableActions]
+      properties: {id: {type: string, format: uuid}, actionType: {type: string}, title: {type: string}, responsibleUserId: {type: string}, dueAt: {type: string, format: date-time}, status: {type: string}, evidenceFileIds: {type: array, items: {type: string, format: uuid}}, evidenceFiles: {type: array, items: {$ref: '#/components/schemas/EvidenceFile'}}, availableActions: {type: array, items: {type: string, enum: [submit, accept]}}}
+    EvidenceFile:
+      type: object
+      description: Safe display metadata; request a scoped download URL when viewing the file.
+      required: [id, fileName, mimeType, fileSize, createdAt]
+      properties:
+        id: {type: string, format: uuid}
+        fileName: {type: string}
+        mimeType: {type: string}
+        fileSize: {type: integer, minimum: 0}
+        createdAt: {type: string, format: date-time}
+    FileDownloadUrl:
+      type: object
+      required: [downloadUrl, expiresAt]
+      properties:
+        downloadUrl: {type: string, format: uri}
+        expiresAt: {type: string, format: date-time}
     Capa:
       type: object
       nullable: true
@@ -396,6 +440,7 @@ components:
     IssueListResponse: {type: object, required: [data], properties: {data: {type: array, items: {$ref: '#/components/schemas/Issue'}}}}
     CapaResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Capa'}}}
     CapaActionResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/CapaAction'}}}
+    FileDownloadUrlResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/FileDownloadUrl'}}}
     VerificationResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/Verification'}}}
     IssueStatisticsResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/IssueStatistics'}}}
     TransferReconcileResponse: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/TransferReconcile'}}}

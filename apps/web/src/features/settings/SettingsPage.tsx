@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Descriptions, Form, Input, List, Popconfirm, Select, Space, Switch, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Descriptions, Form, Input, List, Popconfirm, Select, Space, Tag, Typography, message } from 'antd';
 import SettingOutlined from '@ant-design/icons/SettingOutlined';
 import ApiOutlined from '@ant-design/icons/ApiOutlined';
 import ClearOutlined from '@ant-design/icons/ClearOutlined';
@@ -172,7 +172,7 @@ export function SettingsPage() {
     <section className="page-hero">
       <Typography.Title level={2}>设置</Typography.Title>
       <Typography.Paragraph type="secondary">
-        配置提醒视图、证照分组和消息推送偏好。
+        配置提醒视图和证照分组；系统管理员可维护通知应用。
       </Typography.Paragraph>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         {currentUser?.isAdmin ? (
@@ -253,10 +253,10 @@ export function SettingsPage() {
           <Form
             form={form}
             layout="vertical"
-            onValuesChange={async (_changed, values) => {
+            onValuesChange={async (changed, values) => {
               setErrorText(null);
               try {
-                await updateSettings(values).unwrap();
+                await updateSettings(changed).unwrap();
                 setLastSaved(values);
                 message.success('设置已保存');
               } catch (error) {
@@ -272,9 +272,7 @@ export function SettingsPage() {
             <Form.Item name="certificateGroupBy" label="证照分组">
               <Select options={[{ value: 'type', label: '按证照分类' }]} />
             </Form.Item>
-            <Form.Item name="enablePushNotifications" valuePropName="checked" label="推送通知">
-              <Switch />
-            </Form.Item>
+            <Typography.Paragraph type="secondary">证照、采购和任务通知由业务规则控制。</Typography.Paragraph>
           </Form>
         </Card>
       </Space>

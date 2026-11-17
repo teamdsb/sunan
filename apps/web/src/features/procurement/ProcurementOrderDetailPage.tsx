@@ -129,6 +129,7 @@ export function ProcurementOrderDetailPage() {
     useUnlinkProcurementOrderAttachmentMutation();
   const [getAttachmentDownloadUrl] =
     useLazyGetProcurementOrderAttachmentDownloadUrlQuery();
+  const [uploadedAttachment, setUploadedAttachment] = useState<FileRecord | null>(null);
   const [printOrder] = usePrintProcurementOrderMutation();
   const [pdfAction, setPdfAction] = useState<'preview' | 'download' | null>(
     null,
@@ -255,11 +256,13 @@ export function ProcurementOrderDetailPage() {
   };
 
   const handleUploadedAttachment = async (file: FileRecord | null) => {
+    setUploadedAttachment(file);
     if (!id || !file) {
       return;
     }
 
     await bindAttachments({ id, fileIds: [file.id] }).unwrap();
+    setUploadedAttachment(null);
     messageApi.success('附件已上传并绑定');
     await refetch();
   };
@@ -475,6 +478,7 @@ export function ProcurementOrderDetailPage() {
           >
             <FileUploadField
               category="procurement-attachments"
+              value={uploadedAttachment}
               onChange={(file) => void handleUploadedAttachment(file)}
             />
             {isBinding ? (

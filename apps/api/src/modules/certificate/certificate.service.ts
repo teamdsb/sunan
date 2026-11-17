@@ -20,7 +20,7 @@ import { CertificateGroupQueryDto } from './dto/certificate-group-query.dto';
 import { CertificateListQueryDto } from './dto/certificate-list-query.dto';
 import { CertificateUpdateDto } from './dto/certificate-update.dto';
 import { OssService } from 'src/modules/files/oss.service';
-import { auditAttachmentRemoval, lockAttachmentFiles, scheduleFileRecycle } from 'src/modules/files/file-retention';
+import { assertAttachmentFilesBindable, auditAttachmentRemoval, scheduleFileRecycle } from 'src/modules/files/file-retention';
 import { CertificateReminderJobService } from 'src/modules/reminder/certificate-reminder-job.service';
 
 const MANAGER_ROLES = new Set(['general_office', 'finance', 'business', 'shipping', 'logistics']);
@@ -140,16 +140,16 @@ export class CertificateService {
   async listReminderRecipients(user: CurrentUser) {
     this.ensureManager(user);
     const rows = await this.wecomUserRepository.find({ order: { name: 'ASC' } });
-    return rows
-      .filter((row) => {
+    const available = await Promise.all(rows.map(async (row) => {
         if (!this.authorizationService) return true;
         try {
-          this.authorizationService.getEffectiveAuthorization(row);
+          await this.authorizationService.getEffectiveAuthorization(row);
           return true;
         } catch {
           return false;
         }
-      })
+      }));
+    return rows.filter((_row, index) => available[index])
       .map((row) => ({ userId: row.userId, name: row.name, position: row.position }));
   }
 
@@ -202,7 +202,7 @@ export class CertificateService {
 
     const saved = await this.repository.manager.transaction(async manager => {
       const record = await manager.save(CertificateEntity, entity);
-      if (dto.fileIds?.length) await this.saveFileRelations(manager, record.id, dto.fileIds, 'append');
+      if (dto.fileIds?.length) await this.saveFileRelations(manager, record.id, dto.fileIds, 'append', user);
       return record;
     });
     void this.enqueueReminderScan();
@@ -246,7 +246,7 @@ export class CertificateService {
 
     await manager.save(CertificateEntity, entity);
 
-    if (dto.fileIds) await this.saveFileRelations(manager, id, dto.fileIds, 'replace', user.userId);
+    if (dto.fileIds) await this.saveFileRelations(manager, id, dto.fileIds, 'replace', user);
     });
 
     void this.enqueueReminderScan();
@@ -273,15 +273,16 @@ export class CertificateService {
     await this.repository.manager.transaction(async manager => {
       const record = await manager.findOne(CertificateEntity, { where: { id, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!record) throw new NotFoundException('certificate not found');
-      await this.saveFileRelations(manager, id, dto.fileIds, 'append');
+      await this.saveFileRelations(manager, id, dto.fileIds, 'append', user);
     });
     return this.getById(id);
   }
 
-  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], mode: 'append' | 'replace', operatorUserId?: string) {
+  private async saveFileRelations(manager: EntityManager, id: string, fileIds: string[], mode: 'append' | 'replace', user: CurrentUser) {
     const ids = [...new Set(fileIds)];
-    const removed = mode === 'replace' ? await manager.find(CertificateFileEntity, { where: { certificateId: id } }) : [];
-    const available = await lockAttachmentFiles(manager, [...ids, ...removed.map((row) => row.fileId)]);
+    const current = await manager.find(CertificateFileEntity, { where: { certificateId: id } });
+    const removed = mode === 'replace' ? current : [];
+    const available = await assertAttachmentFilesBindable(manager, ids, user, current.map((row) => row.fileId));
     if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
     if (mode === 'replace') await manager.delete(CertificateFileEntity, { certificateId: id });
     const existing = await manager.find(CertificateFileEntity, { where: { certificateId: id } });
@@ -289,7 +290,7 @@ export class CertificateService {
     const rows = ids.filter(fileId => !linked.has(fileId)).map((fileId, index) => manager.create(CertificateFileEntity, { certificateId: id, fileId, sortOrder: existing.length + index, fileRole: 'primary' }));
     if (rows.length) await manager.save(CertificateFileEntity, rows);
     const removedIds = removed.filter((row) => !ids.includes(row.fileId)).map((row) => row.fileId);
-    if (operatorUserId) await auditAttachmentRemoval(manager, 'certificate', id, removedIds, operatorUserId, '替换附件');
+    await auditAttachmentRemoval(manager, 'certificate', id, removedIds, user.userId, '替换附件');
     await scheduleFileRecycle(manager, removedIds);
   }
 

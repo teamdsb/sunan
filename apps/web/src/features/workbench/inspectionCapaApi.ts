@@ -1,12 +1,14 @@
 import { baseApi } from '../../app/baseApi';
 
 export type Template = { id: string; code: string; name: string; sourceType: string; currentVersionId: string | null };
+export type TemplateVersion = { id: string; templateId: string; versionNo: number; status: string };
 export type InspectionPlan = { id: string; title: string; planId: string; planItemId: string; templateVersionId: string };
 export type SnapshotItem = { snapshotKey: string; title: string; resultRequired: boolean; evidenceRequiredOnFailure: boolean };
-export type Inspection = { id: string; taskId: string; status: string; templateVersionId: string; templateSnapshot: { items: SnapshotItem[] }; results: Array<{ id: string; inspectorUserId: string; templateItemSnapshotKey: string; conclusion: string; remark?: string | null; status: string }>; availableActions: string[] };
+export type EvidenceFile = { id: string; fileName: string; mimeType: string; fileSize: number; createdAt: string };
+export type Inspection = { id: string; taskId: string; status: string; templateVersionId: string; templateSnapshot: { items: SnapshotItem[] }; results: Array<{ id: string; inspectorUserId: string; templateItemSnapshotKey: string; conclusion: string; remark?: string | null; status: string; evidenceFiles: EvidenceFile[]; signatureFile: EvidenceFile | null }>; availableActions: string[] };
 export type Issue = { id: string; title: string; issueType: string; severity: string; status: string; responsibleUserId: string; dueAt: string; sources: Array<{ sourceType: string; sourceId: string; sourceItemKey?: string | null; sourceHref?: string | null }>; capa?: Capa | null; availableActions: string[] };
 export type Capa = { id: string; issueId: string; status: string; verifierUserId: string; rootCause?: { method: string; conclusion: string } | null; actions: CapaAction[] };
-export type CapaAction = { id: string; actionType: string; title: string; responsibleUserId: string; dueAt: string; status: string; evidenceFileIds: string[]; availableActions: string[] };
+export type CapaAction = { id: string; actionType: string; title: string; responsibleUserId: string; dueAt: string; status: string; evidenceFileIds: string[]; evidenceFiles: EvidenceFile[]; availableActions: string[] };
 
 const mutationHeaders = () => ({ 'Idempotency-Key': crypto.randomUUID() });
 
@@ -14,10 +16,15 @@ export const inspectionCapaApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getInspectionTemplates: build.query<{ data: Template[] }, void>({ query: () => ({ url: '/inspection-templates' }), providesTags: ['Workbench'] }),
     createInspectionTemplate: build.mutation<{ data: Template }, { code: string; name: string; sourceType: string; items: Array<{ itemCode: string; title: string; resultRequired: boolean; evidenceRequiredOnFailure: boolean; sequenceNo: number }> }>({ query: (data) => ({ url: '/inspection-templates', method: 'POST', data, headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
+    getInspectionTemplateVersions: build.query<{ data: TemplateVersion[] }, string>({ query: (id) => ({ url: `/inspection-templates/${id}/versions` }), providesTags: ['Workbench'] }),
+    publishInspectionTemplateVersion: build.mutation<{ data: TemplateVersion }, string>({ query: (id) => ({ url: `/inspection-template-versions/${id}/publish`, method: 'POST', headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
     getInspectionPlans: build.query<{ data: InspectionPlan[] }, void>({ query: () => ({ url: '/inspection-plans' }), providesTags: ['Workbench'] }),
     createInspectionPlan: build.mutation<{ data: InspectionPlan }, { title: string; templateVersionId: string; responsibleUserId: string; participantUserIds?: string[]; completionRule: string; recurrence: { kind: 'one_time'; startAt: string }; dueOffsetMinutes: number }>({ query: (data) => ({ url: '/inspection-plans', method: 'POST', data, headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
+    generateInspectionPlan: build.mutation<{ data: { createdCount: number; failedCount: number } }, { id: string; windowStart: string; windowEnd: string }>({ query: ({ id, ...data }) => ({ url: `/inspection-plans/${id}/generation-runs`, method: 'POST', data: { ...data, mode: 'reconcile' }, headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
     getInspections: build.query<{ data: Inspection[] }, void>({ query: () => ({ url: '/inspections' }), providesTags: ['Workbench'] }),
     getInspection: build.query<{ data: Inspection }, string>({ query: (id) => ({ url: `/inspections/${id}` }), providesTags: ['Workbench'] }),
+    getInspectionFileDownloadUrl: build.query<{ data: { downloadUrl: string; expiresAt: string } }, { inspectionId: string; fileId: string }>({ query: ({ inspectionId, fileId }) => ({ url: `/inspections/${inspectionId}/files/${fileId}/download-url` }) }),
+    getCapaActionFileDownloadUrl: build.query<{ data: { downloadUrl: string; expiresAt: string } }, { actionId: string; fileId: string }>({ query: ({ actionId, fileId }) => ({ url: `/capa-actions/${actionId}/files/${fileId}/download-url` }) }),
     saveInspectionResult: build.mutation<{ data: Inspection['results'][number] }, { inspectionId: string; templateItemSnapshotKey: string; conclusion: string; remark?: string; evidenceFileIds?: string[] }>({ query: ({ inspectionId, ...data }) => ({ url: `/inspections/${inspectionId}/results`, method: 'POST', data, headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
     submitInspection: build.mutation<{ data: Inspection }, { inspectionId: string; signatureFileId: string }>({ query: ({ inspectionId, ...data }) => ({ url: `/inspections/${inspectionId}/submit`, method: 'POST', data, headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
     summarizeInspection: build.mutation<{ data: Inspection }, string>({ query: (id) => ({ url: `/inspections/${id}/summaries`, method: 'POST', headers: mutationHeaders() }), invalidatesTags: ['Workbench'] }),
@@ -35,8 +42,10 @@ export const inspectionCapaApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetInspectionTemplatesQuery, useCreateInspectionTemplateMutation, useGetInspectionPlansQuery, useCreateInspectionPlanMutation,
+  useGetInspectionTemplatesQuery, useCreateInspectionTemplateMutation, useGetInspectionTemplateVersionsQuery, usePublishInspectionTemplateVersionMutation,
+  useGetInspectionPlansQuery, useCreateInspectionPlanMutation, useGenerateInspectionPlanMutation,
   useGetInspectionsQuery, useGetInspectionQuery, useSaveInspectionResultMutation, useSubmitInspectionMutation, useSummarizeInspectionMutation,
+  useLazyGetInspectionFileDownloadUrlQuery, useLazyGetCapaActionFileDownloadUrlQuery,
   useGetIssuesQuery, useGetIssueQuery, useCreateCapaMutation, useSaveRootCauseMutation, useCreateCapaActionMutation, useSubmitCapaActionMutation,
   useAcceptCapaActionMutation, useVerifyCapaMutation, useRequestVerificationMutation, useCloseIssueMutation,
 } = inspectionCapaApi;

@@ -1,8 +1,7 @@
 import { Alert, Button, Card, Descriptions, Space, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useAppSelector } from '../../app/hooks';
 import { myRouteConfig } from '../../router/myRouteConfig';
 import { resolveBackHref } from '../../router/myRouteState';
 import {
@@ -10,7 +9,7 @@ import {
   useGetReminderByIdQuery,
   type ReminderItem,
 } from './reminderApi';
-import { canAcknowledgeReminder, canManageReminderActions, isOverdueReminder } from './reminderPermissions';
+import { canAcknowledgeReminder, isOverdueReminder } from './reminderPermissions';
 import { formatShanghaiDateTime } from '../../utils/dateTime';
 import { FileAttachmentList, type AttachmentFileDescriptor } from '../files/FileAttachmentList';
 import { useLazyGetCertificateFileDownloadUrlQuery } from '../certificate/certificateApi';
@@ -32,7 +31,6 @@ export function ReminderDetailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const { data, isLoading, refetch } = useGetReminderByIdQuery(id, { skip: !id });
   const [acknowledgeReminder, { isLoading: acknowledging }] = useAcknowledgeReminderMutation();
   const [getCertificateFileUrl] = useLazyGetCertificateFileDownloadUrlQuery();
@@ -46,12 +44,7 @@ export function ReminderDetailPage() {
   }, [data]);
 
   const reminder = localReminder ?? data?.data ?? null;
-  const roles = useMemo(() => currentUser?.roles ?? [], [currentUser?.roles]);
-  const canAcknowledge = useMemo(
-    () => (reminder ? canAcknowledgeReminder(currentUser?.userId, roles, reminder) : false),
-    [currentUser?.userId, reminder, roles],
-  );
-  const canShowAction = reminder ? canManageReminderActions(roles) || currentUser?.userId === reminder.recipientUserId : false;
+  const canAcknowledge = reminder ? canAcknowledgeReminder(reminder) : false;
   const isAcknowledged = reminder?.status === 'acknowledged';
 
   const handleAcknowledge = async () => {
@@ -158,7 +151,7 @@ export function ReminderDetailPage() {
               </Card>
 
               <Space wrap className="detail-action-bar">
-                {canShowAction && canAcknowledge ? (
+                {canAcknowledge ? (
                   <Button type="primary" loading={acknowledging} onClick={handleAcknowledge}>
                     确认提醒
                   </Button>

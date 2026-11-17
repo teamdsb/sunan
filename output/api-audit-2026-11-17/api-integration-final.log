@@ -1,0 +1,83 @@
+
+> api@0.0.8 test:integration /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.integration.config.ts --runInBand
+
+PASS test/certificate-reminder.integration.spec.ts (39.948 s)
+PASS test/inspection-capa.integration.spec.ts (25.439 s)
+PASS test/my-office-procurement-contract.integration.spec.ts (9.559 s)
+PASS test/file-authorization.integration.spec.ts (48.949 s)
+(node:19476) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS test/self-inspection.integration.spec.ts (42.145 s)
+PASS test/full-system-admin.integration.spec.ts (29.35 s)
+PASS test/enterprise-policy.integration.spec.ts (30.963 s)
+PASS test/certificate.integration.spec.ts (7.449 s)
+PASS test/reminder-job-http.integration.spec.ts (7.123 s)
+PASS test/safety-workbench-http-rehearsal.integration.spec.ts (22.468 s)
+PASS test/m9-wave5-migration.integration.spec.ts (23.187 s)
+PASS test/auth.integration.spec.ts (30.072 s)
+PASS test/plan-task.integration.spec.ts (31.264 s)
+PASS test/m9-wave4-token.integration.spec.ts
+PASS test/office.integration.spec.ts (6.922 s)
+PASS test/m9-wave5-acceptance.integration.spec.ts
+PASS test/workbench.integration.spec.ts (7.568 s)
+PASS test/m9-wave4-notifications.integration.spec.ts (19.013 s)
+PASS test/master-data.integration.spec.ts (9.882 s)
+PASS test/procurement-report.integration.spec.ts
+PASS test/procurement-budget.integration.spec.ts (5.708 s)
+PASS test/workbench-business.integration.spec.ts (12.721 s)
+PASS test/settings.integration.spec.ts (25.15 s)
+PASS test/procurement.integration.spec.ts (15.429 s)
+PASS test/wave7-migration.integration.spec.ts (9.38 s)
+PASS test/ship-monitor.integration.spec.ts (10.561 s)
+[Nest] 19476  - 11/17/2026, 8:18:57 PM   ERROR [FilesService] OSS recycle failed for ec85038a-abdf-416c-aefa-9b887036a0d0; queued for retry
+FAIL test/files.integration.spec.ts (6.9 s)
+  ● FilesController integration › presigns procurement and workbench attachment categories
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 401
+
+      236 |       /^procurement\/attachments\//,
+      237 |     );
+    > 238 |     expect(workbench.status).toBe(201);
+          |                              ^
+      239 |     expect((workbench.body as PresignResponseBody).data.ossKey).toMatch(
+      240 |       /^workbench\/attachments\//,
+      241 |     );
+
+      at Object.<anonymous> (test/files.integration.spec.ts:238:30)
+
+PASS test/enterprise-profile.integration.spec.ts (13.806 s)
+PASS test/procurement-wave4.integration.spec.ts (5.706 s)
+PASS test/user-directory.integration.spec.ts
+
+Summary of all failing tests
+FAIL test/files.integration.spec.ts (6.9 s)
+  ● FilesController integration › presigns procurement and workbench attachment categories
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 401
+
+      236 |       /^procurement\/attachments\//,
+      237 |     );
+    > 238 |     expect(workbench.status).toBe(201);
+          |                              ^
+      239 |     expect((workbench.body as PresignResponseBody).data.ossKey).toMatch(
+      240 |       /^workbench\/attachments\//,
+      241 |     );
+
+      at Object.<anonymous> (test/files.integration.spec.ts:238:30)
+
+
+Test Suites: 1 failed, 29 passed, 30 total
+Tests:       1 failed, 199 passed, 200 total
+Snapshots:   0 total
+Time:        513.481 s
+Ran all test suites.
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.8 test:integration: `jest --config ./jest.integration.config.ts --runInBand`
+Exit status 1

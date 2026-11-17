@@ -74,7 +74,7 @@ describe('M9 Wave 5 synthetic legacy migration and rollback', () => {
     for (const row of baseline) {
       const user = await source.getRepository(WecomUserEntity).findOneByOrFail({ userId: row.userId });
       expect(user).toMatchObject({ departmentMode: 'follow_wecom', roleMode: 'auto', platformStatus: 'enabled', sourceStatus: 'unknown', loginStatus: 'unknown', lastLoginAt: null });
-      expect(authorization.toCurrentUser(user).roles.sort()).toEqual(['all_authenticated', ...row.roles].sort());
+      expect((await authorization.toCurrentUser(user)).roles.sort()).toEqual(['all_authenticated', ...row.roles].sort());
     }
     expect(await source.query(`SELECT s.user_id, r.snapshot FROM user_settings s JOIN wecom_users u ON s.user_id=u.user_id JOIN m9_w5_synthetic_uuid_reference r ON r.user_uuid=u.id`)).toEqual([
       { user_id: 'legacy-shipping', snapshot: { department: '船务部', actor: 'legacy-shipping' } },
@@ -160,8 +160,8 @@ describe('M9 Wave 5 synthetic legacy migration and rollback', () => {
       expect(view.configVersion).toBe(3);
       const restoredAuthorization = new AuthorizationService(restored.getRepository(WecomUserEntity), restored, new RoleResolverService(), new WecomAdminService());
       const user = await restored.getRepository(WecomUserEntity).findOneByOrFail({ userId: 'legacy-shipping' });
-      expect(() => restoredAuthorization.toCurrentUser(user)).toThrow('平台账号已停用');
-      expect(restoredAuthorization.getEffectiveAuthorization(user, { ignoreAvailability: true }).roles).toEqual(['all_authenticated']);
+      await expect(restoredAuthorization.toCurrentUser(user)).rejects.toThrow('平台账号已停用');
+      expect((await restoredAuthorization.getEffectiveAuthorization(user, { ignoreAvailability: true })).roles).toEqual(['all_authenticated']);
       expect(user.id).toBe(originalIds.find((row) => row.user_id === 'legacy-shipping')?.id);
       const beforeCalls = post.mock.calls.length;
       const recoveredMessages = makeMessages(restored, restoredConfig);

@@ -19,7 +19,7 @@ interface FileUploadFieldProps {
 export function FileUploadField({
   category,
   extensions,
-  value = null,
+  value,
   onChange,
   enableWecomCapture = false,
   wecomReady = false,
@@ -42,7 +42,7 @@ export function FileUploadField({
     uploadFromWecom,
     getFileDownloadUrl,
   } = useFileUpload({ category, wecomReady });
-  const currentFile = value ?? file;
+  const currentFile = value === undefined ? file : value;
 
   const handleNativeUpload = async (selectedFile: File | null) => {
     if (!selectedFile) {

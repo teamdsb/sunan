@@ -12,6 +12,8 @@ import { DataSource, EntityManager, In, IsNull, LessThan, LessThanOrEqual, Repos
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDateTime } from 'src/common/date/business-date';
 import { PersonnelEntity } from 'src/database/entities/personnel.entity';
+import { InspectionEntity, InspectionPlanEntity, InspectionTemplateEntity, InspectionTemplateItemEntity, InspectionTemplateScopeEntity, InspectionTemplateVersionEntity } from 'src/database/entities/safety-inspection-capa.entity';
+import { snapshotTemplateVersion } from 'src/modules/inspection-capa/inspection-capa-domain';
 import {
   SafetyPlanEntity,
   SafetyPlanItemEntity,
@@ -370,7 +372,7 @@ export class PlanTaskService {
       const tasks = manager.getRepository(SafetyTaskEntity);
       const plans = manager.getRepository(SafetyPlanEntity);
       const logs = manager.getRepository(SafetyTaskActionLogEntity);
-      let task = await tasks.findOneBy({ id: taskId, deletedAt: IsNull() });
+      let task = await tasks.findOne({ where: { id: taskId, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
       if (!task) throw new NotFoundException('Task not found');
       const plan = await plans.findOneBy({ id: task.planId, deletedAt: IsNull() });
       if (!plan) throw new NotFoundException('Plan not found');
@@ -406,6 +408,16 @@ export class PlanTaskService {
       else if (input.actionType === 'transfer') task = await this.transferTask(task, user, input, reason, manager);
       else if (input.actionType === 'delegate') await this.delegateTask(task, user, input, reason, manager);
       else { task.status = decision.nextStatus; if (task.status === 'completed') task.completedAt = new Date(); }
+      if (input.actionType === 'cancel') {
+        const inspection = await manager.findOne(InspectionEntity, { where: { taskId, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+        if (inspection?.status === 'completed') throw new ConflictException('Completed inspections cannot be cancelled');
+        if (inspection) {
+          inspection.status = 'cancelled';
+          inspection.completedAt = null;
+          inspection.updatedBy = user.userId;
+          await manager.save(InspectionEntity, inspection);
+        }
+      }
       task.updatedBy = user.userId;
       task = await tasks.save(task);
       await logs.save(logs.create({
@@ -585,6 +597,7 @@ export class PlanTaskService {
             ...item.participantSnapshot.map((participant) => participants.create({ taskId: task.id, userId: participant.userId, role: participant.role, status: 'active', effectiveFrom: occurrence, effectiveUntil: null, transferredToUserId: null, completedAt: null, createdBy: actor, updatedBy: actor, deletedAt: null })),
           ]);
         }
+        await this.ensureInspectionSnapshot(task, actor, manager);
         await entries.save(entries.create({
           runId: run.id, planItemId: item.id, generationKey, occurrenceAt: occurrence,
           status: outcome === 'created' ? 'succeeded' : 'skipped', taskId: task.id, attemptCount: 1,
@@ -615,6 +628,7 @@ export class PlanTaskService {
   }
 
   private async completeParticipant(task: SafetyTaskEntity, actor: string, manager?: EntityManager) {
+    if (await this.inspectionPlanForTask(task, manager)) throw new ConflictException('Inspection tasks must be completed through signed inspection results and summary');
     const participants = manager?.getRepository(SafetyTaskParticipantEntity) ?? this.participants;
     const items = manager?.getRepository(SafetyPlanItemEntity) ?? this.items;
     let participant = await participants.findOneBy({ taskId: task.id, userId: actor, status: 'active', deletedAt: IsNull() });
@@ -918,7 +932,7 @@ export class PlanTaskService {
 
     if (this.authorizationService) {
       try {
-        this.authorizationService.getEffectiveAuthorization(user);
+        await this.authorizationService.getEffectiveAuthorization(user);
       } catch (error) {
         return `recipient unavailable: ${error instanceof Error ? error.message : 'authorization rejected'}`;
       }
@@ -951,8 +965,10 @@ export class PlanTaskService {
   }
 
   private async taskSummary(task: SafetyTaskEntity, user: CurrentUser, now = new Date()) {
+    const inspection = await this.dataSource.manager.getRepository(InspectionEntity).findOneBy({ taskId: task.id, deletedAt: IsNull() });
     return {
       ...task,
+      inspectionId: inspection?.id ?? null,
       isOverdue: isTaskOverdue(task.status as TaskStatus, task.dueAt, now),
       availableActions: await this.availableActions(task, user),
     };
@@ -1013,12 +1029,31 @@ export class PlanTaskService {
     const actions: string[] = [];
     if (context.canExecute) {
       if (task.status === 'pending') actions.push('start');
-      if (['pending', 'in_progress', 'blocked'].includes(task.status)) actions.push('complete');
+      if (['pending', 'in_progress', 'blocked'].includes(task.status) && !(await this.inspectionPlanForTask(task))) actions.push('complete');
       if (['pending', 'in_progress'].includes(task.status)) actions.push('block');
     }
     if (context.isManager) actions.push('reschedule', 'cancel', 'remind', 'escalate', 'transfer');
     if (context.isManager || context.isResponsible) actions.push('delegate');
     return actions;
+  }
+
+  private inspectionPlanForTask(task: SafetyTaskEntity, manager = this.dataSource.manager) {
+    return manager.getRepository(InspectionPlanEntity).findOneBy({ planItemId: task.planItemId, deletedAt: IsNull() });
+  }
+
+  private async ensureInspectionSnapshot(task: SafetyTaskEntity, actor: string, manager: EntityManager) {
+    const plan = await this.inspectionPlanForTask(task, manager);
+    if (!plan) return;
+    const inspections = manager.getRepository(InspectionEntity);
+    if (await inspections.findOneBy({ taskId: task.id, deletedAt: IsNull() })) return;
+    const version = await manager.getRepository(InspectionTemplateVersionEntity).findOneBy({ id: plan.templateVersionId, status: 'published', deletedAt: IsNull() });
+    if (!version) throw new ConflictException('Inspection plan requires a published template version');
+    const template = await manager.getRepository(InspectionTemplateEntity).findOneBy({ id: version.templateId, deletedAt: IsNull() });
+    if (!template) throw new NotFoundException('Inspection template not found');
+    const items = await manager.getRepository(InspectionTemplateItemEntity).find({ where: { versionId: version.id, deletedAt: IsNull() }, order: { sequenceNo: 'ASC' } });
+    const scopes = await manager.getRepository(InspectionTemplateScopeEntity).find({ where: { templateId: version.templateId, deletedAt: IsNull() } });
+    const snapshot = snapshotTemplateVersion({ id: version.id, versionNo: version.versionNo, sourceType: template.sourceType, scopes: scopes.map((scope) => ({ vesselId: scope.vesselId, departmentCode: scope.departmentCode })), items });
+    await inspections.save(inspections.create({ taskId: task.id, inspectionPlanId: plan.id, templateVersionId: version.id, templateSnapshot: snapshot, status: 'pending', summarySnapshot: null, completedAt: null, createdBy: actor, updatedBy: actor, deletedAt: null }));
   }
 
   private async activeExecutionParticipant(taskId: string, userId: string, now: Date, manager?: EntityManager) {
@@ -1087,7 +1122,7 @@ export class PlanTaskService {
       const member = await memberRepository.findOne({ where: { userId } });
       if (!member) throw new UnprocessableEntityException(`Available directory member not found for ${userId}`);
       try {
-        this.authorizationService.getEffectiveAuthorization(member);
+        await this.authorizationService.getEffectiveAuthorization(member);
       } catch {
         throw new UnprocessableEntityException(`Directory member is unavailable for ${userId}`);
       }

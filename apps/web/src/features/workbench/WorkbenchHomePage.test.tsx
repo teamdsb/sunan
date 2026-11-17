@@ -497,6 +497,19 @@ describe('WorkbenchHomePage', () => {
     });
   });
 
+  it('submits numeric schema fields as numbers', async () => {
+    mockGetWorkbenchModuleSchemaQuery.mockReturnValue({ data: { data: { moduleCode: 'shipping_chart_update', templateType: 'ledger_form', sections: [{ key: 'attendance', title: '工时', fields: [{ key: 'workHours', label: '工时（小时）', inputType: 'number', required: true }] }] } }, isLoading: false });
+    mockCreateWorkbenchRecord.mockReturnValue({ unwrap: () => Promise.resolve({ data: { id: 'numeric-record' } }) });
+    render(<WorkbenchHomePage routeAware initialModuleCode="shipping_chart_update" />);
+    fireEvent.click(screen.getByRole('button', { name: '新建台账记录' }));
+    fireEvent.change(screen.getByLabelText('记录标题'), { target: { value: '当班记录' } });
+    fireEvent.change(screen.getByLabelText('摘要'), { target: { value: '正常值班' } });
+    fireEvent.change(screen.getByLabelText('工时（小时）'), { target: { value: '8.5' } });
+    fireEvent.blur(screen.getByLabelText('工时（小时）'));
+    fireEvent.click(screen.getByText(/提\s*交/));
+    await waitFor(() => expect(mockCreateWorkbenchRecord).toHaveBeenCalledWith(expect.objectContaining({ payload: { workHours: 8.5 } })));
+  });
+
   it('adds return actions for direct module, approval and attendance entries', () => {
     const { rerender } = render(
       <WorkbenchHomePage
@@ -757,6 +770,22 @@ describe('WorkbenchHomePage', () => {
         expect.any(Function),
       );
     });
+  });
+
+  it.each(['fail', 'cancel'])('keeps original approval reconciliation available after SDK %s', async (outcome) => {
+    mockGetWorkbenchRecordQuery.mockReturnValue({ data: { data: {
+      id: 'record-approval-1', moduleCode: 'shipping_fuel_bunkering_approval', title: '燃油审批', summary: '燃油审批', status: 'approval_pending',
+      approvalChannel: 'wecom_native', externalProcessInstanceId: 'original-third-no', externalStatus: 'pending',
+      canLaunchApproval: true, steps: [], attachments: [], actionLogs: [], payload: {},
+    } }, isFetching: false });
+    mockLaunchWorkbenchApproval.mockReturnValue({ unwrap: () => Promise.resolve({ data: { thirdNo: 'original-third-no', wecomLaunchConfig: { oaType: '10002', thirdNo: 'original-third-no', templateId: 'original-template', extData: { fieldList: [] } } } }) });
+    mockWxInvoke.mockImplementation((_api, _config, callback) => callback({ err_msg: `thirdPartyOpenPage:${outcome}` }));
+    render(<WorkbenchHomePage routeAware initialRecordId="record-approval-1" />);
+    fireEvent.click(screen.getByRole('button', { name: '核对企业微信审批' }));
+    await waitFor(() => expect(mockWxInvoke).toHaveBeenCalledWith('thirdPartyOpenPage', expect.objectContaining({ oaType: '10002', thirdNo: 'original-third-no' }), expect.any(Function)));
+    expect(screen.getByRole('button', { name: '核对企业微信审批' })).toBeEnabled();
+    expect(screen.getByText(/状态未核实时请联系管理员处理/)).toBeInTheDocument();
+    expect(await screen.findByText(/审批页打开未确认，原审批编号已保留/)).toBeInTheDocument();
   });
 
   it('renders attendance statistics view and skips module grid in statistics-only mode', () => {

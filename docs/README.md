@@ -29,6 +29,7 @@ replaced_by: []
 | 场景 | 入口 |
 |---|---|
 | 原始目标与主要链路核查 | [2026-09-07 原件对照](audits/2026-09-07-original-goal-audit.md) |
+| 全系统接口对应、修复与回归证据 | [2026-11-17 全系统接口审计](audits/2026-11-17-full-system-api-audit.md) |
 | 船舶监控修复与相关功能核查 | [2026-09-20 修复与验收记录](audits/2026-09-20-ship-monitor-repair-audit.md) |
 | 考勤、学习与燃油月报补齐 | [2026-09-20 业务验收](audits/2026-09-20-workbench-business-completion.md) · [手册截图清单（10 月 1 日核查）](handbook/2026-09-20-截图更新清单.md) |
 | 本轮文档与测试消融 | [2026-09-07 消融记录](audits/2026-09-07-document-test-ablation.md) |

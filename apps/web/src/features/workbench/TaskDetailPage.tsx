@@ -1,6 +1,7 @@
 import { Button, DatePicker, Descriptions, Empty, Form, Input, List, Modal, Space, Tag, Timeline, Typography, message } from 'antd';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { workbenchRouteConfig } from '../../router/workbenchRouteConfig';
 import { formatShanghaiDateTime, toShanghaiIso } from '../../utils/dateTime';
 
 import { type TaskActionInput, type TaskActionType, useGetTaskQuery, usePerformTaskActionMutation, useRetryTaskDeliveryMutation } from './taskApi';
@@ -48,7 +49,7 @@ export function TaskDetailPage() {
         <Descriptions.Item label="期限">{formatShanghaiDateTime(task.dueAt)}</Descriptions.Item>
         <Descriptions.Item label="负责人">{task.responsibleUserId}</Descriptions.Item>
       </Descriptions>
-      <Space wrap>{task.availableActions?.map((action) => <Button key={action} loading={actionState.isLoading} onClick={() => openAction(action)}>{actionLabels[action]}</Button>)}</Space>
+      <Space wrap>{task.inspectionId ? <Link to={workbenchRouteConfig.inspectionDetail.buildPath(task.inspectionId)}>执行检查</Link> : null}{task.availableActions?.filter((action) => !task.inspectionId || action !== 'complete').map((action) => <Button key={action} loading={actionState.isLoading} onClick={() => openAction(action)}>{actionLabels[action]}</Button>)}</Space>
 
       <Typography.Title level={4} style={{ marginTop: 24 }}>企业微信消息</Typography.Title>
       {task.notificationDeliveries.length ? <List size="small" dataSource={task.notificationDeliveries} renderItem={(delivery) => (

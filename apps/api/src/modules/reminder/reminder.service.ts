@@ -66,7 +66,7 @@ export class ReminderService {
     const data = await Promise.all(
       sorted
         .slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)
-        .map((item) => this.toDto(item)),
+        .map((item) => this.toDto(item, user)),
     );
 
     return {
@@ -82,7 +82,7 @@ export class ReminderService {
 
   async detail(id: string, user: CurrentUser) {
     const reminder = await this.findVisibleReminderOrThrow(id, user);
-    return this.toDto(reminder, true);
+    return this.toDto(reminder, user, true);
   }
 
   async acknowledge(id: string, dto: ReminderAcknowledgeDto, user: CurrentUser) {
@@ -101,7 +101,7 @@ export class ReminderService {
     await this.reminderRepository.save(reminder);
 
     void dto;
-    return this.toDto(reminder, true);
+    return this.toDto(reminder, user, true);
   }
 
   private async visibleReminders(user: CurrentUser): Promise<CertificateReminderEntity[]> {
@@ -169,7 +169,7 @@ export class ReminderService {
     }
 
     try {
-      const effective = this.authorizationService.getEffectiveAuthorization(viewer);
+      const effective = await this.authorizationService.getEffectiveAuthorization(viewer);
       return {
         viewer,
         roles: new Set(effective.roles),
@@ -322,14 +322,14 @@ export class ReminderService {
     }
 
     try {
-      const effective = this.authorizationService.getEffectiveAuthorization(currentUser);
+      const effective = await this.authorizationService.getEffectiveAuthorization(currentUser);
       return effective.departmentCodes.includes(personnel.departmentCode);
     } catch {
       return false;
     }
   }
 
-  private async toDto(reminder: CertificateReminderEntity, includeCertificate = false) {
+  private async toDto(reminder: CertificateReminderEntity, user: CurrentUser, includeCertificate = false) {
     const certificate = includeCertificate
       ? await this.certificateRepository.findOne({ where: { id: reminder.certificateId } })
       : null;
@@ -351,6 +351,7 @@ export class ReminderService {
       recipientUserId: reminder.recipientUserId,
       reminderType: reminder.reminderType,
       status: reminder.status,
+      canAcknowledge: !['acknowledged', 'resolved'].includes(reminder.status) && await this.canAcknowledge(reminder, user),
       scheduledDate: reminder.scheduledDate,
       daysBeforeExpiry: reminder.daysBeforeExpiry,
       sentAt: reminder.sentAt?.toISOString() ?? null,

@@ -1,0 +1,45 @@
+
+> api@0.0.8 lint /Users/yuan/项目/sunan/sunan/apps/api
+> eslint "{src,test}/**/*.ts"
+
+
+/Users/yuan/项目/sunan/sunan/apps/api/src/modules/inspection-capa/inspection-capa-regression.spec.ts
+   7:21   error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+   8:159  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+   9:114  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  17:21   error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+  24:18   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  28:21   error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+
+/Users/yuan/项目/sunan/sunan/apps/api/src/modules/plan-task/plan-task-inspection-regression.spec.ts
+   7:21   error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+  10:89   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  10:175  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  10:306  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  18:94   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  18:133  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  18:192  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  20:116  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  22:81   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  23:163  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  24:65   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+
+/Users/yuan/项目/sunan/sunan/apps/api/src/modules/reminder/reminder.service.spec.ts
+  22:141  error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+
+/Users/yuan/项目/sunan/sunan/apps/api/src/modules/workbench/workbench-action-regression.spec.ts
+   8:21  error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+  13:5   error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  65:80  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+  66:85  error  Unsafe return of a value of type `any`                                             @typescript-eslint/no-unsafe-return
+
+/Users/yuan/项目/sunan/sunan/apps/api/test/inspection-capa.integration.spec.ts
+  87:19  error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+  91:28  error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+
+✖ 24 problems (24 errors, 0 warnings)
+  8 errors and 0 warnings potentially fixable with the `--fix` option.
+
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.8 lint: `eslint "{src,test}/**/*.ts"`
+Exit status 1

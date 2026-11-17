@@ -21,6 +21,7 @@ export function EvidencePanel({
   recordId,
   summary,
   attachments,
+  signatureEvidence = [],
   onUpload,
   onSignature,
   onLocation,
@@ -28,6 +29,7 @@ export function EvidencePanel({
   recordId: string;
   summary: string;
   attachments: WorkbenchAttachment[];
+  signatureEvidence?: WorkbenchAttachment[];
   onUpload: (file: FileRecord) => Promise<void>;
   onSignature: (fileId: string, hash: string) => Promise<void>;
   onLocation: (body: {
@@ -44,9 +46,27 @@ export function EvidencePanel({
   const drawing = useRef(false);
   const [locationError, setLocationError] = useState('');
   const [addressText, setAddressText] = useState('');
+  const [pendingFile, setPendingFile] = useState<FileRecord | null>(null);
+  const [binding, setBinding] = useState(false);
+  const [bindError, setBindError] = useState('');
   const { uploadFile } = useFileUpload({ category: 'workbench-attachments' });
   const [getAttachmentDownloadUrl] =
     useLazyGetWorkbenchAttachmentDownloadUrlQuery();
+  const bindFile = async (file: FileRecord) => {
+    setBinding(true);
+    setBindError('');
+    try {
+      await onUpload(file);
+      setPendingFile((current) => current?.id === file.id ? null : current);
+      messageApi.success('附件已关联');
+    } catch {
+      setBindError('附件关联失败，请重试');
+    } finally { setBinding(false); }
+  };
+  const fileUrl = async (file: { id: string }) => {
+    const response = await getAttachmentDownloadUrl({ recordId, fileId: file.id }).unwrap();
+    return response.data.downloadUrl;
+  };
   const hash = async () => {
     if (!crypto?.subtle) return '0'.repeat(64);
     return Array.from(
@@ -68,11 +88,13 @@ export function EvidencePanel({
         category="workbench-attachments"
         enableWecomCapture
         wecomReady={Boolean(window.wx)}
+        value={pendingFile}
         onChange={(file) => {
-          if (file)
-            void onUpload(file).then(() => messageApi.success('附件已关联'));
+          setPendingFile(file);
+          if (file) void bindFile(file);
         }}
       />
+      {bindError && pendingFile ? <Alert type="error" message={bindError} action={<Button loading={binding} onClick={() => void bindFile(pendingFile)}>重试关联附件</Button>} /> : null}
       <FileAttachmentList
         files={attachments.map((item) => ({
           id: item.fileId,
@@ -80,17 +102,12 @@ export function EvidencePanel({
           mimeType: item.mimeType,
           fileSize: item.fileSize,
         }))}
-        getUrl={async (file) => {
-          const response = await getAttachmentDownloadUrl({
-            recordId,
-            fileId: file.id,
-          }).unwrap();
-          return response.data.downloadUrl;
-        }}
+        getUrl={fileUrl}
       />
       <Divider />
       <Space direction="vertical" style={{ width: '100%' }}>
         <Typography.Text>手写签名</Typography.Text>
+        <FileAttachmentList files={signatureEvidence.map((item) => ({ id: item.fileId, fileName: item.fileName, mimeType: item.mimeType, fileSize: item.fileSize }))} getUrl={fileUrl} emptyText="暂无已保存签名" />
         <canvas
           ref={canvasRef}
           width={480}

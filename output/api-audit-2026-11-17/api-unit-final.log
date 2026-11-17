@@ -1,0 +1,68 @@
+
+> api@0.0.8 test:unit /Users/yuan/项目/sunan/sunan/apps/api
+> jest --config ./jest.unit.config.ts --runInBand
+
+PASS src/modules/inspection-capa/inspection-capa-regression.spec.ts (10.668 s)
+PASS src/modules/workbench/business-report-formats.spec.ts (15.805 s)
+PASS src/modules/workbench/workbench-action-regression.spec.ts (5.665 s)
+[Nest] 19545  - 11/17/2026, 8:11:24 PM     LOG [CertificateReminderEngineService] scan job-1 (manual) created=2 sent=2 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:25 PM     LOG [CertificateReminderEngineService] scan job-2 (manual) created=0 sent=0 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:25 PM     LOG [CertificateReminderEngineService] scan job-3 (manual) created=2 sent=2 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:26 PM     LOG [CertificateReminderEngineService] scan job-3b (manual) created=1 sent=0 failed=1
+[Nest] 19545  - 11/17/2026, 8:11:26 PM     LOG [CertificateReminderEngineService] scan job-4 (manual) created=0 sent=0 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:26 PM     LOG [CertificateReminderEngineService] scan job-5 (manual) created=0 sent=0 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:27 PM     LOG [CertificateReminderEngineService] scan job-pending (manual) created=0 sent=1 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:27 PM     LOG [CertificateReminderEngineService] scan job-8 (manual) created=1 sent=1 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:27 PM     LOG [CertificateReminderEngineService] scan job-9 (manual) created=0 sent=1 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:27 PM     LOG [CertificateReminderEngineService] scan job-dispatching-fresh (manual) created=0 sent=0 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:28 PM     LOG [CertificateReminderEngineService] scan job-dispatching-stale (manual) created=0 sent=1 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:29 PM     LOG [CertificateReminderEngineService] scan job-claim (manual) created=0 sent=0 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:29 PM     LOG [CertificateReminderEngineService] scan job-6 (manual) created=2 sent=2 failed=0
+[Nest] 19545  - 11/17/2026, 8:11:29 PM     LOG [CertificateReminderEngineService] scan job-7 (manual) created=2 sent=2 failed=0
+PASS src/modules/reminder/certificate-reminder-engine.service.spec.ts (7.016 s)
+PASS src/modules/reminder/certificate-reminder-job.service.spec.ts
+PASS src/modules/procurement/procurement-report-pdf.spec.ts
+PASS src/health/health.controller.spec.ts
+PASS src/modules/workbench/business-reports.spec.ts
+PASS src/modules/files/files.service.spec.ts
+PASS src/modules/enterprise-policy/enterprise-policy.service.spec.ts
+PASS src/modules/user-directory/user-directory.service.spec.ts
+PASS src/modules/plan-task/plan-task-inspection-regression.spec.ts
+PASS src/modules/master-data/master-data.service.spec.ts
+PASS src/modules/auth/auth.service.spec.ts
+PASS src/modules/ship-monitor/ship-monitor.dto.spec.ts
+PASS src/modules/reminder/reminder.service.spec.ts
+PASS src/modules/wecom/wecom-notification-config.service.spec.ts
+PASS src/modules/enterprise-profile/enterprise-profile.service.spec.ts
+PASS src/modules/files/file-retention.spec.ts
+(node:19545) Warning: NodeVersionSupportWarning: The AWS SDK for JavaScript (v3)
+versions published after the first week of January 2027
+will require node >=22. You are running node v20.20.2.
+
+To continue receiving updates to AWS services, bug fixes,
+and security updates please upgrade to node >=22.
+
+More information can be found at: https://a.co/c895JFp
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/modules/files/oss.service.spec.ts
+PASS src/modules/reminder/reminder-scheduler.service.spec.ts
+PASS src/modules/plan-task/plan-task-scheduler.service.spec.ts
+PASS src/modules/office/office.service.spec.ts
+PASS src/modules/wecom/wecom-message.service.spec.ts
+PASS src/modules/auth/authorization.service.spec.ts
+PASS src/modules/wecom/wecom-token.service.spec.ts
+PASS src/modules/wecom/jssdk-signature.service.spec.ts
+PASS src/modules/wecom/wecom-callback-validation.service.spec.ts
+PASS src/modules/reminder/reminder-clock.service.spec.ts
+PASS src/modules/auth/role-resolver.service.spec.ts
+PASS src/config/env.spec.ts
+PASS src/modules/inspection-capa/inspection-capa-domain.spec.ts
+PASS src/modules/plan-task/task-domain.spec.ts
+PASS src/common/date/business-date.spec.ts
+PASS src/modules/reminder/reminder.constants.spec.ts
+
+Test Suites: 35 passed, 35 total
+Tests:       206 passed, 206 total
+Snapshots:   0 total
+Time:        56.31 s, estimated 75 s
+Ran all test suites.

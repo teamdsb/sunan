@@ -54,9 +54,9 @@ paths:
       responses: {'200': {$ref: '#/components/responses/Item'}, '409': {$ref: '#/components/responses/Conflict'}}
   /master-data/personnel/{id}:
     get:
-      summary: Get personnel profile and assignment history
+      summary: Get own personnel profile or a profile in the manager's scope
       parameters: [{$ref: '#/components/parameters/Id'}]
-      responses: {'200': {$ref: '#/components/responses/Item'}, '404': {$ref: '#/components/responses/NotFound'}}
+      responses: {'200': {$ref: '#/components/responses/Item'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}}
     patch:
       summary: Update personnel or change employment status
       parameters: [{$ref: '#/components/parameters/Id'}]

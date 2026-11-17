@@ -85,7 +85,7 @@ export class SettingsService {
   async sendDraftTest(dto: NotificationDraftTestDto) {
     const user = await this.wecomUserRepository.findOne({ where: { userId: dto.testUserId.trim() } });
     if (!user) throw new NotFoundException('测试人员不存在');
-    this.authorizationService.getEffectiveAuthorization(user);
+    await this.authorizationService.getEffectiveAuthorization(user);
     const config = await this.notificationConfig.resolveDraft(dto);
     const result = await this.messageService.sendTextCard({
       userIds: [user.userId],
@@ -169,7 +169,7 @@ export class SettingsService {
     if (delivery.status !== 'failed') throw new ConflictException('只有确认失败的投递可以重试');
     const user = await this.wecomUserRepository.findOne({ where: { userId: delivery.recipientUserId } });
     if (!user) throw new ConflictException('收件人已不在通讯录中，不能重试');
-    this.authorizationService.getEffectiveAuthorization(user);
+    await this.authorizationService.getEffectiveAuthorization(user);
     const eligible = delivery.sourceType === 'procurement'
       ? await this.procurementService.canReceiveNotification(delivery.dedupeKey, delivery.recipientUserId)
       : delivery.sourceType === 'plan_task'

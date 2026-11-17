@@ -66,15 +66,23 @@ describe('SettingsPage', () => {
 
   it('saves settings and shows feedback', async () => {
     renderPage();
-    fireEvent.click(screen.getByRole('switch'));
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    fireEvent.mouseDown(screen.getByLabelText('提醒视图'));
+    fireEvent.click(await screen.findByText('列表'));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith({ reminderViewMode: 'list' }));
   });
 
   it('shows rollback error when save fails', async () => {
     mockUpdate.mockReturnValue({ unwrap: () => Promise.reject(new Error('boom')) });
     renderPage();
-    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.mouseDown(screen.getByLabelText('提醒视图'));
+    fireEvent.click(await screen.findByText('列表'));
     await waitFor(() => expect(screen.getByText(/boom|保存失败/)).toBeInTheDocument());
+  });
+
+  it('does not offer a personal switch that cannot control mandatory business notifications', () => {
+    renderPage();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.getByText('证照、采购和任务通知由业务规则控制。')).toBeInTheDocument();
   });
 
   it('shows read-only main app details and an empty saved-secret field to administrators', () => {

@@ -1,4 +1,4 @@
-import { scheduleFileRecycle } from 'src/modules/files/file-retention';
+import { assertAttachmentFilesBindable, scheduleFileRecycle } from 'src/modules/files/file-retention';
 import {
   BadRequestException,
   ConflictException,
@@ -22,6 +22,7 @@ import {
 } from 'pdf-lib';
 import { Brackets, DataSource, In, IsNull, Repository } from 'typeorm';
 import { CurrentUser } from 'src/common/interfaces/current-user.interface';
+import { EXPORT_PDF_THEME } from 'src/common/export/export-theme';
 import { toBusinessDate, toBusinessDateTime } from 'src/common/date/business-date';
 import { appEnv } from 'src/config/env';
 import { FileEntity } from 'src/database/entities/file.entity';
@@ -809,25 +810,17 @@ export class ProcurementService {
     dto: ProcurementOrderBindFilesDto,
     user: CurrentUser,
   ) {
-    const order = await this.mustFindOrder(id);
-    this.assertCanEditDraft(order, user);
-
-    const files = await this.fileRepository.find({
-      where: { id: In(dto.fileIds) },
-    });
-    if (files.length !== dto.fileIds.length) {
-      throw new NotFoundException('file not found');
-    }
-
-    const existing = await this.orderFileRepository.find({
-      where: { orderId: id },
-    });
-    const existingSet = new Set(existing.map((item) => item.fileId));
-
-    const rows = dto.fileIds
-      .filter((fileId) => !existingSet.has(fileId))
-      .map((fileId) =>
-        this.orderFileRepository.create({
+    await this.dataSource.transaction(async (manager) => {
+      const order = await manager.findOne(ProcurementOrderEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!order) throw new NotFoundException('procurement order not found');
+      this.assertCanEditDraft(order, user);
+      const existing = await manager.find(ProcurementOrderFileEntity, { where: { orderId: id } });
+      const existingSet = new Set(existing.map((item) => item.fileId));
+      const ids = [...new Set(dto.fileIds)];
+      const available = await assertAttachmentFilesBindable(manager, ids, user, [...existingSet]);
+      if (ids.some((fileId) => !available.has(fileId))) throw new NotFoundException('file not found');
+      const rows = ids.filter((fileId) => !existingSet.has(fileId)).map((fileId) =>
+        manager.create(ProcurementOrderFileEntity, {
           orderId: id,
           fileId,
           relationType: 'attachment',
@@ -835,9 +828,8 @@ export class ProcurementService {
         }),
       );
 
-    if (rows.length) {
-      await this.orderFileRepository.save(rows);
-    }
+      if (rows.length) await manager.save(ProcurementOrderFileEntity, rows);
+    });
 
     return this.getOrderDetail(id, user);
   }
@@ -2281,48 +2273,48 @@ export class ProcurementService {
     departmentCode: ProcurementDepartmentCode,
   ): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
-    const userIds = rows
-      .filter((row) => {
-        const effective = this.effectiveAuthorization(row);
+    const authorized = await Promise.all(rows.map(async (row) => ({ row, effective: await this.effectiveAuthorization(row) })));
+    const userIds = authorized
+      .filter(({ effective }) => {
         return Boolean(
           effective &&
           (effective.roles.includes(DEPARTMENT_ROLE_MAP[departmentCode]) ||
             effective.roles.includes('system_admin')),
         );
       })
-      .map((row) => row.userId);
+      .map(({ row }) => row.userId);
 
     return [...new Set(userIds)];
   }
 
   private async listFinanceApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
-    const userIds = rows
-      .filter((row) => {
-        const effective = this.effectiveAuthorization(row);
+    const authorized = await Promise.all(rows.map(async (row) => ({ row, effective: await this.effectiveAuthorization(row) })));
+    const userIds = authorized
+      .filter(({ effective }) => {
         return Boolean(effective && (effective.roles.includes('finance') || effective.roles.includes('system_admin')));
       })
-      .map((row) => row.userId);
+      .map(({ row }) => row.userId);
 
     return [...new Set(userIds)];
   }
 
   private async listGeneralOfficeApproverUserIds(): Promise<string[]> {
     const rows = await this.wecomUserRepository.find();
-    const userIds = rows
-      .filter((row) => {
-        const effective = this.effectiveAuthorization(row);
+    const authorized = await Promise.all(rows.map(async (row) => ({ row, effective: await this.effectiveAuthorization(row) })));
+    const userIds = authorized
+      .filter(({ effective }) => {
         return Boolean(effective && (effective.roles.includes('general_office') || effective.roles.includes('system_admin')));
       })
-      .map((row) => row.userId);
+      .map(({ row }) => row.userId);
 
     return [...new Set(userIds)];
   }
 
-  private effectiveAuthorization(user: WecomUserEntity) {
+  private async effectiveAuthorization(user: WecomUserEntity) {
     if (this.authorizationService) {
       try {
-        return this.authorizationService.getEffectiveAuthorization(user);
+        return await this.authorizationService.getEffectiveAuthorization(user);
       } catch {
         return null;
       }
@@ -2341,7 +2333,7 @@ export class ProcurementService {
     const member = await this.wecomUserRepository.findOne({ where: { userId: recipientUserId } });
     if (!member || !this.authorizationService) return false;
     let user: CurrentUser;
-    try { user = this.authorizationService.toCurrentUser(member); } catch { return false; }
+    try { user = await this.authorizationService.toCurrentUser(member); } catch { return false; }
     const [kind, id, event, actionOrLevel, status] = dedupeKey.split(':');
     if (kind === 'procurement-order') {
       const order = await this.orderRepository.findOne({ where: { id, deletedAt: IsNull() } });
@@ -2376,10 +2368,11 @@ export class ProcurementService {
     const resolvedUsers = await this.wecomUserRepository.find({
       where: { userId: In(uniqueUserIds) },
     });
+    const available = await Promise.all(resolvedUsers.map((item) => this.effectiveAuthorization(item)));
     let resolvedUserIds = [
       ...new Set(
         resolvedUsers
-          .filter((item) => this.effectiveAuthorization(item))
+          .filter((_item, index) => available[index])
           .map((item) => item.userId),
       ),
     ];
@@ -2508,12 +2501,12 @@ export class ProcurementService {
     const latinFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const latinBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const mediumFont = regularFont;
-    const dark = rgb(0.08, 0.08, 0.08);
-    const muted = rgb(0.38, 0.38, 0.38);
-    const hairline = rgb(0.78, 0.78, 0.78);
-    const strongLine = rgb(0.35, 0.35, 0.35);
-    const softFill = rgb(0.96, 0.96, 0.96);
-    const paleFill = rgb(0.98, 0.98, 0.98);
+    const dark = EXPORT_PDF_THEME.navy;
+    const muted = EXPORT_PDF_THEME.muted;
+    const hairline = EXPORT_PDF_THEME.line;
+    const strongLine = EXPORT_PDF_THEME.navy;
+    const softFill = EXPORT_PDF_THEME.pale;
+    const paleFill = EXPORT_PDF_THEME.stripe;
     let page: PDFPage | null = null;
     let pageNumber = 0;
     let cursorY = 0;

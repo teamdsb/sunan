@@ -1,0 +1,32 @@
+PASS test/master-data.integration.spec.ts (5.98 s)
+FAIL test/full-system-admin.integration.spec.ts (5.962 s)
+  ● Full-system master data and administration HTTP roundtrips › verifies signed callback echoes and records a connection probe without sending a message
+
+    expected 200 "OK", got 503 "Service Unavailable"
+
+      92 |     const probe = jest.spyOn(app.get(OssService), 'checkConnection').mockResolvedValue(undefined);
+      93 |     try {
+    > 94 |       await api().get('/api/health/ready').expect(200);
+         |                                            ^
+      95 |       probe.mockRejectedValue(new Error('synthetic-storage-unavailable'));
+      96 |       await api().get('/api/health/ready').expect(503);
+      97 |     } finally { probe.mockRestore(); }
+
+      at Object.<anonymous> (test/full-system-admin.integration.spec.ts:94:44)
+      ----
+      at Test._assertStatus (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at ../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (../../node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+      at Server.http.Server.emit (../../scripts/trace-api-http.cjs:19:17)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 7 passed, 8 total
+Snapshots:   0 total
+Time:        12.001 s
+Ran all test suites matching /test\/full-system-admin.integration.spec.ts|test\/master-data.integration.spec.ts/i.
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/full-system-admin.integration.spec.ts test/master-data.integration.spec.ts

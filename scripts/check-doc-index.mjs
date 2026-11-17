@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const root = process.cwd();
 const allowedStatuses = new Set([
@@ -16,19 +17,6 @@ const allowedStatuses = new Set([
   'superseded',
   'template',
 ]);
-
-function walk(dir, out = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === '.agents' || entry.name === '.git' || entry.name === 'node_modules') continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      walk(full, out);
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      out.push(path.relative(root, full).split(path.sep).join('/'));
-    }
-  }
-  return out;
-}
 
 function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8').replace(/^\uFEFF/, '');
@@ -65,7 +53,12 @@ function markdownLinks(file) {
   return links;
 }
 
-const files = walk(root).sort();
+// Match inventory generation and honor Git's ignored local artifacts/backups.
+// NUL separators preserve Chinese paths, spaces and special characters.
+const files = [...new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { encoding: 'utf8' })
+  .split('\0'))]
+  .filter((file) => file.endsWith('.md') && !file.startsWith('.agents/') && fs.existsSync(path.join(root, file)))
+  .sort();
 const errors = [];
 const statuses = new Map();
 

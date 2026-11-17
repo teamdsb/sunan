@@ -52,7 +52,6 @@ interface RefreshResponse {
 let accessTokenRefreshPromise: Promise<boolean> | null = null;
 let authFailureRedirected = false;
 let lastCurrentUserInvalidationAt = 0;
-let currentUserRefetchPromise: Promise<unknown> | null = null;
 const CURRENT_USER_INVALIDATION_COOLDOWN_MS = 1000;
 
 function isBrowser(): boolean {
@@ -112,15 +111,6 @@ async function refreshAccessTokenOnce(
     });
   }
   return accessTokenRefreshPromise;
-}
-
-export function refetchCurrentUserOnce(refetch: () => Promise<unknown>): Promise<unknown> {
-  if (!currentUserRefetchPromise) {
-    currentUserRefetchPromise = Promise.resolve(refetch()).finally(() => {
-      currentUserRefetchPromise = null;
-    });
-  }
-  return currentUserRefetchPromise;
 }
 
 function toQueryError(error: unknown) {

@@ -1,0 +1,157 @@
+FAIL test/file-authorization.integration.spec.ts (8.289 s)
+  File access and attachment authorization integration
+    ✓ keeps uploader access to an unbound temporary file, including encoded slash keys and callback retries (34 ms)
+    ✕ denies global download and callback signatures for temporary files without temporary uploader access (5 ms)
+    ✕ denies global download and callback signatures for bound files without temporary uploader access (10 ms)
+    ✕ denies global download and callback signatures for bound-admin files without temporary uploader access (7 ms)
+    ✕ denies WeCom media replay signatures for other-uploader files (4 ms)
+    ✕ denies WeCom media replay signatures for bound files (8 ms)
+    ✕ does not launder known other-temporary file IDs through a readable procurement draft (14 ms)
+    ✕ does not launder known own-bound file IDs through a readable procurement draft (13 ms)
+    ✕ does not launder known other-bound file IDs through a readable procurement draft (10 ms)
+    ✓ binds an uploader temporary file and preserves an existing attachment from another uploader idempotently (13 ms)
+
+  ● File access and attachment authorization integration › denies global download and callback signatures for temporary files without temporary uploader access
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      103 |     if (kind !== 'temporary') await bindFixture(file);
+      104 |     if (kind === 'bound-admin') currentUser = user('admin', ['system_admin']);
+    > 105 |     expect((await http().get(`/api/v1/files/${encodeURIComponent(file.ossKey)}/download-url`)).status).toBe(403);
+          |                                                                                                        ^
+      106 |     expect((await callback(file)).status).toBe(403);
+      107 |     expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+      108 |   });
+
+      at test/file-authorization.integration.spec.ts:105:104
+
+  ● File access and attachment authorization integration › denies global download and callback signatures for bound files without temporary uploader access
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      103 |     if (kind !== 'temporary') await bindFixture(file);
+      104 |     if (kind === 'bound-admin') currentUser = user('admin', ['system_admin']);
+    > 105 |     expect((await http().get(`/api/v1/files/${encodeURIComponent(file.ossKey)}/download-url`)).status).toBe(403);
+          |                                                                                                        ^
+      106 |     expect((await callback(file)).status).toBe(403);
+      107 |     expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+      108 |   });
+
+      at test/file-authorization.integration.spec.ts:105:104
+
+  ● File access and attachment authorization integration › denies global download and callback signatures for bound-admin files without temporary uploader access
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      103 |     if (kind !== 'temporary') await bindFixture(file);
+      104 |     if (kind === 'bound-admin') currentUser = user('admin', ['system_admin']);
+    > 105 |     expect((await http().get(`/api/v1/files/${encodeURIComponent(file.ossKey)}/download-url`)).status).toBe(403);
+          |                                                                                                        ^
+      106 |     expect((await callback(file)).status).toBe(403);
+      107 |     expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+      108 |   });
+
+      at test/file-authorization.integration.spec.ts:105:104
+
+  ● File access and attachment authorization integration › denies WeCom media replay signatures for other-uploader files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+      115 |     });
+      116 |     if (kind === 'bound') await bindFixture(file);
+    > 117 |     expect((await http().post('/api/v1/files/from-wecom').send({ mediaId, category: 'inspection-photos' })).status).toBe(403);
+          |                                                                                                                     ^
+      118 |     expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+      119 |     expect(gateway.getMedia).not.toHaveBeenCalled();
+      120 |   });
+
+      at test/file-authorization.integration.spec.ts:117:117
+
+  ● File access and attachment authorization integration › denies WeCom media replay signatures for bound files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+      115 |     });
+      116 |     if (kind === 'bound') await bindFixture(file);
+    > 117 |     expect((await http().post('/api/v1/files/from-wecom').send({ mediaId, category: 'inspection-photos' })).status).toBe(403);
+          |                                                                                                                     ^
+      118 |     expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+      119 |     expect(gateway.getMedia).not.toHaveBeenCalled();
+      120 |   });
+
+      at test/file-authorization.integration.spec.ts:117:117
+
+  ● File access and attachment authorization integration › does not launder known other-temporary file IDs through a readable procurement draft
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+      125 |     const target = await createOrder();
+      126 |     const response = await http().post(`/api/v1/procurement/orders/${target.id}/attachments`).send({ fileIds: [file.id] });
+    > 127 |     expect(response.status).toBe(403);
+          |                             ^
+      128 |     expect(await ds.getRepository(ProcurementOrderFileEntity).countBy({ orderId: target.id })).toBe(0);
+      129 |   });
+      130 |
+
+      at test/file-authorization.integration.spec.ts:127:29
+
+  ● File access and attachment authorization integration › does not launder known own-bound file IDs through a readable procurement draft
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+      125 |     const target = await createOrder();
+      126 |     const response = await http().post(`/api/v1/procurement/orders/${target.id}/attachments`).send({ fileIds: [file.id] });
+    > 127 |     expect(response.status).toBe(403);
+          |                             ^
+      128 |     expect(await ds.getRepository(ProcurementOrderFileEntity).countBy({ orderId: target.id })).toBe(0);
+      129 |   });
+      130 |
+
+      at test/file-authorization.integration.spec.ts:127:29
+
+  ● File access and attachment authorization integration › does not launder known other-bound file IDs through a readable procurement draft
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+      125 |     const target = await createOrder();
+      126 |     const response = await http().post(`/api/v1/procurement/orders/${target.id}/attachments`).send({ fileIds: [file.id] });
+    > 127 |     expect(response.status).toBe(403);
+          |                             ^
+      128 |     expect(await ds.getRepository(ProcurementOrderFileEntity).countBy({ orderId: target.id })).toBe(0);
+      129 |   });
+      130 |
+
+      at test/file-authorization.integration.spec.ts:127:29
+
+Test Suites: 1 failed, 1 total
+Tests:       8 failed, 2 passed, 10 total
+Snapshots:   0 total
+Time:        8.328 s
+Ran all test suites matching /test\/file-authorization.integration.spec.ts/i.
+undefined
+/Users/yuan/项目/sunan/sunan/apps/api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: jest --config ./jest.integration.config.ts --runInBand test/file-authorization.integration.spec.ts

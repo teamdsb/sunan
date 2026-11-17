@@ -124,11 +124,12 @@ export function OfficeAdminPage() {
   const [auditEntryId, setAuditEntryId] = useState<string | undefined>(
     undefined,
   );
+  const [auditPage, setAuditPage] = useState(1);
   const { data: auditResponse, isLoading: isAuditLoading } =
     useGetOfficeAdminAuditsQuery({
       action: auditAction,
       entryId: auditEntryId,
-      page: 1,
+      page: auditPage,
       pageSize: 20,
     });
   const [form] = Form.useForm<OfficeEntryMutationPayload>();
@@ -394,7 +395,7 @@ export function OfficeAdminPage() {
                 allowClear
                 placeholder="动作"
                 value={auditAction}
-                onChange={(value) => setAuditAction(value)}
+                onChange={(value) => { setAuditAction(value); setAuditPage(1); }}
                 options={[
                   { label: '创建', value: 'create' },
                   { label: '更新', value: 'update' },
@@ -407,7 +408,7 @@ export function OfficeAdminPage() {
                 allowClear
                 placeholder="入口"
                 value={auditEntryId}
-                onChange={(value) => setAuditEntryId(value)}
+                onChange={(value) => { setAuditEntryId(value); setAuditPage(1); }}
                 options={entries.map((entry) => ({
                   label: entry.title,
                   value: entry.id,
@@ -421,7 +422,7 @@ export function OfficeAdminPage() {
             loading={isAuditLoading}
             columns={auditColumns}
             dataSource={audits}
-            pagination={false}
+            pagination={{ current: auditPage, pageSize: 20, total: auditResponse?.meta.total ?? 0, showSizeChanger: false, onChange: setAuditPage }}
           />
         </Card>
       </section>

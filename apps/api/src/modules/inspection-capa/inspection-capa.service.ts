@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, Repository } from 'typeorm';
 
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { toBusinessDateTime } from 'src/common/date/business-date';
@@ -14,6 +14,8 @@ import {
 import { SafetyPlanItemEntity, SafetyTaskEntity, SafetyTaskParticipantEntity } from 'src/database/entities/safety-plan-task.entity';
 import { WorkbenchRecordEntity } from 'src/database/entities/workbench-record.entity';
 import { PlanTaskService } from 'src/modules/plan-task/plan-task.service';
+import { assertAttachmentFilesBindable } from 'src/modules/files/file-retention';
+import { OssService } from 'src/modules/files/oss.service';
 import {
   AcceptCapaActionDto, CloseIssueDto, CreateCapaActionDto, CreateCapaDto, CreateInspectionPlanDto, CreateIssueDto, CreateTemplateDto, CreateTemplateVersionDto,
   InspectionGenerationDto, InspectionListQueryDto, IssueListQueryDto, RootCauseDto, SaveInspectionResultDto, SubmitCapaActionDto, SubmitInspectionDto, VerificationDto,
@@ -59,11 +61,14 @@ export class InspectionCapaService {
     @InjectRepository(WorkbenchRecordEntity) private readonly workbenchRecords: Repository<WorkbenchRecordEntity>,
     private readonly planTasks: PlanTaskService,
     private readonly dataSource: DataSource,
+    private readonly ossService: OssService,
   ) {}
 
   async listTemplates(user: CurrentUser) {
     this.assertManager(user);
-    return { data: (await this.templates.find({ where: { deletedAt: IsNull() }, order: { createdAt: 'desc' } })).map((template) => this.templateDto(template)) };
+    const templates = await this.templates.find({ where: { deletedAt: IsNull() }, order: { createdAt: 'desc' } });
+    const published = new Set((await this.versions.find({ where: { status: 'published', deletedAt: IsNull() } })).map((version) => version.id));
+    return { data: templates.map((template) => ({ ...this.templateDto(template), currentVersionId: template.currentVersionId && published.has(template.currentVersionId) ? template.currentVersionId : null })) };
   }
 
   async createTemplate(user: CurrentUser, input: CreateTemplateDto, requestId: string) {
@@ -78,7 +83,6 @@ export class InspectionCapaService {
       if (!scope.vesselId && !scope.departmentCode?.trim()) throw new UnprocessableEntityException('Template scope requires vessel or department');
       await this.templateScopes.save(this.templateScopes.create({ templateId: template.id, vesselId: scope.vesselId ?? null, departmentCode: scope.departmentCode?.trim() || null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
     }
-    template.currentVersionId = version.id; template.updatedBy = user.userId; await this.templates.save(template);
     await this.audit('inspection_template', template.id, 'create', user.userId, requestId, null, this.templateDto(template));
     return this.templateDto(template);
   }
@@ -117,22 +121,15 @@ export class InspectionCapaService {
     if (version.status !== 'published') throw new UnprocessableEntityException('Inspection plans require a published template version');
     const plan = await this.planTasks.createPlan(user, { title: input.title, planType: input.recurrence.kind, timeZone: 'Asia/Shanghai', vesselId: input.vesselId });
     const item = await this.planTasks.addItem(plan.id, user, { title: input.title, responsibleUserId: input.responsibleUserId, participantUserIds: input.participantUserIds, completionRule: input.completionRule, quorumCount: input.quorumCount, recurrence: input.recurrence, dueOffsetMinutes: input.dueOffsetMinutes, enabled: true });
-    await this.planTasks.changePlanStatus(plan.id, user, { actionType: 'activate' });
     const inspectionPlan = await this.inspectionPlans.save(this.inspectionPlans.create({ title: input.title.trim(), planId: plan.id, planItemId: item.id, templateVersionId: version.id, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
+    await this.planTasks.changePlanStatus(plan.id, user, { actionType: 'activate' });
     await this.audit('inspection_plan', inspectionPlan.id, 'create', user.userId, requestId, null, this.inspectionPlanDto(inspectionPlan));
     return this.inspectionPlanDto(inspectionPlan);
   }
 
   async generateInspectionPlan(inspectionPlanId: string, user: CurrentUser, input: InspectionGenerationDto, requestId: string) {
     const inspectionPlan = await this.mustInspectionPlan(inspectionPlanId); this.assertManager(user);
-    const run = await this.planTasks.generate(inspectionPlan.planId, user, input, requestId, 'inspection');
-    const tasks = await this.tasks.find({ where: { planItemId: inspectionPlan.planItemId, deletedAt: IsNull() } });
-    for (const task of tasks) {
-      if (await this.inspections.exists({ where: { taskId: task.id, deletedAt: IsNull() } })) continue;
-      const snapshot = await this.templateSnapshot(inspectionPlan.templateVersionId);
-      await this.inspections.save(this.inspections.create({ taskId: task.id, inspectionPlanId: inspectionPlan.id, templateVersionId: inspectionPlan.templateVersionId, templateSnapshot: snapshot, status: 'pending', summarySnapshot: null, completedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
-    }
-    return run;
+    return this.planTasks.generate(inspectionPlan.planId, user, input, requestId, 'inspection');
   }
 
   async listInspections(user: CurrentUser, query: InspectionListQueryDto) {
@@ -145,46 +142,100 @@ export class InspectionCapaService {
 
   async getInspection(inspectionId: string, user: CurrentUser) { const inspection = await this.mustInspection(inspectionId); await this.assertReadInspection(inspection, user); return this.inspectionDto(inspection, user); }
 
+  async getInspectionFileDownloadUrl(inspectionId: string, fileId: string, user: CurrentUser) {
+    const inspection = await this.mustInspection(inspectionId);
+    await this.assertReadInspection(inspection, user);
+    const results = await this.results.find({ where: { inspectionId, deletedAt: IsNull() } });
+    const isSignature = results.some((result) => result.signatureFileId === fileId);
+    const isEvidence = results.length > 0 && await this.resultEvidence.exists({
+      where: { resultId: In(results.map((result) => result.id)), fileId, deletedAt: IsNull() },
+    });
+    if (!isSignature && !isEvidence) throw new NotFoundException('Inspection file not found');
+    return this.fileDownloadSignature(fileId);
+  }
+
+  async getCapaActionFileDownloadUrl(actionId: string, fileId: string, user: CurrentUser) {
+    const action = await this.mustAction(actionId);
+    const capa = await this.mustCapa(action.capaId);
+    await this.assertReadIssue(await this.mustIssue(capa.issueId), user);
+    if (!await this.capaEvidence.exists({ where: { capaActionId: actionId, fileId, status: 'active', deletedAt: IsNull() } })) {
+      throw new NotFoundException('CAPA evidence file not found');
+    }
+    return this.fileDownloadSignature(fileId);
+  }
+
+  private async fileDownloadSignature(fileId: string) {
+    const file = await this.files.findOneBy({ id: fileId });
+    if (!file) throw new NotFoundException('Evidence file not found');
+    return this.ossService.createDownloadSignature(file.ossKey);
+  }
+
   async saveInspectionResult(inspectionId: string, user: CurrentUser, input: SaveInspectionResultDto, requestId: string) {
-    const inspection = await this.mustInspection(inspectionId); await this.assertInspectionExecutor(inspection, user);
-    if (['completed', 'cancelled'].includes(inspection.status)) throw new ConflictException('Terminal inspections cannot be changed');
-    const snapshot = inspection.templateSnapshot as { items?: Array<{ snapshotKey: string; evidenceRequiredOnFailure?: boolean }> };
-    const item = snapshot.items?.find((candidate) => candidate.snapshotKey === input.templateItemSnapshotKey);
-    if (!item) throw new UnprocessableEntityException('Snapshot item does not exist');
-    if (input.conclusion === 'nonconforming' && item.evidenceRequiredOnFailure && !(input.evidenceFileIds?.length)) throw new UnprocessableEntityException('Nonconforming result requires evidence');
-    let result = await this.results.findOne({ where: { inspectionId, templateItemSnapshotKey: input.templateItemSnapshotKey, inspectorUserId: user.userId, deletedAt: IsNull() } });
-    if (result?.status === 'submitted') throw new ConflictException('Submitted results are immutable');
-    if (!result) result = this.results.create({ inspectionId, templateItemSnapshotKey: input.templateItemSnapshotKey, inspectorUserId: user.userId, conclusion: input.conclusion, remark: input.remark?.trim() || null, status: 'draft', signatureFileId: null, signedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null });
-    else { result.conclusion = input.conclusion; result.remark = input.remark?.trim() || null; result.updatedBy = user.userId; }
-    result = await this.results.save(result);
-    for (const fileId of input.evidenceFileIds ?? []) { await this.assertFile(fileId); if (!(await this.resultEvidence.exists({ where: { resultId: result.id, fileId, deletedAt: IsNull() } }))) await this.resultEvidence.save(this.resultEvidence.create({ resultId: result.id, fileId, category: 'evidence', createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); }
-    inspection.status = inspection.status === 'pending' ? 'in_progress' : inspection.status; inspection.updatedBy = user.userId; await this.inspections.save(inspection);
+    const current = await this.mustInspection(inspectionId); await this.assertInspectionExecutor(current, user);
+    if (['completed', 'cancelled'].includes(current.status)) throw new ConflictException('Terminal inspections cannot be changed');
+    const result = await this.dataSource.transaction(async (manager) => {
+      const { inspection, task } = await this.lockInspectionTask(manager, current);
+      this.assertInspectionWritable(inspection, task);
+      await this.assertInspectionExecutor(inspection, user, manager);
+      const snapshot = inspection.templateSnapshot as { items?: Array<{ snapshotKey: string; evidenceRequiredOnFailure?: boolean }> };
+      const item = snapshot.items?.find((candidate) => candidate.snapshotKey === input.templateItemSnapshotKey);
+      if (!item) throw new UnprocessableEntityException('Snapshot item does not exist');
+      if (input.conclusion === 'nonconforming' && item.evidenceRequiredOnFailure && !(input.evidenceFileIds?.length)) throw new UnprocessableEntityException('Nonconforming result requires evidence');
+      const results = manager.getRepository(InspectionResultEntity);
+      const evidence = manager.getRepository(InspectionResultEvidenceEntity);
+      let row = await results.findOne({ where: { inspectionId, templateItemSnapshotKey: input.templateItemSnapshotKey, inspectorUserId: user.userId, deletedAt: IsNull() } });
+      if (row?.status === 'submitted') throw new ConflictException('Submitted results are immutable');
+      const inspectionResults = await results.find({ where: { inspectionId, deletedAt: IsNull() } });
+      const retained = inspectionResults.length ? await evidence.find({ where: { resultId: In(inspectionResults.map((entry) => entry.id)), deletedAt: IsNull() } }) : [];
+      const fileIds = [...new Set(input.evidenceFileIds ?? [])];
+      const available = await assertAttachmentFilesBindable(manager, fileIds, user, retained.map((entry) => entry.fileId));
+      if (fileIds.some((fileId) => !available.has(fileId))) throw new UnprocessableEntityException('Evidence file not found');
+      if (!row) row = results.create({ inspectionId, templateItemSnapshotKey: input.templateItemSnapshotKey, inspectorUserId: user.userId, conclusion: input.conclusion, remark: input.remark?.trim() || null, status: 'draft', signatureFileId: null, signedAt: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null });
+      else { row.conclusion = input.conclusion; row.remark = input.remark?.trim() || null; row.updatedBy = user.userId; }
+      row = await results.save(row);
+      for (const fileId of fileIds) if (!(await evidence.exists({ where: { resultId: row.id, fileId, deletedAt: IsNull() } }))) await evidence.save(evidence.create({ resultId: row.id, fileId, category: 'evidence', createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
+      inspection.status = inspection.status === 'pending' ? 'in_progress' : inspection.status; inspection.updatedBy = user.userId;
+      await manager.save(InspectionEntity, inspection);
+      return row;
+    });
     await this.audit('inspection_result', result.id, 'save', user.userId, requestId, null, { conclusion: result.conclusion });
     return this.resultDto(result);
   }
 
   async submitInspection(inspectionId: string, user: CurrentUser, input: SubmitInspectionDto, requestId: string) {
-    const inspection = await this.mustInspection(inspectionId); await this.assertInspectionExecutor(inspection, user); await this.assertFile(input.signatureFileId);
-    const requiredKeys = ((inspection.templateSnapshot as { items?: Array<{ snapshotKey: string; resultRequired: boolean }> }).items ?? []).filter((item) => item.resultRequired).map((item) => item.snapshotKey);
-    const rows = await this.results.find({ where: { inspectionId, inspectorUserId: user.userId, deletedAt: IsNull() } });
-    if (!requiredKeys.every((key) => rows.some((row) => row.templateItemSnapshotKey === key))) throw new UnprocessableEntityException('All required inspection results must be completed before signing');
-    if (rows.some((row) => row.status === 'submitted')) throw new ConflictException('Inspection has already been submitted by this participant');
-    const now = new Date(); for (const row of rows) { row.status = 'submitted'; row.signatureFileId = input.signatureFileId; row.signedAt = now; row.updatedBy = user.userId; } await this.results.save(rows);
-    const participant = await this.participants.findOne({ where: { taskId: inspection.taskId, userId: user.userId, status: 'active', deletedAt: IsNull() } }); if (participant) { participant.completedAt = now; participant.updatedBy = user.userId; await this.participants.save(participant); }
-    inspection.status = 'submitted'; inspection.updatedBy = user.userId; await this.inspections.save(inspection); await this.audit('inspection', inspection.id, 'submit', user.userId, requestId, null, { signatureFileId: input.signatureFileId });
+    const current = await this.mustInspection(inspectionId); await this.assertInspectionExecutor(current, user);
+    if (['completed', 'cancelled'].includes(current.status)) throw new ConflictException('Terminal inspections cannot be changed');
+    const inspection = await this.dataSource.transaction(async (manager) => {
+      const { inspection: row, task } = await this.lockInspectionTask(manager, current);
+      this.assertInspectionWritable(row, task);
+      await this.assertInspectionExecutor(row, user, manager);
+      const requiredKeys = ((row.templateSnapshot as { items?: Array<{ snapshotKey: string; resultRequired: boolean }> }).items ?? []).filter((item) => item.resultRequired).map((item) => item.snapshotKey);
+      const rows = await manager.find(InspectionResultEntity, { where: { inspectionId, inspectorUserId: user.userId, deletedAt: IsNull() } });
+      if (!requiredKeys.every((key) => rows.some((result) => result.templateItemSnapshotKey === key))) throw new UnprocessableEntityException('All required inspection results must be completed before signing');
+      if (rows.some((result) => result.status === 'submitted')) throw new ConflictException('Inspection has already been submitted by this participant');
+      const available = await assertAttachmentFilesBindable(manager, [input.signatureFileId], user, rows.flatMap((result) => result.signatureFileId ? [result.signatureFileId] : []));
+      if (!available.has(input.signatureFileId)) throw new UnprocessableEntityException('Evidence file not found');
+      const now = new Date(); for (const result of rows) { result.status = 'submitted'; result.signatureFileId = input.signatureFileId; result.signedAt = now; result.updatedBy = user.userId; }
+      await manager.save(InspectionResultEntity, rows);
+      const participant = await manager.findOne(SafetyTaskParticipantEntity, { where: { taskId: row.taskId, userId: user.userId, status: 'active', deletedAt: IsNull() } });
+      if (participant) { participant.completedAt = now; participant.updatedBy = user.userId; await manager.save(SafetyTaskParticipantEntity, participant); }
+      row.status = 'submitted'; row.updatedBy = user.userId; await manager.save(InspectionEntity, row);
+      return row;
+    });
+    await this.audit('inspection', inspection.id, 'submit', user.userId, requestId, null, { signatureFileId: input.signatureFileId });
     return this.inspectionDto(inspection, user);
   }
 
   async summarizeInspection(inspectionId: string, user: CurrentUser, requestId: string) {
-    this.assertManager(user); const jobIds = await this.dataSource.transaction(async (manager) => {
-      await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`inspection:${inspectionId}`]);
+    this.assertManager(user); const current = await this.mustInspection(inspectionId);
+    const jobIds = await this.dataSource.transaction(async (manager) => {
+      const { inspection, task } = await this.lockInspectionTask(manager, current);
       const inspections = manager.getRepository(InspectionEntity); const results = manager.getRepository(InspectionResultEntity); const jobs = manager.getRepository(IssueTransferJobEntity);
-      const inspection = await inspections.findOneBy({ id: inspectionId, deletedAt: IsNull() }); if (!inspection) throw new NotFoundException('Inspection not found');
-      if (inspection.status === 'completed') return [] as string[];
+      if (inspection.status === 'completed' && task.status === 'completed') return [] as string[];
+      this.assertInspectionWritable(inspection, task);
       const participants = await manager.getRepository(SafetyTaskParticipantEntity).find({ where: { taskId: inspection.taskId, status: 'active', deletedAt: IsNull() } });
       const submittedRows = await results.find({ where: { inspectionId, status: 'submitted', deletedAt: IsNull() } });
       const submittedBy = [...new Set(submittedRows.map((row) => row.inspectorUserId))];
-      const task = await manager.getRepository(SafetyTaskEntity).findOneBy({ id: inspection.taskId, deletedAt: IsNull() }); if (!task) throw new NotFoundException('Task not found');
       const inspectionPlan = await manager.getRepository(InspectionPlanEntity).findOneBy({ id: inspection.inspectionPlanId, deletedAt: IsNull() }); if (!inspectionPlan) throw new NotFoundException('Inspection plan not found');
       const planItem = await manager.getRepository(SafetyPlanItemEntity).findOneBy({ id: inspectionPlan.planItemId, deletedAt: IsNull() }); if (!planItem) throw new NotFoundException('Plan item not found');
       const taskParticipants = participants.length ? participants.map((row) => row.userId) : [task.responsibleUserId];
@@ -238,9 +289,22 @@ export class InspectionCapaService {
   }
 
   async submitCapaAction(actionId: string, user: CurrentUser, input: SubmitCapaActionDto, requestId: string) {
-    const action = await this.mustAction(actionId); if (action.responsibleUserId !== user.userId && !this.isAdmin(user)) throw new ForbiddenException('Only the action owner may submit completion'); if (!['draft', 'assigned', 'in_progress', 'returned'].includes(action.status)) throw new ConflictException('Action cannot be submitted');
-    for (const fileId of input.evidenceFileIds) { await this.assertFile(fileId); if (!(await this.capaEvidence.exists({ where: { capaActionId: action.id, fileId, deletedAt: IsNull() } }))) await this.capaEvidence.save(this.capaEvidence.create({ capaActionId: action.id, fileId, status: 'active', withdrawReason: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null })); }
-    action.status = 'submitted'; action.completionStatement = input.completionStatement.trim(); action.submittedAt = new Date(); action.updatedBy = user.userId; await this.capaActions.save(action); await this.audit('capa_action', action.id, 'submit', user.userId, requestId, null, { evidenceCount: input.evidenceFileIds.length }); return this.capaActionDto(action, user, await this.mustCapa(action.capaId));
+    const action = await this.dataSource.transaction(async (manager) => {
+      const row = await manager.findOne(CapaActionEntity, { where: { id: actionId, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+      if (!row) throw new NotFoundException('Action not found');
+      if (row.responsibleUserId !== user.userId && !this.isAdmin(user)) throw new ForbiddenException('Only the action owner may submit completion');
+      if (!['draft', 'assigned', 'in_progress', 'returned'].includes(row.status)) throw new ConflictException('Action cannot be submitted');
+      const evidence = manager.getRepository(CapaActionEvidenceEntity);
+      const retained = await evidence.find({ where: { capaActionId: actionId, deletedAt: IsNull() } });
+      const fileIds = [...new Set(input.evidenceFileIds)];
+      const available = await assertAttachmentFilesBindable(manager, fileIds, user, retained.map((entry) => entry.fileId));
+      if (fileIds.some((fileId) => !available.has(fileId))) throw new UnprocessableEntityException('Evidence file not found');
+      for (const fileId of fileIds) if (!retained.some((entry) => entry.fileId === fileId)) await evidence.save(evidence.create({ capaActionId: row.id, fileId, status: 'active', withdrawReason: null, createdBy: user.userId, updatedBy: user.userId, deletedAt: null }));
+      row.status = 'submitted'; row.completionStatement = input.completionStatement.trim(); row.submittedAt = new Date(); row.updatedBy = user.userId;
+      return manager.save(CapaActionEntity, row);
+    });
+    await this.audit('capa_action', action.id, 'submit', user.userId, requestId, null, { evidenceCount: input.evidenceFileIds.length });
+    return this.capaActionDto(action, user, await this.mustCapa(action.capaId));
   }
 
   async acceptCapaAction(actionId: string, user: CurrentUser, input: AcceptCapaActionDto, requestId: string) {
@@ -299,15 +363,38 @@ export class InspectionCapaService {
   private async mustIssue(id: string) { const row = await this.issues.findOneBy({ id, deletedAt: IsNull() }); if (!row) throw new NotFoundException('Issue not found'); return row; }
   private async mustCapa(id: string) { const row = await this.capas.findOneBy({ id, deletedAt: IsNull() }); if (!row) throw new NotFoundException('CAPA not found'); return row; }
   private async mustAction(id: string) { const row = await this.capaActions.findOneBy({ id, deletedAt: IsNull() }); if (!row) throw new NotFoundException('CAPA action not found'); return row; }
-  private async assertFile(id: string) { if (!(await this.files.exists({ where: { id } }))) throw new UnprocessableEntityException('Evidence file not found'); }
   private async assertActivePersonnel(userId: string) { const person = await this.personnel.findOne({ where: { wecomUserId: userId, deletedAt: IsNull() } }); if (!person || person.employmentStatus !== 'active') throw new UnprocessableEntityException('Active personnel not found'); }
   private async assertSource(type: string, id: string, user: CurrentUser) { if (type !== 'workbench_record') throw new UnprocessableEntityException('Only authorized workbench sources may be linked manually'); const record = await this.workbenchRecords.findOne({ where: { id, deletedAt: IsNull() } }); if (!record || !SOURCE_MODULES.has(record.moduleCode)) throw new UnprocessableEntityException('Unsupported workbench inspection source'); if (record.ownerUserId !== user.userId && !this.isManager(user)) throw new ForbiddenException('Source record is not visible'); }
   private async canReadInspection(inspection: InspectionEntity, user: CurrentUser) { if (this.isManager(user)) return true; const task = await this.tasks.findOneBy({ id: inspection.taskId, deletedAt: IsNull() }); if (!task) return false; if (task.responsibleUserId === user.userId) return true; return this.participants.exists({ where: { taskId: inspection.taskId, userId: user.userId, status: 'active', deletedAt: IsNull() } }); }
   private async assertReadInspection(inspection: InspectionEntity, user: CurrentUser) { if (!(await this.canReadInspection(inspection, user))) throw new ForbiddenException('Inspection is not visible'); }
-  private async assertInspectionExecutor(inspection: InspectionEntity, user: CurrentUser) { const task = await this.tasks.findOneBy({ id: inspection.taskId, deletedAt: IsNull() }); if (!task) throw new NotFoundException('Task not found'); if (task.responsibleUserId === user.userId) return; const participant = await this.participants.findOne({ where: { taskId: task.id, userId: user.userId, status: 'active', deletedAt: IsNull() } }); if (!participant || !['executor', 'collaborator'].includes(participant.role)) throw new ForbiddenException('Only an active inspection participant may submit results'); }
+  private async assertInspectionExecutor(inspection: InspectionEntity, user: CurrentUser, manager?: EntityManager) { const task = await (manager?.getRepository(SafetyTaskEntity) ?? this.tasks).findOneBy({ id: inspection.taskId, deletedAt: IsNull() }); if (!task) throw new NotFoundException('Task not found'); if (task.responsibleUserId === user.userId) return; const participant = await (manager?.getRepository(SafetyTaskParticipantEntity) ?? this.participants).findOne({ where: { taskId: task.id, userId: user.userId, status: 'active', deletedAt: IsNull() } }); if (!participant || !['executor', 'collaborator'].includes(participant.role)) throw new ForbiddenException('Only an active inspection participant may submit results'); }
+
+  private async lockInspectionTask(manager: EntityManager, current: InspectionEntity) {
+    // Match generic task actions: serialize both records, then lock task before inspection.
+    await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`task:${current.taskId}`]);
+    const task = await manager.findOne(SafetyTaskEntity, { where: { id: current.taskId, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+    if (!task) throw new NotFoundException('Task not found');
+    const inspection = await manager.findOne(InspectionEntity, { where: { id: current.id, taskId: current.taskId, deletedAt: IsNull() }, lock: { mode: 'pessimistic_write' } });
+    if (!inspection) throw new NotFoundException('Inspection not found');
+    return { inspection, task };
+  }
+
+  private assertInspectionWritable(inspection: InspectionEntity, task: SafetyTaskEntity) {
+    if (['completed', 'cancelled'].includes(inspection.status) || ['completed', 'cancelled'].includes(task.status)) throw new ConflictException('Terminal inspections or tasks cannot be changed');
+  }
   private canReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { return this.isManager(user) || issue.createdBy === user.userId || issue.responsibleUserId === user.userId; }
-  private async assertReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { if (this.canReadIssue(issue, user)) return; const isVerifier = await this.capas.exists({ where: { issueId: issue.id, verifierUserId: user.userId, deletedAt: IsNull() } }); if (!isVerifier) throw new ForbiddenException('Issue is not visible'); }
-  private async visibleIssueIds(issues: SafetyIssueEntity[], user: CurrentUser) { const visible = new Set(issues.filter((issue) => this.canReadIssue(issue, user)).map((issue) => issue.id)); const hiddenIds = issues.filter((issue) => !visible.has(issue.id)).map((issue) => issue.id); if (hiddenIds.length) { const verified = await this.capas.find({ where: { issueId: In(hiddenIds), verifierUserId: user.userId, deletedAt: IsNull() } }); verified.forEach((capa) => visible.add(capa.issueId)); } return visible; }
+  private async assertReadIssue(issue: SafetyIssueEntity, user: CurrentUser) { if (!(await this.visibleIssueIds([issue], user)).has(issue.id)) throw new ForbiddenException('Issue is not visible'); }
+  private async visibleIssueIds(issues: SafetyIssueEntity[], user: CurrentUser) {
+    const visible = new Set(issues.filter((issue) => this.canReadIssue(issue, user)).map((issue) => issue.id));
+    const hiddenIds = issues.filter((issue) => !visible.has(issue.id)).map((issue) => issue.id);
+    if (hiddenIds.length) {
+      const capas = await this.capas.find({ where: { issueId: In(hiddenIds), deletedAt: IsNull() } });
+      const assignedActions = capas.length ? await this.capaActions.find({ where: { capaId: In(capas.map((capa) => capa.id)), responsibleUserId: user.userId, deletedAt: IsNull() } }) : [];
+      const assignedCapaIds = new Set(assignedActions.map((action) => action.capaId));
+      capas.filter((capa) => capa.verifierUserId === user.userId || assignedCapaIds.has(capa.id)).forEach((capa) => visible.add(capa.issueId));
+    }
+    return visible;
+  }
   private assertIssueManager(issue: SafetyIssueEntity, user: CurrentUser) { if (!this.isManager(user) && issue.createdBy !== user.userId && issue.responsibleUserId !== user.userId) throw new ForbiddenException('Issue cannot be managed by caller'); }
   private assertCapaInProgress(capa: SafetyCapaEntity, issue: SafetyIssueEntity) { if (issue.status === 'closed' || capa.status !== 'in_progress') throw new ConflictException('CAPA is not editable in its current state'); }
   private assertManager(user: CurrentUser) { if (!this.isManager(user)) throw new ForbiddenException('Safety management permission is required'); }
@@ -318,8 +405,21 @@ export class InspectionCapaService {
   private templateDto(template: InspectionTemplateEntity) { return { id: template.id, code: template.code, name: template.name, sourceType: template.sourceType, currentVersionId: template.currentVersionId }; }
   private async versionDto(version: InspectionTemplateVersionEntity) { const items = await this.templateItems.find({ where: { versionId: version.id, deletedAt: IsNull() }, order: { sequenceNo: 'ASC' } }); return { id: version.id, templateId: version.templateId, versionNo: version.versionNo, status: version.status, importSource: version.importSource, items: items.map((item) => ({ itemCode: item.itemCode, title: item.title, clauseRef: item.clauseRef, resultRequired: item.resultRequired, evidenceRequiredOnFailure: item.evidenceRequiredOnFailure, sequenceNo: item.sequenceNo })) }; }
   private inspectionPlanDto(plan: InspectionPlanEntity) { return { id: plan.id, title: plan.title, planId: plan.planId, planItemId: plan.planItemId, templateVersionId: plan.templateVersionId }; }
-  private resultDto(row: InspectionResultEntity) { return { id: row.id, inspectorUserId: row.inspectorUserId, templateItemSnapshotKey: row.templateItemSnapshotKey, conclusion: row.conclusion, remark: row.remark, status: row.status, signedAt: row.signedAt }; }
-  private async inspectionDto(inspection: InspectionEntity, user: CurrentUser) { const results = await this.results.find({ where: { inspectionId: inspection.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } }); return { id: inspection.id, taskId: inspection.taskId, status: inspection.status, templateVersionId: inspection.templateVersionId, templateSnapshot: inspection.templateSnapshot, results: results.map((row) => this.resultDto(row)), availableActions: await this.inspectionActions(inspection, user, results) }; }
+  private fileMetadata(file: FileEntity) {
+    return { id: file.id, fileName: file.fileName, mimeType: file.mimeType, fileSize: file.fileSize, createdAt: file.createdAt.toISOString() };
+  }
+
+  private async resultDto(row: InspectionResultEntity) {
+    const evidence = await this.resultEvidence.find({ where: { resultId: row.id, deletedAt: IsNull() } });
+    const ids = [...new Set([...evidence.map((entry) => entry.fileId), ...(row.signatureFileId ? [row.signatureFileId] : [])])];
+    const files = ids.length ? await this.files.findBy({ id: In(ids) }) : [];
+    const fileById = new Map(files.map((file) => [file.id, file]));
+    const signature = row.signatureFileId ? fileById.get(row.signatureFileId) : undefined;
+    return { id: row.id, inspectorUserId: row.inspectorUserId, templateItemSnapshotKey: row.templateItemSnapshotKey, conclusion: row.conclusion, remark: row.remark, status: row.status, signedAt: row.signedAt,
+      evidenceFiles: evidence.flatMap((entry) => { const file = fileById.get(entry.fileId); return file ? [this.fileMetadata(file)] : []; }),
+      signatureFile: signature ? this.fileMetadata(signature) : null };
+  }
+  private async inspectionDto(inspection: InspectionEntity, user: CurrentUser) { const results = await this.results.find({ where: { inspectionId: inspection.id, deletedAt: IsNull() }, order: { createdAt: 'ASC' } }); return { id: inspection.id, taskId: inspection.taskId, status: inspection.status, templateVersionId: inspection.templateVersionId, templateSnapshot: inspection.templateSnapshot, results: await Promise.all(results.map((row) => this.resultDto(row))), availableActions: await this.inspectionActions(inspection, user, results) }; }
   private async inspectionActions(
     inspection: InspectionEntity,
     user: CurrentUser,
@@ -383,7 +483,7 @@ export class InspectionCapaService {
     } | null,
     user: CurrentUser,
   ) {
-    const canRead = this.canReadIssue(issue, user) || capa?.verifierUserId === user.userId;
+    const canRead = this.canReadIssue(issue, user) || capa?.verifierUserId === user.userId || Boolean(capaDetail?.actions.some((action) => action.responsibleUserId === user.userId));
     const canManage = this.isManager(user) || issue.createdBy === user.userId || issue.responsibleUserId === user.userId;
     const corrective = capaDetail?.actions.find((action) => action.actionType === 'corrective');
     const preventive = capaDetail?.actions.find((action) => action.actionType === 'preventive');
@@ -437,6 +537,8 @@ export class InspectionCapaService {
 
   private async capaActionDto(action: CapaActionEntity, user: CurrentUser, capa: SafetyCapaEntity) {
     const evidence = await this.capaEvidence.find({ where: { capaActionId: action.id, status: 'active', deletedAt: IsNull() } });
+    const fileIds = evidence.map((row) => row.fileId);
+    const files = fileIds.length ? await this.files.findBy({ id: In(fileIds) }) : [];
     return {
       id: action.id,
       actionType: action.actionType,
@@ -445,6 +547,7 @@ export class InspectionCapaService {
       dueAt: action.dueAt,
       status: action.status,
       evidenceFileIds: evidence.map((row) => row.fileId),
+      evidenceFiles: files.map((file) => this.fileMetadata(file)),
       availableActions: resolveCapaActionAvailableActions({
         status: action.status,
         isResponsible: action.responsibleUserId === user.userId,

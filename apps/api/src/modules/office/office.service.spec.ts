@@ -253,4 +253,56 @@ describe('OfficeService (Wave3/Wave4 acceptance)', () => {
     expect(result.data).toHaveLength(1);
     expect(result.data[0]?.entryId).toBe('office-ship');
   });
+
+  it.each(['shipping', 'system_admin'])('retains deletion and older audit records for a deleted entry for %s', async (role) => {
+    const user = makeUser({ roles: ['all_authenticated', role] });
+    const deletedEntry = {
+      id: 'office-deleted',
+      title: '已删除船检入口',
+      categoryCode: 'vessel_inspection',
+      deletedAt: new Date('2026-11-17T02:30:00.000Z'),
+    };
+    const audits = ['delete', 'publish'].map((action, index) => ({
+      id: `audit-${index}`,
+      entryId: deletedEntry.id,
+      action,
+      operatorUserId: 'u1',
+      payloadSnapshot: {},
+      createdAt: new Date('2026-11-17T02:30:00.000Z'),
+    }));
+    auditRepository.findAndCount.mockResolvedValue([audits, audits.length]);
+    entryRepository.find.mockImplementation(async (options: { withDeleted?: boolean; where?: { deletedAt?: unknown } }) =>
+      options.withDeleted && !options.where?.deletedAt ? [deletedEntry] : [],
+    );
+
+    const result = await service.listAudits({ entryId: deletedEntry.id }, user);
+
+    expect(result.data.map((audit) => audit.action)).toEqual(['delete', 'publish']);
+    expect(result.data.every((audit) => audit.entryTitle === deletedEntry.title)).toBe(true);
+    expect(result.meta.total).toBe(2);
+  });
+
+  it('filters category scope before paginating and counting audit records', async () => {
+    const entries = [
+      { id: 'customs', title: '海关', categoryCode: 'customs' },
+      { id: 'shipping', title: '船检', categoryCode: 'vessel_inspection' },
+    ];
+    const audits = ['customs', 'customs', 'shipping', 'shipping'].map((entryId, index) => ({
+      id: `audit-page-${index}`, entryId, action: 'update', operatorUserId: 'u1', payloadSnapshot: {}, createdAt: new Date('2026-11-17T02:30:00.000Z'),
+    }));
+    entryRepository.find.mockImplementation(async (options: { where?: { categoryCode?: { value: string[] } } }) => {
+      const categoryCodes = options.where?.categoryCode?.value;
+      return entries.filter((entry) => !categoryCodes || categoryCodes.includes(entry.categoryCode));
+    });
+    auditRepository.findAndCount.mockImplementation(async (options: { where: { entryId?: string | { value: string[] } }; skip: number; take: number }) => {
+      const ids = options.where.entryId;
+      const scoped = audits.filter((audit) => !ids || (typeof ids === 'string' ? ids === audit.entryId : ids.value.includes(audit.entryId)));
+      return [scoped.slice(options.skip, options.skip + options.take), scoped.length];
+    });
+
+    const result = await service.listAudits({ page: 1, pageSize: 1 }, makeUser({ roles: ['all_authenticated', 'shipping'] }));
+
+    expect(result.data.map((audit) => audit.id)).toEqual(['audit-page-2']);
+    expect(result.meta).toEqual({ total: 2, page: 1, pageSize: 1, totalPages: 2 });
+  });
 });

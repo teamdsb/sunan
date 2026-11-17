@@ -1,0 +1,4 @@
+### Ran Playwright code
+```js
+await (async (page) => { await page.screenshot({path:"output/playwright/full-audit-user-empty-roles.png",fullPage:true}); const member = await page.request.get("http://127.0.0.1:4320/api/v1/auth/wecom/callback?code=member"); const m=(await member.json()).data; if (m.user.roles.join(",")!=="all_authenticated") throw new Error("OAuth restored revoked role"); console.log(JSON.stringify({scenario:"UI manual empty roles persisted through OAuth",status:member.status(),roles:m.user.roles})); })(page);
+```

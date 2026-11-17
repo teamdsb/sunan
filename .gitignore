@@ -23,3 +23,6 @@ __pycache__/
 .worktrees/
 .agents/skills/
 .superpowers/brainstorm/
+
+# Local production backups (contains private configuration)
+/backup/

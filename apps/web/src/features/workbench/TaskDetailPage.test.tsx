@@ -13,7 +13,7 @@ vi.mock('./taskApi', () => ({
       data: {
         id: 'task-1', title: '船舶月度检查', status: 'pending', responsibleUserId: 'crew-old',
         scheduledAt: '2026-07-01T01:00:00.000Z', dueAt: '2026-07-01T02:00:00.000Z', isOverdue: false,
-        availableActions: ['start', 'transfer'], actionLogs: [], transfers: [], delegations: [], participants: [{ id: 'p1', userId: 'crew-old', role: 'executor', status: 'active' }],
+        inspectionId: 'inspection-1', availableActions: ['start', 'transfer', 'complete'], actionLogs: [], transfers: [], delegations: [], participants: [{ id: 'p1', userId: 'crew-old', role: 'executor', status: 'active' }],
         notificationDeliveries: [{ id: 'delivery-1', messageType: 'reminder', status: 'failed', attemptCount: 1, failureReason: '超时' }],
       },
     },
@@ -38,6 +38,8 @@ describe('TaskDetailPage', () => {
       </MemoryRouter>,
     );
 
+    expect(screen.getByRole('link', { name: '执行检查' })).toHaveAttribute('href', '/workbench/inspections/inspection-1');
+    expect(screen.queryByRole('button', { name: /完\s*成/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /转\s*移/ }));
     fireEvent.change(screen.getByLabelText('原因'), { target: { value: '轮班交接' } });
     fireEvent.change(screen.getByLabelText('新负责人 ID'), { target: { value: 'crew-new' } });

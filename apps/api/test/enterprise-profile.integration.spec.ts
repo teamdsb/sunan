@@ -238,4 +238,88 @@ describe('EnterpriseProfileController integration', () => {
       .send({ title: '跨部门修改' });
     expect(update.status).toBe(403);
   });
+
+  it('hides archived profiles and their attachments from non-admin readers', async () => {
+    currentUser = {
+      ...currentUser,
+      userId: 'manager-1',
+      roles: ['all_authenticated', 'business'],
+    };
+    const create = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/v1/enterprise-profiles')
+      .set('Authorization', 'Bearer token')
+      .send({ title: '归档权限资料', category: 'notice', status: 'draft' })
+      .expect(201);
+    const id = (create.body as { data: { id: string } }).data.id;
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .post(`/api/v1/enterprise-profiles/${id}/files`)
+      .set('Authorization', 'Bearer token')
+      .send({ fileIds: [fileId] })
+      .expect(201);
+
+    const downloadSpy = jest
+      .spyOn(ossService, 'createDownloadSignature')
+      .mockResolvedValue({
+        downloadUrl: 'https://oss.example.test/enterprise-profile-file',
+        expiresAt: '2026-08-04T12:00:00.000Z',
+      });
+    currentUser = {
+      ...currentUser,
+      userId: 'employee-1',
+      roles: ['all_authenticated'],
+    };
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}`)
+      .set('Authorization', 'Bearer token')
+      .expect(200);
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token')
+      .expect(200);
+    downloadSpy.mockClear();
+
+    currentUser = {
+      ...currentUser,
+      userId: 'manager-1',
+      roles: ['all_authenticated', 'business'],
+    };
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .patch(`/api/v1/enterprise-profiles/${id}`)
+      .set('Authorization', 'Bearer token')
+      .send({ status: 'archived' })
+      .expect(200);
+
+    currentUser = {
+      ...currentUser,
+      userId: 'employee-1',
+      roles: ['all_authenticated'],
+    };
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}`)
+      .set('Authorization', 'Bearer token')
+      .expect(404);
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token')
+      .expect(404);
+    expect(downloadSpy).not.toHaveBeenCalled();
+
+    currentUser = {
+      ...currentUser,
+      userId: 'admin-1',
+      roles: ['all_authenticated', 'system_admin'],
+      isAdmin: true,
+    };
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}`)
+      .set('Authorization', 'Bearer token')
+      .expect(200);
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
+      .get(`/api/v1/enterprise-profiles/${id}/files/${fileId}/download-url`)
+      .set('Authorization', 'Bearer token')
+      .expect(200);
+    downloadSpy.mockRestore();
+  });
 });

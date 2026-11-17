@@ -1,5 +1,5 @@
 import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/common';
-import { Module } from '@nestjs/common';
+import { ConflictException, Module } from '@nestjs/common';
 import type { Server } from 'node:http';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +10,12 @@ import { configureApp } from 'src/app.bootstrap';
 import { appEnv } from 'src/config/env';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { InspectionCapaModule } from 'src/modules/inspection-capa/inspection-capa.module';
+import { InspectionCapaService } from 'src/modules/inspection-capa/inspection-capa.service';
+import { PlanTaskService } from 'src/modules/plan-task/plan-task.service';
+import { InspectionEntity } from 'src/database/entities/safety-inspection-capa.entity';
+import { SafetyTaskEntity, SafetyTaskActionLogEntity } from 'src/database/entities/safety-plan-task.entity';
+import { FilesModule } from 'src/modules/files/files.module';
+import { OssService } from 'src/modules/files/oss.service';
 import { WecomMessageService } from 'src/modules/wecom/wecom-message.service';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
 import { bootstrapPgTestDatabase, buildPgTypeOrmOptions, shutdownPgTestDatabase } from 'test/pg-test-container';
@@ -27,22 +33,25 @@ const makeUser = (userId: string, roles = ['all_authenticated', 'shipping']): Te
 let currentUser = makeUser('plan-owner');
 const authGuard: CanActivate = { canActivate(context: ExecutionContext) { context.switchToHttp().getRequest<{ user?: TestUser }>().user = currentUser; return true; } };
 
-@Module({ imports: [TypeOrmModule.forRootAsync({ useFactory: async () => { await bootstrapPgTestDatabase(); return buildPgTypeOrmOptions(); } }), InspectionCapaModule] })
+@Module({ imports: [TypeOrmModule.forRootAsync({ useFactory: async () => { await bootstrapPgTestDatabase(); return buildPgTypeOrmOptions(); } }), InspectionCapaModule, FilesModule] })
 class TestModule {}
 
 describe('inspection and CAPA integration', () => {
   let app: INestApplication<Server>;
   let source: DataSource;
+  const oss = { createDownloadSignature: jest.fn().mockResolvedValue({ downloadUrl: 'https://storage.test/inspection-evidence', expiresAt: '2026-11-17T11:00:00.000Z' }), deleteObject: jest.fn() };
 
   beforeAll(async () => {
     const ref = await Test.createTestingModule({ imports: [TestModule] })
       .overrideGuard(JwtAuthGuard).useValue(authGuard)
       .overrideProvider(WecomMessageService).useValue({ sendTextCard: jest.fn().mockResolvedValue({ success: true, invalidUser: [] }) })
+      .overrideProvider(OssService).useValue(oss)
       .compile();
     app = ref.createNestApplication(); configureApp(app); await app.init(); source = ref.get(DataSource);
   });
 
   beforeEach(async () => {
+    oss.createDownloadSignature.mockClear();
     currentUser = makeUser('plan-owner');
     await source.query(`TRUNCATE TABLE inspection_capa_action_logs, capa_verifications, capa_action_evidence, capa_actions, capa_root_causes, safety_capas, issue_transfer_jobs, issue_sources, safety_issues, inspection_result_evidence, inspection_results, inspections, inspection_plans, inspection_template_scopes, inspection_template_items, inspection_template_versions, inspection_templates, safety_task_notification_deliveries, safety_task_generation_entries, safety_task_generation_runs, safety_task_action_logs, safety_task_delegations, safety_task_transfers, safety_task_participants, safety_tasks, safety_plan_items, safety_plans, workbench_records, files RESTART IDENTITY CASCADE`);
     await source.query(`INSERT INTO personnel (wecom_user_id,name,department_code,employment_status,is_sync_from_wecom) VALUES ('plan-owner','Plan owner','shipping','active',true),('inspector-a','Inspector A','shipping','active',true),('inspector-b','Inspector B','shipping','active',true),('verifier','Verifier','shipping','active',true) ON CONFLICT (wecom_user_id) WHERE deleted_at IS NULL AND wecom_user_id IS NOT NULL DO UPDATE SET employment_status='active', deleted_at=NULL`);
@@ -64,9 +73,9 @@ describe('inspection and CAPA integration', () => {
   afterAll(async () => { await app?.close(); await shutdownPgTestDatabase(); });
 
   const key = (scope: string) => `${scope}-${crypto.randomUUID()}`;
-  async function createFile() {
+  async function createFile(uploadedBy = currentUser.userId) {
     const id = crypto.randomUUID();
-    await source.query(`INSERT INTO files (id,oss_key,file_name,mime_type,file_size,category,uploaded_by) VALUES ($1,$2,'evidence.jpg','image/jpeg',100,'workbench','plan-owner')`, [id, `tests/${id}.jpg`]);
+    await source.query(`INSERT INTO files (id,oss_key,file_name,mime_type,file_size,category,uploaded_by) VALUES ($1,$2,'evidence.jpg','image/jpeg',100,'workbench',$3)`, [id, `tests/${id}.jpg`, uploadedBy]);
     return id;
   }
 
@@ -82,12 +91,122 @@ describe('inspection and CAPA integration', () => {
     return inspections.body.data[0] as { id: string; templateVersionId: string; templateSnapshot: { items: Array<{ snapshotKey: string; title: string }> } };
   }
 
+  type InspectionMutation = 'save' | 'submit' | 'summarize';
+  async function prepareMutation(mutation: InspectionMutation) {
+    const inspection = await createIssuedInspection();
+    const service = app.get(InspectionCapaService);
+    const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey;
+    if (mutation !== 'save') {
+      for (const userId of mutation === 'summarize' ? ['inspector-a', 'inspector-b'] : ['inspector-a']) {
+        await service.saveInspectionResult(inspection.id, makeUser(userId), { templateItemSnapshotKey: itemKey, conclusion: 'conforming' }, key('prepare-result'));
+        if (mutation === 'summarize') await service.submitInspection(inspection.id, makeUser(userId), { signatureFileId: await createFile(userId) }, key('prepare-signature'));
+      }
+    }
+    const signatureFileId = await createFile('inspector-a');
+    const { taskId } = await source.getRepository(InspectionEntity).findOneByOrFail({ id: inspection.id });
+    const write = (): Promise<unknown> => mutation === 'save'
+      ? service.saveInspectionResult(inspection.id, makeUser('inspector-a'), { templateItemSnapshotKey: itemKey, conclusion: 'conforming' }, key('cancel-result'))
+      : mutation === 'submit'
+        ? service.submitInspection(inspection.id, makeUser('inspector-a'), { signatureFileId }, key('cancel-submit'))
+        : service.summarizeInspection(inspection.id, makeUser('plan-owner'), key('cancel-summary'));
+    return { inspectionId: inspection.id, taskId, write };
+  }
+
+  it.each<InspectionMutation>(['save', 'submit', 'summarize'])('blocks %s after cancellation and keeps cancellation replay idempotent', async (mutation) => {
+    const { inspectionId, taskId, write } = await prepareMutation(mutation);
+    const taskService = app.get(PlanTaskService);
+    const requestId = key('cancel-inspection-task');
+    await taskService.act(taskId, makeUser('plan-owner'), { actionType: 'cancel', reason: '检查已取消' }, requestId);
+    await expect(write()).rejects.toBeInstanceOf(ConflictException);
+    await taskService.act(taskId, makeUser('plan-owner'), { actionType: 'cancel', reason: '检查已取消' }, requestId);
+    expect(await source.getRepository(SafetyTaskEntity).findOneByOrFail({ id: taskId })).toMatchObject({ status: 'cancelled', completedAt: null });
+    expect(await source.getRepository(InspectionEntity).findOneByOrFail({ id: inspectionId })).toMatchObject({ status: 'cancelled', completedAt: null });
+    expect(await source.getRepository(SafetyTaskActionLogEntity).countBy({ taskId, actionType: 'cancel' })).toBe(1);
+    expect((await request(app.getHttpServer()).get(`/api/v1/inspections/${inspectionId}`).expect(200)).body.data.availableActions).toEqual(['read']);
+    expect(await source.query('SELECT id FROM issue_transfer_jobs')).toHaveLength(0);
+  });
+
+  it.each<InspectionMutation>(['save', 'submit', 'summarize'])('blocks %s against a legacy cancelled task even when its inspection status is stale', async (mutation) => {
+    const { inspectionId, taskId, write } = await prepareMutation(mutation);
+    await source.getRepository(SafetyTaskEntity).update(taskId, { status: 'cancelled' });
+    const before = await source.getRepository(InspectionEntity).findOneByOrFail({ id: inspectionId });
+    await expect(write()).rejects.toBeInstanceOf(ConflictException);
+    expect(await source.getRepository(InspectionEntity).findOneByOrFail({ id: inspectionId })).toMatchObject({ status: before.status, completedAt: null });
+    expect(await source.getRepository(SafetyTaskEntity).findOneByOrFail({ id: taskId })).toMatchObject({ status: 'cancelled', completedAt: null });
+  });
+
+  it.each<InspectionMutation>(['save', 'submit', 'summarize'])('serializes concurrent %s behind a cancellation already waiting on the task lock', async (mutation) => {
+    const { inspectionId, taskId, write } = await prepareMutation(mutation);
+    const blocker = source.createQueryRunner();
+    await blocker.connect();
+    await blocker.startTransaction();
+    const lockKey = `task:${taskId}`;
+    await blocker.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [lockKey]);
+    type Outcome = { error: unknown };
+    const outcome = (promise: Promise<unknown>): Promise<Outcome> => promise.then(() => ({ error: null }), (error: unknown) => ({ error }));
+    const cancel = outcome(app.get(PlanTaskService).act(taskId, makeUser('plan-owner'), { actionType: 'cancel', reason: '并发取消检查' }, key('concurrent-cancel')));
+    let writing: Promise<Outcome> | undefined;
+    let results: Outcome[] = [];
+    const waitForWaiters = async (count: number) => {
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const [row] = await source.query<Array<{ count: number }>>(`SELECT COUNT(*)::int AS count FROM pg_locks WHERE locktype='advisory' AND NOT granted AND classid=((hashtextextended($1,0)>>32)&4294967295)::oid AND objid=(hashtextextended($1,0)&4294967295)::oid`, [lockKey]);
+        if (row?.count === count) return true;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      return false;
+    };
+    try {
+      expect(await waitForWaiters(1)).toBe(true);
+      writing = outcome(write());
+      expect(await waitForWaiters(2)).toBe(true);
+    } finally {
+      await blocker.rollbackTransaction();
+      await blocker.release();
+      results = await Promise.all(writing ? [cancel, writing] : [cancel]);
+    }
+    expect(results[0]!.error).toBeNull();
+    expect(results[1]!.error).toBeInstanceOf(ConflictException);
+    expect(await source.getRepository(SafetyTaskEntity).findOneByOrFail({ id: taskId })).toMatchObject({ status: 'cancelled', completedAt: null });
+    expect(await source.getRepository(InspectionEntity).findOneByOrFail({ id: inspectionId })).toMatchObject({ status: 'cancelled', completedAt: null });
+  });
+
+  it('repairs executable inspections through generic plan reconciliation and blocks generic task completion', async () => {
+    const issued = await createIssuedInspection();
+    const [row] = await source.query<Array<{ task_id: string; plan_id: string }>>(`SELECT i.task_id, t.plan_id FROM inspections i JOIN safety_tasks t ON t.id=i.task_id WHERE i.id=$1`, [issued.id]);
+    if (!row) throw new Error('Issued inspection task is missing');
+    await source.query('DELETE FROM inspections WHERE id=$1', [issued.id]);
+    await request(app.getHttpServer()).post(`/api/v1/plans/${row.plan_id}/generation-runs`).set('Idempotency-Key', key('generic-inspection-reconcile')).send({ windowStart: '2026-07-01T00:00:00.000Z', windowEnd: '2026-07-02T00:00:00.000Z', mode: 'reconcile' }).expect(202);
+    const inspectionRows = await source.query<Array<{ id: string; template_snapshot: { items: unknown[] } }>>('SELECT id,template_snapshot FROM inspections WHERE task_id=$1', [row.task_id]);
+    expect(inspectionRows).toHaveLength(1);
+    expect(inspectionRows[0]!.template_snapshot.items).toHaveLength(1);
+    currentUser = makeUser('inspector-a', ['all_authenticated', 'crew']);
+    const detail = await request(app.getHttpServer()).get(`/api/v1/tasks/${row.task_id}`).expect(200);
+    expect(detail.body.data.inspectionId).toBe(inspectionRows[0]!.id);
+    expect(detail.body.data.availableActions).not.toContain('complete');
+    await request(app.getHttpServer()).post(`/api/v1/tasks/${row.task_id}/actions`).set('Idempotency-Key', key('blocked-inspection-complete')).send({ actionType: 'complete' }).expect(409);
+    expect((await source.query('SELECT status FROM safety_tasks WHERE id=$1', [row.task_id]))[0].status).toBe('pending');
+    expect((await source.query('SELECT completed_at FROM safety_task_participants WHERE task_id=$1', [row.task_id])).every((participant: { completed_at: unknown }) => participant.completed_at === null)).toBe(true);
+  });
+
+  it('allows a measure assignee to list and read the issue while denying unrelated readers', async () => {
+    const issue = await request(app.getHttpServer()).post('/api/v1/issues').set('Idempotency-Key', key('assigned-issue')).send({ title: '分派措施测试', issueType: 'hazard', severity: 'minor', responsibleUserId: 'inspector-a', dueAt: '2026-12-01T00:00:00.000Z' }).expect(201);
+    const capa = await request(app.getHttpServer()).post(`/api/v1/issues/${issue.body.data.id}/capa`).set('Idempotency-Key', key('assigned-capa')).send({ verifierUserId: 'verifier' }).expect(201);
+    await request(app.getHttpServer()).post(`/api/v1/capas/${capa.body.data.id}/actions`).set('Idempotency-Key', key('assigned-action')).send({ actionType: 'corrective', title: '补充现场措施', responsibleUserId: 'inspector-b', dueAt: '2026-12-01T00:00:00.000Z' }).expect(201);
+    currentUser = makeUser('inspector-b', ['all_authenticated', 'crew']);
+    expect((await request(app.getHttpServer()).get('/api/v1/issues').expect(200)).body.data.map((row: { id: string }) => row.id)).toContain(issue.body.data.id);
+    const detail = await request(app.getHttpServer()).get(`/api/v1/issues/${issue.body.data.id}`).expect(200);
+    expect(detail.body.data.availableActions).toEqual(['read']);
+    expect(detail.body.data.capa.actions[0].availableActions).toContain('submit');
+    currentUser = makeUser('unrelated', ['all_authenticated', 'crew']);
+    await request(app.getHttpServer()).get(`/api/v1/issues/${issue.body.data.id}`).expect(403);
+  });
+
   it('keeps the issued template snapshot, blocks premature multi-person summary, and deduplicates automatic nonconformity transfer', async () => {
     const inspection = await createIssuedInspection();
     const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey;
     await source.query(`UPDATE inspection_template_items SET title='后续模板编辑' WHERE version_id=$1`, [inspection.templateVersionId]);
     expect((await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}`).expect(200)).body.data.templateSnapshot.items[0].title).toBe('救生圈状态');
-    const resultEvidence = await createFile();
+    const resultEvidence = await createFile('inspector-a');
     currentUser = makeUser('inspector-a');
     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('result-a')).send({ templateItemSnapshotKey: itemKey, conclusion: 'nonconforming', remark: '救生圈反光带破损', evidenceFileIds: [resultEvidence] }).expect(200);
     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('submit-a')).send({ signatureFileId: await createFile() }).expect(200);
@@ -104,7 +223,7 @@ describe('inspection and CAPA integration', () => {
   });
 
   it('keeps failed automatic transfer jobs and reconciles them after the constraint is repaired', async () => {
-    const inspection = await createIssuedInspection(); const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey; const evidence = await createFile();
+    const inspection = await createIssuedInspection(); const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey; const evidence = await createFile('inspector-a');
     currentUser = makeUser('inspector-a');
     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('reconcile-result-a')).send({ templateItemSnapshotKey: itemKey, conclusion: 'nonconforming', evidenceFileIds: [evidence] }).expect(200);
     await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('reconcile-submit-a')).send({ signatureFileId: await createFile() }).expect(200);
@@ -151,6 +270,75 @@ describe('inspection and CAPA integration', () => {
     await request(app.getHttpServer()).post(`/api/v1/issues/${issueId}/close`).set('Idempotency-Key', key('close')).send({ comment: '闭环完成' }).expect(200);
     currentUser = makeUser('plan-owner');
     await request(app.getHttpServer()).post(`/api/v1/capas/${capaId}/actions`).set('Idempotency-Key', key('action-closed')).send({ actionType: 'preventive', title: '不应新增已关闭措施', responsibleUserId: 'inspector-a', dueAt: '2026-07-23T00:00:00.000Z' }).expect(409);
+  });
+
+  it('rejects another uploader inspection evidence and signature without saving partial changes', async () => {
+    const inspection = await createIssuedInspection();
+    const fileId = await createFile('plan-owner');
+    const itemKey = inspection.templateSnapshot.items[0]!.snapshotKey;
+    currentUser = makeUser('inspector-a');
+    await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('foreign-evidence')).send({ templateItemSnapshotKey: itemKey, conclusion: 'nonconforming', evidenceFileIds: [fileId] }).expect(403);
+    expect(await source.query('SELECT id FROM inspection_results WHERE inspection_id=$1', [inspection.id])).toHaveLength(0);
+    await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('own-result')).send({ templateItemSnapshotKey: itemKey, conclusion: 'conforming' }).expect(200);
+    await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('foreign-signature')).send({ signatureFileId: fileId }).expect(403);
+    expect(await source.query('SELECT status, signature_file_id FROM inspection_results WHERE inspection_id=$1', [inspection.id])).toEqual([expect.objectContaining({ status: 'draft', signature_file_id: null })]);
+  });
+
+  it('rejects another uploader CAPA evidence before changing the action', async () => {
+    const fileId = await createFile('plan-owner');
+    const issue = await request(app.getHttpServer()).post('/api/v1/issues').set('Idempotency-Key', key('foreign-capa-issue')).send({ title: 'Evidence authorization', issueType: 'nonconformity', severity: 'minor', responsibilityScope: 'vessel', responsibleUserId: 'inspector-a', dueAt: '2026-08-01T00:00:00.000Z' }).expect(201);
+    const capa = await request(app.getHttpServer()).post(`/api/v1/issues/${issue.body.data.id}/capa`).set('Idempotency-Key', key('foreign-capa')).send({ verifierUserId: 'verifier', effectivenessRequired: false }).expect(201);
+    const action = await request(app.getHttpServer()).post(`/api/v1/capas/${capa.body.data.id}/actions`).set('Idempotency-Key', key('foreign-capa-action')).send({ actionType: 'corrective', title: 'Evidence authorization', responsibleUserId: 'inspector-a', dueAt: '2026-07-20T00:00:00.000Z' }).expect(201);
+    currentUser = makeUser('inspector-a');
+    await request(app.getHttpServer()).post(`/api/v1/capa-actions/${action.body.data.id}/submit`).set('Idempotency-Key', key('foreign-capa-submit')).send({ completionStatement: 'Done', evidenceFileIds: [fileId] }).expect(403);
+    expect(await source.query('SELECT id FROM capa_action_evidence WHERE capa_action_id=$1', [action.body.data.id])).toHaveLength(0);
+    expect(await source.query('SELECT status FROM capa_actions WHERE id=$1', [action.body.data.id])).toEqual([expect.objectContaining({ status: 'assigned' })]);
+  });
+
+  it('serves saved inspection evidence and signatures only through the readable inspection', async () => {
+    const inspection = await createIssuedInspection();
+    currentUser = makeUser('inspector-a', ['all_authenticated', 'crew']);
+    const evidenceId = await createFile();
+    const signatureId = await createFile();
+    await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/results`).set('Idempotency-Key', key('download-result')).send({ templateItemSnapshotKey: inspection.templateSnapshot.items[0]!.snapshotKey, conclusion: 'nonconforming', evidenceFileIds: [evidenceId] }).expect(200);
+    await request(app.getHttpServer()).post(`/api/v1/inspections/${inspection.id}/submit`).set('Idempotency-Key', key('download-submit')).send({ signatureFileId: signatureId }).expect(200);
+    currentUser = makeUser('inspector-b', ['all_authenticated', 'crew']);
+    const download = await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${evidenceId}/download-url`).expect(200);
+    expect(download.body.data.downloadUrl).toBe('https://storage.test/inspection-evidence');
+    expect(oss.createDownloadSignature).toHaveBeenLastCalledWith(`tests/${evidenceId}.jpg`);
+    await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${signatureId}/download-url`).expect(200);
+    const detail = await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}`).expect(200);
+    expect(detail.body.data.results[0].evidenceFiles).toEqual([expect.objectContaining({ id: evidenceId, fileName: 'evidence.jpg', mimeType: 'image/jpeg', fileSize: 100 })]);
+    expect(detail.body.data.results[0].signatureFile).toMatchObject({ id: signatureId, fileName: 'evidence.jpg' });
+    expect(JSON.stringify(detail.body.data.results)).not.toMatch(/ossKey|storagePath|downloadUrl/);
+    oss.createDownloadSignature.mockClear();
+    const foreignId = await createFile();
+    await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${foreignId}/download-url`).expect(404);
+    await request(app.getHttpServer()).get(`/api/v1/files/${encodeURIComponent(`tests/${evidenceId}.jpg`)}/download-url`).expect(403);
+    currentUser = makeUser('unrelated', ['all_authenticated', 'crew']);
+    await request(app.getHttpServer()).get(`/api/v1/inspections/${inspection.id}/files/${evidenceId}/download-url`).expect(403);
+    expect(oss.createDownloadSignature).not.toHaveBeenCalled();
+  });
+
+  it('lets the issue verifier read CAPA evidence while rejecting foreign files and unrelated users', async () => {
+    const issue = await request(app.getHttpServer()).post('/api/v1/issues').set('Idempotency-Key', key('download-capa-issue')).send({ title: 'Evidence download', issueType: 'nonconformity', severity: 'minor', responsibleUserId: 'inspector-a', dueAt: '2026-12-01T00:00:00.000Z' }).expect(201);
+    const capa = await request(app.getHttpServer()).post(`/api/v1/issues/${issue.body.data.id}/capa`).set('Idempotency-Key', key('download-capa')).send({ verifierUserId: 'verifier' }).expect(201);
+    const action = await request(app.getHttpServer()).post(`/api/v1/capas/${capa.body.data.id}/actions`).set('Idempotency-Key', key('download-capa-action')).send({ actionType: 'corrective', title: 'Evidence download', responsibleUserId: 'inspector-a', dueAt: '2026-12-01T00:00:00.000Z' }).expect(201);
+    currentUser = makeUser('inspector-a', ['all_authenticated', 'crew']);
+    const fileId = await createFile();
+    await request(app.getHttpServer()).post(`/api/v1/capa-actions/${action.body.data.id}/submit`).set('Idempotency-Key', key('download-capa-submit')).send({ completionStatement: 'Done', evidenceFileIds: [fileId] }).expect(200);
+    currentUser = makeUser('verifier', ['all_authenticated', 'crew']);
+    await request(app.getHttpServer()).get(`/api/v1/capa-actions/${action.body.data.id}/files/${fileId}/download-url`).expect(200);
+    const detail = await request(app.getHttpServer()).get(`/api/v1/issues/${issue.body.data.id}`).expect(200);
+    expect(detail.body.data.capa.actions[0].evidenceFiles).toEqual([expect.objectContaining({ id: fileId, fileName: 'evidence.jpg', mimeType: 'image/jpeg', fileSize: 100 })]);
+    expect(JSON.stringify(detail.body.data.capa.actions)).not.toMatch(/ossKey|storagePath|downloadUrl/);
+    oss.createDownloadSignature.mockClear();
+    await request(app.getHttpServer()).get(`/api/v1/capa-actions/${action.body.data.id}/files/${await createFile()}/download-url`).expect(404);
+    await source.query('UPDATE capa_action_evidence SET status=$1 WHERE capa_action_id=$2', ['withdrawn', action.body.data.id]);
+    await request(app.getHttpServer()).get(`/api/v1/capa-actions/${action.body.data.id}/files/${fileId}/download-url`).expect(404);
+    currentUser = makeUser('unrelated', ['all_authenticated', 'crew']);
+    await request(app.getHttpServer()).get(`/api/v1/capa-actions/${action.body.data.id}/files/${fileId}/download-url`).expect(403);
+    expect(oss.createDownloadSignature).not.toHaveBeenCalled();
   });
 
   it('links each existing inspection-rectification source in both directions', async () => {

@@ -7,6 +7,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import { WecomMessageDeliveryEntity } from 'src/database/entities/wecom-message-delivery.entity';
 import { WecomNotificationConfigService, type WecomAppConfig } from './wecom-notification-config.service';
+import { presentWecomNotification } from './wecom-notification-presentation';
 import { WecomTokenService } from './wecom-token.service';
 
 export interface SendTextCardOptions {
@@ -53,7 +54,10 @@ export class WecomMessageService {
     const userIds = [...new Set(options.userIds.map((item) => item.trim()).filter(Boolean))];
     if (!userIds.length) return { success: true, invalidUser: [] };
 
-    const deliveryRows = await this.prepareDeliveries(userIds, options, { agentId: null, source: 'unresolved', version: null });
+    const presentation = presentWecomNotification(options);
+    const effectiveOptions: SendTextCardOptions = { ...options, ...presentation };
+
+    const deliveryRows = await this.prepareDeliveries(userIds, effectiveOptions, { agentId: null, source: 'unresolved', version: null });
     const pendingUserIds = deliveryRows.filter((row) => !row.existingTerminal).map((row) => row.userId);
     const blockedUncertain = deliveryRows.some((row) => row.existingStatus === 'uncertain' || row.existingStatus === 'sending');
     if (!pendingUserIds.length) {
@@ -82,7 +86,7 @@ export class WecomMessageService {
       row.entity.configVersion = config.version;
       await this.deliveryRepository.save(row.entity);
     }
-    const result = await this.sendToWecom(pendingUserIds, options, config);
+    const result = await this.sendToWecom(pendingUserIds, effectiveOptions, config);
     await this.updateDeliveries(deliveryRows, pendingUserIds, {
       status: result.uncertain ? 'uncertain' : result.success ? 'sent' : 'failed',
       failureReason: result.failureReason ?? null,

@@ -4,11 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 
 import type { CurrentUser } from 'src/common/interfaces/current-user.interface';
 import { appEnv } from 'src/config/env';
 import { WecomUserEntity } from 'src/database/entities/wecom-user.entity';
+import { WecomDepartmentEntity } from 'src/database/entities/wecom-department.entity';
 import type { AuthenticatedUserResponse } from 'src/modules/auth/auth.types';
 import { RoleResolverService } from 'src/modules/auth/role-resolver.service';
 import { WecomAdminService } from 'src/modules/wecom/wecom-admin.service';
@@ -157,10 +158,10 @@ export class AuthorizationService {
     }
   }
 
-  getEffectiveAuthorization(
+  async getEffectiveAuthorization(
     user: WecomUserEntity,
     options: { ignoreAvailability?: boolean } = {},
-  ): EffectiveAuthorization {
+  ): Promise<EffectiveAuthorization> {
     this.assertCurrentCorp(user);
     const isAdmin = this.adminService.isSystemAdmin(user.userId);
 
@@ -176,9 +177,18 @@ export class AuthorizationService {
         ? user.manualDepartmentIds ?? []
         : user.departmentIds ?? [],
     );
+    const dictionary = user.departmentMode === 'manual' && departmentIds.length
+      ? await this.dataSource.getRepository(WecomDepartmentEntity).find({
+          where: { corpId: user.corpId, departmentId: In(departmentIds) },
+          select: { departmentId: true, name: true },
+        })
+      : [];
+    const nameById = new Map(dictionary.map((department) => [department.departmentId, department.name]));
     const departments =
       user.departmentMode === 'manual'
         ? departmentIds.map((id) => {
+            const currentName = nameById.get(id);
+            if (currentName) return currentName;
             const sourceIndex = (user.departmentIds ?? []).indexOf(id);
             return sourceIndex >= 0
               ? user.departmentNames?.[sourceIndex] ?? this.roleResolver.resolveFallbackDepartmentName(id)
@@ -227,8 +237,8 @@ export class AuthorizationService {
     };
   }
 
-  toCurrentUser(user: WecomUserEntity): CurrentUser {
-    const effective = this.getEffectiveAuthorization(user);
+  async toCurrentUser(user: WecomUserEntity): Promise<CurrentUser> {
+    const effective = await this.getEffectiveAuthorization(user);
     return {
       userId: user.userId,
       corpId: user.corpId,
@@ -242,8 +252,8 @@ export class AuthorizationService {
     };
   }
 
-  toAuthenticatedUser(user: WecomUserEntity): AuthenticatedUserResponse {
-    const effective = this.getEffectiveAuthorization(user);
+  async toAuthenticatedUser(user: WecomUserEntity): Promise<AuthenticatedUserResponse> {
+    const effective = await this.getEffectiveAuthorization(user);
     return {
       userId: user.userId,
       name: user.name,

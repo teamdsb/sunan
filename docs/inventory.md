@@ -10,7 +10,7 @@ replaced_by: []
 
 > 本文件由 `node scripts/generate-doc-inventory.mjs` 生成，覆盖仓库内所有 Markdown 文档（不含 `node_modules`）。日常导航请优先使用 [README.md](README.md)。
 
-总数：286 个 Markdown 文件。
+总数：290 个 Markdown 文件。
 
 ## repository-root
 
@@ -30,6 +30,8 @@ replaced_by: []
 | [deploy/troubleshooting.md](../deploy/troubleshooting.md) | `operations` | `operations` | 故障处理手册 |
 | [deploy/wecom-operations.md](../deploy/wecom-operations.md) | `operations` | `operations` | 企业微信运维手册 |
 | [findings.md](../findings.md) | `operations` | `planning` | 发现与决策 |
+| [output/api-audit-2026-11-17/archive-visibility-regression.md](../output/api-audit-2026-11-17/archive-visibility-regression.md) | `audit-snapshot` | `repository` | 企业资料归档读取权限收尾复核 |
+| [output/api-audit-2026-11-17/inspection-download-review.md](../output/api-audit-2026-11-17/inspection-download-review.md) | `audit-snapshot` | `repository` | 文件授权与检查/CAPA 下载复核 |
 | [outputs/wecom-workbench-01a1e305/使用说明.md](../outputs/wecom-workbench-01a1e305/使用说明.md) | `current-source` | `wecom` | 苏南企业微信工作台应用配置包 |
 | [progress.md](../progress.md) | `operations` | `planning` | 进度日志 |
 | [task_plan.md](../task_plan.md) | `operations` | `planning` | 任务计划：苏南平台开发与发布 |
@@ -431,6 +433,7 @@ replaced_by: []
 | [docs/audits/2026-09-07-original-goal-audit.md](audits/2026-09-07-original-goal-audit.md) | `audit-snapshot` | `repository` | 原始目标与主要业务链路核查 |
 | [docs/audits/2026-09-20-ship-monitor-repair-audit.md](audits/2026-09-20-ship-monitor-repair-audit.md) | `audit-snapshot` | `ship-monitor` | 船舶监控修复与相关功能核查 |
 | [docs/audits/2026-09-20-workbench-business-completion.md](audits/2026-09-20-workbench-business-completion.md) | `audit-snapshot` | `workbench` | 考勤、个人学习与燃油月报补齐记录 |
+| [docs/audits/2026-11-17-full-system-api-audit.md](audits/2026-11-17-full-system-api-audit.md) | `audit-snapshot` | `repository` | 全系统前后端接口与功能回归 |
 | [docs/audits/frontend-backend-api-coverage.md](audits/frontend-backend-api-coverage.md) | `audit-snapshot` | `frontend` | 前后端接口覆盖审计 |
 
 ## handbook
@@ -467,3 +470,4 @@ replaced_by: []
 | [docs/superpowers/specs/2026-09-20-workbench-business-completion-design.md](superpowers/specs/2026-09-20-workbench-business-completion-design.md) | `current-spec` | `workbench` | 考勤、个人学习与燃油月报补齐 |
 | [docs/superpowers/specs/2026-11-16-m9-wave2-user-directory-design.md](superpowers/specs/2026-11-16-m9-wave2-user-directory-design.md) | `current-spec` | `planning` | M9 Wave 2 用户目录与授权后端设计 |
 | [docs/superpowers/specs/2026-11-16-m9-wave3-admin-console-design.md](superpowers/specs/2026-11-16-m9-wave3-admin-console-design.md) | `current-spec` | `planning` | M9 Wave 3 管理后台与全业务权限整合设计 |
+| [docs/superpowers/specs/2026-11-17-brand-export-notification-unification-design.md](superpowers/specs/2026-11-17-brand-export-notification-unification-design.md) | `current-source` | `platform` | 苏南船舶管理品牌与输出统一设计 |

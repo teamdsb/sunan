@@ -462,8 +462,11 @@ describe('FilesController integration', () => {
     const file = await createRecycleFile();
     const profiles = app.get(EnterpriseProfileService);
     const policies = app.get(EnterprisePolicyService);
-    const profile = await profiles.create({ title: 'File retention profile', category: 'license', fileIds: [file.id] }, user);
-    const policy = await policies.create({ title: 'File retention policy', policyCode: randomUUID(), version: 'v1', fileIds: [file.id] }, user);
+    const profile = await profiles.create({ title: 'File retention profile', category: 'license' }, user);
+    const policy = await policies.create({ title: 'File retention policy', policyCode: randomUUID(), version: 'v1' }, user);
+    // Legacy shared relations remain removable by the authorized record manager.
+    await ds.getRepository(EnterpriseProfileFileEntity).save({ enterpriseProfileId: profile.id, fileId: file.id, sortOrder: 0 });
+    await ds.query('INSERT INTO enterprise_policy_files (enterprise_policy_id, file_id, sort_order) VALUES ($1, $2, 0)', [policy.id, file.id]);
     await profiles.unbindFile(profile.id, file.id, user);
     expect((await profiles.getById(profile.id, user)).files).toHaveLength(0);
     expect((await ds.getRepository(FileEntity).findOneByOrFail({ id: file.id })).orphanedAt).toBeNull();

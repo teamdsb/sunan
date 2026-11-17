@@ -1,0 +1,131 @@
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+ ❯ src/features/files/FileUploadField.test.tsx (7 tests | 1 failed) 840ms
+   ✓ FileUploadField > invokes uploadFile when a file is selected 237ms
+   ✓ FileUploadField > shows the effective limits before the upload action 64ms
+   ✓ FileUploadField > invokes wecom upload when capture is enabled 80ms
+   ✓ FileUploadField > previews the current file 145ms
+   ✓ FileUploadField > downloads the current file through the existing signed URL 160ms
+   × FileUploadField > clears a controlled upload after the business record has bound the file 107ms
+     → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"
+  type="button"
+>
+  <span
+    class="ant-btn-icon"
+  >
+    <span
+      aria-label="download"
+      class="anticon anticon-download"
+      role="img"
+    >
+      <svg
+        aria-hidden="true"
+        data-icon="download"
+        fill="currentColor"
+        focusable="false"
+        height="1em"
+        viewBox="64 64 896 896"
+        width="1em"
+      >
+        <path
+          d="M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z"
+        />
+      </svg>
+    </span>
+  </span>
+  <span>
+    下载文件
+  </span>
+</button> instead
+   ✓ FileUploadField > keeps a retry path after native upload fails 45ms
+ ❯ src/features/procurement/ProcurementOrderDetailPage.test.tsx (7 tests | 1 failed) 2412ms
+   ✓ ProcurementOrderDetailPage > previews an order PDF inside the application without window.open  790ms
+   ✓ ProcurementOrderDetailPage > downloads a generated order PDF from the export action  334ms
+   ✓ ProcurementOrderDetailPage > has a direct-entry return action to procurement home 257ms
+   ✓ ProcurementOrderDetailPage > uploads and binds procurement attachments without manual fileId input  361ms
+   × ProcurementOrderDetailPage > clears the temporary upload controls once the attachment is bound 231ms
+     → expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  file-1
+Received:
+
+   ✓ ProcurementOrderDetailPage > opens bound attachments through procurement-scoped download URLs 242ms
+   ✓ ProcurementOrderDetailPage > uses resubmit endpoint when an order has historical submittedAt 193ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/files/FileUploadField.test.tsx > FileUploadField > clears a controlled upload after the business record has bound the file
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"
+  type="button"
+>
+  <span
+    class="ant-btn-icon"
+  >
+    <span
+      aria-label="download"
+      class="anticon anticon-download"
+      role="img"
+    >
+      <svg
+        aria-hidden="true"
+        data-icon="download"
+        fill="currentColor"
+        focusable="false"
+        height="1em"
+        viewBox="64 64 896 896"
+        width="1em"
+      >
+        <path
+          d="M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z"
+        />
+      </svg>
+    </span>
+  </span>
+  <span>
+    下载文件
+  </span>
+</button> instead
+ ❯ src/features/files/FileUploadField.test.tsx:198:64
+    196|     expect(screen.getByRole('button', { name: /下载文件/ })).toBeInTheDocu…
+    197|     rerender(<FileUploadField category="certificates" value={null} />);
+    198|     expect(screen.queryByRole('button', { name: /下载文件/ })).not.toBeInT…
+       |                                                                ^
+    199|     expect(screen.queryByText('已绑定.pdf')).not.toBeInTheDocument();
+    200|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/procurement/ProcurementOrderDetailPage.test.tsx > ProcurementOrderDetailPage > clears the temporary upload controls once the attachment is bound
+Error: expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  file-1
+Received:
+
+ ❯ src/features/procurement/ProcurementOrderDetailPage.test.tsx:235:50
+    233|     render(<ProcurementOrderDetailPage />);
+    234|     fireEvent.click(screen.getByRole('button', { name: '模拟上传附件' }));
+    235|     expect(screen.getByTestId('pending-upload')).toHaveTextContent('fi…
+       |                                                  ^
+    236|     finishBinding();
+    237|     await waitFor(() => expect(screen.getByTestId('pending-upload')).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 12 passed (14)
+   Start at  11:15:12
+   Duration  5.14s (transform 292ms, setup 201ms, collect 4.23s, tests 3.25s, environment 1.02s, prepare 259ms)
+
+undefined
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/features/files/FileUploadField.test.tsx src/features/procurement/ProcurementOrderDetailPage.test.tsx

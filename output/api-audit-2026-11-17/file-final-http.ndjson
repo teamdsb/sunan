@@ -1,0 +1,12 @@
+{"method":"GET","pathname":"/api/v1/auth/wecom/callback","registeredRoute":"/api/v1/auth/wecom/callback","status":200}
+{"method":"GET","pathname":"/api/v1/auth/wecom/callback","registeredRoute":"/api/v1/auth/wecom/callback","status":200}
+{"method":"POST","pathname":"/api/v1/certificates","registeredRoute":"/api/v1/certificates","status":201}
+{"method":"POST","pathname":"/api/v1/certificates","registeredRoute":"/api/v1/certificates","status":201}
+{"method":"POST","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb/files","registeredRoute":"/api/v1/certificates/:id/files","status":201}
+{"method":"POST","pathname":"/api/v1/certificates/7325a405-f27c-4215-aaa8-93376fdab72c/files","registeredRoute":"/api/v1/certificates/:id/files","status":201}
+{"method":"DELETE","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb/files/b35bca6a-10fe-48ee-a4bc-ce3d03278225","registeredRoute":"/api/v1/certificates/:id/files/:fileId","status":403}
+{"method":"DELETE","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb/files/4495424f-25cc-45cb-b18a-e68c6d175fae","registeredRoute":"/api/v1/certificates/:id/files/:fileId","status":204}
+{"method":"DELETE","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb/files/f6a6e58c-1796-4f35-9984-96c1c7ed542e","registeredRoute":"/api/v1/certificates/:id/files/:fileId","status":204}
+{"method":"DELETE","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb/files/b35bca6a-10fe-48ee-a4bc-ce3d03278225","registeredRoute":"/api/v1/certificates/:id/files/:fileId","status":204}
+{"method":"GET","pathname":"/api/v1/certificates/767bb8a5-d047-4dc1-aa49-b4e5a3ff3feb","registeredRoute":"/api/v1/certificates/:id","status":200}
+{"method":"GET","pathname":"/api/v1/certificates/7325a405-f27c-4215-aaa8-93376fdab72c","registeredRoute":"/api/v1/certificates/:id","status":200}

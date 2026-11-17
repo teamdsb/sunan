@@ -1,0 +1,15 @@
+PASS test/my-office-procurement-contract.integration.spec.ts (31.439 s)
+  My, office and procurement HTTP contracts with real JWT and PostgreSQL
+    ✓ unbinds certificate attachments with real JWT permissions and preserves unrelated and shared files (1000 ms)
+    ○ skipped preserves deleted office audit history and paginates inside category scope
+    ○ skipped returns profile content to ordinary readers and persists a valid manager update
+    ○ skipped allows draft policy edits and file removal, then freezes the published history
+    ○ skipped returns actual order and report pending tasks and persisted approval history
+    ○ skipped lists configured budgets and returns submitted orders in the selected report dimension
+    ○ skipped returns the category and remarks needed when reopening master-data editors
+
+Test Suites: 1 passed, 1 total
+Tests:       6 skipped, 1 passed, 7 total
+Snapshots:   0 total
+Time:        31.539 s
+Ran all test suites matching /test\/my-office-procurement-contract.integration.spec.ts/i with tests matching "unbinds certificate attachments".

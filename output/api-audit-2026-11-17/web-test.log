@@ -1,0 +1,1784 @@
+
+> web@0.0.8 test /Users/yuan/项目/sunan/sunan/apps/web
+> vitest run --maxWorkers=1
+
+
+ RUN  v3.2.4 /Users/yuan/项目/sunan/sunan/apps/web
+
+ ✓ src/features/workbench/MasterDataPage.test.tsx (2 tests) 729ms
+   ✓ MasterDataPage > uses a searchable active selector instead of a UUID text field  351ms
+   ✓ MasterDataPage > does not carry an edited category into another equipment form  376ms
+stderr | src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx (10 tests | 2 failed) 1517ms
+   ✓ InspectionCapaPages > publishes a visible draft and offers inspection generation for the selected window  1038ms
+   ✓ InspectionCapaPages > renders inspection loading, empty and source-backed issue drill-down states 187ms
+   ✓ InspectionCapaPages > shows a safe error state without inspection data 11ms
+   ✓ InspectionCapaPages > does not render a fake source link when the backend has no source URL 29ms
+   ✓ InspectionCapaPages > keeps a read-only inspection free of result and signing controls 13ms
+   ✓ InspectionCapaPages > shows only verifier actions on a CAPA awaiting verification 100ms
+   ✓ InspectionCapaPages > shows action submission only to the responsible member 67ms
+   ✓ InspectionCapaPages > does not render safety template creation to a member without safety management permission 7ms
+   × InspectionCapaPages > previews saved inspection evidence and signatures through the inspection download route 23ms
+     → Unable to find an element with the text: 现场证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m检查执行[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"ant-tag css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [0msubmitted[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m救生设备[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   × InspectionCapaPages > lets a verifier inspect submitted CAPA photos through the action download route 42ms
+     → Unable to find an element with the text: 整改证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m证据复核[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-descriptions css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-descriptions-view"[39m
+        [36m>[39m
+          [36m<table>[39m
+            [36m<tbody>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m类型[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0minspection[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m等级[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"ant-tag ant-tag-orange css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [0mminor[0m
+                      [36m</span>[39m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m状态[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0mpending_verification[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m来源[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m/>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+            [36m</tbody>[39m
+          [36m</table>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0mCAPA · pending_verification[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [0m验证人：[0m
+                [0mverifier[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+            [33mstyle[39m=[32m"width: 100%;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-space-item"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-card-head-title"[39m
+                    [36m>[39m
+                      [0m纠正：更换设备[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+                  [36m>[39m
+                    [0m责任人：[0m
+                    [0mcrew-a[0m
+                    [0m · 状态：[0m
+                    [0maccepted[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m验证与关闭[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small"[39m
+                [33mstyle[39m=[32m"flex-wrap: wrap;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m验证通过[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-dangerous ant-btn-color-dangerous ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m退回返工[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > clears the current session and redirects when reauthorizing
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile more menu that exposes navigation links on small screens
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > navigates when tapping a mobile drawer button body
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > navigates when tapping a mobile drawer button body
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile back button on secondary pages and returns to the module home
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > shows a mobile back button on secondary pages and returns to the module home
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > returns to the module home even when a backTo query preserves a list state
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders drawer navigation as lightweight text items without the default button fill class
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders drawer navigation as lightweight text items without the default button fill class
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/layouts/AppShell.navigation.test.tsx > AppShell navigation > renders collapsible desktop sidebar navigation
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+ ✓ src/layouts/AppShell.navigation.test.tsx (8 tests) 3228ms
+   ✓ AppShell navigation > clears the current session and redirects when reauthorizing  1710ms
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-profile
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/certificates
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/reminders
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/monitors
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/monitors
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /my/settings
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office/search
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /office/admin
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/orders/order-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/orders/order-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/reports
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/reports
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/report-approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /procurement/report-approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/master-data
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/tasks
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/tasks/task-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/tasks/task-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/plans
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/modules/shipping_chart_update
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/records/record-1
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/statistics/attendance
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/statistics/attendance
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders /workbench/approvals
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/reminders
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/enterprise-policy
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/enterprise-profile
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/certificates
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+stderr | src/router/AppRoutes.test.tsx > AppRoutes > renders detail route /my/monitors
+Error: AggregateError
+    at Object.dispatchError (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/xhr-utils.js:62:19)
+    at Request.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:536:35)
+    at ClientRequest.<anonymous> (/Users/yuan/项目/sunan/sunan/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/helpers/http-request.js:127:14)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3) undefined
+
+ ✓ src/router/AppRoutes.test.tsx (38 tests) 1860ms
+   ✓ AppRoutes > renders the my home page at /my  498ms
+ ✓ src/features/workbench/WorkbenchHomePage.test.tsx (19 tests) 1956ms
+   ✓ WorkbenchHomePage > uses selectable vessel and date-time controls for voyage approval records  394ms
+ ✓ src/features/monitor/MonitorPage.test.tsx (15 tests) 1909ms
+   ✓ MonitorPage > creates using a selected vessel UUID and supports intranet monitoring URLs  377ms
+ ✓ src/features/procurement/ProcurementOrderDetailPage.test.tsx (7 tests) 1085ms
+   ✓ ProcurementOrderDetailPage > previews an order PDF inside the application without window.open  379ms
+ ✓ src/features/workbench/TaskDetailPage.test.tsx (1 test) 276ms
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+stderr | src/features/settings/UserManagementPage.test.tsx > stops polling a completed directory batch while retaining its result on screen
+Warning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ ✓ src/features/settings/UserManagementPage.test.tsx (1 test) 2167ms
+   ✓ stops polling a completed directory batch while retaining its result on screen  2166ms
+ ✓ src/features/procurement/ProcurementOrderCreatePage.test.tsx (4 tests) 551ms
+ ✓ src/features/workbench/MasterDataPage.save.test.tsx (2 tests) 448ms
+   ✓ master data save results > reports success after a successfully created vessel  320ms
+ ✓ src/features/procurement/ProcurementReportRequestDetailPage.test.tsx (7 tests) 1021ms
+   ✓ ProcurementReportRequestDetailPage > renders a business summary instead of raw snapshot JSON  390ms
+ ✓ src/features/files/FileUploadField.test.tsx (7 tests) 340ms
+ ✓ src/layouts/AppShell.auth.test.tsx (1 test) 723ms
+   ✓ AppShell auth recovery > restores the current user from /auth/me when a stored token exists  722ms
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > saves settings and shows feedback
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/settings/SettingsPage.test.tsx > SettingsPage > keeps a blank Secret out of a save and preserves the optimistic version
+Warning: Warning: There may be circular references
+
+ ✓ src/features/settings/SettingsPage.test.tsx (8 tests) 1233ms
+ ✓ src/features/certificate/CertificateListPage.test.tsx (6 tests) 708ms
+ ✓ src/features/reminder/ReminderDashboardPage.test.tsx (12 tests) 1696ms
+   ✓ ReminderDashboardPage > falls back to the settings view when the URL omits view, but lets the URL win when present  464ms
+ ✓ src/features/procurement/ProcurementReportApprovalPage.test.tsx (6 tests) 751ms
+   ✓ ProcurementReportApprovalPage > does not submit 通过 after the comment prompt is canceled  345ms
+ ✓ src/features/office/OfficeAdminPage.test.tsx (3 tests) 2473ms
+   ✓ OfficeAdminPage > renders manageable entries and opens the create drawer  1506ms
+   ✓ OfficeAdminPage > can request the next page of audit history  679ms
+ ✓ src/features/procurement/ProcurementApprovalPage.test.tsx (5 tests) 4236ms
+   ✓ ProcurementApprovalPage > does not submit 通过 after the comment prompt is canceled  1634ms
+   ✓ ProcurementApprovalPage > does not submit 退回 after the comment prompt is canceled  638ms
+   ✓ ProcurementApprovalPage > does not submit 驳回 after the comment prompt is canceled  733ms
+   ✓ ProcurementApprovalPage > still approves when an empty comment is explicitly confirmed  572ms
+   ✓ ProcurementApprovalPage > can return to procurement home from a direct entry  656ms
+ ✓ src/features/certificate/CertificateDetailPage.test.tsx (2 tests) 15410ms
+   ✓ CertificateDetailPage > relies on the global navigation instead of a return button  7753ms
+   ✓ CertificateDetailPage > renders detail, edit and bind file  7655ms
+ ✓ src/features/procurement/ProcurementReportPage.test.tsx (2 tests) 1626ms
+   ✓ ProcurementReportPage > creates a monthly report request and jumps to detail  1329ms
+stderr | src/features/enterprise/EnterprisePolicyPage.test.tsx > EnterprisePolicyPage > shows the title and summary to a reader without an edit form
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/enterprise/EnterprisePolicyPage.test.tsx (8 tests) 1830ms
+   ✓ EnterprisePolicyPage > shows the title and summary to a reader without an edit form  377ms
+   ✓ EnterprisePolicyPage > saves an uploaded attachment in the same update as the draft content  402ms
+   ✓ EnterprisePolicyPage > keeps keyword drafting local until search is committed  367ms
+ ❯ src/features/enterprise/EnterprisePolicyDetailPage.test.tsx (2 tests | 1 failed) 275ms
+   ✓ EnterprisePolicyDetailPage > shows publish time and returns to the preserved list state 213ms
+   × EnterprisePolicyDetailPage > supports edit and file bind 61ms
+     → Unable to fire a "change" event - please provide a DOM element.
+stderr | src/features/reminder/ReminderDetailPage.test.tsx > ReminderDetailPage > uses a server denial even for a shipping management role
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/reminder/ReminderDetailPage.test.tsx (7 tests) 514ms
+ ✓ src/features/procurement/ProcurementOrderListPage.test.tsx (5 tests) 448ms
+ ✓ src/features/procurement/ProcurementDictionaryAdminPage.test.tsx (3 tests) 449ms
+ ✓ src/features/enterprise/EnterpriseProfilePage.test.tsx (3 tests) 378ms
+ ✓ src/features/office/OfficeHomePage.test.tsx (7 tests) 398ms
+ ✓ src/features/files/FilePreviewModal.test.tsx (7 tests) 318ms
+ ✓ src/features/files/FileAttachmentList.test.tsx (5 tests) 309ms
+ ✓ src/features/procurement/ProcurementBudgetAdminPage.test.tsx (2 tests) 381ms
+   ✓ ProcurementBudgetAdminPage > creates a department budget with a required change reason  327ms
+stderr | src/features/workbench/BusinessPanels.test.tsx > business report and learning panels > submits the displayed attendance scope and shows missing hours distinctly
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/workbench/BusinessPanels.test.tsx (4 tests) 339ms
+stderr | src/features/enterprise/EnterpriseProfileDetailPage.test.tsx > EnterpriseProfileDetailPage > shows profile text to readers without maintenance permission
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/enterprise/EnterpriseProfileDetailPage.test.tsx (3 tests) 446ms
+ ✓ src/router/RequireAuth.auth.test.tsx (2 tests) 265ms
+stderr | src/features/ui/MyHomePage.test.tsx > MyHomePage > shows overdue-only pending reminders as active warnings
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/ui/MyHomePage.test.tsx (11 tests) 345ms
+ ✓ src/features/workbench/EvidencePanel.test.tsx (1 test) 209ms
+ ✓ src/features/workbench/SelfInspectionPanel.test.tsx (3 tests) 271ms
+ ✓ src/features/workbench/TaskCenterPage.test.tsx (1 test) 241ms
+ ✓ src/features/office/OfficeSearchPage.test.tsx (2 tests) 187ms
+ ✓ src/components/ResponsiveTable.test.tsx (2 tests) 152ms
+ ✓ src/features/auth/AuthCallbackPage.test.tsx (4 tests) 149ms
+ ✓ src/hooks/useWecomJsSdk.test.tsx (2 tests) 123ms
+ ✓ src/features/auth/UserAvatar.test.tsx (4 tests) 64ms
+ ✓ src/features/files/useFileUpload.test.tsx (5 tests) 25ms
+ ✓ src/app/baseApi.test.ts (7 tests) 7ms
+ ✓ src/features/auth/authSlice.test.ts (4 tests) 3ms
+ ✓ src/features/auth/oauth.test.ts (7 tests) 4ms
+ ✓ src/features/auth/bootstrap.test.ts (2 tests) 3ms
+ ✓ src/features/office/launchOfficeEntry.test.ts (2 tests) 2ms
+ ✓ src/features/procurement/procurementReportPresentation.test.ts (7 tests) 2ms
+ ✓ src/features/auth/permissions.test.ts (4 tests) 2ms
+ ✓ src/router/moduleNav.test.ts (2 tests) 2ms
+ ✓ src/router/AppRoutes.lazy.test.ts (1 test) 1ms
+ ✓ src/features/enterprise/enterpriseSlice.test.ts (2 tests) 2ms
+ ✓ src/features/auth/userPresentation.test.ts (6 tests) 3ms
+ ✓ src/app/buildCompatibility.test.ts (2 tests) 2ms
+ ✓ src/features/monitor/monitorSlice.test.ts (2 tests) 1ms
+ ✓ src/features/settings/settingsSlice.test.ts (1 test) 1ms
+ ✓ src/features/reminder/reminderApi.test.ts (1 test) 1ms
+ ✓ src/features/certificate/certificateSlice.test.ts (1 test) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/enterprise/EnterprisePolicyDetailPage.test.tsx > EnterprisePolicyDetailPage > supports edit and file bind
+Error: Unable to fire a "change" event - please provide a DOM element.
+ ❯ createEvent ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/events.js:27:11
+ ❯ Function.createEvent.<computed> [as change] ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/events.js:106:38
+ ❯ Function.fireEvent.<computed> [as change] ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/events.js:110:68
+ ❯ Function.fireEvent.<computed> [as change] ../../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@18.3.7_@type_8105afb30b3aed617b9ca863f1e5e96d/node_modules/@testing-library/react/dist/fire-event.js:15:52
+ ❯ src/features/enterprise/EnterprisePolicyDetailPage.test.tsx:98:15
+     96| 
+     97|     const titleInput = container.querySelector('#title') as HTMLInputE…
+     98|     fireEvent.change(titleInput, { target: { value: 'policy-a-updated'…
+       |               ^
+     99|     fireEvent.click(screen.getByRole('button', { name: 'upload' }));
+    100|     fireEvent.click(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > previews saved inspection evidence and signatures through the inspection download route
+TestingLibraryElementError: Unable to find an element with the text: 现场证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m检查执行[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-typography ant-typography-secondary css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m模板版本快照已固定。每位参与人独立签认，满足完成门槛后才可汇总。[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"ant-tag css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [0msubmitted[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m救生设备[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx:259:19
+    257|     } }, isLoading: false, isError: false });
+    258|     render(<MemoryRouter initialEntries={['/inspections/inspection-1']…
+    259|     expect(screen.getByText('现场证据.jpg')).toBeInTheDocument();
+       |                   ^
+    260|     expect(screen.getByText('签认照片.jpg')).toBeInTheDocument();
+    261|     fireEvent.click(screen.getAllByRole('button', { name: '预览' })[0]!);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/features/workbench/InspectionCapaPages.test.tsx > InspectionCapaPages > lets a verifier inspect submitted CAPA photos through the action download route
+TestingLibraryElementError: Unable to find an element with the text: 整改证据.jpg. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"ant-message ant-message-top css-dev-only-do-not-override-mncuj7"[39m
+    [33mstyle[39m=[32m"left: 50%; transform: translateX(-50%); top: 8px;"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m模板版本已发布[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-message-notice-wrapper"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-message-notice ant-message-notice-success"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-message-notice-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-message-custom-content ant-message-success"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-label[39m=[32m"check-circle"[39m
+              [33mclass[39m=[32m"anticon anticon-check-circle"[39m
+              [33mrole[39m=[32m"img"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mdata-icon[39m=[32m"check-circle"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mheight[39m=[32m"1em"[39m
+                [33mviewBox[39m=[32m"64 64 896 896"[39m
+                [33mwidth[39m=[32m"1em"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m检查任务已生成，可进入现场检查[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33mclass[39m=[32m"workbench-page"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [0m证据复核[0m
+      [36m</h2>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-descriptions css-dev-only-do-not-override-mncuj7"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-descriptions-view"[39m
+        [36m>[39m
+          [36m<table>[39m
+            [36m<tbody>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m类型[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0minspection[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m等级[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"ant-tag ant-tag-orange css-dev-only-do-not-override-mncuj7"[39m
+                      [36m>[39m
+                        [0mminor[0m
+                      [36m</span>[39m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m状态[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m>[39m
+                      [0mpending_verification[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+              [36m<tr[39m
+                [33mclass[39m=[32m"ant-descriptions-row"[39m
+              [36m>[39m
+                [36m<td[39m
+                  [33mclass[39m=[32m"ant-descriptions-item"[39m
+                  [33mcolspan[39m=[32m"1"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-descriptions-item-container"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-label"[39m
+                    [36m>[39m
+                      [0m来源[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-descriptions-item-content"[39m
+                    [36m/>[39m
+                  [36m</div>[39m
+                [36m</td>[39m
+              [36m</tr>[39m
+            [36m</tbody>[39m
+          [36m</table>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+        [33mstyle[39m=[32m"width: 100%;"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0mCAPA · pending_verification[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [0m验证人：[0m
+                [0mverifier[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-vertical ant-space-gap-row-small ant-space-gap-col-small"[39m
+            [33mstyle[39m=[32m"width: 100%;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-space-item"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card ant-card-bordered ant-card-small css-dev-only-do-not-override-mncuj7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"ant-card-head-title"[39m
+                    [36m>[39m
+                      [0m纠正：更换设备[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-typography css-dev-only-do-not-override-mncuj7"[39m
+                  [36m>[39m
+                    [0m责任人：[0m
+                    [0mcrew-a[0m
+                    [0m · 状态：[0m
+                    [0maccepted[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-space-item"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-card-head-wrapper"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-card-head-title"[39m
+                [36m>[39m
+                  [0m验证与关闭[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-card-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-space css-dev-only-do-not-override-mncuj7 ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small"[39m
+                [33mstyle[39m=[32m"flex-wrap: wrap;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m验证通过[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-space-item"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-dangerous ant-btn-color-dangerous ant-btn-variant-outlined"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span>[39m
+                      [0m退回返工[0m
+                    [36m</span>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/workbench/InspectionCapaPages.test.tsx:276:19
+    274|     } }, isLoading: false, isError: false });
+    275|     render(<MemoryRouter initialEntries={['/issues/issue-1']}><Routes>…
+    276|     expect(screen.getByText('整改证据.jpg')).toBeInTheDocument();
+       |                   ^
+    277|     fireEvent.click(screen.getByRole('button', { name: '预览' }));
+    278|     await waitFor(() => expect(getCapaDownloadUrl).toHaveBeenCalledWit…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed | 59 passed (61)
+      Tests  3 failed | 307 passed (310)
+   Start at  19:50:53
+   Duration  149.59s (transform 2.61s, setup 3.29s, collect 59.21s, tests 54.10s, environment 21.14s, prepare 3.78s)
+
+/Users/yuan/项目/sunan/sunan/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  web@0.0.8 test: `vitest run --maxWorkers=1`
+Exit status 1
