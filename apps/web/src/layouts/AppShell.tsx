@@ -14,7 +14,7 @@ import Layout from 'antd/es/layout';
 import Space from 'antd/es/space';
 import Tag from 'antd/es/tag';
 import Typography from 'antd/es/typography';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useGetCurrentUserQuery } from '../features/auth/authApi';
@@ -47,6 +47,8 @@ const moduleRootPathMap = {
 
 type ModuleRootKey = keyof typeof moduleRootPathMap;
 
+const IDENTITY_REFRESH_COOLDOWN_MS = 30_000;
+
 export function AppShell() {
   const user = useAppSelector((state) => state.auth.currentUser);
   const token = useAppSelector((state) => state.auth.token);
@@ -55,10 +57,12 @@ export function AppShell() {
   const navigate = useNavigate();
   const currentUserQuery = useGetCurrentUserQuery(undefined, {
     skip: !token,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     refetchOnMountOrArgChange: 300,
   });
+  const identityRefreshAtRef = useRef(0);
+  const identityRefreshInFlightRef = useRef<Promise<unknown> | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const activeNavGroupKey = useMemo(() => resolveActiveNavGroupKey(location.pathname), [location.pathname]);
@@ -85,6 +89,32 @@ export function AppShell() {
       dispatch(setCurrentUser(currentUserQuery.data.data));
     }
   }, [currentUserQuery.data, dispatch]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const refreshIdentity = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - identityRefreshAtRef.current < IDENTITY_REFRESH_COOLDOWN_MS) return;
+      if (identityRefreshInFlightRef.current) return;
+
+      identityRefreshAtRef.current = now;
+      const refresh = Promise.resolve(currentUserQuery.refetch());
+      identityRefreshInFlightRef.current = refresh.finally(() => {
+        identityRefreshInFlightRef.current = null;
+      });
+    };
+
+    window.addEventListener('focus', refreshIdentity);
+    window.addEventListener('online', refreshIdentity);
+    document.addEventListener('visibilitychange', refreshIdentity);
+    return () => {
+      window.removeEventListener('focus', refreshIdentity);
+      window.removeEventListener('online', refreshIdentity);
+      document.removeEventListener('visibilitychange', refreshIdentity);
+    };
+  }, [currentUserQuery.refetch, token]);
 
   const reauthorize = () => {
     dispatch(logout());

@@ -1579,9 +1579,17 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     if (!completed) this.logger.warn('export worker shutdown timed out after 30 seconds');
   }
 
-  async listModules(user: CurrentUser) {
+  async listModules(user: CurrentUser, visibleRecords?: WorkbenchRecord[]) {
     const visibleModules = await this.listVisibleModules(user);
-    const pendingMap = await this.computePendingCounts(user);
+    let pendingMap: Map<string, number>;
+    if (visibleRecords) {
+      pendingMap = await this.computePendingCounts(user, visibleRecords);
+    } else {
+      pendingMap = new Map<string, number>();
+      for (const item of await this.getVisibleRecordStatusCounts(user, visibleModules)) {
+        if (PENDING_STATUSES.has(item.status)) pendingMap.set(item.moduleCode, (pendingMap.get(item.moduleCode) ?? 0) + item.count);
+      }
+    }
 
     return visibleModules.map((moduleItem) => ({
       moduleCode: moduleItem.moduleCode,
@@ -1637,10 +1645,30 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getDashboard(user: CurrentUser) {
-    const modules = await this.listModules(user);
-    const visibleRecords = await this.listVisibleRecords(user);
-    const pendingTotal = visibleRecords.filter((record) => this.learningPending(record, user)).length;
-    const approvalPendingTotal = visibleRecords.filter((record) => record.status === 'approval_pending').length;
+    const visibleModules = await this.listVisibleModules(user);
+    const statusCounts = await this.getVisibleRecordStatusCounts(user, visibleModules);
+    const pendingMap = new Map<string, number>();
+    let pendingTotal = 0;
+    let approvalPendingTotal = 0;
+    for (const item of statusCounts) {
+      if (PENDING_STATUSES.has(item.status)) {
+        pendingTotal += item.count;
+        pendingMap.set(item.moduleCode, (pendingMap.get(item.moduleCode) ?? 0) + item.count);
+      }
+      if (item.status === 'approval_pending') approvalPendingTotal += item.count;
+    }
+    const modules = visibleModules.map((moduleItem) => ({
+      moduleCode: moduleItem.moduleCode,
+      moduleName: moduleItem.moduleName,
+      departmentCode: moduleItem.departmentCode,
+      templateType: moduleItem.templateType,
+      pendingCount: pendingMap.get(moduleItem.moduleCode) ?? 0,
+      requiresApproval: moduleItem.requiresApproval,
+      supportsPrint: moduleItem.supportsPrint,
+      supportsStatistics: moduleItem.supportsStatistics,
+      mobileFirst: moduleItem.mobileFirst,
+      canCreate: moduleItem.moduleCode === FUEL_MEASUREMENT ? false : LEARNING_MODULES.includes(moduleItem.moduleCode) ? isLearningManager(user) : moduleItem.moduleCode !== SELF_INSPECTION_MODULE || this.selfInspection.isManager(user),
+    }));
 
     const alerts: Array<{ code: string; message: string }> = [];
     if (approvalPendingTotal > 0) {
@@ -1656,6 +1684,46 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       approvalPendingTotal,
       alerts,
     };
+  }
+
+  private async getVisibleRecordStatusCounts(user: CurrentUser, visibleModules: WorkbenchModuleSummary[]) {
+    const moduleCodes = visibleModules.map((moduleItem) => moduleItem.moduleCode);
+    const specialModuleCodes = moduleCodes.filter((moduleCode) => moduleCode === SELF_INSPECTION_MODULE || LEARNING_MODULES.includes(moduleCode));
+    const regularModuleCodes = moduleCodes.filter((moduleCode) => !specialModuleCodes.includes(moduleCode));
+    const rows: Array<{ moduleCode: string; status: string; count: string }> = [];
+    const regularQuery = this.createVisibleRecordQuery(user, regularModuleCodes);
+    if (regularQuery) {
+      const regularRows = await regularQuery
+        .select('record.module_code', 'moduleCode')
+        .addSelect('record.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('record.module_code')
+        .addGroupBy('record.status')
+        .getRawMany<{ moduleCode: string; status: string; count: string }>();
+      rows.push(...regularRows);
+    }
+
+    if (specialModuleCodes.length > 0) {
+      const specialRecords = await this.recordRepository.find({ where: { moduleCode: In(specialModuleCodes) } });
+      const moduleByCode = new Map(visibleModules.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
+      const counts = new Map<string, number>();
+      for (const record of specialRecords) {
+        const moduleItem = moduleByCode.get(record.moduleCode);
+        const readable = moduleItem && this.hasRoleAccess(user, moduleItem.visibleRoles) && (
+          record.moduleCode === SELF_INSPECTION_MODULE
+            ? this.selfInspection.canRead(record, user)
+            : canReadLearning(record, user)
+        );
+        if (!readable || !this.learningPending(this.toRecordModel(record), user)) continue;
+        const key = `${record.moduleCode}\u0000${record.status}`;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      for (const [key, count] of counts) {
+        const separator = key.indexOf('\u0000');
+        rows.push({ moduleCode: key.slice(0, separator), status: key.slice(separator + 1), count: String(count) });
+      }
+    }
+    return rows.map((row) => ({ ...row, count: Number(row.count) || 0 }));
   }
 
   private async attendanceData(user: CurrentUser, month?: string, departmentCode?: string) {
@@ -1856,48 +1924,51 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
   async listRecords(query: WorkbenchRecordListQueryDto, user: CurrentUser) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
-
-    let records = await this.listVisibleRecords(user);
-
-    if (query.moduleCode) {
-      records = records.filter((record) => record.moduleCode === query.moduleCode);
-    }
-
-    if (query.status) {
-      records = records.filter((record) => record.status === query.status);
-    }
-
-    if (query.vesselId) {
-      records = records.filter((record) => record.vesselId === query.vesselId);
-    }
-
-    if (query.templateType) {
-      const runtimeModules = await this.listRuntimeModules();
-      const allowedModuleCodes = new Set(
-        runtimeModules.filter((moduleItem) => moduleItem.templateType === query.templateType).map((moduleItem) => moduleItem.moduleCode),
-      );
-      records = records.filter((record) => allowedModuleCodes.has(record.moduleCode));
-    }
-
-    if (query.requiresApproval !== undefined) {
-      const runtimeModules = await this.listRuntimeModules();
-      const approvalModuleCodes = new Set(
-        runtimeModules.filter((moduleItem) => moduleItem.requiresApproval === query.requiresApproval).map((moduleItem) => moduleItem.moduleCode),
-      );
-      records = records.filter((record) => approvalModuleCodes.has(record.moduleCode));
-    }
-
-    if (query.keyword?.trim()) {
-      const keyword = query.keyword.trim().toLowerCase();
-      records = records.filter((record) => `${record.title} ${record.summary}`.toLowerCase().includes(keyword));
-    }
-
-    const total = records.length;
+    const runtimeModules = await this.listReadableModules(user);
+    const moduleByCode = new Map(runtimeModules.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
+    const allowedModuleCodes = new Set(runtimeModules
+      .filter((moduleItem) => !query.templateType || moduleItem.templateType === query.templateType)
+      .filter((moduleItem) => query.requiresApproval === undefined || moduleItem.requiresApproval === query.requiresApproval)
+      .filter((moduleItem) => !query.moduleCode || moduleItem.moduleCode === query.moduleCode)
+      .map((moduleItem) => moduleItem.moduleCode));
+    const specialModuleCodes = [...allowedModuleCodes].filter((moduleCode) =>
+      moduleCode === SELF_INSPECTION_MODULE || LEARNING_MODULES.includes(moduleCode),
+    );
+    const regularModuleCodes = [...allowedModuleCodes].filter((moduleCode) => !specialModuleCodes.includes(moduleCode));
     const offset = (page - 1) * pageSize;
-    const paged = records.slice(offset, offset + pageSize).map((record) => this.toRecordSummary(record));
+    const candidateLimit = offset + pageSize;
+
+    const regularQuery = this.createVisibleRecordQuery(user, regularModuleCodes);
+    if (query.status) regularQuery?.andWhere('record.status = :status', { status: query.status });
+    if (query.vesselId) regularQuery?.andWhere('record.vessel_id = :vesselId', { vesselId: query.vesselId });
+    if (query.keyword?.trim()) {
+      regularQuery?.andWhere('(record.title ILIKE :keyword OR record.summary ILIKE :keyword)', { keyword: `%${query.keyword.trim()}%` });
+    }
+    const [regularRecords, regularTotal] = regularQuery
+      ? await regularQuery.orderBy('record.occurred_at', 'DESC').addOrderBy('record.id', 'DESC').take(candidateLimit).getManyAndCount()
+      : [[], 0] as [WorkbenchRecordEntity[], number];
+
+    const specialRecords = specialModuleCodes.length
+      ? await this.recordRepository.find({ where: { moduleCode: In(specialModuleCodes) }, order: { occurredAt: 'DESC' } })
+      : [];
+    const keyword = query.keyword?.trim().toLowerCase();
+    const visibleSpecialRecords = specialRecords.filter((record) => {
+      const moduleItem = moduleByCode.get(record.moduleCode);
+      if (!moduleItem || !this.hasRoleAccess(user, moduleItem.visibleRoles)) return false;
+      if (query.status && record.status !== query.status) return false;
+      if (query.vesselId && record.vesselId !== query.vesselId) return false;
+      if (keyword && !`${record.title} ${record.summary}`.toLowerCase().includes(keyword)) return false;
+      if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.canRead(record, user);
+      return canReadLearning(record, user);
+    });
+
+    const total = regularTotal + visibleSpecialRecords.length;
+    const records = [...regularRecords, ...visibleSpecialRecords]
+      .sort((left, right) => right.occurredAt.getTime() - left.occurredAt.getTime() || right.id.localeCompare(left.id))
+      .slice(offset, offset + pageSize);
 
     return {
-      data: paged,
+      data: records.map((record) => this.toRecordSummary(this.toRecordModel(record))),
       pagination: {
         page,
         pageSize,
@@ -3667,17 +3738,57 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
       return [];
     }
 
-    const records = await this.recordRepository.find({
-      where: {
-        moduleCode: In(moduleCodes),
-      },
-      order: {
-        occurredAt: 'DESC',
-      },
-    });
+    const specialModuleCodes = moduleCodes.filter((moduleCode) => moduleCode === SELF_INSPECTION_MODULE || LEARNING_MODULES.includes(moduleCode));
+    const regularModuleCodes = moduleCodes.filter((moduleCode) => !specialModuleCodes.includes(moduleCode));
+    const regularQuery = this.createVisibleRecordQuery(user, regularModuleCodes);
+    const regularRecords = regularQuery
+      ? await regularQuery.orderBy('record.occurred_at', 'DESC').addOrderBy('record.id', 'DESC').getMany()
+      : [];
+    const specialRecords = specialModuleCodes.length
+      ? await this.recordRepository.find({ where: { moduleCode: In(specialModuleCodes) }, order: { occurredAt: 'DESC' } })
+      : [];
+    const moduleByCode = new Map(visibleModules.map((moduleItem) => [moduleItem.moduleCode, moduleItem]));
 
-    const allowed = await Promise.all(records.map(async (record) => ({ record, readable: await this.canReadRecord(record, user) })));
-    return allowed.filter((item) => item.readable).map((item) => this.toRecordModel(item.record));
+    return [...regularRecords, ...specialRecords.filter((record) => {
+      const moduleItem = moduleByCode.get(record.moduleCode);
+      if (!moduleItem || !this.hasRoleAccess(user, moduleItem.visibleRoles)) return false;
+      if (record.moduleCode === SELF_INSPECTION_MODULE) return this.selfInspection.canRead(record, user);
+      return canReadLearning(record, user);
+    })]
+      .sort((left, right) => right.occurredAt.getTime() - left.occurredAt.getTime() || right.id.localeCompare(left.id))
+      .map((record) => this.toRecordModel(record));
+  }
+
+  private createVisibleRecordQuery(user: CurrentUser, moduleCodes: string[]) {
+    if (moduleCodes.length === 0) return null;
+
+    const query = this.recordRepository.createQueryBuilder('record')
+      .where('record.module_code IN (:...moduleCodes)', { moduleCodes })
+      .andWhere('record.deleted_at IS NULL');
+    if (user.roles.includes('system_admin') || !user.roles.includes('crew')) return query;
+
+    const vesselIds = user.departments
+      .map((department) => department.startsWith('vessel:') ? department.slice('vessel:'.length) : department)
+      .filter(Boolean);
+    const accessClauses = [
+      'record.owner_user_id = :userId',
+      'record.applicant_user_id = :userId',
+      'record.assignee_user_id = :userId',
+      'record.reviewer_user_id = :userId',
+      `EXISTS (
+        SELECT 1 FROM workbench_record_participants participant
+        WHERE participant.business_record_id = record.id
+          AND participant.user_id = :userId
+          AND participant.status = 'active'
+          AND participant.deleted_at IS NULL
+      )`,
+    ];
+    const parameters: Record<string, unknown> = { userId: user.userId };
+    if (vesselIds.length > 0) {
+      accessClauses.push('record.vessel_id IN (:...vesselIds)');
+      parameters.vesselIds = vesselIds;
+    }
+    return query.andWhere(`(${accessClauses.join(' OR ')})`, parameters);
   }
 
   private learningPending(record: WorkbenchRecord, user: CurrentUser) {
@@ -3687,8 +3798,8 @@ export class WorkbenchService implements OnModuleInit, OnModuleDestroy {
     return Boolean(learning?.learners.some(p => p.userId === user.userId && !p.completedAt));
   }
 
-  private async computePendingCounts(user: CurrentUser) {
-    const records = await this.listVisibleRecords(user);
+  private async computePendingCounts(user: CurrentUser, visibleRecords?: WorkbenchRecord[]) {
+    const records = visibleRecords ?? await this.listVisibleRecords(user);
     const counts = new Map<string, number>();
     for (const record of records) if (this.learningPending(record, user)) counts.set(record.moduleCode, (counts.get(record.moduleCode) ?? 0) + 1);
     return counts;

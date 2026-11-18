@@ -6,7 +6,7 @@ import SendOutlined from '@ant-design/icons/SendOutlined';
 import SaveOutlined from '@ant-design/icons/SaveOutlined';
 import KeyOutlined from '@ant-design/icons/KeyOutlined';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import {
   type UserSettings,
@@ -38,6 +38,7 @@ function notificationFormValues(config: NotificationConfigView) {
 
 export function SettingsPage() {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const navigate = useNavigate();
   const { data, isLoading } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
   const notificationQuery = useGetNotificationConfigQuery(undefined, { skip: !currentUser?.isAdmin });
@@ -180,15 +181,15 @@ export function SettingsPage() {
             <Typography.Paragraph type="secondary">
               用户部门、业务角色、平台状态和通讯录同步由系统管理员统一维护。
             </Typography.Paragraph>
-            <Button type="primary" icon={<SettingOutlined />}>
-              <Link to="/my/settings/users">打开用户管理</Link>
+            <Button type="primary" icon={<SettingOutlined />} onClick={() => navigate('/my/settings/users')}>
+              打开用户管理
             </Button>
           </Card>
         ) : null}
         {currentUser?.isAdmin ? (
           <Card loading={notificationQuery.isLoading} className="settings-card" title="企业微信推送应用">
             {notificationQuery.isError || notificationErrorText ? <Alert type="error" showIcon style={{ marginBottom: 12 }} message={notificationErrorText ?? '推送配置读取失败，当前生效应用未知。'} action={<Button size="small" onClick={reloadNotification}>重新加载配置</Button>} /> : null}
-            {notificationQuery.data?.data.encryptionKeyAvailable === false ? <Alert type="error" showIcon message="服务端未配置独立加密主密钥，无法保存覆盖。" /> : null}
+            {notificationQuery.data?.data.encryptionKeyAvailable === false ? <Alert type="error" showIcon message="服务端未配置独立加密主密钥，无法保存覆盖。" description="请在 API 环境变量中配置 SYSTEM_SETTINGS_ENCRYPTION_KEY（至少 32 个字符，不能复用 JWT 或企微 Secret），重启 API 后再保存。" /> : null}
             {notificationQuery.data?.data.configurationError ? <Alert type="error" showIcon message="后台通知覆盖配置不完整或无法解密，业务消息已停止发送；请修复密钥、补齐凭据或明确清除覆盖。" /> : null}
             <Typography.Paragraph type="secondary">
               主应用由环境变量维护并只读显示；填写同企业通知应用后，证书、采购和任务消息使用该应用。留空 Secret 会保留已存凭据，清除覆盖才会恢复主应用。

@@ -99,6 +99,7 @@ describe('SettingsPage', () => {
 
     expect(screen.getByText('主应用 CorpID').parentElement).toHaveTextContent('corp-1');
     expect(screen.getByText('主应用 AgentID').parentElement).toHaveTextContent('1000001');
+    expect(screen.getByRole('button', { name: /打开用户管理/ })).toBeInTheDocument();
     expect(screen.getByLabelText('通知应用 Secret')).toHaveAttribute('type', 'password');
     expect(screen.getByPlaceholderText('已保存，留空表示保留')).toHaveValue('');
   });

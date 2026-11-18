@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch } from '../app/hooks';
 import { env } from '../app/env';
 import { useLazyGetJssdkSignatureQuery } from '../features/auth/authApi';
@@ -84,6 +84,12 @@ export function useWecomJsSdk({
   jsApiList,
   agentJsApiList = EMPTY_AGENT_API_LIST,
 }: UseWecomJsSdkOptions): UseWecomJsSdkReturn {
+  // Callers often build these lists inline. Depend on their contents so a
+  // state update during SDK setup cannot restart the initialization loop.
+  const jsApiListKey = JSON.stringify(jsApiList);
+  const agentJsApiListKey = JSON.stringify(agentJsApiList);
+  const stableJsApiList = useMemo(() => jsApiList, [jsApiListKey]);
+  const stableAgentJsApiList = useMemo(() => agentJsApiList, [agentJsApiListKey]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
@@ -108,11 +114,11 @@ export function useWecomJsSdk({
       for (let attempt = 0; attempt < 2; attempt += 1) {
         try {
           const corpSignature = await getSignature({ url, type: 'corp' }).unwrap();
-          await waitForReady(toCorpConfig(corpSignature.data, jsApiList));
+          await waitForReady(toCorpConfig(corpSignature.data, stableJsApiList));
 
-          if (agentJsApiList.length > 0) {
+          if (stableAgentJsApiList.length > 0) {
             const agentSignature = await getSignature({ url, type: 'agent' }).unwrap();
-            await runAgentConfig(toAgentConfig(agentSignature.data, agentJsApiList));
+            await runAgentConfig(toAgentConfig(agentSignature.data, stableAgentJsApiList));
           }
 
           if (mounted) {
@@ -135,7 +141,7 @@ export function useWecomJsSdk({
     return () => {
       mounted = false;
     };
-  }, [agentJsApiList, dispatch, getSignature, jsApiList]);
+  }, [dispatch, getSignature, stableAgentJsApiList, stableJsApiList]);
 
   return { isReady, error };
 }

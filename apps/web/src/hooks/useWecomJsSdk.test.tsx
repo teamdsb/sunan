@@ -27,6 +27,13 @@ function useCorpOnlyHook() {
   return useWecomJsSdk({ jsApiList });
 }
 
+function useInlineArrayHook() {
+  return useWecomJsSdk({
+    jsApiList: [],
+    agentJsApiList: ['openEnterpriseChat'],
+  });
+}
+
 describe('useWecomJsSdk', () => {
   beforeEach(() => {
     getSignature.mockReset();
@@ -121,5 +128,39 @@ describe('useWecomJsSdk', () => {
       type: 'corp',
     });
     expect(result.current.isReady).toBe(false);
+  });
+
+  it('does not restart setup when callers pass inline api lists', async () => {
+    window.wx = {
+      config: vi.fn(),
+      ready: vi.fn((callback: () => void) => callback()),
+      error: vi.fn(),
+      agentConfig: vi.fn(({ success }) => success()),
+      chooseImage: vi.fn(),
+      uploadImage: vi.fn(),
+      invoke: vi.fn(),
+      previewFile: vi.fn(),
+    };
+
+    getSignature.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({
+          data: {
+            appId: 'ww-test',
+            timestamp: 1,
+            nonceStr: 'n1',
+            signature: 's1',
+          },
+        }),
+    });
+
+    const { result } = renderHook(() => useInlineArrayHook(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(getSignature).toHaveBeenCalledTimes(2);
   });
 });

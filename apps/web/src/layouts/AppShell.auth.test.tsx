@@ -89,4 +89,38 @@ describe('AppShell auth recovery', () => {
     expect(await screen.findByText('企业资料页')).toBeInTheDocument();
     expect(refetch).not.toHaveBeenCalled();
   });
+
+  it('coalesces repeated mobile focus events into one identity refresh', async () => {
+    const refetch = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useGetCurrentUserQuery).mockReturnValue({
+      data: {
+        data: {
+          userId: 'focus-stable',
+          name: '焦点稳定用户',
+          department: ['总经办'],
+          roles: ['all_authenticated'],
+        },
+      },
+      refetch,
+    } as never);
+    window.localStorage.setItem('sunan_token', 'jwt-token');
+    const store = createStore();
+    store.dispatch(bootstrapFromStorage());
+    const { AppShell } = await import('./AppShell');
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/workbench']}>
+          <AppShell />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    window.dispatchEvent(new Event('focus'));
+    window.dispatchEvent(new Event('focus'));
+    window.dispatchEvent(new Event('online'));
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
 });

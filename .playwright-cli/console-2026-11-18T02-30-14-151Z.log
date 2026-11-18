@@ -1,0 +1,4 @@
+[ 2524862ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:964
+[ 2527131ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-63UZTOTG.js?v=41914547:21609
+[ 3419501ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:964
+[ 3420883ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-63UZTOTG.js?v=41914547:21609

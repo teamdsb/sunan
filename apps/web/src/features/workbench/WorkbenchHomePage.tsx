@@ -77,6 +77,8 @@ const departmentLabelMap: Record<string, string> = {
   workgroup: '工作组',
 };
 
+const EMPTY_WORKBENCH_JS_API_LIST: string[] = [];
+
 const templateColorMap: Record<string, string> = {
   ledger_form: 'geekblue',
   operation_flow: 'purple',
@@ -292,7 +294,7 @@ export function WorkbenchHomePage({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const wecomApprovalSdk = useWecomJsSdk({
-    jsApiList: [],
+    jsApiList: EMPTY_WORKBENCH_JS_API_LIST,
     agentJsApiList: WECOM_APPROVAL_AGENT_JS_API_LIST,
   });
 
